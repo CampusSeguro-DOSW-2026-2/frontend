@@ -1,0 +1,2 @@
+# frontend
+Campus Seguro frontend
