@@ -14,7 +14,7 @@ export default function ActiveSimulation() {
   const [confirmed, setConfirmed] = useState(false);
   const [routeInfo, setRouteInfo] = useState(false);
   useEffect(() => {
-    api.getActiveSimulation().then((s) => setStarted(new Date(s.startedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })));
+    api.getActiveSimulation().then((s) => setStarted(s ? new Date(s.startedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''));
     api.isAlertConfirmed().then(setConfirmed);
   }, []);
   const confirm = async () => { if (confirmed) return; await api.confirmAlert(); setConfirmed(true); };
