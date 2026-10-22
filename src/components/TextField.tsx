@@ -9,17 +9,18 @@ interface Props {
   value: string;
   onChange: (v: string) => void;
   error?: string;
-  required?: boolean;
+  optional?: boolean;
   type?: 'text' | 'email' | 'password';
   icon?: ReactNode;
   hint?: string;
+  placeholder?: string;
   autoComplete?: string;
   maxLength?: number;
 }
 
-/** Campo de texto con la identidad visual: etiqueta, icono opcional, error y ayuda accesibles. */
+/** Campo de texto con la identidad visual: etiqueta, error y ayuda accesibles, y ojo para contraseñas. */
 export function TextField({
-  id, label, value, onChange, error, required = false, type = 'text', icon, hint, autoComplete, maxLength,
+  id, label, value, onChange, error, optional = false, type = 'text', icon, hint, placeholder, autoComplete, maxLength,
 }: Props) {
   const [visible, setVisible] = useState(false);
   const isPassword = type === 'password';
@@ -28,8 +29,8 @@ export function TextField({
   return (
     <div className="field">
       <label htmlFor={id}>
-        {label}{' '}
-        {required ? <span style={{ color: 'var(--red)' }}>*</span> : <span className="hint">(opcional)</span>}
+        {label}
+        {optional && <span className="hint"> (opcional)</span>}
       </label>
       <div className={`input${error ? ' bad' : ''}`}>
         {icon}
@@ -38,9 +39,10 @@ export function TextField({
           type={isPassword && visible ? 'text' : type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
           autoComplete={autoComplete}
           maxLength={maxLength}
-          aria-required={required}
+          aria-required={!optional}
           aria-invalid={!!error}
           aria-describedby={error || hint ? msgId : undefined}
         />

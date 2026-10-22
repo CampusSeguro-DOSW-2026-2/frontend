@@ -3,11 +3,14 @@ import { Navbar } from './components/Layout';
 import CreateSimulation from './pages/CreateSimulation';
 import ActiveSimulation from './pages/ActiveSimulation';
 import BrigadistaPanel from './pages/BrigadistaPanel';
-import './styles.css';
 import Register from './pages/Register';
+import './styles.css';
 
 // Router mínimo por hash para no añadir dependencias; sustituible por react-router.
 const path = () => window.location.hash.replace(/^#/, '') || '/';
+
+// Pantallas a pantalla completa, sin la barra de navegación principal
+const FULL_SCREEN = ['/registro'];
 
 export default function App() {
   const [route, setRoute] = useState(path());
@@ -23,11 +26,10 @@ export default function App() {
   }
   return (
     <>
-      <Navbar current={route} />
+      {!FULL_SCREEN.includes(route) && <Navbar current={route} />}
       {page}
       <footer className="demo-nav">
-        <a href="#/registro">Registro</a>
-        Vistas de demostración: <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a>
+        Vistas de demostración: <a href="#/registro">Registro</a> · <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a>
       </footer>
     </>
   );
