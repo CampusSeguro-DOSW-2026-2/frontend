@@ -1,0 +1,16 @@
+/* Pantallas de autenticación (registro; reutilizable para el login) */
+.auth{display:flex;justify-content:center;padding:48px}
+.auth-card{width:100%;max-width:720px;display:flex;flex-direction:column;gap:24px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px}
+.auth-card h2{font:700 20px/25px 'Outfit',sans-serif}
+.hint{font-size:13px;line-height:140%;color:var(--mut);font-weight:400}
+.input .toggle{display:flex;align-items:center;padding:4px;margin:-4px;border:0;border-radius:8px;background:none;color:var(--mut);cursor:pointer}
+.notice.err{background:#FEF2F2;border-color:#FECACA;color:#7F1D1D}
+a.btn{text-decoration:none}
+/* estado de éxito */
+.auth-card.done{align-items:center;text-align:center}
+.auth-card.done p{max-width:480px;color:var(--mut);font-size:15px;line-height:150%}
+.auth-card.done p b{color:var(--ink);overflow-wrap:anywhere}
+.auth-card.done .actions{width:100%;max-width:360px}
+.okmark{display:grid;place-items:center;width:56px;height:56px;border-radius:999px;background:var(--cream);border:1px solid var(--red);color:var(--red)}
+.okmark svg{width:26px;height:26px}
+@media(max-width:900px){.auth{padding:24px 16px}.auth-card{padding:24px}}

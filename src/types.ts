@@ -14,3 +14,8 @@ export interface AssistanceRequest {
 }
 
 export interface Brigadista { name: string; status: string; zone: string }
+
+export interface RegisterDraft {
+  firstName: string; secondName: string; firstLastName: string; secondLastName: string;
+  email: string; password: string; confirmPassword: string;
+}

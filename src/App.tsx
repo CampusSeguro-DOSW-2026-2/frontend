@@ -4,6 +4,7 @@ import CreateSimulation from './pages/CreateSimulation';
 import ActiveSimulation from './pages/ActiveSimulation';
 import BrigadistaPanel from './pages/BrigadistaPanel';
 import './styles.css';
+import Register from './pages/Register';
 
 // Router mínimo por hash para no añadir dependencias; sustituible por react-router.
 const path = () => window.location.hash.replace(/^#/, '') || '/';
@@ -17,6 +18,7 @@ export default function App() {
     case '/': case '/simulacro': page = <ActiveSimulation />; break;
     case '/crear-simulacro': page = <CreateSimulation />; break;
     case '/brigadista': page = <BrigadistaPanel />; break;
+    case '/registro': page = <Register />; break;
     default: page = <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
   }
   return (
@@ -24,6 +26,7 @@ export default function App() {
       <Navbar current={route} />
       {page}
       <footer className="demo-nav">
+        <a href="#/registro">Registro</a>
         Vistas de demostración: <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a>
       </footer>
     </>
