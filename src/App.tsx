@@ -3,6 +3,8 @@ import { Navbar } from './components/Layout';
 import CreateSimulation from './pages/CreateSimulation';
 import ActiveSimulation from './pages/ActiveSimulation';
 import BrigadistaPanel from './pages/BrigadistaPanel';
+import AlertList from './pages/AlertList';
+import AlertForm from './pages/AlertForm';
 import './styles.css';
 
 // Router mínimo por hash para no añadir dependencias; sustituible por react-router.
@@ -17,14 +19,19 @@ export default function App() {
     case '/': case '/simulacro': page = <ActiveSimulation />; break;
     case '/crear-simulacro': page = <CreateSimulation />; break;
     case '/brigadista': page = <BrigadistaPanel />; break;
-    default: page = <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
+    case '/alertas': page = <AlertList />; break;
+    case '/alertas/nueva': page = <AlertForm key="new" />; break;
+    default: {
+      const m = route.match(/^\/alertas\/([^/]+)\/editar$/);
+      page = m ? <AlertForm key={m[1]} editId={m[1]} /> : <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
+    }
   }
   return (
     <>
       <Navbar current={route} />
       {page}
       <footer className="demo-nav">
-        Vistas de demostración: <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a>
+        Vistas de demostración: <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a> · <a href="#/alertas">Alertas</a>
       </footer>
     </>
   );

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Bell, Chat, Home, MapIcon, User } from './Icons';
+import { Bell, Chat, Home, Logo, MapIcon, User } from './Icons';
 
 const NAV = [
   { href: '#/', icon: <Home />, label: 'Inicio' },
@@ -12,7 +12,7 @@ const NAV = [
 export function Navbar({ current }: { current: string }) {
   return (
     <nav className="navbar" aria-label="Navegación principal">
-      <a className="brand" href="#/">CampusSeguro</a>
+      <a className="brand" href="#/"><Logo />CampusSeguro</a>
       <ul>
         {NAV.map((n) => (
           <li key={n.href}>

@@ -1,3 +1,4 @@
+import { alertsApi } from './alerts';
 import type { AssistanceRequest, Brigadista, Option, SimulationDraft } from '../types';
 
 /**
@@ -57,34 +58,13 @@ export const localApi: CampusApi = {
 // ---------------------------------------------------------------------------
 // MS03 (Alertas) por HTTP. Solo lo que el backend ya expone hoy.
 // ---------------------------------------------------------------------------
-const MS03_URL = (import.meta.env.VITE_MS03_URL as string | undefined) ?? 'http://localhost:8080';
-
-// SOLO DESARROLLO: /local/tokens existe únicamente con el perfil `local` de MS03.
-// Se reemplaza por el JWT real de MS01 cuando exista.
-let devToken: Promise<string> | null = null;
-const getToken = () => {
-  devToken ??= fetch(`${MS03_URL}/local/tokens`)
-    .then((r) => { if (!r.ok) throw new Error(`tokens ${r.status}`); return r.json(); })
-    .then((t: Record<string, string>) => t.COORDINATOR)
-    .catch((e) => { devToken = null; throw e; });
-  return devToken;
-};
-
-async function ms03<T>(path: string): Promise<T> {
-  const r = await fetch(`${MS03_URL}${path}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
-  if (!r.ok) throw new Error(`MS03 ${path} → ${r.status}`);
-  return r.json() as Promise<T>;
-}
-
-interface Page<T> { contenido: T[] }
-
 export const ms03Api: Pick<CampusApi, 'getActiveSimulation'> = {
   async getActiveSimulation() {
     try {
-      const list = await ms03<Page<{ id: string }>>('/api/v1/alertas?estado=ACTIVE&size=1');
-      if (!list.contenido.length) return null; // no hay alerta activa
-      const alert = await ms03<{ fechaActivacion: string | null }>(`/api/v1/alertas/${list.contenido[0].id}`);
-      return alert.fechaActivacion ? { startedAt: alert.fechaActivacion } : null;
+      const page = await alertsApi.list({ status: 'ACTIVE', size: 1 });
+      if (!page.content.length) return null; // no hay alerta activa
+      const alert = await alertsApi.get(page.content[0].id);
+      return alert.activatedAt ? { startedAt: alert.activatedAt } : null;
     } catch (e) {
       console.warn('MS03 no disponible, se usa el dato local de demostración.', e);
       return localApi.getActiveSimulation();
