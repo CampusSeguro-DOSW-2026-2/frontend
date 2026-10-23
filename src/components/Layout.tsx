@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Bell, Chat, Home, MapIcon, User } from './Icons';
 
 const NAV = [
-  { href: '#/', icon: <Home />, label: 'Inicio' },
+  { href: '#/simulacro', icon: <Home />, label: 'Inicio' },
   { href: '#/rutas', icon: <MapIcon />, label: 'Rutas' },
   { href: '#/reportar', icon: <Bell />, label: 'Reportar' },
   { href: '#/tutor', icon: <Chat />, label: 'Tutor AI' },
@@ -12,7 +12,7 @@ const NAV = [
 export function Navbar({ current }: { current: string }) {
   return (
     <nav className="navbar" aria-label="Navegación principal">
-      <a className="brand" href="#/">CampusSeguro</a>
+      <a className="brand" href="#/simulacro">CampusSeguro</a>
       <ul>
         {NAV.map((n) => (
           <li key={n.href}>

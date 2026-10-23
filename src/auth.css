@@ -24,3 +24,42 @@ a.btn{text-decoration:none}
 .reg-photo{position:relative}
 .reg-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 @media(max-width:900px){.reg{grid-template-columns:1fr}.reg-photo{display:none}.reg h1{font-size:26px}}
+
+/* Inicio de sesión (mockup inicio-sesion-web, 1440 px).
+   Las medidas del mockup son el tope: al achicar la ventana todo se escala de forma fluida con clamp()
+   (cqw = ancho de .login) y a partir de 900 px pasa a una sola columna sin la foto. */
+.login{container-type:inline-size;grid-template-columns:minmax(0,59fr) minmax(0,41fr)}
+.login .reg-main{gap:0;padding:40px 24px 51px 44px}
+.login-logo{display:block;width:186px;max-width:100%;height:auto;translate:-7.5% 0}
+.login h1{margin-top:41px;font-size:40px;text-wrap:balance}
+.login .reg-sub{margin-top:32px}
+.login .reg-form{max-width:474px;gap:18px;margin-top:63px}
+.login .reg-form .field{gap:7px}
+.login .reg-form .input{min-height:58px;padding:0 14px 0 16px}
+.login .input .toggle svg{width:21px;height:21px}
+.login .reg-form .btn{width:min(288px,100%);height:58px;margin-top:7px;border-radius:16px;font-size:15px}
+.remember{display:flex;align-items:center;justify-content:center;gap:8px;font:700 11px/16px 'Outfit',sans-serif;color:var(--ink);cursor:pointer}
+.remember input{appearance:none;-webkit-appearance:none;flex:none;width:21px;height:21px;margin:0;border:1.5px solid var(--mut);border-radius:50%;background:#fff;cursor:pointer}
+.remember input:checked{border-color:var(--red);background:var(--red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/14px no-repeat}
+.login-forgot{align-self:center;margin-top:7px;font:600 14px/18px 'Outfit',sans-serif;color:var(--red);text-decoration:none}
+.login-forgot:hover{text-decoration:underline}
+/* Foto: en el mockup va a tamaño natural, centrada. Si el panel es más grande que la foto, se amplía para cubrirlo. */
+.login .reg-photo{overflow:hidden}
+.login .reg-photo img{inset:50% auto auto 50%;width:auto;height:auto;min-width:100%;min-height:100%;max-width:none;transform:translate(calc(-50% + 9px),-50%)}
+/* Escalado fluido (el panel del formulario mide 59 % del ancho; por debajo de 900 px, el 100 %) */
+@supports (width:1cqw){
+  .login-logo{width:clamp(120px,12.9cqw,186px)}
+  .login h1{font-size:clamp(30px,calc((59cqw - 68px) / 12.6),40px);margin-top:clamp(22px,2.85cqw,41px)}
+  .login .reg-sub{margin-top:clamp(18px,2.22cqw,32px)}
+  .login .reg-form{margin-top:clamp(36px,4.4cqw,63px)}
+}
+@media(max-width:900px){
+  .login{grid-template-columns:minmax(0,1fr)}
+  .login .reg-main{padding:32px 24px 40px}
+  .login-logo{translate:none}
+  .login h1{font-size:30px}
+  @supports (width:1cqw){
+    .login-logo{width:clamp(120px,40cqw,186px)}
+    .login h1{font-size:clamp(26px,calc((100cqw - 48px) / 12.6),40px)}
+  }
+}
