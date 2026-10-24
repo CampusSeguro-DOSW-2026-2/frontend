@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Bell, Chat, Home, MapIcon, User } from './Icons';
+import { Bell, Chat, Home, MapIcon, User, Users } from './Icons';
 
 const NAV = [
   { href: '#/simulacro', icon: <Home />, label: 'Inicio' },
@@ -9,14 +9,26 @@ const NAV = [
   { href: '#/perfil', icon: <User />, label: 'Perfil' },
 ];
 
-export function Navbar({ current }: { current: string }) {
+// Solo para administradores y auditores (KAIR-51)
+const USERS_NAV = { href: '#/usuarios', icon: <Users />, label: 'Usuarios' };
+
+// "Perfil" también queda activo en #/perfil/editar, "Usuarios" en #/usuarios/estado, etc.
+const isCurrent = (current: string, href: string) => {
+  const path = href.slice(1);
+  return current === path || current.startsWith(`${path}/`);
+};
+
+export function Navbar({ current, roles = [] }: { current: string; roles?: string[] }) {
+  const canList = roles.includes('ADMIN') || roles.includes('AUDITOR');
+  const items = canList ? [...NAV.slice(0, -1), USERS_NAV, NAV[NAV.length - 1]] : NAV;
+
   return (
     <nav className="navbar" aria-label="Navegación principal">
       <a className="brand" href="#/simulacro">CampusSeguro</a>
       <ul>
-        {NAV.map((n) => (
+        {items.map((n) => (
           <li key={n.href}>
-            <a href={n.href} aria-current={current === n.href.slice(1) ? 'page' : undefined}>{n.icon}{n.label}</a>
+            <a href={n.href} aria-current={isCurrent(current, n.href) ? 'page' : undefined}>{n.icon}{n.label}</a>
           </li>
         ))}
       </ul>
