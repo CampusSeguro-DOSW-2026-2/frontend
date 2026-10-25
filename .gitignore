@@ -25,3 +25,6 @@ dist-ssr
 
 # Notas locales del asistente
 CLAUDE.md
+
+# Variables locales (copiar de .env.example)
+.env
