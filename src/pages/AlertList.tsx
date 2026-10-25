@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Edit, Filter, Logo, Plus, Search } from '../components/Icons';
+import { Edit, EmptyLogo, Filter, Plus, Search } from '../components/Icons';
 import { alertsApi, type Alert, type AlertStatus } from '../services/alerts';
 import { ROLE_ITEMS, SCOPE_ITEMS, labelOf, listEs, scopeIdsOf } from '../services/catalog';
 
@@ -73,7 +73,7 @@ export default function AlertList() {
         {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={reload}>Reintentar</button></p>}
         {!(error && items.length === 0) && <section className={`alist${empty ? ' empty' : ''}`}>
           {loading && items.length === 0 && <p className="notice">Cargando alertas…</p>}
-          {empty && <><Logo size={345} variant="black" /><h2>El campus está seguro. No hay alertas</h2></>}
+          {empty && <><EmptyLogo /><h2>El campus está seguro. No hay alertas</h2></>}
           {shown.map((a, i) => {
             const s = ST[a.status];
             const scope = a.scope.type === 'CAMPUS' ? 'Todo el campus' : scopeIdsOf(a.scope).map((id) => labelOf(SCOPE_ITEMS, id)).join(', ');

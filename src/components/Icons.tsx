@@ -13,7 +13,6 @@ import profile from '../assets/icons/profile.svg';
 import search from '../assets/icons/search.svg';
 import send from '../assets/icons/send.svg';
 import logoRed from '../assets/icons/logo-red.svg';
-import logoBlack from '../assets/icons/logo-black.svg';
 
 // Iconos oficiales (docs/mockups/icons). Se pintan como máscara para heredar el color del texto (currentColor).
 function Ico({ src, w, h }: { src: string; w: number; h: number }) {
@@ -38,6 +37,6 @@ export const FilePen = () => <Ico src={filePen} w={14} h={14} />;
 export const Check = () => <svg className="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>;
 export const Close = () => <svg className="x" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" /></svg>;
 
-export const Logo = ({ size = 64, variant = 'red' }: { size?: number; variant?: 'red' | 'black' }) => (
-  <img src={variant === 'red' ? logoRed : logoBlack} height={size} alt="" aria-hidden="true" style={{ width: 'auto', objectFit: 'contain' }} />
-);
+export const Logo = () => <img src={logoRed} width={63} height={64} alt="" aria-hidden="true" style={{ objectFit: 'contain' }} />;
+// El mockup del listado vacío muestra el logo relleno en negro: se usa la silueta del logo oficial como máscara.
+export const EmptyLogo = () => <span className="ico empty-logo" style={{ '--w': '337px', '--h': '344px', WebkitMaskImage: `url("${logoRed}")`, maskImage: `url("${logoRed}")` } as CSSProperties} aria-hidden="true" />;
