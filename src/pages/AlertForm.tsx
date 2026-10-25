@@ -10,6 +10,24 @@ const typeOf = (id: string) => (id === 'CAMPUS' ? 'CAMPUS' : id.startsWith('BLD'
 const toLocalInput = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 const msg = (e: unknown) => (e instanceof ApiError || e instanceof Error ? e.message : 'Error inesperado.');
 
+// Errores de MS03 junto a cada campo (details.field viene con nombres del contrato en inglés).
+const FIELD: Record<string, [string, string]> = {
+  title: ['title', 'Revisa el título (obligatorio, máximo 150 caracteres).'],
+  instructions: ['instructions', 'Revisa la descripción (obligatoria, máximo 1000 caracteres).'],
+  scope: ['scope', 'Revisa los edificios y zonas seleccionados.'],
+  recipients: ['roles', 'Revisa los destinatarios seleccionados.'],
+  activationAt: ['start', 'Debe ser una fecha futura'],
+};
+const fieldErrors = (e: ApiError) => {
+  const out: Record<string, string> = {};
+  if (e.code === 'INVALID_ACTIVATION_DATE') out.start = FIELD.activationAt[1];
+  for (const d of e.details) {
+    const f = FIELD[d.field.split(/[.[]/)[0]];
+    if (f) out[f[0]] = f[1];
+  }
+  return out;
+};
+
 export default function AlertForm({ editId }: { editId?: string }) {
   const [title, setTitle] = useState('');
   const [instructions, setInstructions] = useState('');
@@ -62,20 +80,25 @@ export default function AlertForm({ editId }: { editId?: string }) {
       scope: t === 'CAMPUS' ? { type: 'CAMPUS' } : { type: t, ids: scopeIds },
       recipients: roles.map((id) => ({ type: 'ROLE' as const, id })),
     };
+    const activationAt = start ? new Date(start).toISOString() : undefined;
     try {
-      const id = editId ?? (await alertsApi.create(payload)).id;
-      if (editId) await alertsApi.update(editId, payload);
-      if (!scheduled) {
-        try {
-          if (start) await alertsApi.schedule(id, new Date(start).toISOString()); else await alertsApi.activate(id);
-        } catch (err) {
-          setApiError(`La alerta quedó guardada como borrador, pero no pudo emitirse: ${msg(err)}`);
-          if (!editId) window.location.hash = `#/alertas/${id}/editar`;
-          return;
+      if (!editId) {
+        // Una sola llamada: con fecha queda programada; sin fecha se emite de inmediato.
+        await alertsApi.create(activationAt ? { ...payload, activationAt } : { ...payload, activateImmediately: true });
+      } else {
+        await alertsApi.update(editId, payload);
+        if (!scheduled && activationAt) {
+          try { await alertsApi.schedule(editId, activationAt); } catch (err) {
+            setApiError(`Los cambios se guardaron, pero la alerta no pudo programarse: ${msg(err)}`);
+            return;
+          }
         }
       }
       window.location.hash = '#/alertas';
-    } catch (err) { setApiError(msg(err)); } finally { setBusy(false); }
+    } catch (err) {
+      setApiError(msg(err));
+      if (err instanceof ApiError) setErrors(fieldErrors(err));
+    } finally { setBusy(false); }
   };
 
   const scopeText = scopeIds.map((i) => labelOf(SCOPE_ITEMS, i)).join(' · ');
@@ -129,7 +152,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
           <p className="foot">Completa los campos obligatorios y revisa el mensaje antes de emitir.</p>
           {apiError && <p className="notice err" role="alert">{apiError}</p>}
           <div className="actions">
-            <button type="button" className="btn red" disabled={busy} onClick={submit}><Send />{busy ? 'Enviando…' : scheduled ? 'Guardar cambios' : 'Emitir alerta'}</button>
+            <button type="button" className="btn red" disabled={busy} onClick={submit}><Send />{busy ? 'Enviando…' : editId ? 'Guardar cambios' : 'Emitir alerta'}</button>
             <button type="button" className="btn white" onClick={() => { window.location.hash = '#/alertas'; }}>Cancelar</button>
           </div>
         </aside>
