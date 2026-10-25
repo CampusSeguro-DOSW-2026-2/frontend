@@ -71,7 +71,7 @@ export default function AlertList() {
           )}
         </div>
         {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={reload}>Reintentar</button></p>}
-        <section className={`alist${empty ? ' empty' : ''}`}>
+        {!(error && items.length === 0) && <section className={`alist${empty ? ' empty' : ''}`}>
           {loading && items.length === 0 && <p className="notice">Cargando alertas…</p>}
           {empty && <><Logo size={345} variant="black" /><h2>El campus está seguro. No hay alertas</h2></>}
           {shown.map((a, i) => {
@@ -90,7 +90,7 @@ export default function AlertList() {
               </article>
             );
           })}
-        </section>
+        </section>}
         {pg.page + 1 < pg.totalPages && <button type="button" className="btn white more" disabled={loading} onClick={loadMore}>Cargar más</button>}
       </main>
     </>
