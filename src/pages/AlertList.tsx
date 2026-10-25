@@ -18,15 +18,17 @@ export default function AlertList() {
   const [status, setStatus] = useState<AlertStatus | ''>('');
   const [showFilter, setShowFilter] = useState(false);
 
-  const load = useCallback(async (page: number, append: boolean) => {
-    setLoading(true); setError('');
+  // Solo actualiza estado tras la respuesta; el "cargando" lo marcan los eventos que piden datos.
+  const fetchPage = useCallback(async (page: number, append: boolean) => {
     try {
       const p = await alertsApi.list({ status: status || undefined, page, size: 10 });
       const full = await Promise.all(p.content.map((s) => alertsApi.get(s.id))); // el resumen no trae instrucciones ni destinatarios
-      setItems((cur) => (append ? [...cur, ...full] : full)); setPg({ page: p.page, totalPages: p.totalPages });
+      setItems((cur) => (append ? [...cur, ...full] : full)); setPg({ page: p.page, totalPages: p.totalPages }); setError('');
     } catch (e) { setError(e instanceof Error ? e.message : 'Error inesperado.'); } finally { setLoading(false); }
   }, [status]);
-  useEffect(() => { load(0, false); }, [load]);
+  useEffect(() => { void fetchPage(0, false); }, [fetchPage]);
+  const load = (page: number, append: boolean) => { setLoading(true); setError(''); return fetchPage(page, append); };
+  const changeStatus = (s: AlertStatus | '') => { if (s === status) return; setLoading(true); setItems([]); setStatus(s); };
 
   const act = async (fn: () => Promise<unknown>, ask: string) => {
     if (!window.confirm(ask)) return;
@@ -47,7 +49,7 @@ export default function AlertList() {
           <button type="button" aria-label="Filtrar por estado" aria-expanded={showFilter} onClick={() => setShowFilter(!showFilter)}><Filter /></button>
           {showFilter && (
             <div className="filterpop"><label htmlFor="fs">Estado</label>
-              <select id="fs" value={status} onChange={(e) => setStatus(e.target.value as AlertStatus | '')}>
+              <select id="fs" value={status} onChange={(e) => changeStatus(e.target.value as AlertStatus | '')}>
                 <option value="">Todos</option>{(Object.keys(ST) as AlertStatus[]).map((s) => <option key={s} value={s}>{ST[s].label}</option>)}
               </select></div>
           )}
