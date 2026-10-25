@@ -63,3 +63,13 @@ export interface UserSearch { email: string; state: string; role: string; page: 
 
 // Resultado del cambio de estado de un usuario
 export interface StatusChange { id: string; previous: string; next: string }
+
+// Roles y permisos (MS01 · KAIR-41 y KAIR-36)
+// Un rol del catálogo con los códigos de permiso (ms:recurso:acción) que le concede la matriz
+export interface RolePermissions { role: string; permissions: string[] }
+
+// Roles que tiene un usuario después de cambiarlos
+export interface RoleChange { id: string; roles: string[] }
+
+// Cambio pedido en el formulario F-09: roles a agregar y roles a retirar
+export interface RolesDraft { add: string[]; remove: string[] }

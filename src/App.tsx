@@ -10,6 +10,8 @@ import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
 import Users from './pages/Users';
 import ChangeStatus from './pages/ChangeStatus';
+import Roles from './pages/Roles';
+import ChangeRoles from './pages/ChangeRoles';
 import { getSession } from './services/session';
 import type { UserSummary } from './types';
 import './styles.css';
@@ -21,7 +23,7 @@ const path = () => window.location.hash.replace(/^#/, '') || '/';
 const FULL_SCREEN = ['/', '/login', '/registro'];
 
 // Pantallas que exigen una sesión iniciada: sin ella se envía al inicio de sesión
-const NEEDS_SESSION = ['/perfil', '/perfil/editar', '/usuarios', '/usuarios/estado'];
+const NEEDS_SESSION = ['/perfil', '/perfil/editar', '/usuarios', '/usuarios/estado', '/roles', '/roles/editar'];
 
 const NO_ACCESS = (
   <main className="page"><p className="notice err" role="alert">No tienes permisos para ver esta sección.</p></main>
@@ -32,6 +34,8 @@ export default function App() {
   const [session, setSession] = useState(getSession);
   // Usuarios marcados en el listado (administrador) para cambiarles el estado
   const [selected, setSelected] = useState<UserSummary[]>([]);
+  // Usuarios marcados en el listado de roles (administrador); se descartan al cambiar de usuario
+  const [roleSelection, setRoleSelection] = useState<{ owner?: string; users: UserSummary[] }>({ users: [] });
 
   useEffect(() => {
     const onChange = () => { setRoute(path()); setSession(getSession()); };
@@ -42,6 +46,9 @@ export default function App() {
   // Al cambiar de usuario no se arrastra la selección del anterior
   const userId = session?.user.id;
   useEffect(() => { setSelected([]); }, [userId]);
+
+  const roleSelected = roleSelection.owner === userId ? roleSelection.users : [];
+  const setRoleSelected = (users: UserSummary[]) => setRoleSelection({ owner: userId, users });
 
   const roles = session?.user.roles ?? [];
   const isAdmin = roles.includes('ADMIN');
@@ -72,6 +79,16 @@ export default function App() {
           ? <ChangeStatus session={session} selected={selected} onSelectedChange={setSelected} />
           : NO_ACCESS);
         break;
+      case '/roles':
+        page = session && (isAdmin
+          ? <Roles session={session} selected={roleSelected} onSelectedChange={setRoleSelected} />
+          : NO_ACCESS);
+        break;
+      case '/roles/editar':
+        page = session && (isAdmin
+          ? <ChangeRoles session={session} selected={roleSelected} onSelectedChange={setRoleSelected} />
+          : NO_ACCESS);
+        break;
       default: page = <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
     }
   }
@@ -81,7 +98,7 @@ export default function App() {
       {!FULL_SCREEN.includes(route) && <Navbar current={route} roles={roles} />}
       {page}
       <footer className="demo-nav">
-        Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a>
+        Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a>
       </footer>
     </>
   );

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Bell, Chat, Home, MapIcon, User, Users } from './Icons';
+import { Bell, Chat, Home, MapIcon, ShieldCheck, User, Users } from './Icons';
 
 const NAV = [
   { href: '#/simulacro', icon: <Home />, label: 'Inicio' },
@@ -12,15 +12,22 @@ const NAV = [
 // Solo para administradores y auditores (KAIR-51)
 const USERS_NAV = { href: '#/usuarios', icon: <Users />, label: 'Usuarios' };
 
-// "Perfil" también queda activo en #/perfil/editar, "Usuarios" en #/usuarios/estado, etc.
+// Solo para administradores: gestión de roles y permisos (RF-MS01-05)
+const ROLES_NAV = { href: '#/roles', icon: <ShieldCheck />, label: 'Roles' };
+
+// "Perfil" también queda activo en #/perfil/editar, "Usuarios" en #/usuarios/estado, "Roles" en #/roles/editar, etc.
 const isCurrent = (current: string, href: string) => {
   const path = href.slice(1);
   return current === path || current.startsWith(`${path}/`);
 };
 
 export function Navbar({ current, roles = [] }: { current: string; roles?: string[] }) {
-  const canList = roles.includes('ADMIN') || roles.includes('AUDITOR');
-  const items = canList ? [...NAV.slice(0, -1), USERS_NAV, NAV[NAV.length - 1]] : NAV;
+  const isAdmin = roles.includes('ADMIN');
+  const canList = isAdmin || roles.includes('AUDITOR');
+  const items = [...NAV.slice(0, -1)];
+  if (canList) items.push(USERS_NAV);
+  if (isAdmin) items.push(ROLES_NAV);
+  items.push(NAV[NAV.length - 1]);
 
   return (
     <nav className="navbar" aria-label="Navegación principal">

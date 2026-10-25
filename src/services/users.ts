@@ -13,7 +13,7 @@ const MS01_URL = (import.meta.env.VITE_MS01_URL as string | undefined) ?? 'http:
 const NETWORK_ERROR = 'No se pudo conectar con el servidor. Intenta de nuevo en unos minutos.';
 export const GENERIC_ERROR = 'Ocurrió un error inesperado. Intenta de nuevo más tarde.';
 
-type Json = Record<string, unknown>;
+export type Json = Record<string, unknown>;
 
 /** Mensaje listo para mostrar a partir de cualquier error. */
 export function errorMessage(err: unknown): string {
@@ -28,7 +28,7 @@ function authHeaders(session: Session): Record<string, string> {
   };
 }
 
-async function call(
+export async function call(
   session: Session,
   path: string,
   init: { method?: string; body?: unknown } = {},
