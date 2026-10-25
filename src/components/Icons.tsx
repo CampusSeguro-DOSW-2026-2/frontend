@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react';
 import add from '../assets/icons/add.svg';
 import bell from '../assets/icons/bell.svg';
 import calendar from '../assets/icons/calendar.svg';
+import check from '../assets/icons/check.svg';
+import cross from '../assets/icons/cross.svg';
 import chat from '../assets/icons/chat.svg';
 import edit from '../assets/icons/edit.svg';
 import filePen from '../assets/icons/file-pen-line.svg';
@@ -33,9 +35,8 @@ export const Info = () => <Ico src={info} w={20} h={20} />;
 export const Send = () => <Ico src={send} w={17} h={17} />;
 export const FilePen = () => <Ico src={filePen} w={14} h={14} />;
 
-// Sin equivalente en el set oficial: se mantienen los trazos anteriores.
-export const Check = () => <svg className="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>;
-export const Close = () => <svg className="x" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" /></svg>;
+export const Check = () => <Ico src={check} w={20} h={19} />;
+export const Close = () => <Ico src={cross} w={12} h={12} />;
 
 export const Logo = () => <img src={logoRed} width={63} height={64} alt="" aria-hidden="true" style={{ objectFit: 'contain' }} />;
 // El mockup del listado vacío muestra el logo relleno en negro: se usa la silueta del logo oficial como máscara.
