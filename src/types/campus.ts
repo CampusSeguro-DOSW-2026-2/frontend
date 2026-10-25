@@ -102,6 +102,19 @@ export interface RutaConsultada {
   motivo?: string;
   destinoActivo?: boolean;
   mensaje?: string;
+  recomendacionesPreventivas: RecomendacionPreventiva[];
+}
+
+export interface RecomendacionPreventiva {
+  id: string;
+  ambito: 'EDIFICIO' | 'TIPO_ESPACIO';
+  edificioId?: string;
+  tipoEspacio?: TipoEspacio;
+  titulo: string;
+  recomendacion: string;
+  estado: Estado;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ErrorResponse {
