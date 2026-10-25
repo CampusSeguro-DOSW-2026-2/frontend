@@ -5,7 +5,6 @@ body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.5 'Geist',sy
 h1,h2,h3,p{margin:0}
 .of{font-family:'Outfit',sans-serif}
 :focus-visible{outline:3px solid var(--blue);outline-offset:2px}
-svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .ico{display:inline-block;width:var(--w);height:var(--h);flex:none;background:currentColor;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-position:center;mask-position:center}
 /* navegación */
 .navbar{display:flex;justify-content:space-between;align-items:center;height:80px;padding:0 48px;background:#fff;border-bottom:1px solid var(--line)}
@@ -65,7 +64,6 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .num{display:grid;place-items:center;width:40px;height:40px;border-radius:999px;background:var(--pale);color:var(--amber);font:800 18px/23px 'Outfit',sans-serif}
 .step p{font-weight:600;font-size:18px;line-height:150%}
 .title+.steps{margin-top:-8px}
-.btn svg.i{width:20px;height:20px}
 .btns{display:flex;gap:24px}.btns .btn{flex:1}
 /* pantalla 3 */
 .stats{display:flex;gap:24px}
@@ -88,14 +86,15 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 /* ===== Alertas ===== */
 .brand{display:flex;align-items:center;gap:16px}
 .req{color:var(--red)}
-svg.x{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
 .alert-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:36px;padding:40px 48px}
 .af{display:flex;flex-direction:column;gap:20px;min-width:0}
 .fgroup{display:flex;flex-direction:column;gap:8px}.fgroup.half{max-width:462px}
 .flabel{font:700 20px/120% 'Outfit',sans-serif}.plabel{font:700 14px/18px 'Outfit',sans-serif}
 .input.tall{min-height:187px}.input.tall textarea{min-height:150px;height:100%}
 .input input:disabled{color:var(--mut)}
-.input input[type=datetime-local]{position:static}.input input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:auto;height:auto;opacity:0;cursor:pointer}
+.input input[type=datetime-local]{position:static}
+.dt .dtv{position:absolute;left:46px;right:16px;top:50%;transform:translateY(-50%);pointer-events:none;font:400 14px/150% 'Geist',sans-serif;color:var(--ink);white-space:nowrap;overflow:hidden}.dt .dtv.empty,.dt input:disabled~.dtv{color:var(--mut)}
+.dt input:not(:focus){color:transparent}.dt input:focus~.dtv{display:none}.input input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:auto;height:auto;opacity:0;cursor:pointer}
 .pgroup{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
 .pbox{display:flex;flex-direction:column;gap:16px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;min-height:142px}
 .chip2{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--red);background:var(--cream);color:var(--red);border-radius:999px;font:600 12px/16px 'Geist',sans-serif}
