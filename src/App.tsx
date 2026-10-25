@@ -3,6 +3,7 @@ import { Navbar } from './components/Layout';
 import CreateSimulation from './pages/CreateSimulation';
 import ActiveSimulation from './pages/ActiveSimulation';
 import BrigadistaPanel from './pages/BrigadistaPanel';
+import RouteQuery from './pages/campus/RouteQuery';
 import './styles.css';
 
 // Router mínimo por hash para no añadir dependencias; sustituible por react-router.
@@ -17,6 +18,7 @@ export default function App() {
     case '/': case '/simulacro': page = <ActiveSimulation />; break;
     case '/crear-simulacro': page = <CreateSimulation />; break;
     case '/brigadista': page = <BrigadistaPanel />; break;
+    case '/rutas': page = <RouteQuery />; break;
     default: page = <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
   }
   return (

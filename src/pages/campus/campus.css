@@ -1,0 +1,33 @@
+.cs-form{display:flex;gap:24px;align-items:flex-end;flex-wrap:wrap}
+.cs-form .field{flex:1 1 260px}
+.cs-form .btn{flex:none;width:220px}
+.cs-form select{flex:1;border:0;outline:0;background:none;font:400 14px/150% 'Geist',sans-serif;color:var(--ink);min-width:0;cursor:pointer}
+.cs-form select:disabled{color:var(--mut);cursor:default}
+.cs-opcional{font:400 13px/17px 'Geist',sans-serif;color:var(--mut)}
+.cs-resultados{display:flex;flex-direction:column;gap:20px}
+.cs-cabecera{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px}
+.cs-resumen{font-size:14px;color:var(--mut)}
+.cs-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;align-items:start}
+.cs-ruta{display:flex;flex-direction:column;gap:20px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}
+.cs-ruta.stop{border:1.5px solid var(--red)}
+.cs-ruta .ctop{gap:16px;align-items:flex-start}
+.cs-ruta h3{font:700 20px/26px 'Outfit',sans-serif;overflow-wrap:anywhere}
+.cs-ruta .sm p{font-size:15px;line-height:150%}
+.cs-recorrido{white-space:pre-line}
+.cs-estado{flex:none;font:800 12px/15px 'Outfit',sans-serif;padding:6px 10px;border-radius:6px}
+.cs-estado.ok{background:#DCFCE7;color:#166534}
+.cs-estado.warn{background:var(--pale);color:#92400E}
+.cs-estado.stop{background:var(--cream);color:var(--red)}
+.cs-estado.info{background:var(--bg);color:var(--mut);border:1px solid var(--line)}
+.cs-destino{display:flex;gap:12px;align-items:flex-start;background:var(--cream);border-radius:12px;padding:16px}
+.cs-destino svg{width:24px;height:24px;color:var(--red)}
+.cs-destino small{font-size:13px;line-height:17px;color:var(--mut)}
+.cs-destino p{font:700 18px/130% 'Outfit',sans-serif;margin-top:4px}
+.cs-destino span{font-size:14px;color:var(--mut)}
+.cs-alert{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid;border-radius:12px;font-size:14px;line-height:150%}
+.cs-alert small{font-size:12px;opacity:.85}
+.cs-alert.info{background:#EFF6FF;border-color:#BFDBFE;color:#1E3A8A}
+.cs-alert.warn{background:#FFFBEB;border-color:#FCD34D;color:#92400E}
+.cs-alert.stop{background:#FEF2F2;border-color:#FCA5A5;color:#7F1D1D}
+.cs-alert.ok{display:none}
+@media(max-width:900px){.cs-form{flex-direction:column;align-items:stretch}.cs-form .field{flex:none}.cs-form .btn{width:100%}.cs-lista{grid-template-columns:1fr}}
