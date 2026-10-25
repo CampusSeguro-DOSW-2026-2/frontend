@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../components/Layout';
 import { MultiSelect } from '../components/MultiSelect';
-import { Calendar } from '../components/Icons';
+import { DateTimeField } from '../components/DateTimeField';
 import { api } from '../services/api';
 import type { Option, SimulationDraft } from '../types';
 
@@ -71,7 +71,7 @@ export default function CreateSimulation() {
             {([['start', 'Inicio'], ['end', 'Finalización']] as const).map(([k, l]) => (
               <div className="field" key={k}>
                 <label htmlFor={k}>{l} <span style={{ color: 'var(--red)' }}>*</span></label>
-                <div className={`input${errors[k] ? ' bad' : ''}`}><Calendar /><input id={k} type="datetime-local" value={form[k]} onChange={(e) => set(k, e.target.value)} /></div>
+                <DateTimeField id={k} value={form[k]} onChange={(v) => set(k, v)} invalid={!!errors[k]} />
                 {errors[k] && <span className="error" role="alert">{errors[k]}</span>}
               </div>
             ))}

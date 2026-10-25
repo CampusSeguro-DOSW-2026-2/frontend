@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../components/Layout';
 import { PickerBox } from '../components/PickerBox';
-import { Calendar, FilePen, Info, Send } from '../components/Icons';
+import { DateTimeField } from '../components/DateTimeField';
+import { FilePen, Info, Send } from '../components/Icons';
 import { alertsApi, type Alert, type AlertInput } from '../services/alerts';
 import { ApiError } from '../services/http';
 import { ROLE_ITEMS, SCOPE_ITEMS, labelOf, listEs, scopeIdsOf } from '../services/catalog';
@@ -126,7 +127,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
           </div>
           <div className="fgroup half">
             <label className="plabel" htmlFor="start">Inicio</label>
-            <div className={`input${errors.start ? ' bad' : ''}`}><Calendar /><input id="start" type="datetime-local" value={start} disabled={scheduled} onChange={(e) => setStart(e.target.value)} /></div>
+            <DateTimeField id="start" value={start} onChange={setStart} disabled={scheduled} invalid={!!errors.start} />
             <span className="help">{scheduled ? 'La alerta ya está programada.' : 'Opcional. Si lo dejas vacío, la alerta se emite de inmediato.'}</span>
             {errors.start && <span className="error" role="alert">{errors.start}</span>}
           </div>
