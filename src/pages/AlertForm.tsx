@@ -133,7 +133,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
           <div className="fgroup">
             <span className="flabel">Alcance y destinatarios{star(!editId)}</span>
             <div className="two">
-              <PickerBox label="Edificios y zonas" required={!editId} help="La alerta admite solo edificios, solo zonas o todo el campus." editLabel="Editar edificios y zonas" items={SCOPE_ITEMS} selected={scopeIds} onToggle={toggleScope} error={errors.scope} />
+              <PickerBox label="Edificios y zonas" required={!editId} help="La alerta se dirigirá a los lugares seleccionados." editLabel="Editar edificios y zonas" items={SCOPE_ITEMS} selected={scopeIds} onToggle={toggleScope} error={errors.scope} />
               <PickerBox label="Destinatarios" required={!editId} help="Grupos que recibirán el aviso en este alcance." editLabel="Editar destinatarios" items={ROLE_ITEMS} selected={roles} onToggle={toggleRole} error={errors.roles} />
             </div>
           </div>

@@ -73,7 +73,7 @@ export default function AlertList() {
         {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={reload}>Reintentar</button></p>}
         <section className={`alist${empty ? ' empty' : ''}`}>
           {loading && items.length === 0 && <p className="notice">Cargando alertas…</p>}
-          {empty && <><Logo size={340} /><h2>El campus está seguro. No hay alertas</h2></>}
+          {empty && <><Logo size={345} variant="black" /><h2>El campus está seguro. No hay alertas</h2></>}
           {shown.map((a, i) => {
             const s = ST[a.status];
             const scope = a.scope.type === 'CAMPUS' ? 'Todo el campus' : scopeIdsOf(a.scope).map((id) => labelOf(SCOPE_ITEMS, id)).join(', ');
