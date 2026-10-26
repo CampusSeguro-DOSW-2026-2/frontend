@@ -12,7 +12,7 @@ const NAV = [
 export function Navbar({ current }: { current: string }) {
   return (
     <nav className="navbar" aria-label="Navegación principal">
-      <a className="brand" href="#/"><Logo />CampusSeguro</a>
+      <a className="brand" href="#/">{current.startsWith('/alertas') && <Logo />}CampusSeguro</a>
       <ul>
         {NAV.map((n) => (
           <li key={n.href}>

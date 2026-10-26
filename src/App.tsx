@@ -30,9 +30,10 @@ export default function App() {
     <>
       <Navbar current={route} />
       {page}
-      <footer className="demo-nav">
+      {/* Solo en desarrollo: acceso a las pantallas de prueba (la barra del mockup no tiene "Alertas"). */}
+      {import.meta.env.DEV && <footer className="demo-nav">
         Vistas de demostración: <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a> · <a href="#/alertas">Alertas</a>
-      </footer>
+      </footer>}
     </>
   );
 }

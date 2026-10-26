@@ -1,27 +1,43 @@
-import type { ReactNode } from 'react';
-const I = ({ children }: { children: ReactNode }) => <svg className="i" viewBox="0 0 24 24" aria-hidden="true">{children}</svg>;
-export const Home = () => <I><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M9 22V12h6v10" /></I>;
-export const MapIcon = () => <I><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z" /><path d="M9 3v15M15 6v15" /></I>;
-export const Bell = () => <I><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></I>;
-export const Chat = () => <I><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></I>;
-export const User = () => <I><circle cx="12" cy="8" r="4" /><path d="M20 21a8 8 0 0 0-16 0" /></I>;
-export const Calendar = () => <I><rect width="18" height="18" x="3" y="4" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></I>;
-export const Check = () => <I><path d="M20 6 9 17l-5-5" /></I>;
-export const Search = () => <I><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></I>;
-export const Filter = () => <I><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></I>;
-export const Plus = () => <I><path d="M5 12h14M12 5v14" /></I>;
-export const Edit = () => <I><path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.4 2.6a2 2 0 0 1 3 3L12 15l-4 1 1-4z" /></I>;
-export const Info = () => <I><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></I>;
-export const Send = () => <I><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" /></I>;
-export const FilePen = () => <I><path d="M12.5 22H18a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v9" /><path d="M14 2v4a2 2 0 0 0 2 2h4M10.4 12.6a2 2 0 0 1 3 3L8 21l-4 1 1-4z" /></I>;
-export const Close = () => <svg className="x" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" /></svg>;
-export const Logo = ({ size = 64 }: { size?: number }) => (
-  <img
-    src="/logo.svg"
-    width={size}
-    height={size}
-    alt=""
-    aria-hidden="true"
-    style={{ objectFit: 'contain' }}
-  />
-);
+import type { CSSProperties } from 'react';
+import add from '../assets/icons/add.svg';
+import bell from '../assets/icons/bell.svg';
+import calendar from '../assets/icons/calendar.svg';
+import check from '../assets/icons/check.svg';
+import cross from '../assets/icons/cross.svg';
+import chat from '../assets/icons/chat.svg';
+import edit from '../assets/icons/edit.svg';
+import filePen from '../assets/icons/file-pen-line.svg';
+import filter from '../assets/icons/filter.svg';
+import home from '../assets/icons/home.svg';
+import info from '../assets/icons/info.svg';
+import map from '../assets/icons/map.svg';
+import profile from '../assets/icons/profile.svg';
+import search from '../assets/icons/search.svg';
+import send from '../assets/icons/send.svg';
+import logoRed from '../assets/icons/logo-red.svg';
+
+// Iconos oficiales (docs/mockups/icons). Se pintan como máscara para heredar el color del texto (currentColor).
+function Ico({ src, w, h }: { src: string; w: number; h: number }) {
+  const style = { '--w': `${w}px`, '--h': `${h}px`, WebkitMaskImage: `url("${src}")`, maskImage: `url("${src}")` } as CSSProperties;
+  return <span className="ico" style={style} aria-hidden="true" />;
+}
+export const Home = () => <Ico src={home} w={18} h={20} />;
+export const MapIcon = () => <Ico src={map} w={18} h={20} />;
+export const Bell = () => <Ico src={bell} w={18} h={15} />;
+export const Chat = () => <Ico src={chat} w={18} h={20} />;
+export const User = () => <Ico src={profile} w={15} h={20} />;
+export const Calendar = () => <Ico src={calendar} w={18} h={18} />;
+export const Search = () => <Ico src={search} w={24} h={24} />;
+export const Filter = () => <Ico src={filter} w={24} h={24} />;
+export const Plus = () => <Ico src={add} w={20} h={20} />;
+export const Edit = () => <Ico src={edit} w={19} h={19} />;
+export const Info = () => <Ico src={info} w={20} h={20} />;
+export const Send = () => <Ico src={send} w={17} h={17} />;
+export const FilePen = () => <Ico src={filePen} w={14} h={14} />;
+
+export const Check = () => <Ico src={check} w={20} h={19} />;
+export const Close = () => <Ico src={cross} w={12} h={12} />;
+
+export const Logo = () => <img src={logoRed} width={63} height={64} alt="" aria-hidden="true" style={{ objectFit: 'contain' }} />;
+// El mockup del listado vacío muestra el logo relleno en negro: se usa la silueta del logo oficial como máscara.
+export const EmptyLogo = () => <span className="ico empty-logo" style={{ '--w': '337px', '--h': '344px', WebkitMaskImage: `url("${logoRed}")`, maskImage: `url("${logoRed}")` } as CSSProperties} aria-hidden="true" />;
