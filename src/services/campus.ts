@@ -35,19 +35,27 @@ export class CampusApiError extends Error {
 export const comoCampusError = (e: unknown) =>
   e instanceof CampusApiError ? e : new CampusApiError(0, 'ERROR', MENSAJES.inesperado, {}, '');
 
-function tokenDeSesion(): string | null {
+interface SesionGuardada {
+  token?: string;
+  expiresAt?: string;
+  user?: { roles?: string[] };
+}
+
+function sesionVigente(): SesionGuardada | null {
   for (const nombre of ['localStorage', 'sessionStorage'] as const) {
     try {
       const raw = window[nombre].getItem(SESSION_KEY);
       if (!raw) continue;
-      const sesion = JSON.parse(raw) as { token?: string; expiresAt?: string };
-      if (sesion.token && Date.parse(sesion.expiresAt ?? '') > Date.now()) return sesion.token;
+      const sesion = JSON.parse(raw) as SesionGuardada;
+      if (sesion.token && Date.parse(sesion.expiresAt ?? '') > Date.now()) return sesion;
     } catch {
       continue;
     }
   }
   return null;
 }
+
+export const rolesDeSesion = (): string[] | null => sesionVigente()?.user?.roles ?? null;
 
 function mensajePara(status: number, mensajeDelServidor?: string): string {
   if (status === 401) return MENSAJES.sesion;
@@ -72,7 +80,7 @@ async function aError(r: Response, enviado: string): Promise<CampusApiError> {
 async function pedir<T>(metodo: string, ruta: string, cuerpo?: unknown): Promise<T> {
   const correlationId = crypto.randomUUID();
   const headers: Record<string, string> = { Accept: 'application/json', 'X-Correlation-ID': correlationId };
-  const token = tokenDeSesion();
+  const token = sesionVigente()?.token;
   if (token) headers.Authorization = `Bearer ${token}`;
   if (cuerpo !== undefined) headers['Content-Type'] = 'application/json';
 

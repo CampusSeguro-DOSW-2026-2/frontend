@@ -67,6 +67,15 @@
 .cs-form-botones{display:flex;gap:8px}
 .cs-subeditor{display:flex;flex-direction:column;gap:12px;background:var(--cream);border-radius:12px;padding:16px}
 .cs-subeditor h4{font:700 15px/20px 'Outfit',sans-serif}
+.cs-filtros{display:flex;flex-wrap:wrap;gap:16px}
+.cs-filtros .field{flex:0 1 280px}
+.cs-filtros .input,.cs-editor .input{min-height:44px;padding:10px 14px}
+.cs-filtros select{flex:1;border:0;outline:0;background:none;font:400 14px/150% 'Geist',sans-serif;color:var(--ink);min-width:0;cursor:pointer}
+.cs-editor select{flex:1;border:0;outline:0;background:none;font:400 14px/150% 'Geist',sans-serif;color:var(--ink);min-width:0}
+.cs-editor textarea{flex:1;border:0;outline:0;background:none;font:400 14px/150% 'Geist',sans-serif;color:var(--ink);min-width:0;min-height:72px;resize:vertical}
+.cs-sub{display:block;font-size:12px;line-height:16px;color:var(--mut);margin-top:2px}
+.cs-motivo{max-width:260px}
+.cs-fecha{white-space:nowrap;color:var(--mut)}
 @media(max-width:900px){.cs-form{flex-direction:column;align-items:stretch}.cs-form .field{flex:none}.cs-form .btn{width:100%}.cs-lista{grid-template-columns:1fr}.cs-piso{padding:16px}.cs-acciones{justify-content:flex-start}}
 .cs-preventivas{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:16px}
 .cs-preventivas h4{font:700 15px/20px 'Outfit',sans-serif}
