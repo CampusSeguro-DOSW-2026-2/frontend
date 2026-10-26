@@ -1,6 +1,7 @@
 export type Estado = 'ACTIVO' | 'INACTIVO';
 export type TipoEspacio = 'SALON' | 'LABORATORIO' | 'AUDITORIO' | 'OFICINA' | 'ESPACIO_COMUN';
 export type EstadoRuta = 'DISPONIBLE' | 'BLOQUEADA' | 'RESTRINGIDA';
+export type AmbitoRecomendacion = 'EDIFICIO' | 'TIPO_ESPACIO';
 
 export interface Edificio {
   id: string;
@@ -107,7 +108,7 @@ export interface RutaConsultada {
 
 export interface RecomendacionPreventiva {
   id: string;
-  ambito: 'EDIFICIO' | 'TIPO_ESPACIO';
+  ambito: AmbitoRecomendacion;
   edificioId?: string;
   tipoEspacio?: TipoEspacio;
   titulo: string;
@@ -123,4 +124,12 @@ export interface ErrorResponse {
   mensaje: string;
   errores: { campo: string; mensaje: string }[];
   correlation_id: string;
+}
+
+export interface RecomendacionPreventivaRequest {
+  ambito: AmbitoRecomendacion;
+  edificioId?: string;
+  tipoEspacio?: TipoEspacio;
+  titulo: string;
+  recomendacion: string;
 }

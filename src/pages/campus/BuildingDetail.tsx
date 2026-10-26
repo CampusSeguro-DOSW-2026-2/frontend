@@ -2,16 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError } from '../../services/campus';
 import type { Edificio, Espacio, EspacioRequest, Piso, PisoRequest, TipoEspacio } from '../../types/campus';
-import { Campo, Falla } from './comun';
+import { Botones, Campo, Falla } from './comun';
+import { TIPOS } from './tipos';
+import { useEnvio, type Errores } from './useEnvio';
 import './campus.css';
-
-const TIPOS: Record<TipoEspacio, string> = {
-  SALON: 'Salón',
-  LABORATORIO: 'Laboratorio',
-  AUDITORIO: 'Auditorio',
-  OFICINA: 'Oficina',
-  ESPACIO_COMUN: 'Espacio común',
-};
 
 type Edicion =
   | { tipo: 'nuevo-piso' }
@@ -19,40 +13,6 @@ type Edicion =
   | { tipo: 'nuevo-espacio'; pisoId: string }
   | { tipo: 'espacio'; id: string }
   | null;
-
-type Errores = Record<string, string>;
-
-function useEnvio<T>(guardar: (datos: T) => Promise<void>) {
-  const [errores, setErrores] = useState<Errores>({});
-  const [general, setGeneral] = useState<CampusApiError | null>(null);
-  const [guardando, setGuardando] = useState(false);
-
-  const enviar = async (locales: Errores, datos: T) => {
-    setErrores(locales);
-    setGeneral(null);
-    if (Object.keys(locales).length) return;
-    setGuardando(true);
-    try {
-      await guardar(datos);
-    } catch (e) {
-      const error = comoError(e);
-      setErrores(error.campos);
-      if (!Object.keys(error.campos).length) setGeneral(error);
-    } finally {
-      setGuardando(false);
-    }
-  };
-  return { errores, general, guardando, enviar };
-}
-
-function Botones({ guardando, onCancelar }: { guardando: boolean; onCancelar: () => void }) {
-  return (
-    <div className="cs-form-botones">
-      <button type="submit" className="cs-mini primario" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
-      <button type="button" className="cs-mini" onClick={onCancelar} disabled={guardando}>Cancelar</button>
-    </div>
-  );
-}
 
 function PisoForm({ inicial, onGuardar, onCancelar }: {
   inicial?: Piso; onGuardar: (datos: PisoRequest) => Promise<void>; onCancelar: () => void;
@@ -183,8 +143,8 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
 
   const guardar = async (accion: () => Promise<unknown>) => {
     await accion();
-    setEdicion(null);
     await cargar();
+    setEdicion(null);
   };
 
   const cambiarEstado = async (clave: string, pisoId: string, accion: () => Promise<unknown>) => {
