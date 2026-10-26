@@ -68,3 +68,10 @@
 .cs-subeditor{display:flex;flex-direction:column;gap:12px;background:var(--cream);border-radius:12px;padding:16px}
 .cs-subeditor h4{font:700 15px/20px 'Outfit',sans-serif}
 @media(max-width:900px){.cs-form{flex-direction:column;align-items:stretch}.cs-form .field{flex:none}.cs-form .btn{width:100%}.cs-lista{grid-template-columns:1fr}.cs-piso{padding:16px}.cs-acciones{justify-content:flex-start}}
+.cs-preventivas{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+.cs-preventivas h4{font:700 15px/20px 'Outfit',sans-serif}
+.cs-preventivas ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.cs-preventivas li{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.cs-preventivas strong{font:700 14px/20px 'Outfit',sans-serif;overflow-wrap:anywhere}
+.cs-preventivas p{font-size:14px;line-height:150%;margin-top:6px;white-space:pre-line;overflow-wrap:anywhere}
+.cs-ambito{display:block;font-size:12px;line-height:16px;color:var(--mut);margin-top:2px}
