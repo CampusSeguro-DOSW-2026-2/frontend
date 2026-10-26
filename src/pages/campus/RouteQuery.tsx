@@ -23,6 +23,7 @@ function tonoDe(r: RutaConsultada): Tono {
 function Resultado({ ruta }: { ruta: RutaConsultada }) {
   const tono = tonoDe(ruta);
   const estado = ruta.estado ? ESTADOS[ruta.estado] : null;
+  const recomendaciones = ruta.recomendacionesPreventivas ?? [];
   return (
     <article className={`cs-ruta ${tono}`}>
       <div className="ctop">
@@ -44,6 +45,20 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
         </>
       )}
       {ruta.mensaje && <p className={`cs-alert ${tono}`}>{ruta.mensaje}</p>}
+      {recomendaciones.length > 0 && (
+        <section className="cs-preventivas" aria-label="Recomendaciones preventivas">
+          <h4>Recomendaciones preventivas</h4>
+          <ul>
+            {recomendaciones.map((r) => (
+              <li key={r.id}>
+                <strong>{r.titulo}</strong>
+                <span className="cs-ambito">{r.ambito === 'EDIFICIO' ? 'Para este edificio' : 'Para este tipo de espacio'}</span>
+                <p>{r.recomendacion}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </article>
   );
 }
