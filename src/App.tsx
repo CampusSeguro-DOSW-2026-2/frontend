@@ -7,6 +7,7 @@ import RouteQuery from './pages/campus/RouteQuery';
 import BuildingDetail from './pages/campus/BuildingDetail';
 import RoutesAdmin from './pages/campus/RoutesAdmin';
 import PreventiveAdmin from './pages/campus/PreventiveAdmin';
+import BuildingsAdmin from './pages/campus/BuildingsAdmin';
 import './styles.css';
 
 // Router mínimo por hash para no añadir dependencias; sustituible por react-router.
@@ -25,6 +26,7 @@ export default function App() {
     case '/rutas': page = <RouteQuery />; break;
     case '/admin/rutas': page = <RoutesAdmin />; break;
     case '/admin/preventiva': page = <PreventiveAdmin />; break;
+    case '/admin/edificios': page = <BuildingsAdmin />; break;
     default: page = edificio ? <BuildingDetail key={edificio[1]} edificioId={edificio[1]} /> : <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
   }
   return (
