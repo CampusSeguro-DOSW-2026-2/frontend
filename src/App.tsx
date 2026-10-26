@@ -6,6 +6,7 @@ import BrigadistaPanel from './pages/BrigadistaPanel';
 import RouteQuery from './pages/campus/RouteQuery';
 import BuildingDetail from './pages/campus/BuildingDetail';
 import RoutesAdmin from './pages/campus/RoutesAdmin';
+import PreventiveAdmin from './pages/campus/PreventiveAdmin';
 import './styles.css';
 
 // Router mínimo por hash para no añadir dependencias; sustituible por react-router.
@@ -23,6 +24,7 @@ export default function App() {
     case '/brigadista': page = <BrigadistaPanel />; break;
     case '/rutas': page = <RouteQuery />; break;
     case '/admin/rutas': page = <RoutesAdmin />; break;
+    case '/admin/preventiva': page = <PreventiveAdmin />; break;
     default: page = edificio ? <BuildingDetail key={edificio[1]} edificioId={edificio[1]} /> : <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
   }
   return (

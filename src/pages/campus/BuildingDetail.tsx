@@ -3,16 +3,9 @@ import { PageHeader } from '../../components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError } from '../../services/campus';
 import type { Edificio, Espacio, EspacioRequest, Piso, PisoRequest, TipoEspacio } from '../../types/campus';
 import { Botones, Campo, Falla } from './comun';
+import { TIPOS } from './tipos';
 import { useEnvio, type Errores } from './useEnvio';
 import './campus.css';
-
-const TIPOS: Record<TipoEspacio, string> = {
-  SALON: 'Salón',
-  LABORATORIO: 'Laboratorio',
-  AUDITORIO: 'Auditorio',
-  OFICINA: 'Oficina',
-  ESPACIO_COMUN: 'Espacio común',
-};
 
 type Edicion =
   | { tipo: 'nuevo-piso' }

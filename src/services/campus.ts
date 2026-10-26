@@ -1,7 +1,7 @@
 import type {
   ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, ErrorResponse, Espacio,
-  EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, Piso, PisoRequest, Ruta, RutaConsultada,
-  ZonaSegura, ZonaSeguraRequest,
+  EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, Piso, PisoRequest, RecomendacionPreventiva,
+  RecomendacionPreventivaRequest, Ruta, RutaConsultada, TipoEspacio, ZonaSegura, ZonaSeguraRequest,
 } from '../types/campus';
 
 export const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8080/api/v1';
@@ -144,6 +144,18 @@ export const campus = {
     actualizar: (id: string, datos: ActualizarRutaRequest) => pedir<Ruta>('PUT', `/evacuation-routes/${id}`, datos),
     cambiarEstado: (id: string, datos: CambiarEstadoRequest) =>
       pedir<Ruta>('PATCH', `/evacuation-routes/${id}/status`, datos),
+  },
+  recomendaciones: {
+    listar: () => pedir<RecomendacionPreventiva[]>('GET', '/preventive-recommendations'),
+    porEdificio: (edificioId: string) =>
+      pedir<RecomendacionPreventiva[]>('GET', `/preventive-recommendations/building/${edificioId}`),
+    porTipoEspacio: (tipo: TipoEspacio) =>
+      pedir<RecomendacionPreventiva[]>('GET', `/preventive-recommendations/space-type/${tipo}`),
+    crear: (datos: RecomendacionPreventivaRequest) =>
+      pedir<RecomendacionPreventiva>('POST', '/preventive-recommendations', datos),
+    modificar: (id: string, datos: RecomendacionPreventivaRequest) =>
+      pedir<RecomendacionPreventiva>('PUT', `/preventive-recommendations/${id}`, datos),
+    inactivar: (id: string) => pedir<RecomendacionPreventiva>('PATCH', `/preventive-recommendations/${id}/deactivate`),
   },
   consulta: {
     porEspacio: (espacioId: string) => pedir<RutaConsultada>('GET', `/spaces/${espacioId}/evacuation-route`),
