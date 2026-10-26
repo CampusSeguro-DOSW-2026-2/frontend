@@ -30,4 +30,41 @@
 .cs-alert.warn{background:#FFFBEB;border-color:#FCD34D;color:#92400E}
 .cs-alert.stop{background:#FEF2F2;border-color:#FCA5A5;color:#7F1D1D}
 .cs-alert.ok{display:none}
-@media(max-width:900px){.cs-form{flex-direction:column;align-items:stretch}.cs-form .field{flex:none}.cs-form .btn{width:100%}.cs-lista{grid-template-columns:1fr}}
+.cs-volver{color:#fff;text-decoration:none;font-weight:600}
+.cs-volver:hover{text-decoration:underline}
+.cs-barra{display:flex;flex-wrap:wrap;align-items:center;gap:16px 24px}
+.cs-barra-titulo{flex:1 1 280px;display:flex;flex-direction:column;gap:4px}
+.cs-check{display:flex;align-items:center;gap:8px;font:600 14px/18px 'Geist',sans-serif;cursor:pointer}
+.cs-check input{width:18px;height:18px;accent-color:var(--red)}
+.cs-agregar{height:48px;border-radius:12px;font-size:15px}
+.cs-piso{display:flex;flex-direction:column;gap:16px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}
+.cs-piso.inactivo{background:var(--bg)}
+.cs-piso-cabecera{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px 24px}
+.cs-piso-titulo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;font:700 20px/26px 'Outfit',sans-serif}
+.cs-piso-titulo>span:not(.cs-estado){font-weight:600;color:var(--mut)}
+.cs-acciones{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.cs-mini{height:36px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);font:600 13px/16px 'Geist',sans-serif;cursor:pointer;white-space:nowrap}
+.cs-mini:hover:not(:disabled){border-color:var(--ink)}
+.cs-mini:disabled{opacity:.6;cursor:default}
+.cs-mini.peligro{color:var(--red)}
+.cs-mini.peligro:hover:not(:disabled){border-color:var(--red)}
+.cs-mini.primario{background:var(--red);border-color:var(--red);color:#fff}
+.cs-vacio{font-size:14px;color:var(--mut)}
+.cs-tabla{position:relative;overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.cs-tabla table{width:100%;border-collapse:collapse;min-width:640px;font-size:14px}
+.cs-tabla th{text-align:left;font:700 12px/16px 'Outfit',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);background:var(--bg);padding:10px 16px;border-bottom:1px solid var(--line)}
+.cs-tabla td{padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+.cs-tabla tr:last-child td{border-bottom:0}
+.cs-tabla tr.inactivo td{color:var(--mut)}
+.cs-codigo{font-weight:600;white-space:nowrap}
+.cs-oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cs-editor{display:flex;flex-direction:column;gap:16px}
+.cs-campos{display:flex;flex-wrap:wrap;gap:16px}
+.cs-campos .field{flex:1 1 200px}
+.cs-campos .input{min-height:44px;padding:10px 14px}
+.cs-campos select{flex:1;border:0;outline:0;background:none;font:400 14px/150% 'Geist',sans-serif;color:var(--ink);min-width:0}
+.cs-campos input:disabled{color:var(--mut)}
+.cs-form-botones{display:flex;gap:8px}
+.cs-subeditor{display:flex;flex-direction:column;gap:12px;background:var(--cream);border-radius:12px;padding:16px}
+.cs-subeditor h4{font:700 15px/20px 'Outfit',sans-serif}
+@media(max-width:900px){.cs-form{flex-direction:column;align-items:stretch}.cs-form .field{flex:none}.cs-form .btn{width:100%}.cs-lista{grid-template-columns:1fr}.cs-piso{padding:16px}.cs-acciones{justify-content:flex-start}}

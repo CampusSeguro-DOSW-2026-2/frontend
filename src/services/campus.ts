@@ -32,6 +32,9 @@ export class CampusApiError extends Error {
   }
 }
 
+export const comoCampusError = (e: unknown) =>
+  e instanceof CampusApiError ? e : new CampusApiError(0, 'ERROR', MENSAJES.inesperado, {}, '');
+
 function tokenDeSesion(): string | null {
   for (const nombre of ['localStorage', 'sessionStorage'] as const) {
     try {

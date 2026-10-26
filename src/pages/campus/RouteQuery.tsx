@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { PageHeader } from '../../components/Layout';
 import { MapIcon } from '../../components/Icons';
-import { campus, CampusApiError } from '../../services/campus';
+import { campus, CampusApiError, comoCampusError as comoError } from '../../services/campus';
 import type { Edificio, Espacio, EstadoRuta, RutaConsultada } from '../../types/campus';
+import { Falla } from './comun';
 import './campus.css';
 
 type Tono = 'ok' | 'warn' | 'stop' | 'info';
@@ -13,22 +14,10 @@ const ESTADOS: Record<EstadoRuta, { texto: string; tono: Tono }> = {
   BLOQUEADA: { texto: 'BLOQUEADA', tono: 'stop' },
 };
 
-const comoError = (e: unknown) =>
-  e instanceof CampusApiError ? e : new CampusApiError(0, 'ERROR', 'Ocurrió un error inesperado. Inténtalo más tarde.', {}, '');
-
 function tonoDe(r: RutaConsultada): Tono {
   if (!r.tieneRuta) return 'info';
   if (!r.destinoActivo) return 'stop';
   return r.estado ? ESTADOS[r.estado].tono : 'info';
-}
-
-function Falla({ error }: { error: CampusApiError }) {
-  return (
-    <p className="cs-alert stop" role="alert">
-      {error.message}
-      {error.correlationId && <small>Código para soporte: {error.correlationId}</small>}
-    </p>
-  );
 }
 
 function Resultado({ ruta }: { ruta: RutaConsultada }) {
