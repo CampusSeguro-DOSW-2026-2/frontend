@@ -72,7 +72,20 @@ Referencia visual para el equipo.
 
 ---
 
-### 4. _Nueva pantalla_ (copiar esta sección)
+### 4. Administración
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/edificios` |
+| Archivo | `src/components/Layout.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- La opción «Administración» solo aparece para los roles ADMIN y COORDINADOR.
+
+---
+
+### 5. _Nueva pantalla_ (copiar esta sección)
 
 | Campo | Detalle |
 |---|---|
