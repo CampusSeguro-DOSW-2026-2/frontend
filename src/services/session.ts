@@ -80,3 +80,19 @@ export function clearSession(): void {
     // Sin almacenamiento disponible: no hay nada que borrar
   }
 }
+
+// Aviso para la pantalla de inicio de sesión: "Sesión cerrada.", "Tu sesión venció...", etc.
+// Vive solo en memoria: se muestra una vez, en la siguiente pantalla de inicio de sesión.
+let pendingNotice = '';
+
+/** Deja un aviso para mostrarlo en el siguiente inicio de sesión. */
+export function setSessionNotice(message: string): void {
+  pendingNotice = message;
+}
+
+/** Entrega el aviso pendiente (si hay) y lo descarta. */
+export function takeSessionNotice(): string {
+  const message = pendingNotice;
+  pendingNotice = '';
+  return message;
+}

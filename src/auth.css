@@ -63,3 +63,12 @@ a.btn{text-decoration:none}
     .login h1{font-size:clamp(26px,calc((100cqw - 48px) / 12.6),40px)}
   }
 }
+
+/* Recuperación de contraseña (mockup código-recuperación-web): código de 6 dígitos, una casilla por dígito */
+.code-field .lbl{text-align:center;font-size:13px;line-height:17px}
+.code-boxes{display:flex;justify-content:center;gap:clamp(6px,.9cqw,13px)}
+.code-box{flex:none;width:clamp(40px,3.8cqw,55px);aspect-ratio:1;padding:0;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:center;font:700 20px/1 'Outfit',sans-serif;color:var(--ink);caret-color:var(--red)}
+.code-box:disabled{opacity:.7}
+.code-field .error{text-align:center}
+button.login-forgot{padding:0;border:0;background:none;cursor:pointer}
+button.login-forgot:disabled{opacity:.6;cursor:default}

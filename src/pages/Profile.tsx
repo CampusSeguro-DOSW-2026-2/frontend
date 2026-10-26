@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { PageHeader } from '../components/Layout';
 import { RoleChip, StateChip } from '../components/Chips';
 import { RoleDetails } from '../components/Permissions';
+import { logoutUser } from '../services/identity';
 import { getRoles } from '../services/roles';
+import { setSessionNotice } from '../services/session';
 import { errorMessage, getMyProfile } from '../services/users';
 import { ROLE_LABEL } from '../utils/labels';
 import type { ProfileData, RolePermissions, Session } from '../types';
@@ -20,6 +22,7 @@ export default function Profile({ session }: { session: Session }) {
   const [catalog, setCatalog] = useState<RolePermissions[] | null>(null);
   const [rolesError, setRolesError] = useState('');
   const [rolesAttempt, setRolesAttempt] = useState(0);
+  const [leaving, setLeaving] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,6 +54,15 @@ export default function Profile({ session }: { session: Session }) {
       });
     return () => { cancelled = true; };
   }, [session, rolesAttempt]);
+
+  // Cerrar sesión (RF-MS01-04): avisa al servidor para que quede auditado y descarta el token local
+  const logout = async () => {
+    if (leaving) return;
+    setLeaving(true);
+    const message = await logoutUser(session);
+    setSessionNotice(message);
+    window.location.hash = '#/login';
+  };
 
   // Los permisos que rigen son los de los roles de la sesión (los del token con el que se inició sesión)
   const mine: RolePermissions[] = [];
@@ -129,7 +141,13 @@ export default function Profile({ session }: { session: Session }) {
               )}
             </section>
 
-            <a className="btn red" href="#/perfil/editar">Editar perfil</a>
+            <div className="actions">
+              <a className="btn red" href="#/perfil/editar">Editar perfil</a>
+              <a className="btn white" href="#/perfil/contrasena">Cambiar contraseña</a>
+              <button type="button" className="btn white" onClick={() => void logout()} disabled={leaving}>
+                {leaving ? 'Cerrando sesión…' : 'Cerrar sesión'}
+              </button>
+            </div>
           </section>
         )}
       </main>
