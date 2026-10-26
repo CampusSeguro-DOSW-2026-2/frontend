@@ -19,3 +19,12 @@ export function Campo({ id, etiqueta, error, children }: { id: string; etiqueta:
     </div>
   );
 }
+
+export function Botones({ guardando, onCancelar }: { guardando: boolean; onCancelar: () => void }) {
+  return (
+    <div className="cs-form-botones">
+      <button type="submit" className="cs-mini primario" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
+      <button type="button" className="cs-mini" onClick={onCancelar} disabled={guardando}>Cancelar</button>
+    </div>
+  );
+}
