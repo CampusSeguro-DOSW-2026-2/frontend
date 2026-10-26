@@ -69,8 +69,18 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
   const { errores, general, guardando, enviar } = useEnvio(onGuardar);
 
   const conRuta = new Set(datos.rutas.map((r) => r.espacioOrigenId));
-  const espaciosLibres = datos.espacios.filter((s) => s.edificioId === edificioId && s.disponible && !conRuta.has(s.id));
+  const delEdificio = datos.espacios.filter((s) => s.edificioId === edificioId);
+  const disponibles = delEdificio.filter((s) => s.disponible);
+  const espaciosLibres = disponibles.filter((s) => !conRuta.has(s.id));
   const zonasActivas = datos.zonas.filter((z) => z.estado === 'ACTIVO');
+
+  const sinEspacios = () => {
+    if (!edificioId) return 'Selecciona primero un edificio';
+    if (delEdificio.length === 0) return 'Este edificio no tiene espacios registrados';
+    if (disponibles.length === 0) return 'Ningún espacio del edificio está disponible';
+    if (espaciosLibres.length === 0) return 'Todos los espacios ya tienen ruta';
+    return 'Selecciona un espacio';
+  };
 
   const validar = () => {
     const e: Errores = {};
@@ -98,8 +108,8 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
           </select>
         </Campo>
         <Campo id="ruta-espacio-nueva" etiqueta="Espacio de origen" error={errores.espacioOrigenId}>
-          <select id="ruta-espacio-nueva" value={espacioId} disabled={!edificioId} onChange={(e) => setEspacioId(e.target.value)}>
-            <option value="">{edificioId && espaciosLibres.length === 0 ? 'Todos los espacios ya tienen ruta' : 'Selecciona un espacio'}</option>
+          <select id="ruta-espacio-nueva" value={espacioId} disabled={!edificioId || espaciosLibres.length === 0} onChange={(e) => setEspacioId(e.target.value)}>
+            <option value="">{sinEspacios()}</option>
             {espaciosLibres.map((s) => <option key={s.id} value={s.id}>{s.codigo} · {s.nombre}</option>)}
           </select>
         </Campo>
