@@ -1,0 +1,80 @@
+/* Pantalla de registro: formulario a la izquierda, foto del campus a la derecha */
+.reg{display:grid;grid-template-columns:59fr 41fr;min-height:calc(100dvh - 68px);background:var(--bg)}
+.reg-main{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px 24px;text-align:center}
+.reg-logo{width:112px;height:auto;color:var(--red)}
+.reg h1{font:800 32px/120% 'Outfit',sans-serif;color:var(--ink)}
+.reg-sub{font-size:14px;line-height:18px;font-weight:600}
+.reg-sub a{color:var(--red);font-weight:700;text-decoration:none}
+.reg-sub a:hover{text-decoration:underline}
+.reg-form{width:100%;max-width:480px;display:flex;flex-direction:column;gap:20px;margin-top:8px}
+.reg-form .field label{text-align:center;font-size:13px;line-height:17px}
+.reg-form .error,.reg-form .hint{text-align:center}
+.reg .input input::placeholder{color:var(--mut);opacity:.9}
+.reg-form .btn{align-self:center;width:220px;height:52px;border-radius:14px}
+.hint{font-size:13px;line-height:140%;color:var(--mut);font-weight:400}
+.input .toggle{display:flex;align-items:center;padding:4px;margin:-4px;border:0;border-radius:8px;background:none;color:var(--mut);cursor:pointer}
+.notice.err{background:#FEF2F2;border-color:#FECACA;color:#7F1D1D}
+/* éxito */
+.reg-done{display:flex;flex-direction:column;align-items:center;gap:20px;max-width:420px}
+.reg-done p{color:var(--mut);font-size:15px;line-height:150%}
+.reg-done p b{color:var(--ink);overflow-wrap:anywhere}
+.reg-done .btn{width:220px;height:52px;border-radius:14px}
+a.btn{text-decoration:none}
+/* foto */
+.reg-photo{position:relative}
+.reg-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+@media(max-width:900px){.reg{grid-template-columns:1fr}.reg-photo{display:none}.reg h1{font-size:26px}}
+
+/* Inicio de sesión (mockup inicio-sesion-web, 1440 px).
+   Las medidas del mockup son el tope: al achicar la ventana todo se escala de forma fluida con clamp()
+   (cqw = ancho de .login) y a partir de 900 px pasa a una sola columna sin la foto. */
+.login{container-type:inline-size;grid-template-columns:minmax(0,59fr) minmax(0,41fr)}
+.login .reg-main{gap:0;padding:40px 24px 51px 44px}
+.login-logo{display:block;width:186px;max-width:100%;height:auto;translate:-7.5% 0}
+.login h1{margin-top:41px;font-size:40px;text-wrap:balance}
+.login .reg-sub{margin-top:32px}
+.login .reg-form{max-width:474px;gap:18px;margin-top:63px}
+.login .reg-form .field{gap:7px}
+.login .reg-form .input{min-height:58px;padding:0 14px 0 16px}
+.login .input .toggle svg{width:21px;height:21px}
+.login .reg-form .btn{width:min(288px,100%);height:58px;margin-top:7px;border-radius:16px;font-size:15px}
+.remember{display:flex;align-items:center;justify-content:center;gap:8px;font:700 11px/16px 'Outfit',sans-serif;color:var(--ink);cursor:pointer}
+.remember input{appearance:none;-webkit-appearance:none;flex:none;width:21px;height:21px;margin:0;border:1.5px solid var(--mut);border-radius:50%;background:#fff;cursor:pointer}
+.remember input:checked{border-color:var(--red);background:var(--red) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center/14px no-repeat}
+.login-forgot{align-self:center;margin-top:7px;font:600 14px/18px 'Outfit',sans-serif;color:var(--red);text-decoration:none}
+.login-forgot:hover{text-decoration:underline}
+/* Foto: en el mockup va a tamaño natural, centrada. Si el panel es más grande que la foto, se amplía para cubrirlo. */
+.login .reg-photo{overflow:hidden}
+.login .reg-photo img{inset:50% auto auto 50%;width:auto;height:auto;min-width:100%;min-height:100%;max-width:none;transform:translate(calc(-50% + 9px),-50%)}
+/* Escalado fluido (el panel del formulario mide 59 % del ancho; por debajo de 900 px, el 100 %) */
+@supports (width:1cqw){
+  .login-logo{width:clamp(120px,12.9cqw,186px)}
+  .login h1{font-size:clamp(30px,calc((59cqw - 68px) / 12.6),40px);margin-top:clamp(22px,2.85cqw,41px)}
+  .login .reg-sub{margin-top:clamp(18px,2.22cqw,32px)}
+  .login .reg-form{margin-top:clamp(36px,4.4cqw,63px)}
+}
+@media(max-width:900px){
+  .login{grid-template-columns:minmax(0,1fr)}
+  .login .reg-main{padding:32px 24px 40px}
+  .login-logo{translate:none}
+  .login h1{font-size:30px}
+  @supports (width:1cqw){
+    .login-logo{width:clamp(120px,40cqw,186px)}
+    .login h1{font-size:clamp(26px,calc((100cqw - 48px) / 12.6),40px)}
+  }
+}
+
+/* Recuperación de contraseña (mockups recuperar-contrasena y cambiar-contrasena) */
+.recover .reg-main{padding-top:24px}
+.recover .reg-sub{max-width:520px}
+.recover h1{margin-top:clamp(24px,3vw,40px)}
+.recover .reg-form{margin-top:clamp(24px,3.2vw,44px)}
+.link-btn{align-self:center;margin-top:-6px;border:0;background:none;padding:2px 4px;font:600 13px/18px 'Outfit',sans-serif;color:var(--red);cursor:pointer}
+.link-btn:hover:not(:disabled){text-decoration:underline}
+.link-btn:disabled{color:var(--mut);cursor:default}
+.otp{display:flex;justify-content:center;gap:12px}
+.otp input{width:56px;height:56px;padding:0;border:1px solid var(--line);border-radius:14px;background:#fff;text-align:center;font:700 22px/1 'Outfit',sans-serif;color:var(--ink)}
+.otp input:focus{outline:2px solid var(--red);outline-offset:1px;border-color:var(--red)}
+.otp input.bad{border-color:var(--red)}
+.recover .notice{text-align:center}
+@media(max-width:420px){.otp{gap:6px}.otp input{width:44px;height:48px}}
