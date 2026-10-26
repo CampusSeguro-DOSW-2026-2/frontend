@@ -62,6 +62,8 @@ export interface ZonaSegura {
 }
 
 export type ZonaSeguraRequest = Omit<ZonaSegura, 'id' | 'estado'>;
+// El código de la zona es fijo (RF-04): el PUT no lo recibe.
+export type ModificarZonaSeguraRequest = Omit<ZonaSeguraRequest, 'codigo'>;
 
 export interface Ruta {
   id: string;

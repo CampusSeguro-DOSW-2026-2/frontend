@@ -1,7 +1,7 @@
 import type {
   ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, ErrorResponse, Espacio,
   EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, Piso, PisoRequest, RecomendacionPreventiva,
-  RecomendacionPreventivaRequest, Ruta, RutaConsultada, TipoEspacio, ZonaSegura, ZonaSeguraRequest,
+  RecomendacionPreventivaRequest, Ruta, RutaConsultada, TipoEspacio, ZonaSegura, ZonaSeguraRequest, ModificarZonaSeguraRequest
 } from '../types/campus';
 
 export const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8080/api/v1';
@@ -133,7 +133,7 @@ export const campus = {
     listar: (incluirInactivos?: boolean) => pedir<ZonaSegura[]>('GET', `/safe-zones${filtro(incluirInactivos)}`),
     obtener: (id: string) => pedir<ZonaSegura>('GET', `/safe-zones/${id}`),
     crear: (datos: ZonaSeguraRequest) => pedir<ZonaSegura>('POST', '/safe-zones', datos),
-    modificar: (id: string, datos: ZonaSeguraRequest) => pedir<ZonaSegura>('PUT', `/safe-zones/${id}`, datos),
+    modificar: (id: string, datos: ModificarZonaSeguraRequest) => pedir<ZonaSegura>('PUT', `/safe-zones/${id}`, datos),    
     inactivar: (id: string) => pedir<ZonaSegura>('PATCH', `/safe-zones/${id}/deactivate`),
     reactivar: (id: string) => pedir<ZonaSegura>('PATCH', `/safe-zones/${id}/reactivate`),
   },
