@@ -1,0 +1,7 @@
+/* Estilos de las pantallas de administración de edificios y zonas (Persona 1). */
+.cs-filtro-estado{display:flex;flex-wrap:wrap;gap:8px}
+.cs-pildora{height:36px;padding:0 16px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:600 13px/16px 'Geist',sans-serif;cursor:pointer;white-space:nowrap}
+.cs-pildora:hover{border-color:var(--ink)}
+.cs-pildora[aria-pressed='true']{background:var(--red);border-color:var(--red);color:#fff}
+a.cs-mini{display:inline-flex;align-items:center;text-decoration:none}
+.cs-descripcion{max-width:360px;overflow-wrap:anywhere}
