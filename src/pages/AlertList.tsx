@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Edit, EmptyLogo, Filter, Plus, Search } from '../components/Icons';
-import { alertsApi, type Alert, type AlertStatus } from '../services/alerts';
+import { alertsApi, type AlertStatus, type AlertSummary } from '../services/alerts';
 import { ROLE_ITEMS, SCOPE_ITEMS, labelOf, listEs, scopeIdsOf } from '../services/catalog';
 
 const ST: Record<AlertStatus, { label: string; color: string; off?: boolean }> = {
@@ -10,14 +10,16 @@ const ST: Record<AlertStatus, { label: string; color: string; off?: boolean }> =
 };
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Error inesperado.');
-const fetchPage = async (status: AlertStatus | '', page: number) => {
-  const p = await alertsApi.list({ status: status || undefined, page, size: 10 });
-  const items = await Promise.all(p.content.map((s) => alertsApi.get(s.id))); // el resumen no trae instrucciones ni destinatarios
-  return { items, page: p.page, totalPages: p.totalPages };
+const PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 100; // límite de MS03
+const REFRESH_MS = 15000;
+const fetchPage = async (status: AlertStatus | '', page: number, size = PAGE_SIZE) => {
+  const p = await alertsApi.list({ status: status || undefined, page, size });
+  return { items: p.content, page: p.page, totalPages: p.totalPages, totalElements: p.totalElements };
 };
 
 export default function AlertList() {
-  const [items, setItems] = useState<Alert[]>([]);
+  const [items, setItems] = useState<AlertSummary[]>([]);
   const [pg, setPg] = useState({ page: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -37,6 +39,29 @@ export default function AlertList() {
     return () => { ignore = true; };
   }, [status, reloads]);
   const reload = () => { setLoading(true); setError(''); setReloads((n) => n + 1); };
+
+  // Refresco en segundo plano: los cambios del scheduler o de MS06 aparecen sin recargar la página.
+  // Vuelve a pedir todas las páginas ya cargadas en una sola consulta para no perder "Cargar más".
+  const loadedPages = useRef(1);
+  const busy = useRef(false);
+  useEffect(() => { loadedPages.current = pg.page + 1; busy.current = loading; }, [pg.page, loading]);
+  useEffect(() => {
+    let ignore = false;
+    const refresh = () => {
+      if (busy.current || document.visibilityState !== 'visible') return;
+      const pages = Math.min(loadedPages.current, MAX_PAGE_SIZE / PAGE_SIZE);
+      fetchPage(status, 0, pages * PAGE_SIZE)
+        .then((r) => {
+          if (ignore) return;
+          setItems(r.items);
+          setPg({ page: pages - 1, totalPages: Math.ceil(r.totalElements / PAGE_SIZE) });
+        })
+        .catch(() => { /* un fallo del refresco no interrumpe la vista; el siguiente intento lo reintenta */ });
+    };
+    const timer = window.setInterval(refresh, REFRESH_MS);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { ignore = true; window.clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
+  }, [status]);
   const changeStatus = (s: AlertStatus | '') => { if (s === status) return; setLoading(true); setError(''); setItems([]); setStatus(s); };
   const loadMore = async () => {
     setLoading(true);
