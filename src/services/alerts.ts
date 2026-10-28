@@ -3,9 +3,12 @@ import { ms03 } from './http';
 export type AlertStatus = 'DRAFT' | 'SCHEDULED' | 'ACTIVE' | 'ENDED' | 'ARCHIVED';
 export interface Scope { type: 'CAMPUS' | 'BUILDING' | 'ZONE'; ids?: string[] }
 export interface Recipient { type: 'USER' | 'ROLE'; id: string }
-export interface AlertSummary { id: string; type: string; title: string; scope: Scope; status: AlertStatus; origin: string; simulationId: string | null; createdAt: string }
+export interface AlertSummary {
+  id: string; type: string; title: string; scope: Scope; status: AlertStatus; origin: string; simulationId: string | null; createdAt: string;
+  instructions: string; recipients: Recipient[];
+}
 export interface Alert extends AlertSummary {
-  instructions: string; recipients: Recipient[]; createdBy: string;
+  createdBy: string;
   updatedAt: string; activationAt: string | null; activatedAt: string | null; endedAt: string | null; archivedAt: string | null;
 }
 export interface Page<T> { content: T[]; page: number; size: number; totalElements: number; totalPages: number }

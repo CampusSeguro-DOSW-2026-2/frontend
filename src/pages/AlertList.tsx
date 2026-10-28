@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Edit, EmptyLogo, Filter, Plus, Search } from '../components/Icons';
-import { alertsApi, type Alert, type AlertStatus } from '../services/alerts';
+import { alertsApi, type AlertStatus, type AlertSummary } from '../services/alerts';
 import { ROLE_ITEMS, SCOPE_ITEMS, labelOf, listEs, scopeIdsOf } from '../services/catalog';
 
 const ST: Record<AlertStatus, { label: string; color: string; off?: boolean }> = {
@@ -15,12 +15,11 @@ const MAX_PAGE_SIZE = 100; // límite de MS03
 const REFRESH_MS = 15000;
 const fetchPage = async (status: AlertStatus | '', page: number, size = PAGE_SIZE) => {
   const p = await alertsApi.list({ status: status || undefined, page, size });
-  const items = await Promise.all(p.content.map((s) => alertsApi.get(s.id))); // el resumen no trae instrucciones ni destinatarios
-  return { items, page: p.page, totalPages: p.totalPages, totalElements: p.totalElements };
+  return { items: p.content, page: p.page, totalPages: p.totalPages, totalElements: p.totalElements };
 };
 
 export default function AlertList() {
-  const [items, setItems] = useState<Alert[]>([]);
+  const [items, setItems] = useState<AlertSummary[]>([]);
   const [pg, setPg] = useState({ page: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
