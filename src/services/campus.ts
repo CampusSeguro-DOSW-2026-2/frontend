@@ -4,7 +4,9 @@ import type {
   RecomendacionPreventivaRequest, Ruta, RutaConsultada, TipoEspacio, ZonaSegura, ZonaSeguraRequest, ModificarZonaSeguraRequest
 } from '../types/campus';
 
-export const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:8080/api/v1';
+// VITE_API_URL es la dirección del Gateway sin ruta (http://localhost:8080), igual que en services/http.ts
+const GATEWAY_URL = ((import.meta.env.VITE_API_URL as string | undefined)?.trim() || 'http://localhost:8080').replace(/\/+$/, '');
+export const API_URL = `${GATEWAY_URL}/api/v1`;
 
 const SESSION_KEY = 'campusseguro.session';
 
