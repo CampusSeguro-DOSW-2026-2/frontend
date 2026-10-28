@@ -73,3 +73,9 @@ export interface RoleChange { id: string; roles: string[] }
 
 // Cambio pedido en el formulario F-09: roles a agregar y roles a retirar
 export interface RolesDraft { add: string[]; remove: string[] }
+
+// Cambio de contraseña autenticado (MS01 · F-06): contraseña actual, nueva y su confirmación
+export interface PasswordChangeDraft { current: string; next: string; confirm: string }
+
+// Nueva contraseña tras la recuperación (MS01 · F-05): la nueva contraseña y su confirmación
+export interface PasswordResetDraft { password: string; confirmPassword: string }

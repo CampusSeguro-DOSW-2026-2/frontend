@@ -6,11 +6,11 @@ import ActiveSimulation from './pages/ActiveSimulation';
 import BrigadistaPanel from './pages/BrigadistaPanel';
 import Register from './pages/Register';
 import Login from './pages/Login';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
 import ChangePassword from './pages/ChangePassword';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Users from './pages/Users';
 import ChangeStatus from './pages/ChangeStatus';
 import Roles from './pages/Roles';
@@ -22,11 +22,10 @@ import './styles.css';
 // Router mínimo por hash para no añadir dependencias; sustituible por react-router.
 const path = () => window.location.hash.replace(/^#/, '') || '/';
 
-// Pantallas a pantalla completa, sin la barra de navegación principal
-const FULL_SCREEN = ['/', '/login', '/registro', '/recuperar-contrasena', '/restablecer-contrasena'];
-
-// Pantallas que exigen una sesión iniciada: sin ella se envía al inicio de sesión
-const NEEDS_SESSION = ['/perfil', '/perfil/editar', '/perfil/contrasena', '/usuarios', '/usuarios/estado', '/roles', '/roles/editar'];
+// Pantallas públicas: inicio de sesión, registro y recuperación de contraseña. Se muestran a pantalla
+// completa, sin la barra de navegación principal. Todas las demás exigen una sesión iniciada; sin ella se
+// envía al inicio de sesión
+const PUBLIC = ['/', '/login', '/registro', '/recuperar-contrasena', '/cambiar-contrasena'];
 
 const NO_ACCESS = (
   <main className="page"><p className="notice err" role="alert">No tienes permisos para ver esta sección.</p></main>
@@ -56,7 +55,7 @@ export default function App() {
   const roles = session?.user.roles ?? [];
   const isAdmin = roles.includes('ADMIN');
   const canList = isAdmin || roles.includes('AUDITOR');
-  const blocked = NEEDS_SESSION.includes(route) && !session;
+  const blocked = !PUBLIC.includes(route) && !session;
 
   useEffect(() => {
     if (blocked) window.location.hash = '#/login';
@@ -66,15 +65,15 @@ export default function App() {
   if (!blocked) {
     switch (route) {
       case '/': case '/login': page = <Login />; break;
-      case '/simulacro': page = <ActiveSimulation />; break;
+      case '/simulacro': page = session && <ActiveSimulation session={session} />; break;
       case '/crear-simulacro': page = <CreateSimulation />; break;
       case '/brigadista': page = <BrigadistaPanel />; break;
       case '/registro': page = <Register />; break;
       case '/recuperar-contrasena': page = <ForgotPassword />; break;
-      case '/restablecer-contrasena': page = <ResetPassword />; break;
+      case '/cambiar-contrasena': page = <ResetPassword />; break;
       case '/perfil': page = session && <Profile session={session} />; break;
-      case '/perfil/contrasena': page = session && <ChangePassword session={session} />; break;
       case '/perfil/editar': page = session && <EditProfile session={session} />; break;
+      case '/perfil/contrasena': page = session && <ChangePassword session={session} />; break;
       case '/usuarios':
         page = session && (canList
           ? <Users session={session} selected={selected} onSelectedChange={setSelected} />
@@ -101,7 +100,7 @@ export default function App() {
 
   return (
     <>
-      {!FULL_SCREEN.includes(route) && <Navbar current={route} roles={roles} />}
+      {!PUBLIC.includes(route) && <Navbar current={route} roles={roles} />}
       {page}
       <footer className="demo-nav">
         Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/recuperar-contrasena">Recuperar contraseña</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a>

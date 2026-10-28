@@ -1,77 +1,163 @@
 import { useEffect, useState } from 'react';
 import { CodeInput } from '../components/CodeInput';
 import { TextField } from '../components/TextField';
-import { PasswordError, requestResetCode, savePendingReset } from '../services/password';
+import { ApiError, errorMessage } from '../services/http';
+import { requestPasswordCode } from '../services/password';
+import { clearRecovery, readRecovery, RESEND_SECONDS, saveRecovery } from '../services/recovery';
+import { codeError, emailFormatError } from '../utils/validation';
 import '../auth.css';
 
-const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Mismo tiempo de espera que el back (campusseguro.recuperacion.espera-segundos)
-const RESEND_SECONDS = 60;
-const NEXT_ROUTE = '#/restablecer-contrasena';
+// Ruta de la pantalla donde se escribe la nueva contraseña (F-05)
+const RESET_ROUTE = '#/cambiar-contrasena';
 
+type Step = 'email' | 'code';
+
+/**
+ * Recuperación de contraseña (RF-MS01-08, flujo A), primera parte. Primero se pide el correo (F-04) y el
+ * sistema responde siempre lo mismo exista o no la cuenta; luego se escribe el código de 6 dígitos que
+ * llegó al correo y se pasa a elegir la nueva contraseña (F-05).
+ */
 export default function ForgotPassword() {
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; code?: string }>({});
+  // Si se vuelve desde la pantalla de la nueva contraseña (código vencido, por ejemplo), se retoma en el código
+  const [saved] = useState(readRecovery);
+  const [step, setStep] = useState<Step>(saved ? 'code' : 'email');
+  const [email, setEmail] = useState(saved?.email ?? '');
+  const [code, setCode] = useState(saved?.code ?? '');
+  const [emailErr, setEmailErr] = useState('');
+  const [codeErr, setCodeErr] = useState(saved?.error ?? '');
   const [info, setInfo] = useState('');
   const [serverError, setServerError] = useState('');
-  const [sending, setSending] = useState(false);
-  const [wait, setWait] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  // Espera entre dos solicitudes de código (la misma que aplica MS01): instante en que termina y reloj de la pantalla
+  const [waitUntil, setWaitUntil] = useState(saved?.waitUntil ?? 0);
+  const [now, setNow] = useState(Date.now);
+  const remaining = Math.max(0, Math.ceil((waitUntil - now) / 1000));
 
-  // Cuenta regresiva para poder pedir otro código
+  // Cuenta regresiva del botón de reenviar: el reloj solo corre mientras hay espera
   useEffect(() => {
-    if (wait <= 0) return;
-    const t = window.setTimeout(() => setWait((w) => w - 1), 1000);
-    return () => window.clearTimeout(t);
-  }, [wait]);
+    if (waitUntil <= Date.now()) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current >= waitUntil) {
+        window.clearInterval(timer);
+      }
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [waitUntil]);
 
-  const emailError = () => {
-    const v = email.trim();
-    return !EMAIL_FORMAT.test(v) || v.length > 100 ? 'Ingrese un correo válido.' : undefined;
+  // Al volver con el código pendiente, el cursor queda en la casilla del código
+  useEffect(() => {
+    if (saved) {
+      document.getElementById('code')?.focus();
+    }
+  }, [saved]);
+
+  const onEmail = (value: string) => {
+    setEmail(value);
+    setEmailErr('');
+    setServerError('');
+    // La espera es de la cuenta a la que se pidió el código: con otro correo se puede pedir de inmediato
+    setWaitUntil(0);
   };
 
-  const sendCode = async () => {
-    if (sending || wait > 0) return;
-    const err = emailError();
-    setErrors((c) => ({ ...c, email: err }));
-    if (err) {
+  const onCode = (value: string) => {
+    setCode(value);
+    setCodeErr('');
+    setServerError('');
+  };
+
+  // F-04: solicita el código. La respuesta es la misma exista o no el correo (RN-MS01-20)
+  const requestCode = async (): Promise<boolean> => {
+    const problem = emailFormatError(email);
+    setEmailErr(problem);
+    if (problem) {
       document.getElementById('email')?.focus();
-      return;
+      return false;
     }
-    setSending(true);
+
+    setSubmitting(true);
     setServerError('');
     setInfo('');
     try {
-      setInfo(await requestResetCode(email));
-      setWait(RESEND_SECONDS);
-      document.getElementById('code-0')?.focus();
-    } catch (e) {
-      if (e instanceof PasswordError && e.fields.email) {
-        setErrors((c) => ({ ...c, email: e.fields.email }));
+      const message = await requestPasswordCode(email);
+      setInfo(message);
+      const started = Date.now();
+      setNow(started);
+      setWaitUntil(started + RESEND_SECONDS * 1000);
+      return true;
+    } catch (err) {
+      if (err instanceof ApiError && err.fields.email) {
+        setEmailErr(err.fields.email);
+        document.getElementById('email')?.focus();
       } else {
-        setServerError(e instanceof PasswordError ? e.message : 'Ocurrió un error inesperado. Intenta de nuevo más tarde.');
+        setServerError(errorMessage(err));
       }
+      return false;
     } finally {
-      setSending(false);
+      setSubmitting(false);
     }
   };
 
-  const submit = () => {
-    const found = { email: emailError(), code: /^\d{6}$/.test(code) ? undefined : 'Ingrese el código de 6 dígitos.' };
-    setErrors(found);
-    if (found.email) return document.getElementById('email')?.focus();
-    if (found.code) return document.getElementById('code-0')?.focus();
-    // El código se valida en el back al cambiar la contraseña (siguiente pantalla)
-    savePendingReset(email.trim().toLowerCase(), code);
-    window.location.hash = NEXT_ROUTE;
+  const submit = async () => {
+    if (submitting) {
+      return;
+    }
+
+    if (step === 'email') {
+      clearRecovery();
+      if (await requestCode()) {
+        setCode('');
+        setCodeErr('');
+        setStep('code');
+        // Con la casilla del código a la vista, el cursor queda listo para escribirlo
+        window.setTimeout(() => document.getElementById('code')?.focus(), 0);
+      }
+      return;
+    }
+
+    // F-05: el código se valida junto con la nueva contraseña en la pantalla siguiente
+    const emailProblem = emailFormatError(email);
+    const codeProblem = codeError(code);
+    setEmailErr(emailProblem);
+    setCodeErr(codeProblem);
+    if (emailProblem) {
+      document.getElementById('email')?.focus();
+      return;
+    }
+    if (codeProblem) {
+      document.getElementById('code')?.focus();
+      return;
+    }
+    saveRecovery(email.trim().toLowerCase(), code, '', waitUntil);
+    window.location.hash = RESET_ROUTE;
   };
 
-  let sendLabel = 'Enviar código';
-  if (sending) sendLabel = 'Enviando…';
-  else if (wait > 0) sendLabel = `Reenviar código en ${wait} s`;
+  const resend = async () => {
+    if (submitting || remaining > 0) {
+      return;
+    }
+    if (await requestCode()) {
+      setCode('');
+      setCodeErr('');
+      window.setTimeout(() => document.getElementById('code')?.focus(), 0);
+    }
+  };
+
+  let buttonLabel = 'Restablecer contraseña';
+  if (submitting && step === 'email') {
+    buttonLabel = 'Enviando código…';
+  }
+
+  let resendLabel = 'Reenviar código';
+  if (remaining > 0) {
+    resendLabel = `Reenviar código en ${remaining} s`;
+  }
 
   return (
-    <div className="reg login recover">
+    <div className="reg login">
       <main className="reg-main">
         <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
 
@@ -81,36 +167,53 @@ export default function ForgotPassword() {
         <form
           className="reg-form"
           noValidate
-          onSubmit={(e) => { e.preventDefault(); submit(); }}
+          aria-busy={submitting}
+          onSubmit={(e) => {
+            e.preventDefault();
+            void submit();
+          }}
         >
+          {info && <p className="notice" role="status">{info}</p>}
+
           <TextField
             id="email"
             label="Correo institucional"
             type="email"
             placeholder="Ingresa tu correo institucional"
             value={email}
-            onChange={(v) => { setEmail(v); setErrors((c) => ({ ...c, email: undefined })); setServerError(''); }}
-            error={errors.email}
+            onChange={onEmail}
+            error={emailErr}
             autoComplete="username"
             maxLength={100}
           />
 
-          <button type="button" className="link-btn" onClick={() => void sendCode()} disabled={sending || wait > 0}>
-            {sendLabel}
-          </button>
+          {step === 'code' && (
+            <CodeInput
+              id="code"
+              label="Código"
+              value={code}
+              onChange={onCode}
+              error={codeErr}
+              disabled={submitting}
+            />
+          )}
 
-          <CodeInput
-            id="code"
-            label="Código"
-            value={code}
-            onChange={(v) => { setCode(v); setErrors((c) => ({ ...c, code: undefined })); }}
-            error={errors.code}
-          />
-
-          {info && <p className="notice" role="status">{info}</p>}
           {serverError && <p className="notice err" role="alert">{serverError}</p>}
 
-          <button type="submit" className="btn red">Restablecer contraseña</button>
+          <button type="submit" className="btn red" disabled={submitting}>
+            {buttonLabel}
+          </button>
+
+          {step === 'code' && (
+            <button
+              type="button"
+              className="login-forgot link"
+              onClick={() => void resend()}
+              disabled={submitting || remaining > 0}
+            >
+              {resendLabel}
+            </button>
+          )}
           <a className="login-forgot" href="#/login">Volver a iniciar sesión</a>
         </form>
       </main>

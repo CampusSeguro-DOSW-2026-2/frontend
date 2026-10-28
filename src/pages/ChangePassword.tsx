@@ -1,104 +1,179 @@
 import { useState } from 'react';
 import { PageHeader } from '../components/Layout';
 import { TextField } from '../components/TextField';
-import { PasswordError, changePassword } from '../services/password';
-import type { ResetFieldErrors } from '../services/password';
-import type { Session } from '../types';
+import { ApiError, errorMessage } from '../services/http';
+import { changeMyPassword } from '../services/password';
+import {
+  confirmationError, currentPasswordError, MESSAGES, passwordPolicyError,
+} from '../utils/validation';
+import type { PasswordChangeDraft, Session } from '../types';
 import '../users.css';
 
-// Misma política que el back (ChangePasswordRequest): el back sigue siendo quien decide.
-const POLICY = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9\s])\S{8,64}$/;
-const POLICY_MESSAGE = 'La contraseña debe tener 8 a 64 caracteres, con mayúscula, minúscula, número y carácter especial.';
+const EMPTY: PasswordChangeDraft = { current: '', next: '', confirm: '' };
+type Errors = Partial<Record<keyof PasswordChangeDraft, string>>;
 
-type Field = 'current' | 'password' | 'confirm';
-const ORDER: Field[] = ['current', 'password', 'confirm'];
-const IDS: Record<Field, string> = { current: 'current', password: 'password', confirm: 'confirm' };
+// Orden visual de los campos: sirve para enfocar el primero con error
+const FIELD_ORDER: (keyof PasswordChangeDraft)[] = ['current', 'next', 'confirm'];
 
-const focusFirst = (errs: ResetFieldErrors) => {
-  const first = ORDER.find((k) => errs[k]);
-  if (first) document.getElementById(IDS[first])?.focus();
-  return !!first;
-};
+// Mismas reglas que el back (F-06): el back sigue siendo quien decide.
+function validate(d: PasswordChangeDraft): Errors {
+  const errors: Errors = {};
 
+  const current = currentPasswordError(d.current);
+  if (current) {
+    errors.current = current;
+  }
+
+  // La nueva contraseña cumple la política y es distinta de la actual
+  if (passwordPolicyError(d.next) || (d.next !== '' && d.next === d.current)) {
+    errors.next = MESSAGES.newPassword;
+  }
+
+  const confirmation = confirmationError(d.next, d.confirm);
+  if (confirmation) {
+    errors.confirm = confirmation;
+  }
+  return errors;
+}
+
+function focusFirstError(errors: Errors): boolean {
+  const first = FIELD_ORDER.find((key) => errors[key]);
+  if (first) {
+    document.getElementById(first)?.focus();
+  }
+  return Boolean(first);
+}
+
+/**
+ * Cambio de contraseña de la persona autenticada (RF-MS01-08, flujo B, F-06). Pide la contraseña actual,
+ * la nueva y su confirmación. El token de la sesión sigue siendo válido: el cambio rige para el siguiente
+ * inicio de sesión (los Estándares no revocan tokens).
+ */
 export default function ChangePassword({ session }: { session: Session }) {
-  const [form, setForm] = useState({ current: '', password: '', confirm: '' });
-  const [errors, setErrors] = useState<ResetFieldErrors>({});
+  const [form, setForm] = useState<PasswordChangeDraft>(EMPTY);
+  const [errors, setErrors] = useState<Errors>({});
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState('');
 
-  const set = (key: Field, value: string) => {
-    setForm((f) => ({ ...f, [key]: value }));
-    setErrors((e) => ({ ...e, [key]: undefined }));
+  const set = (key: keyof PasswordChangeDraft, value: string) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setErrors((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
     setServerError('');
   };
 
   const submit = async () => {
-    if (submitting) return;
+    if (submitting) {
+      return;
+    }
 
-    const found: ResetFieldErrors = {};
-    if (form.current === '') found.current = 'Ingrese su contraseña actual.';
-    if (!POLICY.test(form.password)) found.password = POLICY_MESSAGE;
-    else if (form.password === form.current) found.password = 'La nueva contraseña debe ser distinta de la actual.';
-    if (form.confirm === '' || form.confirm !== form.password) found.confirm = 'Las contraseñas no coinciden.';
+    const found = validate(form);
     setErrors(found);
-    if (focusFirst(found)) return;
+    if (focusFirstError(found)) {
+      return;
+    }
 
     setSubmitting(true);
     setServerError('');
     try {
-      setDone(await changePassword(session, form));
-      setForm({ current: '', password: '', confirm: '' });
+      const message = await changeMyPassword(session, form);
+      setForm(EMPTY);
+      setDone(message);
     } catch (err) {
-      if (err instanceof PasswordError) {
-        setErrors(err.fields);
-        if (!focusFirst(err.fields)) setServerError(err.message);
+      if (err instanceof ApiError) {
+        const fields: Errors = {
+          current: err.fields.current,
+          next: err.fields.next,
+          confirm: err.fields.confirm,
+        };
+        setErrors(fields);
+        if (!focusFirstError(fields)) {
+          setServerError(err.message);
+        }
       } else {
-        setServerError('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
+        setServerError(errorMessage(err));
       }
     } finally {
       setSubmitting(false);
     }
   };
 
+  let buttonLabel = 'Cambiar contraseña';
+  if (submitting) {
+    buttonLabel = 'Cambiando…';
+  }
+
   return (
     <>
       <PageHeader
         badge="MI PERFIL"
         title="Cambiar contraseña"
-        subtitle="Ingresa tu contraseña actual y elige una nueva para proteger el acceso a tu cuenta."
+        subtitle="Escribe tu contraseña actual y elige una nueva. Debe ser distinta de la actual."
       />
       <main className="content narrow">
-        <form
-          className="panel"
-          noValidate
-          aria-busy={submitting}
-          onSubmit={(e) => { e.preventDefault(); void submit(); }}
-        >
-          <TextField id="current" label="Contraseña actual" type="password"
-            placeholder="Ingresa tu contraseña actual" value={form.current}
-            onChange={(v) => set('current', v)} error={errors.current}
-            autoComplete="current-password" maxLength={64} />
-          <TextField id="password" label="Nueva contraseña" type="password"
-            placeholder="Ingresa tu nueva contraseña" value={form.password}
-            onChange={(v) => set('password', v)} error={errors.password}
-            hint="8 a 64 caracteres, con mayúscula, minúscula, número y carácter especial."
-            autoComplete="new-password" maxLength={64} />
-          <TextField id="confirm" label="Confirmar nueva contraseña" type="password"
-            placeholder="Ingresa tu nueva contraseña de nuevo" value={form.confirm}
-            onChange={(v) => set('confirm', v)} error={errors.confirm}
-            autoComplete="new-password" maxLength={64} />
+        {done ? (
+          <section className="panel">
+            <p className="notice" role="status">{done}</p>
+            <a className="btn red" href="#/perfil">Volver al perfil</a>
+          </section>
+        ) : (
+          <form
+            className="panel"
+            noValidate
+            aria-busy={submitting}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void submit();
+            }}
+          >
+            <TextField
+              id="current"
+              label="Contraseña actual"
+              type="password"
+              placeholder="Ingresa tu contraseña actual"
+              value={form.current}
+              onChange={(v) => set('current', v)}
+              error={errors.current}
+              autoComplete="current-password"
+              maxLength={64}
+            />
+            <TextField
+              id="next"
+              label="Nueva contraseña"
+              type="password"
+              placeholder="Ingresa tu nueva contraseña"
+              value={form.next}
+              onChange={(v) => set('next', v)}
+              error={errors.next}
+              autoComplete="new-password"
+              maxLength={64}
+            />
+            <TextField
+              id="confirm"
+              label="Confirmar nueva contraseña"
+              type="password"
+              placeholder="Ingresa tu nueva contraseña de nuevo"
+              value={form.confirm}
+              onChange={(v) => set('confirm', v)}
+              error={errors.confirm}
+              autoComplete="new-password"
+              maxLength={64}
+            />
 
-          {done && <p className="notice" role="status">{done}</p>}
-          {serverError && <p className="notice err" role="alert">{serverError}</p>}
+            {serverError && <p className="notice err" role="alert">{serverError}</p>}
 
-          <div className="actions">
-            <button type="submit" className="btn red wide" disabled={submitting}>
-              {submitting ? 'Cambiando…' : 'Cambiar contraseña'}
-            </button>
-            <a className="btn white" href="#/perfil">{done ? 'Volver al perfil' : 'Cancelar'}</a>
-          </div>
-        </form>
+            <div className="actions">
+              <button type="submit" className="btn red" disabled={submitting}>
+                {buttonLabel}
+              </button>
+              <a className="btn white" href="#/perfil">Cancelar</a>
+            </div>
+          </form>
+        )}
       </main>
     </>
   );

@@ -4,7 +4,7 @@
 .panel h2{font:700 20px/25px 'Outfit',sans-serif}
 .panel > .btn{align-self:flex-start;width:220px;height:52px;border-radius:14px}
 .panel .actions{flex-direction:row;flex-wrap:wrap}
-.panel .actions .btn{width:200px;height:52px;border-radius:14px}
+.panel .actions .btn{width:200px;height:52px;padding:0 8px;border-radius:14px;white-space:nowrap}
 .panel.wide-panel{max-width:none}
 a.btn{text-decoration:none}
 .notice.err{background:#FEF2F2;border-color:#FECACA;color:#7F1D1D}
@@ -90,4 +90,3 @@ a.btn{text-decoration:none}
   .panel .rolesbar{width:100%}
   .perm-group li{flex-direction:column;gap:4px}
 }
-.panel .actions .btn.wide{width:240px}

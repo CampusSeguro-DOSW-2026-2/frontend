@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TextField } from '../components/TextField';
 import { ApiError, loginUser } from '../services/identity';
-import type { FieldErrors } from '../services/identity';
-import { saveSession } from '../services/session';
+import { errorMessage } from '../services/http';
+import { clearRecovery } from '../services/recovery';
+import { saveSession, takeSessionNotice } from '../services/session';
+import { emailFormatError, loginPasswordError } from '../utils/validation';
 import type { LoginDraft } from '../types';
 import '../auth.css';
 
@@ -11,32 +13,28 @@ const EMPTY: LoginDraft = {
   password: '',
 };
 
-type Errors = Pick<FieldErrors, 'email' | 'password'>;
+type Errors = Partial<Record<keyof LoginDraft, string>>;
 
 // Destino después de iniciar sesión: la pantalla de simulacro activo
 const HOME_ROUTE = '#/simulacro';
-
-// Formato de correo válido (F-02). No se exige el dominio institucional: eso lo decide el back.
-const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Orden visual de los campos: sirve para enfocar el primero con error
 const FIELD_ORDER: (keyof Errors)[] = ['email', 'password'];
 
 // Mismas reglas que el back (LoginRequest): el back sigue siendo quien decide.
+// RG-01: el correo se recorta antes de validar; la contraseña no se recorta ni se revalida (RG-02: vacía es faltante).
+// No se exige el dominio institucional: eso lo decide el back.
 function validate(d: LoginDraft): Errors {
   const errors: Errors = {};
 
-  // RG-01: el correo se recorta antes de validar
-  const email = d.email.trim();
-  if (!EMAIL_FORMAT.test(email) || email.length > 100) {
-    errors.email = 'Ingrese un correo válido.';
+  const email = emailFormatError(d.email);
+  if (email) {
+    errors.email = email;
   }
 
-  // RG-02: vacío o solo espacios es faltante. RG-01: la contraseña no se recorta ni se revalida.
-  if (d.password.trim() === '') {
-    errors.password = 'Ingrese su contraseña.';
-  } else if (d.password.length > 64) {
-    errors.password = 'La contraseña no puede superar los 64 caracteres.';
+  const password = loginPasswordError(d.password);
+  if (password) {
+    errors.password = password;
   }
   return errors;
 }
@@ -55,6 +53,13 @@ export default function Login() {
   const [errors, setErrors] = useState<Errors>({});
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Aviso de la pantalla anterior: "Sesión cerrada.", "Tu sesión venció...", "Contraseña actualizada."
+  const [notice] = useState(takeSessionNotice);
+
+  // Llegar al inicio de sesión descarta cualquier recuperación de contraseña a medias
+  useEffect(() => {
+    clearRecovery();
+  }, []);
 
   const set = (key: keyof LoginDraft, value: string) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -90,7 +95,7 @@ export default function Login() {
           setServerError(err.message);
         }
       } else {
-        setServerError('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
+        setServerError(errorMessage(err));
       }
     } finally {
       setSubmitting(false);
@@ -121,6 +126,8 @@ export default function Login() {
             void submit();
           }}
         >
+          {notice && <p className="notice" role="status">{notice}</p>}
+
           <TextField
             id="email"
             label="Correo institucional"

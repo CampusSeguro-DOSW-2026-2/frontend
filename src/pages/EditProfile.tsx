@@ -3,6 +3,7 @@ import { PageHeader } from '../components/Layout';
 import { TextField } from '../components/TextField';
 import { ApiError } from '../services/identity';
 import { errorMessage, getMyProfile, updateMyProfile } from '../services/users';
+import { nameError } from '../utils/validation';
 import type { ProfileDraft, Session } from '../types';
 import '../users.css';
 
@@ -12,17 +13,18 @@ type Errors = Partial<Record<keyof ProfileDraft, string>>;
 // Orden visual de los campos: sirve para enfocar el primero con error
 const FIELD_ORDER: (keyof ProfileDraft)[] = ['firstName', 'secondName', 'firstLastName', 'secondLastName'];
 
-// Mismas reglas que el back (UserUpdateProfileRequest): el back sigue siendo quien decide.
+// Mismas reglas y mensajes que el back (F-03): el back sigue siendo quien decide.
 function validate(d: ProfileDraft): Errors {
   const e: Errors = {};
-  const req = 'Campo obligatorio';
-  const range = 'Debe tener entre 2 y 30 caracteres';
-  const okLen = (v: string) => v.trim().length >= 2 && v.trim().length <= 30;
 
-  if (!d.firstName.trim()) e.firstName = req; else if (!okLen(d.firstName)) e.firstName = range;
-  if (d.secondName.trim() && !okLen(d.secondName)) e.secondName = range;
-  if (!d.firstLastName.trim()) e.firstLastName = req; else if (!okLen(d.firstLastName)) e.firstLastName = range;
-  if (d.secondLastName.trim() && !okLen(d.secondLastName)) e.secondLastName = range;
+  const firstName = nameError('firstName', d.firstName);
+  if (firstName) e.firstName = firstName;
+  const secondName = nameError('secondName', d.secondName);
+  if (secondName) e.secondName = secondName;
+  const firstLastName = nameError('firstLastName', d.firstLastName);
+  if (firstLastName) e.firstLastName = firstLastName;
+  const secondLastName = nameError('secondLastName', d.secondLastName);
+  if (secondLastName) e.secondLastName = secondLastName;
   return e;
 }
 

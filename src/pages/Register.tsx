@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { Logo } from '../components/Logo';
 import { TextField } from '../components/TextField';
 import { ApiError, registerUser } from '../services/identity';
-import type { FieldErrors } from '../services/identity';
+import { errorMessage } from '../services/http';
+import {
+  confirmationError, nameError, passwordPolicyError, registerEmailError,
+} from '../utils/validation';
 import type { RegisterDraft } from '../types';
 import '../auth.css';
 
@@ -10,37 +13,34 @@ const EMPTY: RegisterDraft = {
   firstName: '', secondName: '', firstLastName: '', secondLastName: '',
   email: '', password: '', confirmPassword: '',
 };
-type Errors = FieldErrors;
+type Errors = Partial<Record<keyof RegisterDraft, string>>;
 
 // Orden visual de los campos: sirve para enfocar el primero con error
 const FIELD_ORDER: (keyof RegisterDraft)[] = [
   'email', 'firstName', 'secondName', 'firstLastName', 'secondLastName', 'password', 'confirmPassword',
 ];
 
-// Mismas reglas que el back (UserCreateRequest): el back sigue siendo quien decide.
-const INSTITUTIONAL = /^[A-Za-z0-9._%+-]+@(mail\.)?escuelaing\.edu\.co$/i;
-
+// Mismas reglas y mensajes que el back (F-01): el back sigue siendo quien decide.
 function validate(d: RegisterDraft): Errors {
   const e: Errors = {};
-  const req = 'Campo obligatorio';
-  const range = 'Debe tener entre 2 y 30 caracteres';
-  const okLen = (v: string) => v.trim().length >= 2 && v.trim().length <= 30;
 
-  const email = d.email.trim();
-  if (!email) e.email = req;
-  else if (email.length > 100) e.email = 'No puede superar los 100 caracteres';
-  else if (!INSTITUTIONAL.test(email)) e.email = 'Usa tu correo institucional (@escuelaing.edu.co o @mail.escuelaing.edu.co)';
+  const email = registerEmailError(d.email);
+  if (email) e.email = email;
 
-  if (!d.firstName.trim()) e.firstName = req; else if (!okLen(d.firstName)) e.firstName = range;
-  if (d.secondName.trim() && !okLen(d.secondName)) e.secondName = range;
-  if (!d.firstLastName.trim()) e.firstLastName = req; else if (!okLen(d.firstLastName)) e.firstLastName = range;
-  if (d.secondLastName.trim() && !okLen(d.secondLastName)) e.secondLastName = range;
+  const firstName = nameError('firstName', d.firstName);
+  if (firstName) e.firstName = firstName;
+  const secondName = nameError('secondName', d.secondName);
+  if (secondName) e.secondName = secondName;
+  const firstLastName = nameError('firstLastName', d.firstLastName);
+  if (firstLastName) e.firstLastName = firstLastName;
+  const secondLastName = nameError('secondLastName', d.secondLastName);
+  if (secondLastName) e.secondLastName = secondLastName;
 
-  if (!d.password) e.password = req;
-  else if (d.password.length < 8 || d.password.length > 72) e.password = 'Debe tener entre 8 y 72 caracteres';
+  const password = passwordPolicyError(d.password);
+  if (password) e.password = password;
 
-  if (!d.confirmPassword) e.confirmPassword = req;
-  else if (d.confirmPassword !== d.password) e.confirmPassword = 'Las contraseñas no coinciden';
+  const confirmation = confirmationError(d.password, d.confirmPassword);
+  if (confirmation) e.confirmPassword = confirmation;
   return e;
 }
 
@@ -79,7 +79,7 @@ export default function Register() {
         setErrors(err.fields);
         if (!focusField(err.fields)) setServerError(err.message);
       } else {
-        setServerError('Ocurrió un error inesperado. Intenta de nuevo más tarde.');
+        setServerError(errorMessage(err));
       }
     } finally {
       setSubmitting(false);
@@ -138,11 +138,11 @@ export default function Register() {
               <TextField id="password" label="Contraseña" type="password"
                 placeholder="Ingresa tu contraseña" value={form.password}
                 onChange={(v) => set('password', v)} error={errors.password}
-                autoComplete="new-password" maxLength={72} />
+                autoComplete="new-password" maxLength={64} />
               <TextField id="confirmPassword" label="Vuelve a ingresar la contraseña" type="password"
                 placeholder="Ingresa tu contraseña de nuevo" value={form.confirmPassword}
                 onChange={(v) => set('confirmPassword', v)} error={errors.confirmPassword}
-                autoComplete="new-password" maxLength={72} />
+                autoComplete="new-password" maxLength={64} />
 
               {serverError && <p className="notice err" role="alert">{serverError}</p>}
 

@@ -1,118 +1,72 @@
+import { ApiError, GENERIC_ERROR, messageOf, request } from './http';
+import type { FieldErrors } from './http';
+import { clearSession } from './session';
+import { MESSAGES } from '../utils/validation';
 import type { LoginDraft, RegisterDraft, Session } from '../types';
 
 /**
- * Cliente de MS01 (identidad). Solo lo que el backend ya expone hoy: registro e inicio de sesión.
+ * Cliente de MS01 (identidad) a través del API Gateway: registro, inicio y cierre de sesión.
  * No usa localStorage de respaldo: registrar una cuenta o iniciar sesión de mentira no tendría sentido.
  */
-const MS01_URL = (import.meta.env.VITE_MS01_URL as string | undefined) ?? 'http://localhost:8080';
+export { ApiError };
+export type { FieldErrors };
 
-export type FieldErrors = Partial<Record<keyof RegisterDraft, string>>;
-
-/** Error de la API con el detalle por campo (ya traducido a los nombres del formulario). */
-export class ApiError extends Error {
-  status: number;
-  fields: FieldErrors;
-
-  constructor(status: number, message: string, fields: FieldErrors = {}) {
-    super(message);
-    this.status = status;
-    this.fields = fields;
-  }
-}
-
-// El back responde los errores 400 con { <campo del DTO>: <mensaje> }
-const FIELD_MAP: Record<string, keyof RegisterDraft> = {
+// Campo del contrato (JSON) → campo del formulario, para los errores 400 por campo
+const REGISTER_FIELDS: Record<string, string> = {
   primer_nombre: 'firstName',
   segundo_nombre: 'secondName',
   primer_apellido: 'firstLastName',
   segundo_apellido: 'secondLastName',
   correo: 'email',
-  password: 'password',
-  password_hash: 'password', // nombre actual del campo en UserCreateRequest
+  contrasena: 'password',
+  confirmar_contrasena: 'confirmPassword',
 };
 
+const LOGIN_FIELDS: Record<string, string> = {
+  correo: 'email',
+  contrasena: 'password',
+};
+
+/**
+ * Registra a un usuario (RF-MS01-01, F-01). Aplica RG-01 (correo recortado y en minúsculas, contraseña
+ * intacta) y RG-04 (solo envía los campos del contrato). Crea la cuenta ACTIVA con rol ESTUDIANTE y no
+ * inicia sesión.
+ */
 export async function registerUser(d: RegisterDraft): Promise<void> {
   const body: Record<string, string> = {
     primer_nombre: d.firstName.trim(),
     primer_apellido: d.firstLastName.trim(),
     correo: d.email.trim().toLowerCase(),
-    password: d.password,
+    contrasena: d.password,
+    confirmar_contrasena: d.confirmPassword,
   };
   // Los segundos nombres son opcionales: si están vacíos no se envían
-  if (d.secondName.trim()) body.segundo_nombre = d.secondName.trim();
-  if (d.secondLastName.trim()) body.segundo_apellido = d.secondLastName.trim();
+  if (d.secondName.trim()) {
+    body.segundo_nombre = d.secondName.trim();
+  }
+  if (d.secondLastName.trim()) {
+    body.segundo_apellido = d.secondLastName.trim();
+  }
 
-  let res: Response;
   try {
-    res = await fetch(`${MS01_URL}/api/v1/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-  } catch {
-    throw new ApiError(0, 'No se pudo conectar con el servidor. Intenta de nuevo en unos minutos.');
-  }
-
-  if (res.ok) return;
-
-  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-
-  if (res.status === 400) {
-    const fields: FieldErrors = {};
-    for (const [key, msg] of Object.entries(data)) {
-      const field = FIELD_MAP[key];
-      if (field && typeof msg === 'string') fields[field] = msg;
+    await request('/api/v1/auth/register', { method: 'POST', body, fields: REGISTER_FIELDS });
+  } catch (err) {
+    // 409 CONFLICTO: el correo ya existe, el mensaje va en el campo del correo
+    if (err instanceof ApiError && err.status === 409) {
+      err.fields = { ...err.fields, email: MESSAGES.duplicatedEmail };
+      err.message = MESSAGES.duplicatedEmail;
     }
-    throw new ApiError(400, 'Revisa los datos ingresados.', fields);
+    throw err;
   }
-  if (res.status === 409) {
-    throw new ApiError(409, 'Ya existe una cuenta con este correo.', {
-      email: 'Ya existe una cuenta registrada con este correo.',
-    });
-  }
-  throw new ApiError(res.status, 'Ocurrió un error inesperado. Intenta de nuevo más tarde.');
 }
 
-const NETWORK_ERROR = 'No se pudo conectar con el servidor. Intenta de nuevo en unos minutos.';
-const UNEXPECTED_ERROR = 'Ocurrió un error inesperado. Intenta de nuevo más tarde.';
-
-// El login responde los errores 400 como { errores: [{ campo, mensaje }] }
-const LOGIN_FIELD_MAP: Record<string, keyof LoginDraft> = {
-  correo: 'email',
-  contrasena: 'password',
-};
-
-/** Mensaje que envía el back (campo "mensaje"); si no llega, se usa el texto del requerimiento. */
-function serverMessage(data: Record<string, unknown>, fallback: string): string {
-  const message = data.mensaje;
-  if (typeof message === 'string' && message.trim() !== '') {
-    return message;
-  }
-  return fallback;
-}
-
-function loginFieldErrors(data: Record<string, unknown>): FieldErrors {
-  const fields: FieldErrors = {};
-  if (!Array.isArray(data.errores)) {
-    return fields;
-  }
-
-  for (const item of data.errores) {
-    const detail = item as Record<string, unknown>;
-    const field = LOGIN_FIELD_MAP[String(detail.campo)];
-    if (field && typeof detail.mensaje === 'string') {
-      fields[field] = detail.mensaje;
-    }
-  }
-  return fields;
-}
-
-function toSession(data: Record<string, unknown>): Session {
-  const user = data.usuario as Record<string, unknown> | undefined;
-  const validToken = typeof data.token === 'string' && data.token !== '';
-  const validExpiration = typeof data.expira_en === 'string' && data.expira_en !== '';
+function toSession(data: unknown): Session {
+  const body = (typeof data === 'object' && data !== null ? data : {}) as Record<string, unknown>;
+  const user = body.usuario as Record<string, unknown> | undefined;
+  const validToken = typeof body.token === 'string' && body.token !== '';
+  const validExpiration = typeof body.expira_en === 'string' && body.expira_en !== '';
   if (!validToken || !validExpiration || !user) {
-    throw new ApiError(500, UNEXPECTED_ERROR);
+    throw new ApiError(500, GENERIC_ERROR);
   }
 
   let roles: string[] = [];
@@ -121,9 +75,9 @@ function toSession(data: Record<string, unknown>): Session {
   }
 
   return {
-    token: data.token as string,
-    tokenType: String(data.tipo ?? 'Bearer'),
-    expiresAt: data.expira_en as string,
+    token: body.token as string,
+    tokenType: String(body.tipo ?? 'Bearer'),
+    expiresAt: body.expira_en as string,
     user: {
       id: String(user.id),
       email: String(user.correo),
@@ -133,41 +87,36 @@ function toSession(data: Record<string, unknown>): Session {
 }
 
 /**
- * Inicia sesión (RF-MS01-02). Aplica RG-01 (correo recortado y en minúsculas, contraseña intacta)
+ * Inicia sesión (RF-MS01-02, F-02). Aplica RG-01 (correo recortado y en minúsculas, contraseña intacta)
  * y RG-04 (solo envía los campos del contrato). El token y su vencimiento los guarda quien llama.
+ * 401 (credenciales incorrectas) y 403 (cuenta inactiva) llegan como mensaje global del formulario
+ * (RN-MS01-05: sin decir qué dato falló).
  */
 export async function loginUser(d: LoginDraft): Promise<Session> {
   const body = {
     correo: d.email.trim().toLowerCase(),
     contrasena: d.password,
   };
+  const data = await request('/api/v1/auth/login', { method: 'POST', body, fields: LOGIN_FIELDS });
+  return toSession(data);
+}
 
-  let res: Response;
+/**
+ * Cierra la sesión (RF-MS01-04): POST /api/v1/auth/logout con el token de la sesión, sin cuerpo.
+ * El servidor registra el cierre en la auditoría pero no revoca el token (RN-MS01-10): quien cierra
+ * la sesión es el cliente, que descarta el token. Por eso la sesión local se elimina siempre, aunque
+ * el servidor no responda o el token ya haya vencido, y la salida nunca falla.
+ *
+ * Devuelve el mensaje de confirmación del servidor, o vacío si no se pudo confirmar.
+ */
+export async function logoutUser(session: Session): Promise<string> {
+  let message = '';
   try {
-    res = await fetch(`${MS01_URL}/api/v1/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
+    const data = await request('/api/v1/auth/logout', { method: 'POST', session, expireOn401: false });
+    message = messageOf(data, 'Sesión cerrada.');
   } catch {
-    throw new ApiError(0, NETWORK_ERROR);
+    // Sin confirmación del servidor: igual se descarta el token local
   }
-
-  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-
-  if (res.ok) {
-    return toSession(data);
-  }
-
-  if (res.status === 400) {
-    throw new ApiError(400, 'Revisa los datos ingresados.', loginFieldErrors(data));
-  }
-  // 401 y 403 se muestran como mensaje global del formulario (RN-MS01-05: sin decir qué dato falló)
-  if (res.status === 401) {
-    throw new ApiError(401, serverMessage(data, 'Credenciales incorrectas.'));
-  }
-  if (res.status === 403) {
-    throw new ApiError(403, serverMessage(data, 'Cuenta inactiva. Contacte al administrador.'));
-  }
-  throw new ApiError(res.status, UNEXPECTED_ERROR);
+  clearSession();
+  return message;
 }
