@@ -1,9 +1,8 @@
 import type { ReactNode } from 'react';
-import { Bell, Chat, Home, MapIcon, User } from './Icons';
-import { rolesDeSesion } from '../services/campus';
+import { Bell, Chat, Home, MapIcon, ShieldCheck, User, Users } from './Icons';
 
 const NAV = [
-  { href: '#/', icon: <Home />, label: 'Inicio' },
+  { href: '#/simulacro', icon: <Home />, label: 'Inicio' },
   { href: '#/rutas', icon: <MapIcon />, label: 'Rutas' },
   { href: '#/reportar', icon: <Bell />, label: 'Reportar' },
   { href: '#/tutor', icon: <Chat />, label: 'Tutor AI' },
@@ -13,20 +12,38 @@ const NAV = [
 // Solo ADMIN y COORDINADOR ven la administración de MS02
 const ADMIN_NAV = { href: '#/admin/edificios', icon: <Home />, label: 'Administración' };
 
-export function Navbar({ current }: { current: string }) {
-  const roles = rolesDeSesion() ?? [];
-  const veAdministracion = roles.includes('ADMIN') || roles.includes('COORDINADOR');
+// Solo para administradores y auditores (KAIR-51)
+const USERS_NAV = { href: '#/usuarios', icon: <Users />, label: 'Usuarios' };
+
+// Solo para administradores: gestión de roles y permisos (RF-MS01-05)
+const ROLES_NAV = { href: '#/roles', icon: <ShieldCheck />, label: 'Roles' };
+
+// "Perfil" también queda activo en #/perfil/editar, "Usuarios" en #/usuarios/estado, "Roles" en #/roles/editar, etc.
+const isCurrent = (current: string, href: string) => {
+  const path = href.slice(1);
+  return current === path || current.startsWith(`${path}/`);
+};
+
+export function Navbar({ current, roles = [] }: { current: string; roles?: string[] }) {
+  const isAdmin = roles.includes('ADMIN');
+  const canList = isAdmin || roles.includes('AUDITOR');
   const items = [...NAV.slice(0, -1)];
-  if (veAdministracion) items.push(ADMIN_NAV);
+
+  if (isAdmin || roles.includes('COORDINADOR')) items.push(ADMIN_NAV);
+  if (canList) items.push(USERS_NAV);
+  if (isAdmin) items.push(ROLES_NAV);
+
   items.push(NAV[NAV.length - 1]);
 
   return (
     <nav className="navbar" aria-label="Navegación principal">
-      <a className="brand" href="#/">CampusSeguro</a>
+      <a className="brand" href="#/simulacro">CampusSeguro</a>
       <ul>
         {items.map((n) => (
           <li key={n.href}>
-            <a href={n.href} aria-current={current.startsWith(n.href.slice(1)) && n.href !== '#/' || current === n.href.slice(1) ? 'page' : undefined}>{n.icon}{n.label}</a>
+            <a href={n.href} aria-current={isCurrent(current, n.href) ? 'page' : undefined}>
+              {n.icon}{n.label}
+            </a>
           </li>
         ))}
       </ul>
