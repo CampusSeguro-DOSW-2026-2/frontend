@@ -53,6 +53,7 @@ export default function AlertList() {
       fetchPage(status, 0, pages * PAGE_SIZE)
         .then((r) => {
           if (ignore) return;
+          setError(''); // si MS03 aún arrancaba en la carga inicial, la vista se recupera sola
           setItems(r.items);
           setPg({ page: pages - 1, totalPages: Math.ceil(r.totalElements / PAGE_SIZE) });
         })
