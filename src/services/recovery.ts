@@ -10,13 +10,24 @@ export interface Recovery {
   code: string;
   /** Mensaje para la pantalla del código cuando se vuelve a ella (por ejemplo, código vencido). */
   error: string;
+  /** Instante (ms desde 1970) hasta el cual no se puede pedir otro código; 0 si no hay espera. */
+  waitUntil: number;
 }
+
+const configured = Number.parseInt(String(import.meta.env.VITE_RECOVERY_RESEND_SECONDS ?? ''), 10);
+
+/**
+ * Segundos que deben pasar entre dos solicitudes de código de la misma cuenta. Coincide con la espera de MS01
+ * (RECOVERY_RESEND_COOLDOWN_SECONDS, 60 por defecto): una solicitud antes de ese tiempo recibe la misma
+ * respuesta pero no genera otro correo. Se cambia con VITE_RECOVERY_RESEND_SECONDS; 0 la desactiva.
+ */
+export const RESEND_SECONDS = Number.isNaN(configured) || configured < 0 ? 60 : configured;
 
 let current: Recovery | null = null;
 
-/** Guarda el correo y el código para la pantalla de la nueva contraseña. */
-export function saveRecovery(email: string, code: string, error = ''): void {
-  current = { email, code, error };
+/** Guarda el correo, el código y la espera vigente para la pantalla de la nueva contraseña. */
+export function saveRecovery(email: string, code: string, error = '', waitUntil = 0): void {
+  current = { email, code, error, waitUntil };
 }
 
 /** Estado vigente de la recuperación, o null si no hay una en curso. */

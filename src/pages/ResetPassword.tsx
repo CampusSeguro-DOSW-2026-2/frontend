@@ -96,7 +96,7 @@ export default function ResetPassword() {
     } catch (err) {
       if (err instanceof ApiError && (err.code === 'CODIGO_INVALIDO' || err.fields.code || err.fields.email)) {
         // El código ya no sirve: se vuelve a la pantalla del código sin conservarlo
-        saveRecovery(recovery.email, '', MESSAGES.code);
+        saveRecovery(recovery.email, '', MESSAGES.code, recovery.waitUntil);
         window.location.hash = CODE_ROUTE;
         return;
       }

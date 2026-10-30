@@ -3,7 +3,7 @@ import { CodeInput } from '../components/CodeInput';
 import { TextField } from '../components/TextField';
 import { ApiError, errorMessage } from '../services/http';
 import { requestPasswordCode } from '../services/password';
-import { clearRecovery, readRecovery, saveRecovery } from '../services/recovery';
+import { clearRecovery, readRecovery, RESEND_SECONDS, saveRecovery } from '../services/recovery';
 import { codeError, emailFormatError } from '../utils/validation';
 import '../auth.css';
 
@@ -28,6 +28,25 @@ export default function ForgotPassword() {
   const [info, setInfo] = useState('');
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Espera entre dos solicitudes de código (la misma que aplica MS01): instante en que termina y reloj de la pantalla
+  const [waitUntil, setWaitUntil] = useState(saved?.waitUntil ?? 0);
+  const [now, setNow] = useState(Date.now);
+  const remaining = Math.max(0, Math.ceil((waitUntil - now) / 1000));
+
+  // Cuenta regresiva del botón de reenviar: el reloj solo corre mientras hay espera
+  useEffect(() => {
+    if (waitUntil <= Date.now()) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current >= waitUntil) {
+        window.clearInterval(timer);
+      }
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [waitUntil]);
 
   // Al volver con el código pendiente, el cursor queda en la casilla del código
   useEffect(() => {
@@ -40,6 +59,8 @@ export default function ForgotPassword() {
     setEmail(value);
     setEmailErr('');
     setServerError('');
+    // La espera es de la cuenta a la que se pidió el código: con otro correo se puede pedir de inmediato
+    setWaitUntil(0);
   };
 
   const onCode = (value: string) => {
@@ -63,6 +84,9 @@ export default function ForgotPassword() {
     try {
       const message = await requestPasswordCode(email);
       setInfo(message);
+      const started = Date.now();
+      setNow(started);
+      setWaitUntil(started + RESEND_SECONDS * 1000);
       return true;
     } catch (err) {
       if (err instanceof ApiError && err.fields.email) {
@@ -107,12 +131,12 @@ export default function ForgotPassword() {
       document.getElementById('code')?.focus();
       return;
     }
-    saveRecovery(email.trim().toLowerCase(), code);
+    saveRecovery(email.trim().toLowerCase(), code, '', waitUntil);
     window.location.hash = RESET_ROUTE;
   };
 
   const resend = async () => {
-    if (submitting) {
+    if (submitting || remaining > 0) {
       return;
     }
     if (await requestCode()) {
@@ -125,6 +149,11 @@ export default function ForgotPassword() {
   let buttonLabel = 'Restablecer contraseña';
   if (submitting && step === 'email') {
     buttonLabel = 'Enviando código…';
+  }
+
+  let resendLabel = 'Reenviar código';
+  if (remaining > 0) {
+    resendLabel = `Reenviar código en ${remaining} s`;
   }
 
   return (
@@ -176,8 +205,13 @@ export default function ForgotPassword() {
           </button>
 
           {step === 'code' && (
-            <button type="button" className="login-forgot link" onClick={() => void resend()} disabled={submitting}>
-              Reenviar código
+            <button
+              type="button"
+              className="login-forgot link"
+              onClick={() => void resend()}
+              disabled={submitting || remaining > 0}
+            >
+              {resendLabel}
             </button>
           )}
           <a className="login-forgot" href="#/login">Volver a iniciar sesión</a>
