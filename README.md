@@ -1,5 +1,9 @@
 # React + Vite
 
+## Estructura del proyecto
+
+El código está organizado por microservicio: `src/app/` (shell), `src/shared/` (lo reutilizable por todos) y `src/modules/msXX-*/` (lo propio de cada microservicio). Las reglas y la guía para mover archivos están en [docs/ESTRUCTURA.md](docs/ESTRUCTURA.md).
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:
