@@ -6,6 +6,7 @@ h1,h2,h3,p{margin:0}
 .of{font-family:'Outfit',sans-serif}
 :focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 .ico{display:inline-block;width:var(--w);height:var(--h);flex:none;background:currentColor;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain;-webkit-mask-position:center;mask-position:center}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
 /* navegación */
 .navbar{display:flex;justify-content:space-between;align-items:center;height:80px;padding:0 48px;background:#fff;border-bottom:1px solid var(--line)}
 .brand{font:800 26px/33px 'Outfit',sans-serif;color:var(--red);text-decoration:none}

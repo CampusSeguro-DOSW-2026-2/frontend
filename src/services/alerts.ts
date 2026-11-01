@@ -1,4 +1,4 @@
-import { ms03 } from './http';
+import { ms03 } from './ms03';
 
 export type AlertStatus = 'DRAFT' | 'SCHEDULED' | 'ACTIVE' | 'ENDED' | 'ARCHIVED';
 export interface Scope { type: 'CAMPUS' | 'BUILDING' | 'ZONE'; ids?: string[] }

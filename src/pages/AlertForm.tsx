@@ -4,12 +4,12 @@ import { PickerBox } from '../components/PickerBox';
 import { DateTimeField } from '../components/DateTimeField';
 import { FilePen, Info, Send } from '../components/Icons';
 import { alertsApi, type Alert, type AlertInput } from '../services/alerts';
-import { ApiError } from '../services/http';
+import { Ms03Error } from '../services/ms03';
 import { ROLE_ITEMS, SCOPE_ITEMS, labelOf, listEs, scopeIdsOf } from '../services/catalog';
 
 const typeOf = (id: string) => (id === 'CAMPUS' ? 'CAMPUS' : id.startsWith('BLD') ? 'BUILDING' : 'ZONE');
 const toLocalInput = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
-const msg = (e: unknown) => (e instanceof ApiError || e instanceof Error ? e.message : 'Error inesperado.');
+const msg = (e: unknown) => (e instanceof Ms03Error || e instanceof Error ? e.message : 'Error inesperado.');
 
 // Errores de MS03 junto a cada campo (details.field viene con nombres del contrato en inglés).
 const FIELD: Record<string, [string, string]> = {
@@ -19,7 +19,7 @@ const FIELD: Record<string, [string, string]> = {
   recipients: ['roles', 'Revisa los destinatarios seleccionados.'],
   activationAt: ['start', 'Debe ser una fecha futura'],
 };
-const fieldErrors = (e: ApiError) => {
+const fieldErrors = (e: Ms03Error) => {
   const out: Record<string, string> = {};
   if (e.code === 'INVALID_ACTIVATION_DATE') out.start = FIELD.activationAt[1];
   for (const d of e.details) {
@@ -98,7 +98,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
       window.location.hash = '#/alertas';
     } catch (err) {
       setApiError(msg(err));
-      if (err instanceof ApiError) setErrors(fieldErrors(err));
+      if (err instanceof Ms03Error) setErrors(fieldErrors(err));
     } finally { setBusy(false); }
   };
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { PageHeader } from '../components/Layout';
 import { Check, MapIcon } from '../components/Icons';
 import { api } from '../services/api';
+import type { Session } from '../types';
 
 const STEPS = [
   'Agáchate, cúbrete debajo de una mesa y sostente.',
@@ -9,14 +10,14 @@ const STEPS = [
   'Dirígete inmediatamente al Punto de Encuentro X.',
 ];
 
-export default function ActiveSimulation() {
+export default function ActiveSimulation({ session }: { session: Session }) {
   const [started, setStarted] = useState('');
   const [confirmed, setConfirmed] = useState(false);
   const [routeInfo, setRouteInfo] = useState(false);
   useEffect(() => {
-    api.getActiveSimulation().then((s) => setStarted(s ? new Date(s.startedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''));
+    api.getActiveSimulation(session).then((s) => setStarted(s ? new Date(s.startedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''));
     api.isAlertConfirmed().then(setConfirmed);
-  }, []);
+  }, [session]);
   const confirm = async () => { if (confirmed) return; await api.confirmAlert(); setConfirmed(true); };
 
   return (

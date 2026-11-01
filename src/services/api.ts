@@ -1,5 +1,5 @@
 import { alertsApi } from './alerts';
-import type { AssistanceRequest, Brigadista, Option, SimulationDraft } from '../types';
+import type { AssistanceRequest, Brigadista, Option, Session, SimulationDraft } from '../types';
 
 /**
  * Contrato que consumen las pantallas. Hoy lo implementa `localApi` (localStorage).
@@ -10,7 +10,7 @@ import type { AssistanceRequest, Brigadista, Option, SimulationDraft } from '../
 export interface CampusApi {
   getCatalogs(): Promise<{ buildings: Option[]; groups: Option[]; managers: Option[] }>;
   saveSimulationDraft(d: SimulationDraft): Promise<void>;
-  getActiveSimulation(): Promise<{ startedAt: string } | null>;
+  getActiveSimulation(session?: Session | null): Promise<{ startedAt: string } | null>;
   isAlertConfirmed(): Promise<boolean>;
   confirmAlert(): Promise<void>;
   getBrigadista(): Promise<Brigadista>;
@@ -56,10 +56,14 @@ export const localApi: CampusApi = {
 };
 
 // ---------------------------------------------------------------------------
-// MS03 (Alertas) por HTTP. Solo lo que el backend ya expone hoy.
+// MS03 (Alertas) por el API Gateway. Solo lo que el backend ya expone hoy.
+// La ruta /api/v1/alertas es protegida. Mientras el JWT de MS01 no sea aceptado por MS03, el cliente
+// de alertas (ms03.ts) usa el token de desarrollo de MS03.
 // ---------------------------------------------------------------------------
 export const ms03Api: Pick<CampusApi, 'getActiveSimulation'> = {
-  async getActiveSimulation() {
+  async getActiveSimulation(session) {
+    // Sin sesión no hay token: la pantalla ya exige iniciar sesión, esto es solo una defensa
+    if (!session) return localApi.getActiveSimulation();
     try {
       const page = await alertsApi.list({ status: 'ACTIVE', size: 1 });
       if (!page.content.length) return null; // no hay alerta activa
