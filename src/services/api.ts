@@ -1,4 +1,5 @@
-import type { AssistanceRequest, Brigadista, Option, SimulationDraft } from '../types';
+import { request } from './http';
+import type { AssistanceRequest, Brigadista, Option, Session, SimulationDraft } from '../types';
 
 /**
  * Contrato que consumen las pantallas. Hoy lo implementa `localApi` (localStorage).
@@ -9,7 +10,7 @@ import type { AssistanceRequest, Brigadista, Option, SimulationDraft } from '../
 export interface CampusApi {
   getCatalogs(): Promise<{ buildings: Option[]; groups: Option[]; managers: Option[] }>;
   saveSimulationDraft(d: SimulationDraft): Promise<void>;
-  getActiveSimulation(): Promise<{ startedAt: string } | null>;
+  getActiveSimulation(session?: Session | null): Promise<{ startedAt: string } | null>;
   isAlertConfirmed(): Promise<boolean>;
   confirmAlert(): Promise<void>;
   getBrigadista(): Promise<Brigadista>;
@@ -55,36 +56,22 @@ export const localApi: CampusApi = {
 };
 
 // ---------------------------------------------------------------------------
-// MS03 (Alertas) por HTTP. Solo lo que el backend ya expone hoy.
+// MS03 (Alertas) por el API Gateway. Solo lo que el backend ya expone hoy.
+// La ruta /api/v1/alertas es protegida: lleva el JWT de la sesión y el Gateway inyecta la identidad.
 // ---------------------------------------------------------------------------
-const MS03_URL = (import.meta.env.VITE_MS03_URL as string | undefined) ?? 'http://localhost:8080';
-
-// SOLO DESARROLLO: /local/tokens existe únicamente con el perfil `local` de MS03.
-// Se reemplaza por el JWT real de MS01 cuando exista.
-let devToken: Promise<string> | null = null;
-const getToken = () => {
-  devToken ??= fetch(`${MS03_URL}/local/tokens`)
-    .then((r) => { if (!r.ok) throw new Error(`tokens ${r.status}`); return r.json(); })
-    .then((t: Record<string, string>) => t.COORDINATOR)
-    .catch((e) => { devToken = null; throw e; });
-  return devToken;
-};
-
-async function ms03<T>(path: string): Promise<T> {
-  const r = await fetch(`${MS03_URL}${path}`, { headers: { Authorization: `Bearer ${await getToken()}` } });
-  if (!r.ok) throw new Error(`MS03 ${path} → ${r.status}`);
-  return r.json() as Promise<T>;
-}
-
-interface Page<T> { contenido: T[] }
+const record = (value: unknown): Record<string, unknown> =>
+  (typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {});
 
 export const ms03Api: Pick<CampusApi, 'getActiveSimulation'> = {
-  async getActiveSimulation() {
+  async getActiveSimulation(session) {
+    // Sin sesión no hay token: la pantalla ya exige iniciar sesión, esto es solo una defensa
+    if (!session) return localApi.getActiveSimulation();
     try {
-      const list = await ms03<Page<{ id: string }>>('/api/v1/alertas?estado=ACTIVE&size=1');
-      if (!list.contenido.length) return null; // no hay alerta activa
-      const alert = await ms03<{ fechaActivacion: string | null }>(`/api/v1/alertas/${list.contenido[0].id}`);
-      return alert.fechaActivacion ? { startedAt: alert.fechaActivacion } : null;
+      const list = record(await request('/api/v1/alertas?estado=ACTIVE&size=1', { session }));
+      const first = Array.isArray(list.contenido) ? record(list.contenido[0]) : {};
+      if (typeof first.id !== 'string') return null; // no hay alerta activa
+      const alert = record(await request(`/api/v1/alertas/${encodeURIComponent(first.id)}`, { session }));
+      return typeof alert.fechaActivacion === 'string' ? { startedAt: alert.fechaActivacion } : null;
     } catch (e) {
       console.warn('MS03 no disponible, se usa el dato local de demostración.', e);
       return localApi.getActiveSimulation();
