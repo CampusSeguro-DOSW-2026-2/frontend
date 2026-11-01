@@ -15,15 +15,18 @@ src/
 │   ├── styles.css            # Tokens y estilos globales
 │   └── types.ts              # Session, SessionUser
 │
-└── modules/                  # Un módulo por microservicio
+└── modules/                  # Un módulo por microservicio (cada uno con su README)
     ├── ms01-identity/        # Registro, sesión, perfil, usuarios, roles y contraseña
-    ├── ms02-campus/          # (pendiente: lo crea el squad de MS02)
+    ├── ms02-campus/          # Edificios, espacios, zonas seguras y rutas (pantallas en feature/MS02-Campus)
     ├── ms03-alerts/          # Alertas: listado, crear y editar; alerta activa
+    ├── ms04-evacuation/      # Estado de las personas y consolidado por punto de encuentro (sin pantallas aún)
     ├── ms05-brigades/        # Panel del brigadista
-    └── ms06-drills/          # Crear simulacro
+    ├── ms06-drills/          # Crear simulacro
+    ├── ms07-training/        # Formación preventiva, evaluaciones y Tutor AI (sin pantallas aún)
+    └── ms08-analytics/       # Indicadores, métricas y auditoría (sin pantallas aún)
 ```
 
-Cada módulo tiene la misma forma; solo existen las carpetas que el módulo necesita:
+Cada módulo tiene la misma forma. `pages/`, `components/`, `services/` y `hooks/` existen en todos (con `.gitkeep` mientras estén vacías; se borra al agregar el primer archivo); `utils/`, `styles/` y `types.ts` se crean cuando hacen falta:
 
 ```
 modules/msXX-nombre/
@@ -57,6 +60,6 @@ La rama `feature/MS02-Campus` todavía usa la estructura anterior. Al traer `dev
 | `src/pages/campus/*.css` | `src/modules/ms02-campus/styles/` |
 | `src/pages/campus/tipos.ts` y `src/types/campus.ts` | `src/modules/ms02-campus/types.ts` |
 | `src/services/campus.ts` | `src/modules/ms02-campus/services/campus.ts` |
-| Las rutas que agregaron en `App.tsx` | `src/modules/ms02-campus/routes.tsx` (y se encadena en `app/App.tsx`) |
+| Las rutas que agregaron en `App.tsx` | `campusRoutes` en `src/modules/ms02-campus/routes.tsx` (ya está encadenada en `app/App.tsx`) |
 
 Los imports compartidos cambian a `shared/`: `components/Layout` → `shared/components/Layout`, `components/Icons` → `shared/components/Icons`, `services/http` → `shared/services/http`, `services/session` → `shared/services/session`.

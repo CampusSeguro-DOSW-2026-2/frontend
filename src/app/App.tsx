@@ -2,9 +2,13 @@ import { useEffect, useState } from 'react';
 import { Navbar } from '../shared/components/Layout';
 import { getSession } from '../shared/services/session';
 import { PUBLIC_ROUTES, useIdentityRoutes } from '../modules/ms01-identity/routes';
+import { campusRoutes } from '../modules/ms02-campus/routes';
 import { alertRoutes } from '../modules/ms03-alerts/routes';
+import { evacuationRoutes } from '../modules/ms04-evacuation/routes';
 import { brigadesRoutes } from '../modules/ms05-brigades/routes';
 import { drillsRoutes } from '../modules/ms06-drills/routes';
+import { trainingRoutes } from '../modules/ms07-training/routes';
+import { analyticsRoutes } from '../modules/ms08-analytics/routes';
 import '../shared/styles.css';
 
 // Router mínimo por hash para no añadir dependencias; sustituible por react-router.
@@ -33,9 +37,13 @@ export default function App() {
 
   const page = blocked ? null
     : identityRoutes(route)
+      ?? campusRoutes(route)
       ?? alertRoutes(route, session)
+      ?? evacuationRoutes(route)
       ?? brigadesRoutes(route)
       ?? drillsRoutes(route)
+      ?? trainingRoutes(route)
+      ?? analyticsRoutes(route)
       ?? NOT_IMPLEMENTED;
 
   return (
