@@ -4,6 +4,8 @@ import { Navbar } from './components/Layout';
 import CreateSimulation from './pages/CreateSimulation';
 import ActiveSimulation from './pages/ActiveSimulation';
 import BrigadistaPanel from './pages/BrigadistaPanel';
+import AlertList from './pages/AlertList';
+import AlertForm from './pages/AlertForm';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
@@ -68,6 +70,8 @@ export default function App() {
       case '/simulacro': page = session && <ActiveSimulation session={session} />; break;
       case '/crear-simulacro': page = <CreateSimulation />; break;
       case '/brigadista': page = <BrigadistaPanel />; break;
+      case '/alertas': page = <AlertList />; break;
+      case '/alertas/nueva': page = <AlertForm key="new" />; break;
       case '/registro': page = <Register />; break;
       case '/recuperar-contrasena': page = <ForgotPassword />; break;
       case '/cambiar-contrasena': page = <ResetPassword />; break;
@@ -94,7 +98,10 @@ export default function App() {
           ? <ChangeRoles session={session} selected={roleSelected} onSelectedChange={setRoleSelected} />
           : NO_ACCESS);
         break;
-      default: page = <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
+      default: {
+        const m = route.match(/^\/alertas\/([^/]+)\/editar$/);
+        page = m ? <AlertForm key={m[1]} editId={m[1]} /> : <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
+      }
     }
   }
 
@@ -102,9 +109,10 @@ export default function App() {
     <>
       {!PUBLIC.includes(route) && <Navbar current={route} roles={roles} />}
       {page}
-      <footer className="demo-nav">
-        Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/recuperar-contrasena">Recuperar contraseña</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a>
-      </footer>
+      {/* Solo en desarrollo: acceso a las pantallas de prueba (la barra del mockup no tiene "Alertas"). */}
+      {import.meta.env.DEV && <footer className="demo-nav">
+        Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/recuperar-contrasena">Recuperar contraseña</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a> · <a href="#/alertas">Alertas</a>
+      </footer>}
     </>
   );
 }

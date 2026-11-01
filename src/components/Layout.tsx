@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Bell, Chat, Home, MapIcon, ShieldCheck, User, Users } from './Icons';
+import { Bell, Chat, Home, Logo, MapIcon, ShieldCheck, User, Users } from './Icons';
 
 const NAV = [
   { href: '#/simulacro', icon: <Home />, label: 'Inicio' },
@@ -31,7 +31,7 @@ export function Navbar({ current, roles = [] }: { current: string; roles?: strin
 
   return (
     <nav className="navbar" aria-label="Navegación principal">
-      <a className="brand" href="#/simulacro">CampusSeguro</a>
+      <a className="brand" href="#/simulacro">{current.startsWith('/alertas') && <Logo />}CampusSeguro</a>
       <ul>
         {items.map((n) => (
           <li key={n.href}>

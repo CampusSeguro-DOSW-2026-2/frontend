@@ -23,5 +23,11 @@ dist-ssr
 *.sln
 *.sw?
 
+# Notas locales del asistente
+CLAUDE.md
+
+# Variables locales (copiar de .env.example)
+.env
+
 # Carpeta temporal
 tmp/

@@ -1,4 +1,4 @@
-import { request } from './http';
+import { alertsApi } from './alerts';
 import type { AssistanceRequest, Brigadista, Option, Session, SimulationDraft } from '../types';
 
 /**
@@ -57,21 +57,18 @@ export const localApi: CampusApi = {
 
 // ---------------------------------------------------------------------------
 // MS03 (Alertas) por el API Gateway. Solo lo que el backend ya expone hoy.
-// La ruta /api/v1/alertas es protegida: lleva el JWT de la sesión y el Gateway inyecta la identidad.
+// La ruta /api/v1/alertas es protegida. Mientras el JWT de MS01 no sea aceptado por MS03, el cliente
+// de alertas (ms03.ts) usa el token de desarrollo de MS03.
 // ---------------------------------------------------------------------------
-const record = (value: unknown): Record<string, unknown> =>
-  (typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {});
-
 export const ms03Api: Pick<CampusApi, 'getActiveSimulation'> = {
   async getActiveSimulation(session) {
     // Sin sesión no hay token: la pantalla ya exige iniciar sesión, esto es solo una defensa
     if (!session) return localApi.getActiveSimulation();
     try {
-      const list = record(await request('/api/v1/alertas?estado=ACTIVE&size=1', { session }));
-      const first = Array.isArray(list.contenido) ? record(list.contenido[0]) : {};
-      if (typeof first.id !== 'string') return null; // no hay alerta activa
-      const alert = record(await request(`/api/v1/alertas/${encodeURIComponent(first.id)}`, { session }));
-      return typeof alert.fechaActivacion === 'string' ? { startedAt: alert.fechaActivacion } : null;
+      const page = await alertsApi.list({ status: 'ACTIVE', size: 1 });
+      if (!page.content.length) return null; // no hay alerta activa
+      const alert = await alertsApi.get(page.content[0].id);
+      return alert.activatedAt ? { startedAt: alert.activatedAt } : null;
     } catch (e) {
       console.warn('MS03 no disponible, se usa el dato local de demostración.', e);
       return localApi.getActiveSimulation();
