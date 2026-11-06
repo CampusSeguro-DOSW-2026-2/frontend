@@ -3,13 +3,15 @@ import { PageHeader } from '../../../shared/components/Layout';
 import { PickerBox } from '../components/PickerBox';
 import { DateTimeField } from '../../../shared/components/DateTimeField';
 import { FilePen, Info, Send } from '../../../shared/components/Icons';
-import { alertsApi, type Alert, type AlertInput } from '../services/alerts';
-import { Ms03Error } from '../services/ms03';
-import { ROLE_ITEMS, SCOPE_ITEMS, labelOf, listEs, scopeIdsOf } from '../services/catalog';
+import { alertsApi, type Alert, type AlertInput, type AlertType, type Recipient } from '../services/alerts';
+import { ApiError, errorMessage } from '../../../shared/services/http';
+import { getSession } from '../../../shared/services/session';
+import { alertAccess } from '../permissions';
+import { DEFAULT_TYPES, ROLE_ITEMS, SCOPE_ITEMS, TYPE_ITEMS, labelOf, listEs, scopeIdsOf, toggleType } from '../services/catalog';
 
 const typeOf = (id: string) => (id === 'CAMPUS' ? 'CAMPUS' : id.startsWith('BLD') ? 'BUILDING' : 'ZONE');
 const toLocalInput = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
-const msg = (e: unknown) => (e instanceof Ms03Error || e instanceof Error ? e.message : 'Error inesperado.');
+const msg = errorMessage;
 
 // Errores de MS03 junto a cada campo (details.field viene con nombres del contrato en inglés).
 const FIELD: Record<string, [string, string]> = {
@@ -17,13 +19,17 @@ const FIELD: Record<string, [string, string]> = {
   instructions: ['instructions', 'Revisa la descripción (obligatoria, máximo 1000 caracteres).'],
   scope: ['scope', 'Revisa los edificios y zonas seleccionados.'],
   recipients: ['roles', 'Revisa los destinatarios seleccionados.'],
+  destinatarios: ['roles', 'Revisa los destinatarios seleccionados.'],
+  alcance: ['scope', 'Revisa los edificios y zonas seleccionados.'],
+  types: ['types', 'Selecciona al menos un tipo de alerta.'],
+  tipos: ['types', 'Selecciona al menos un tipo de alerta.'],
   activationAt: ['start', 'Debe ser una fecha futura'],
 };
-const fieldErrors = (e: Ms03Error) => {
+const fieldErrors = (e: ApiError) => {
   const out: Record<string, string> = {};
-  if (e.code === 'INVALID_ACTIVATION_DATE') out.start = FIELD.activationAt[1];
+  if (e.code === 'FECHA_ACTIVACION_INVALIDA') out.start = FIELD.activationAt[1];
   for (const d of e.details) {
-    const f = FIELD[d.field.split(/[.[]/)[0]];
+    const f = FIELD[d.campo.split(/[.[]/)[0]];
     if (f) out[f[0]] = f[1];
   }
   return out;
@@ -35,6 +41,9 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const [start, setStart] = useState('');
   const [scopeIds, setScopeIds] = useState<string[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
+  const [types, setTypes] = useState<AlertType[]>(DEFAULT_TYPES);
+  // Destinatarios individuales (USER) que pudo fijar otro servicio: se conservan al editar.
+  const [users, setUsers] = useState<Recipient[]>([]);
   const [alert, setAlert] = useState<Alert | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [apiError, setApiError] = useState('');
@@ -46,13 +55,16 @@ export default function AlertForm({ editId }: { editId?: string }) {
     alertsApi.get(editId).then((a) => {
       setAlert(a); setTitle(a.title); setInstructions(a.instructions); setScopeIds(scopeIdsOf(a.scope));
       setRoles(a.recipients.filter((r) => r.type === 'ROLE').map((r) => r.id));
+      setUsers(a.recipients.filter((r) => r.type === 'USER')); setTypes(a.types);
       if (a.activationAt) setStart(toLocalInput(a.activationAt));
     }).catch((e) => setApiError(msg(e))).finally(() => setLoading(false));
   }, [editId]);
 
+  const access = alertAccess(getSession()?.user.roles ?? []);
   const status = alert?.status;
   const scheduled = status === 'SCHEDULED';
   const blocked = !!alert && status !== 'DRAFT' && !scheduled;
+  const forbidden = editId ? !!alert && !access.canManage(alert.origin) : !access.canCreate;
 
   const toggleScope = (id: string) => setScopeIds((cur) => {
     if (cur.includes(id)) return cur.filter((x) => x !== id);
@@ -66,7 +78,8 @@ export default function AlertForm({ editId }: { editId?: string }) {
     if (!title.trim()) e.title = req; else if (title.length > 150) e.title = 'Máximo 150 caracteres';
     if (!instructions.trim()) e.instructions = req; else if (instructions.length > 1000) e.instructions = 'Máximo 1000 caracteres';
     if (!scopeIds.length) e.scope = 'Selecciona al menos un lugar';
-    if (!roles.length) e.roles = 'Selecciona al menos un grupo';
+    if (!types.length) e.types = 'Selecciona al menos un tipo';
+    if (!roles.length && !users.length) e.roles = 'Selecciona al menos un grupo';
     if (start && !scheduled && new Date(start).getTime() <= Date.now()) e.start = 'Debe ser una fecha futura';
     return e;
   };
@@ -77,9 +90,9 @@ export default function AlertForm({ editId }: { editId?: string }) {
     setBusy(true);
     const t = typeOf(scopeIds[0]);
     const payload: AlertInput = {
-      type: 'OTHER', title: title.trim(), instructions: instructions.trim(),
+      types, title: title.trim(), instructions: instructions.trim(),
       scope: t === 'CAMPUS' ? { type: 'CAMPUS' } : { type: t, ids: scopeIds },
-      recipients: roles.map((id) => ({ type: 'ROLE' as const, id })),
+      recipients: [...users, ...roles.map((id) => ({ type: 'ROLE' as const, id }))],
     };
     const activationAt = start ? new Date(start).toISOString() : undefined;
     try {
@@ -98,7 +111,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
       window.location.hash = '#/alertas';
     } catch (err) {
       setApiError(msg(err));
-      if (err instanceof Ms03Error) setErrors(fieldErrors(err));
+      if (err instanceof ApiError) setErrors(fieldErrors(err));
     } finally { setBusy(false); }
   };
 
@@ -108,6 +121,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const star = (on: boolean) => on && <span className="req"> *</span>;
 
   if (loading) return <main className="page"><p className="notice">Cargando alerta…</p></main>;
+  if (forbidden) return <main className="page"><p className="notice" role="alert">No cuentas con permisos para {editId ? 'editar esta alerta' : 'crear alertas'}. <a href="#/alertas">Volver al listado</a></p></main>;
   if (blocked) return <main className="page"><p className="notice" role="alert">Esta alerta ya no se puede editar. <a href="#/alertas">Volver al listado</a></p></main>;
 
   return (
@@ -131,6 +145,9 @@ export default function AlertForm({ editId }: { editId?: string }) {
             <span className="help">{scheduled ? 'La alerta ya está programada.' : 'Opcional. Si lo dejas vacío, la alerta se emite de inmediato.'}</span>
             {errors.start && <span className="error" role="alert">{errors.start}</span>}
           </div>
+          <div className="fgroup half">
+            <PickerBox label="Tipo de alerta" required={!editId} help="Elige uno o varios tipos de emergencia, o Operativa (se usa sola)." editLabel="Editar tipo" items={TYPE_ITEMS} selected={types} onToggle={(id) => setTypes((c) => toggleType(c, id as AlertType))} error={errors.types} />
+          </div>
           <div className="fgroup">
             <span className="flabel">Alcance y destinatarios{star(!editId)}</span>
             <div className="two">
@@ -145,6 +162,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
             <div className="sum2-msg"><small>Título del mensaje</small><strong>{title.trim() || 'Pendiente de completar'}</strong>
               <p className="clamp">{instructions.trim() || 'Añada la descripción que recibirá la comunidad.'}</p></div>
             <div className="sep" />
+            <div className="sum2-row"><small>Tipo</small><span>{listEs(types.map((t) => labelOf(TYPE_ITEMS, t))) || '—'}</span></div>
             <div className="sum2-row"><small>Edificios y zonas</small><span>{scopeText || '—'}</span></div>
             <div className="sum2-row"><small>Destinatarios</small><span>{rolesText || '—'}</span></div>
           </div>

@@ -1,39 +1,70 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { Check, MapIcon } from '../../../shared/components/Icons';
-import { activeAlertApi } from '../services/activeAlert';
-import type { Session } from '../../../shared/types';
+import { Check, EmptyLogo, MapIcon } from '../../../shared/components/Icons';
+import { errorMessage } from '../../../shared/services/http';
+import { USE_MS03, activeAlertApi, type ActiveAlert } from '../services/activeAlert';
+import { scopeText } from '../services/catalog';
 
-const STEPS = [
-  'Agáchate, cúbrete debajo de una mesa y sostente.',
-  'Evacúa ordenadamente usando las salidas indicadas.',
-  'Dirígete inmediatamente al Punto de Encuentro X.',
-];
+const REFRESH_MS = 15000;
+const timeOf = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+// Las instrucciones son un texto libre: cada línea es un paso.
+const stepsOf = (text: string) => text.split(/\r?\n+/).map((s) => s.trim()).filter(Boolean);
 
-export default function ActiveSimulation({ session }: { session: Session }) {
-  const [started, setStarted] = useState('');
-  const [confirmed, setConfirmed] = useState(false);
+export default function ActiveSimulation() {
+  const [alert, setAlert] = useState<ActiveAlert | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [confirmError, setConfirmError] = useState('');
   const [routeInfo, setRouteInfo] = useState(false);
-  useEffect(() => {
-    activeAlertApi.getActiveSimulation(session).then((s) => setStarted(s ? new Date(s.startedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''));
-    activeAlertApi.isAlertConfirmed().then(setConfirmed);
-  }, [session]);
-  const confirm = async () => { if (confirmed) return; await activeAlertApi.confirmAlert(); setConfirmed(true); };
 
+  const load = useCallback(() => activeAlertApi.getActiveAlert()
+    .then((a) => { setAlert(a); setError(''); })
+    .catch((e: unknown) => setError(errorMessage(e)))
+    .finally(() => setLoading(false)), []);
+
+  // Una alerta puede activarse o archivarse con la pantalla abierta: se vuelve a consultar mientras la pestaña está visible.
+  useEffect(() => {
+    load();
+    const refresh = () => { if (document.visibilityState === 'visible') load(); };
+    const timer = window.setInterval(refresh, REFRESH_MS);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { window.clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
+  }, [load]);
+
+  const confirm = async () => {
+    if (!alert || alert.confirmed) return;
+    setConfirmError('');
+    try { await activeAlertApi.confirmAlert(alert.id); setAlert({ ...alert, confirmed: true }); }
+    catch (e) { setConfirmError(errorMessage(e)); }
+  };
+
+  if (!alert) {
+    return (
+      <main className="page">
+        {loading && <p className="notice">Cargando alertas…</p>}
+        {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
+        {!loading && !error && <section className="alist empty"><EmptyLogo /><h2>El campus está seguro. No hay alertas activas</h2></section>}
+      </main>
+    );
+  }
+
+  const steps = stepsOf(alert.instructions);
+  const operational = alert.types.length === 1 && alert.types[0] === 'OPERATIVA';
   return (
     <>
-      <PageHeader badge="EN PROGRESO" title="Simulacro Sísmico Nacional" subtitle="Evacuación Prioritaria de Campus" context={started && `Iniciado: ${started}`} />
+      <PageHeader badge="EN PROGRESO" title={alert.title} subtitle={`Alcance: ${scopeText(alert.scope)}`} context={`Iniciado: ${timeOf(alert.startedAt)}`} />
       <main className="content">
-        <h2 className="title">Instrucciones de Emergencia</h2>
+        <h2 className="title">{operational ? 'Instrucciones' : 'Instrucciones de Emergencia'}</h2>
         <div className="steps">
-          {STEPS.map((t, i) => <div className="step" key={t}><span className="num">{i + 1}</span><p>{t}</p></div>)}
+          {steps.map((t, i) => <div className="step" key={`${i}-${t}`}><span className="num">{i + 1}</span><p>{t}</p></div>)}
         </div>
         <div className="btns">
           <button className="btn navy" onClick={() => setRouteInfo(true)}><MapIcon />Ver Ruta de Evacuación Segura</button>
-          <button className="btn deep" onClick={confirm} disabled={confirmed}><Check />{confirmed ? 'Alerta recibida' : 'Confirmar Recepción de Alerta'}</button>
+          <button className="btn deep" onClick={confirm} disabled={alert.confirmed}><Check />{alert.confirmed ? 'Alerta recibida' : 'Confirmar Recepción de Alerta'}</button>
         </div>
         {routeInfo && <p className="notice" role="status">La vista de rutas aún no está disponible en esta versión.</p>}
-        {confirmed && <p className="notice" role="status">Recepción confirmada (registro local de demostración).</p>}
+        {confirmError && <p className="notice err" role="alert">{confirmError}</p>}
+        {alert.confirmed && <p className="notice" role="status">Recepción confirmada{USE_MS03 ? '.' : ' (registro local de demostración).'}</p>}
       </main>
     </>
   );

@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import { Edit, EmptyLogo, Filter, Plus, Search } from '../../../shared/components/Icons';
+import { errorMessage } from '../../../shared/services/http';
+import { getSession } from '../../../shared/services/session';
+import { alertAccess } from '../permissions';
 import { alertsApi, type AlertStatus, type AlertSummary } from '../services/alerts';
-import { ROLE_ITEMS, SCOPE_ITEMS, labelOf, listEs, scopeIdsOf } from '../services/catalog';
+import { recipientsText, scopeText } from '../services/catalog';
 
 const ST: Record<AlertStatus, { label: string; color: string; off?: boolean }> = {
   DRAFT: { label: 'Borrador', color: '#0F172A' }, SCHEDULED: { label: 'Programada', color: '#2563EB' },
-  ACTIVE: { label: 'Activa', color: '#990000' }, ENDED: { label: 'Finalizada', color: '#5A5C60', off: true },
+  ACTIVE: { label: 'Activa', color: '#990000' },
   ARCHIVED: { label: 'Archivada', color: '#5A5C60', off: true },
 };
 
-const errMsg = (e: unknown) => (e instanceof Error ? e.message : 'Error inesperado.');
+const errMsg = errorMessage;
 const PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 100; // límite de MS03
 const REFRESH_MS = 15000;
@@ -19,6 +22,7 @@ const fetchPage = async (status: AlertStatus | '', page: number, size = PAGE_SIZ
 };
 
 export default function AlertList() {
+  const access = alertAccess(getSession()?.user.roles ?? []);
   const [items, setItems] = useState<AlertSummary[]>([]);
   const [pg, setPg] = useState({ page: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
@@ -83,7 +87,7 @@ export default function AlertList() {
     <>
       <header className="list-head">
         <div><h1>Alertas</h1><p>Consulta las alertas en el campus.</p></div>
-        <a className="btn-create" href="#/alertas/nueva"><Plus />Crear alerta</a>
+        {access.canCreate && <a className="btn-create" href="#/alertas/nueva"><Plus />Crear alerta</a>}
       </header>
       <main className="list-main">
         <div className="searchbar">
@@ -102,16 +106,16 @@ export default function AlertList() {
           {empty && <><EmptyLogo /><h2>El campus está seguro. No hay alertas</h2></>}
           {shown.map((a, i) => {
             const s = ST[a.status];
-            const scope = a.scope.type === 'CAMPUS' ? 'Todo el campus' : scopeIdsOf(a.scope).map((id) => labelOf(SCOPE_ITEMS, id)).join(', ');
-            const rec = listEs(a.recipients.map((r) => labelOf(ROLE_ITEMS, r.id)));
+            const scope = scopeText(a.scope);
+            const rec = recipientsText(a.recipients);
+            const manage = access.canManage(a.origin);
             return (
               <article key={a.id} className={`arow${s.off ? ' off' : ''}`} style={{ borderTopColor: s.color, borderTopWidth: i === 0 ? 7 : 5 }}>
                 <div className="abody"><h3>{a.title}</h3><p className="adesc">{a.instructions}</p><p className="al"><b>Alcance:</b> {scope} · {rec}</p></div>
                 <span className="abadge" style={{ background: s.color }}>{s.label}</span>
                 <div className="aact">
-                  {(a.status === 'DRAFT' || a.status === 'SCHEDULED') && <a href={`#/alertas/${a.id}/editar`} aria-label={`Editar ${a.title}`}><Edit /></a>}
-                  {a.status === 'ACTIVE' && <button type="button" onClick={() => act(() => alertsApi.end(a.id), '¿Finalizar esta alerta?')}>Finalizar</button>}
-                  {a.status === 'ENDED' && <button type="button" onClick={() => act(() => alertsApi.archive(a.id), '¿Archivar esta alerta?')}>Archivar</button>}
+                  {manage && (a.status === 'DRAFT' || a.status === 'SCHEDULED') && <a href={`#/alertas/${a.id}/editar`} aria-label={`Editar ${a.title}`}><Edit /></a>}
+                  {manage && a.status !== 'ARCHIVED' && <button type="button" onClick={() => act(() => alertsApi.archive(a.id), '¿Archivar esta alerta?')}>Archivar</button>}
                 </div>
               </article>
             );
