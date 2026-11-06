@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Bell, Chat, Home, Logo, MapIcon, ShieldCheck, User, Users } from './Icons';
+import { Bell, Chat, FilePen, Home, Logo, MapIcon, ShieldCheck, User, Users } from './Icons';
 
 const NAV = [
   { href: '#/simulacro', icon: <Home />, label: 'Inicio' },
@@ -8,6 +8,9 @@ const NAV = [
   { href: '#/tutor', icon: <Chat />, label: 'Tutor AI' },
   { href: '#/perfil', icon: <User />, label: 'Perfil' },
 ];
+
+// Historial de alertas de MS03: coordinadores, organizadores y auditores
+const ALERTS_NAV = { href: '#/alertas', icon: <FilePen />, label: 'Alertas' };
 
 // Solo para administradores y auditores (KAIR-51)
 const USERS_NAV = { href: '#/usuarios', icon: <Users />, label: 'Usuarios' };
@@ -25,6 +28,7 @@ export function Navbar({ current, roles = [] }: { current: string; roles?: strin
   const isAdmin = roles.includes('ADMIN');
   const canList = isAdmin || roles.includes('AUDITOR');
   const items = [...NAV.slice(0, -1)];
+  if (roles.some((r) => ['COORDINADOR', 'ORGANIZADOR', 'AUDITOR'].includes(r))) items.push(ALERTS_NAV);
   if (canList) items.push(USERS_NAV);
   if (isAdmin) items.push(ROLES_NAV);
   items.push(NAV[NAV.length - 1]);

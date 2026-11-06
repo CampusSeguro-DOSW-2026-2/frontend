@@ -1,64 +1,41 @@
-export const MS03_URL = (import.meta.env.VITE_MS03_URL as string | undefined) ?? 'http://localhost:8080';
+import { ApiError, request } from '../../../shared/services/http';
+import { getSession } from '../../../shared/services/session';
 
-export interface ErrorDetail { field: string; message: string }
-// Error de MS03: su formato es { code, message, details[{ field, message }] }, distinto del ApiError del Gateway (http.ts).
-export class Ms03Error extends Error {
-  status: number;
-  code: string;
-  details: ErrorDetail[];
-  constructor(status: number, code: string, message: string, details: ErrorDetail[] = []) {
-    super(message); this.status = status; this.code = code; this.details = details;
-  }
-}
+/**
+ * Cliente de MS03 (Alertas) a través del API Gateway.
+ *
+ * MS03 ya no valida JWT ni expone CORS: el Gateway verifica el token de MS01 e inyecta la identidad
+ * (X-User-Id, X-User-Role). Por eso aquí solo se firma con la sesión del usuario y se reutiliza el
+ * cliente compartido (`shared/services/http.ts`), que ya entiende el ErrorResponse estándar
+ * { status, codigo, mensaje, errores[{ campo, mensaje }], correlation_id }.
+ */
 
-// MS03 responde los mensajes en inglés; la interfaz los muestra en español según el código.
+// Códigos de dominio de MS03 que el cliente compartido no conoce. Los demás (VALIDACION, NO_AUTENTICADO,
+// NO_ENCONTRADO, ERROR_INTERNO...) los traduce http.ts.
 const MESSAGES: Record<string, string> = {
-  VALIDATION_ERROR: 'Revisa los campos marcados.',
-  INVALID_ACTIVATION_DATE: 'La fecha de inicio debe ser futura.',
-  INVALID_ALERT_STATE: 'La alerta ya no se puede modificar en su estado actual.',
-  INVALID_TRANSITION: 'La alerta ya no admite esa acción en su estado actual.',
-  ALERT_NOT_FOUND: 'La alerta no existe.',
-  UNAUTHORIZED: 'Tu sesión no es válida. Vuelve a iniciar sesión.',
-  FORBIDDEN: 'No tienes permiso para realizar esta acción.',
-  CONCURRENT_MODIFICATION: 'Otra persona modificó la alerta. Recarga e inténtalo de nuevo.',
-  EXTERNAL_SERVICE_UNAVAILABLE: 'Un servicio del campus no está disponible. Inténtalo más tarde.',
-  INVALID_REFERENCE: 'Algún edificio, zona o destinatario no existe en el catálogo.',
-  NOT_A_RECIPIENT: 'No eres destinatario de esta alerta.',
-  ALERT_NOT_ACTIVE: 'La alerta no está activa.',
-  INTERNAL_ERROR: 'El servicio de alertas tuvo un error. Inténtalo más tarde.',
-};
-const byStatus = (s: number) => {
-  if (s >= 500) return MESSAGES.INTERNAL_ERROR;
-  return `No se pudo completar la operación (error ${s}).`;
+  VALIDACION: 'Revisa los campos marcados.',
+  REFERENCIA_INVALIDA: 'Algún edificio, zona o destinatario no existe en el catálogo.',
+  PAGINACION_INVALIDA: 'Los parámetros de consulta no son válidos.',
+  FECHA_ACTIVACION_INVALIDA: 'La fecha de inicio debe ser futura.',
+  PROHIBIDO: 'No tienes permiso para realizar esta acción.',
+  NO_ES_DESTINATARIO: 'No eres destinatario de esta alerta.',
+  ALERTA_NO_ENCONTRADA: 'La alerta no existe.',
+  ESTADO_ALERTA_INVALIDO: 'La alerta ya no se puede modificar en su estado actual.',
+  TRANSICION_INVALIDA: 'La alerta ya no admite esa acción en su estado actual.',
+  ALERTA_NO_ACTIVA: 'La alerta no está activa.',
+  SIMULACION_DUPLICADA: 'Ya existe una alerta para este simulacro con otros datos.',
+  MODIFICACION_CONCURRENTE: 'Otra persona modificó la alerta. Recarga e inténtalo de nuevo.',
+  SERVICIO_EXTERNO_NO_DISPONIBLE: 'Un servicio del campus no está disponible. Inténtalo más tarde.',
 };
 
-// SOLO DESARROLLO: /local/tokens existe únicamente con el perfil `local` de MS03.
-// Se reemplaza por el JWT real de MS01 cuando exista.
-let devToken: Promise<string> | null = null;
-const getToken = () => {
-  devToken ??= fetch(`${MS03_URL}/local/tokens`)
-    .then((r) => { if (!r.ok) throw new Error(`tokens ${r.status}`); return r.json(); })
-    .then((t: Record<string, string>) => t.COORDINATOR)
-    .catch((e) => { devToken = null; throw e; });
-  return devToken;
-};
-
-export async function ms03<T>(method: string, path: string, body?: unknown): Promise<T> {
-  let r: Response;
+export async function ms03<T>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', path: string, body?: unknown): Promise<T> {
   try {
-    const token = await getToken();
-    r = await fetch(`${MS03_URL}${path}`, {
-      method,
-      headers: { Authorization: `Bearer ${token}`, ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}) },
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-  } catch {
-    throw new Ms03Error(0, 'NETWORK', 'No se pudo conectar con el servicio de alertas.');
+    return (await request(path, { method, body, session: getSession() ?? undefined })) as T;
+  } catch (e) {
+    const message = e instanceof ApiError ? MESSAGES[e.code] : undefined;
+    if (e instanceof ApiError && message) {
+      throw new ApiError(e.status, message, e.fields, e.code, e.details, e.correlationId);
+    }
+    throw e;
   }
-  if (!r.ok) {
-    let code = 'ERROR', details: ErrorDetail[] = [];
-    try { const j = await r.json(); code = j.code ?? code; details = j.details ?? []; } catch { /* sin cuerpo */ }
-    throw new Ms03Error(r.status, code, MESSAGES[code] ?? byStatus(r.status), details);
-  }
-  return (r.status === 204 ? undefined : await r.json()) as T;
 }

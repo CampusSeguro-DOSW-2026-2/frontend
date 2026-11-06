@@ -1,44 +1,52 @@
-import { alertsApi } from './alerts';
+import { alertsApi, type AlertType, type Scope } from './alerts';
 import { ago, read, write } from '../../../shared/services/localStore';
-import type { Session } from '../../../shared/types';
 
-/**
- * Alerta activa que ve el destinatario. La confirmación (POST /{id}/confirmaciones) aún es local;
- * la fecha de activación sale de MS03 cuando VITE_USE_MS03=true.
- */
-interface ActiveAlertApi {
-  getActiveSimulation(session?: Session | null): Promise<{ startedAt: string } | null>;
-  isAlertConfirmed(): Promise<boolean>;
-  confirmAlert(): Promise<void>;
+/** Alerta activa que ve el destinatario en su pantalla de inicio. */
+export interface ActiveAlert {
+  id: string; types: AlertType[]; title: string; instructions: string; scope: Scope; startedAt: string; confirmed: boolean;
 }
 
+interface ActiveAlertApi {
+  /** La alerta activa más reciente dirigida al usuario, o null si no hay ninguna. */
+  getActiveAlert(): Promise<ActiveAlert | null>;
+  confirmAlert(id: string): Promise<void>;
+}
+
+// Para activar MS03: VITE_USE_MS03=true. Sin eso la pantalla usa datos locales de demostración.
+export const USE_MS03 = import.meta.env.VITE_USE_MS03 === 'true';
+
 export const localApi: ActiveAlertApi = {
-  async getActiveSimulation() { return { startedAt: read('cs.startedAt', ago(3)) }; },
-  async isAlertConfirmed() { return read('cs.alertConfirmed', false); },
+  async getActiveAlert() {
+    return {
+      id: 'demo', types: ['EARTHQUAKE'], title: 'Simulacro Sísmico Nacional', scope: { type: 'CAMPUS' },
+      instructions: [
+        'Agáchate, cúbrete debajo de una mesa y sostente.',
+        'Evacúa ordenadamente usando las salidas indicadas.',
+        'Dirígete inmediatamente al Punto de Encuentro X.',
+      ].join('\n'),
+      startedAt: read('cs.startedAt', ago(3)),
+      confirmed: read('cs.alertConfirmed', false),
+    };
+  },
   async confirmAlert() { write('cs.alertConfirmed', true); },
 };
 
 // ---------------------------------------------------------------------------
-// MS03 (Alertas) por el API Gateway. Solo lo que el backend ya expone hoy.
-// La ruta /api/v1/alertas es protegida. Mientras el JWT de MS01 no sea aceptado por MS03, el cliente
-// de alertas (ms03.ts) usa el token de desarrollo de MS03.
+// MS03 (Alertas) por el API Gateway: bandeja personal y confirmación de recepción.
+// GET /api/v1/alertas/mias devuelve solo las alertas dirigidas al usuario (por su id, por su rol o por
+// una notificación enviada), ordenadas de la más reciente a la más antigua; `confirmedAt` indica si ya confirmó.
 // ---------------------------------------------------------------------------
-export const ms03Api: Pick<ActiveAlertApi, 'getActiveSimulation'> = {
-  async getActiveSimulation(session) {
-    // Sin sesión no hay token: la pantalla ya exige iniciar sesión, esto es solo una defensa
-    if (!session) return localApi.getActiveSimulation();
-    try {
-      const page = await alertsApi.list({ status: 'ACTIVE', size: 1 });
-      if (!page.content.length) return null; // no hay alerta activa
-      const alert = await alertsApi.get(page.content[0].id);
-      return alert.activatedAt ? { startedAt: alert.activatedAt } : null;
-    } catch (e) {
-      console.warn('MS03 no disponible, se usa el dato local de demostración.', e);
-      return localApi.getActiveSimulation();
-    }
+export const ms03Api: ActiveAlertApi = {
+  async getActiveAlert() {
+    const page = await alertsApi.inbox({ status: 'ACTIVE', size: 1 });
+    const alert = page.content[0];
+    if (!alert) return null;
+    return {
+      id: alert.id, types: alert.types, title: alert.title, scope: alert.scope, instructions: alert.instructions,
+      startedAt: alert.activatedAt ?? new Date().toISOString(), confirmed: alert.confirmedAt !== null,
+    };
   },
+  async confirmAlert(id) { await alertsApi.confirm(id); },
 };
 
-// Para activar MS03: VITE_USE_MS03=true
-const useMs03 = import.meta.env.VITE_USE_MS03 === 'true';
-export const activeAlertApi: ActiveAlertApi = useMs03 ? { ...localApi, ...ms03Api } : localApi;
+export const activeAlertApi: ActiveAlertApi = USE_MS03 ? ms03Api : localApi;
