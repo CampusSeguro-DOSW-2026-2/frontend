@@ -1,5 +1,5 @@
 import type {
-  CalcularRutaExteriorRequest, RutaExterior, Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
+  CampusRequest, ZonaAbiertaRequest, CalcularRutaExteriorRequest, RutaExterior, Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
   EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, ModificarSalidaRequest, ModificarZonaSeguraRequest,
   Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, Salida,
   SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest, EspacioPublico, SalidaPublica, ZonaSeguraPublica,
@@ -122,10 +122,21 @@ export const campus = {
   },
   campuses: {
     listar: (incluirInactivos?: boolean) => pedir<Campus[]>('GET', `/campuses${filtro(incluirInactivos)}`),
+    obtener: (id: string) => pedir<Campus>('GET', `/campuses/${id}`),
+    crear: (datos: CampusRequest) => pedir<Campus>('POST', '/campuses', datos),
+    modificar: (id: string, datos: CampusRequest) => pedir<Campus>('PUT', `/campuses/${id}`, datos),
+    inactivar: (id: string) => pedir<Campus>('PATCH', `/campuses/${id}/deactivate`),
+    reactivar: (id: string) => pedir<Campus>('PATCH', `/campuses/${id}/reactivate`),
   },
   zonasAbiertas: {
     listarPorCampus: (campusId: string, incluirInactivos?: boolean) =>
       pedir<ZonaAbierta[]>('GET', `/campuses/${campusId}/open-zones${filtro(incluirInactivos)}`),
+    obtener: (id: string) => pedir<ZonaAbierta>('GET', `/open-zones/${id}`),
+    crear: (campusId: string, datos: ZonaAbiertaRequest) =>
+      pedir<ZonaAbierta>('POST', `/campuses/${campusId}/open-zones`, datos),
+    modificar: (id: string, datos: ZonaAbiertaRequest) => pedir<ZonaAbierta>('PUT', `/open-zones/${id}`, datos),
+    inactivar: (id: string) => pedir<ZonaAbierta>('PATCH', `/open-zones/${id}/deactivate`),
+    reactivar: (id: string) => pedir<ZonaAbierta>('PATCH', `/open-zones/${id}/reactivate`),
   },
   rutas: {
     listar: () => pedir<Ruta[]>('GET', '/evacuation-routes'),

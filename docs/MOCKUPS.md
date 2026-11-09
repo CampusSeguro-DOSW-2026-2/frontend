@@ -133,6 +133,21 @@ Referencia visual para el equipo.
 
 ---
 
+### 4.4 Campus y zonas abiertas
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/campus` |
+| Archivo | `src/modules/ms02-campus/pages/CampusAdmin.tsx`, `pages/BuildingsAdmin.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- Pantalla nueva: cada campus es una tarjeta con sus zonas abiertas (zona verde, plazoleta, cancha, parqueadero u otra). El ADMIN crea, modifica, inactiva y reactiva campus y zonas abiertas; el backend rechaza inactivar lo que aún tiene zonas activas y el mensaje se muestra tal cual.
+- Latitud y longitud de una zona abierta son opcionales, van juntas y se revisan con «Ver en OpenStreetMap».
+- En «Edificios» el formulario permite elegir el campus (opcional), la tabla muestra una columna «Campus» y un enlace lleva a esta pantalla. El campus de un edificio se puede cambiar pero no quitar, porque el backend interpreta el campo vacío como «sin cambios».
+
+---
+
 ### 5. _Nueva pantalla_ (copiar esta sección)
 
 | Campo | Detalle |
