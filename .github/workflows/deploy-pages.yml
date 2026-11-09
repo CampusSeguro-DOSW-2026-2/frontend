@@ -1,0 +1,51 @@
+# Publica el frontend en GitHub Pages en cada push a develop (o a mano desde Actions).
+# Requisito único (admin del repositorio): Settings > Pages > Build and deployment > Source = "GitHub Actions".
+# La URL del API Gateway se toma de la variable del repositorio API_URL (Settings > Secrets and variables >
+# Actions > Variables); si no existe, se usa el Gateway de prueba en Azure.
+name: Desplegar en GitHub Pages
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Un solo despliegue a la vez; si llega otro push, el que está en curso termina primero
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Revisar tipos
+        run: npx tsc -p .
+      - name: Compilar
+        # La página vive en /<repositorio>/: los recursos se sirven con ese prefijo
+        run: npx vite build --base="/${{ github.event.repository.name }}/"
+        env:
+          VITE_API_URL: ${{ vars.API_URL || 'https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443' }}
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
