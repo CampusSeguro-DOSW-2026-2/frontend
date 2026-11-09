@@ -229,7 +229,7 @@ export default function RoutesAdmin() {
 
   const encabezado = (
     <PageHeader badge="ADMINISTRACIÓN" title="Rutas de evacuación"
-      subtitle="Define la ruta de cada espacio hacia su zona segura y mantén su estado al día." context="Campus y seguridad" />
+      subtitle="Las rutas desde cada salida hasta las zonas seguras se generan solas; aquí las revisas y mantienes al día el estado de las rutas por espacio." context="Campus y seguridad" />
   );
 
   if (!datos) {
