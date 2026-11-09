@@ -7,7 +7,6 @@ import { TIPOS_ZONA_ABIERTA } from '../types';
 import { enlaceOsm, leerCoordenada, textoCoordenadas } from '../utils/coordenadas';
 import { Botones, Campo, Falla } from '../components/comun';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
-import { BotonQr } from '../components/BotonQr';
 import '../styles/campus.css';
 import '../styles/admin.css';
 
@@ -224,6 +223,7 @@ export default function ZonesAdmin() {
               </button>
             ))}
           </div>
+          <a className="cs-mini cs-enlace-boton" href="#/admin/zonas/qr">Imprimir QR</a>
           {puedeGestionar && (
             <button type="button" className="btn red cs-agregar" onClick={() => editar({ tipo: 'nueva' })}>Crear zona segura</button>
           )}
@@ -292,7 +292,7 @@ export default function ZonesAdmin() {
                       <td>
                         {puedeGestionar && (
                           <div className="cs-acciones">
-                            {activa && <BotonQr elemento="zona" id={zona.id} nombre={`${zona.codigo} ${zona.nombre}`} />}
+                            {activa && <a className="cs-mini cs-enlace-boton" href={`#/admin/zonas/${zona.id}/qr`}>QR</a>}
                             {activa && (
                               <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona', id: zona.id })}>Modificar</button>
                             )}

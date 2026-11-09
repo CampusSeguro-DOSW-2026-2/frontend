@@ -3,6 +3,7 @@ import BuildingDetail from './pages/BuildingDetail';
 import BuildingsAdmin from './pages/BuildingsAdmin';
 import CampusAdmin from './pages/CampusAdmin';
 import HojaQr from './pages/HojaQr';
+import HojaQrZonas from './pages/HojaQrZonas';
 import PreventiveAdmin from './pages/PreventiveAdmin';
 import QrPublico, { type TipoQr } from './pages/QrPublico';
 import RouteQuery from './pages/RouteQuery';
@@ -20,12 +21,15 @@ export function campusRoutes(route: string): ReactNode | undefined {
     case '/rutas': return <RouteQuery />;
     case '/admin/edificios': return <BuildingsAdmin />;
     case '/admin/zonas': return <ZonesAdmin />;
+    case '/admin/zonas/qr': return <HojaQrZonas />;
     case '/admin/campus': return <CampusAdmin />;
     case '/admin/rutas': return <RoutesAdmin />;
     case '/admin/preventiva': return <PreventiveAdmin />;
     default: {
       const qr = route.match(RUTA_QR);
       if (qr) return <QrPublico key={route} tipo={qr[1] as TipoQr} id={qr[2]} />;
+      const hojaZona = route.match(/^\/admin\/zonas\/([^/]+)\/qr$/);
+      if (hojaZona) return <HojaQrZonas key={hojaZona[1]} zonaId={hojaZona[1]} />;
       const hoja = route.match(/^\/admin\/edificios\/([^/]+)\/qr$/);
       if (hoja) return <HojaQr key={hoja[1]} edificioId={hoja[1]} />;
       const m = route.match(/^\/admin\/edificios\/([^/]+)$/);
