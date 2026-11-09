@@ -3,6 +3,7 @@ import BuildingDetail from './pages/BuildingDetail';
 import BuildingsAdmin from './pages/BuildingsAdmin';
 import CampusAdmin from './pages/CampusAdmin';
 import HojaQr from './pages/HojaQr';
+import HojaQrZonas from './pages/HojaQrZonas';
 import PreventiveAdmin from './pages/PreventiveAdmin';
 import QrPublico, { type TipoQr } from './pages/QrPublico';
 import RouteQuery from './pages/RouteQuery';
@@ -20,6 +21,7 @@ export function campusRoutes(route: string): ReactNode | undefined {
     case '/rutas': return <RouteQuery />;
     case '/admin/edificios': return <BuildingsAdmin />;
     case '/admin/zonas': return <ZonesAdmin />;
+    case '/admin/zonas/qr': return <HojaQrZonas />;
     case '/admin/campus': return <CampusAdmin />;
     case '/admin/rutas': return <RoutesAdmin />;
     case '/admin/preventiva': return <PreventiveAdmin />;
