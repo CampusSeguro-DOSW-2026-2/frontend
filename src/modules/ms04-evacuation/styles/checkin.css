@@ -1,0 +1,29 @@
+/* MS04 · Evacuación y check-in */
+.chk-eventos{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+.chk-evento{display:flex;flex-direction:column;gap:12px;background:#fff;border:1.5px solid var(--red);border-radius:16px;padding:24px}
+.chk-evento .tag{align-self:flex-start}
+.chk-evento h3{font:700 22px/28px 'Outfit',sans-serif}
+.chk-meta{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px;color:var(--mut)}
+.chk-meta b{font-weight:600;color:var(--ink)}
+.chk-retry{align-self:flex-start}
+.chk-ir{align-self:flex-start;text-decoration:none;margin-top:4px}
+/* Reporte de estado (F-01) */
+.chk-actual{display:flex;flex-direction:column;gap:4px;background:var(--cream);border:1px solid var(--red);border-radius:16px;padding:20px 24px}
+.chk-actual small{font-size:13px;color:var(--mut)}
+.chk-actual b{font:700 20px/26px 'Outfit',sans-serif}
+.chk-actual span{font-size:13px;color:var(--mut)}
+.chk-opciones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.chk-opcion{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:96px;padding:20px 24px;border:1.5px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);font:700 20px/26px 'Outfit',sans-serif;text-align:left;cursor:pointer}
+.chk-opcion small{font:400 13px/18px 'Geist',sans-serif;color:var(--mut)}
+.chk-opcion:hover:not(:disabled){border-color:var(--red)}
+.chk-opcion[aria-pressed=true]{background:var(--cream);border-color:var(--red);color:var(--red)}
+.chk-opcion:disabled{cursor:default;opacity:.6}
+.chk-puntos{display:flex;flex-direction:column;gap:12px}
+.chk-puntos ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.chk-punto{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font:600 16px/22px 'Outfit',sans-serif;text-align:left;cursor:pointer}
+.chk-punto small{font:400 13px/18px 'Geist',sans-serif;color:var(--mut)}
+.chk-punto:hover:not(:disabled){border-color:var(--red)}
+.chk-punto[aria-pressed=true]{background:var(--cream);border-color:var(--red)}
+.chk-punto:disabled{cursor:default;opacity:.6}
+.notice.chk-ok{background:#F0FDF4;border-color:#BBF7D0;color:#14532D}
+@media(max-width:900px){.chk-opciones{grid-template-columns:1fr}}

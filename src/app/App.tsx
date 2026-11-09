@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navbar } from '../shared/components/Layout';
-import { getSession } from '../shared/services/session';
+import { getSession, setSessionNotice } from '../shared/services/session';
+import { logoutUser } from '../modules/ms01-identity/services/identity';
 import { PUBLIC_ROUTES, useIdentityRoutes } from '../modules/ms01-identity/routes';
 import { campusRoutes, esRutaPublicaCampus } from '../modules/ms02-campus/routes';
 import { alertRoutes } from '../modules/ms03-alerts/routes';
@@ -28,7 +29,13 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
 
-  const roles = session?.user.roles ?? [];
+  // Cerrar sesión desde el menú (RF-MS01-04).
+  const logout = async () => {
+    if (!session) return;
+    setSessionNotice(await logoutUser(session));
+    window.location.hash = '#/login';
+  };
+
   const isPublic = PUBLIC_ROUTES.includes(route) || esRutaPublicaCampus(route);
   const blocked = !isPublic && !session;
 
@@ -40,20 +47,20 @@ export default function App() {
     : identityRoutes(route)
       ?? campusRoutes(route)
       ?? alertRoutes(route, session)
-      ?? evacuationRoutes(route)
-      ?? brigadesRoutes(route)
-      ?? drillsRoutes(route)
+      ?? evacuationRoutes(route, session)
+      ?? brigadesRoutes(route, session)
+      ?? drillsRoutes(route, session)
       ?? trainingRoutes(route)
       ?? analyticsRoutes(route)
       ?? NOT_IMPLEMENTED;
 
   return (
     <>
-      {!isPublic && <Navbar current={route} roles={roles} />}
+      {!isPublic && <Navbar current={route} session={session} onLogout={logout} />}
       {page}
       {/* Solo en desarrollo: acceso a las pantallas de prueba (la barra del mockup no tiene "Alertas"). */}
       {import.meta.env.DEV && <footer className="demo-nav">
-        Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/recuperar-contrasena">Recuperar contraseña</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/crear-simulacro">Crear simulacro</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a> · <a href="#/alertas">Alertas</a>
+        Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/recuperar-contrasena">Recuperar contraseña</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/eventos">Eventos</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a> · <a href="#/brigadistas">Gestión de brigadistas</a> · <a href="#/checkin">Reportar mi estado</a> · <a href="#/ayuda">Necesito ayuda</a> · <a href="#/alertas">Alertas</a>
       </footer>}
     </>
   );
