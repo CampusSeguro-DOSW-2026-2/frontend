@@ -141,6 +141,9 @@ function messageFor(status: number, code: string, server: string, unmapped: Erro
       return server || GENERIC_ERROR;
     case 'SERVICIO_NO_DISPONIBLE':
       return BAD_GATEWAY_ERROR;
+    case 'DEPENDENCIA_NO_DISPONIBLE':
+      // MS04 (503): MS02 o MS05 no respondieron; el mensaje ya viene en español
+      return server || BAD_GATEWAY_ERROR;
     case 'TIEMPO_AGOTADO':
       return TIMEOUT_ERROR;
     case 'METODO_NO_PERMITIDO':

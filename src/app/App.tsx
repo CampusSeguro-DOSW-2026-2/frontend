@@ -59,7 +59,7 @@ export default function App() {
       {page}
       {/* Solo en desarrollo: acceso a las pantallas de prueba (la barra del mockup no tiene "Alertas"). */}
       {import.meta.env.DEV && <footer className="demo-nav">
-        Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/recuperar-contrasena">Recuperar contraseña</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/eventos">Eventos</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a> · <a href="#/brigadistas">Gestión de brigadistas</a> · <a href="#/ayuda">Necesito ayuda</a> · <a href="#/alertas">Alertas</a>
+        Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/recuperar-contrasena">Recuperar contraseña</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/eventos">Eventos</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a> · <a href="#/brigadistas">Gestión de brigadistas</a> · <a href="#/checkin">Reportar mi estado</a> · <a href="#/ayuda">Necesito ayuda</a> · <a href="#/alertas">Alertas</a>
       </footer>}
     </>
   );

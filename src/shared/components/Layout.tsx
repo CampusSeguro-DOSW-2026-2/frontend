@@ -29,7 +29,14 @@ function menuFor(roles: string[]): MenuSection[] {
     sections.push({ title: 'Brigada', items: [{ href: '#/brigadista', icon: <ClipboardCheck />, label: 'Panel de responsabilidades' }] });
   }
   if (community) {
-    sections.push({ title: 'Emergencia', items: [{ href: '#/ayuda', icon: <LifeBuoy />, label: 'Necesito ayuda' }] });
+    sections.push({
+      title: 'Emergencia',
+      items: [
+        // Check-in de MS04 (RF-MS04-01 a 04): reportar el propio estado durante un evento activo
+        { href: '#/checkin', icon: <ShieldCheck />, label: 'Reportar mi estado' },
+        { href: '#/ayuda', icon: <LifeBuoy />, label: 'Necesito ayuda' },
+      ],
+    });
   }
   if (coordination || oversight) {
     const items: MenuItem[] = [{ href: '#/eventos', icon: <CalendarIcon />, label: 'Eventos' }];
