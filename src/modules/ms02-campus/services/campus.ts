@@ -1,7 +1,8 @@
 import type {
   ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
-  EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, Piso, PisoRequest, RecomendacionPreventiva,
-  RecomendacionPreventivaRequest, Ruta, RutaConsultada, TipoEspacio, ZonaSegura, ZonaSeguraRequest, ModificarZonaSeguraRequest
+  EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, ModificarSalidaRequest, ModificarZonaSeguraRequest,
+  Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, Salida,
+  SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest,
 } from '../types';
 import { ApiError, GENERIC_ERROR, request } from '../../../shared/services/http';
 import { getSession } from '../../../shared/services/session';
@@ -71,6 +72,15 @@ export const campus = {
     modificar: (id: string, datos: ModificarEspacioRequest) => pedir<Espacio>('PUT', `/spaces/${id}`, datos),
     inactivar: (id: string) => pedir<Espacio>('PATCH', `/spaces/${id}/deactivate`),
     reactivar: (id: string) => pedir<Espacio>('PATCH', `/spaces/${id}/reactivate`),
+  },
+  salidas: {
+    listarPorEdificio: (edificioId: string, incluirInactivos?: boolean) =>
+      pedir<Salida[]>('GET', `/buildings/${edificioId}/exits${filtro(incluirInactivos)}`),
+    obtener: (id: string) => pedir<Salida>('GET', `/exits/${id}`),
+    crear: (edificioId: string, datos: SalidaRequest) => pedir<Salida>('POST', `/buildings/${edificioId}/exits`, datos),
+    modificar: (id: string, datos: ModificarSalidaRequest) => pedir<Salida>('PUT', `/exits/${id}`, datos),
+    inactivar: (id: string) => pedir<Salida>('PATCH', `/exits/${id}/deactivate`),
+    reactivar: (id: string) => pedir<Salida>('PATCH', `/exits/${id}/reactivate`),
   },
   zonas: {
     listar: (incluirInactivos?: boolean) => pedir<ZonaSegura[]>('GET', `/safe-zones${filtro(incluirInactivos)}`),

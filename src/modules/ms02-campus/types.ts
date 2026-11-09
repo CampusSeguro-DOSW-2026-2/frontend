@@ -35,13 +35,39 @@ export interface PisoRequest {
 export interface Espacio {
   id: string;
   edificioId: string;
+  edificioNombre?: string;
   pisoId: string;
+  pisoNumero?: number;
   codigo: string;
   nombre: string;
   tipo: TipoEspacio;
   estado: Estado;
   disponible: boolean;
 }
+
+export interface Salida {
+  id: string;
+  edificioId: string;
+  edificioNombre?: string;
+  pisoId: string;
+  pisoNumero?: number;
+  codigo: string;
+  nombre: string;
+  latitud: number;
+  longitud: number;
+  estado: Estado;
+  disponible: boolean;
+}
+
+export interface SalidaRequest {
+  pisoId: string;
+  codigo: string;
+  nombre: string;
+  latitud: number;
+  longitud: number;
+}
+
+export type ModificarSalidaRequest = Omit<SalidaRequest, 'codigo'>;
 
 export interface EspacioRequest {
   codigo: string;
