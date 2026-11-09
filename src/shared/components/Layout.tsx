@@ -65,11 +65,12 @@ function menuFor(roles: string[]): MenuSection[] {
 
   if (campusRead) {
     campusItems.push(
-      { href: '#/edificios', icon: <HomeIcon />, label: 'Edificios y espacios' },
+      
       { href: '#/rutas', icon: <MapLine />, label: 'Rutas de evacuación' },
     );
   }
 
+  campusItems.push({ href: '#/campus/edificios', icon: <HomeIcon />, label: 'Edificios' });
   campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
 
   sections.push({
