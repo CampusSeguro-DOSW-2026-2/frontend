@@ -10,3 +10,6 @@
 .cs-guia-pasos ol{margin:10px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:150%}
 .cs-guia-pasos li span{color:var(--mut)}
 .cs-guia-pedir{display:flex;flex-direction:column;gap:12px;align-items:flex-start;border-top:1px solid var(--line);padding-top:16px}
+.cs-exterior{display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.cs-exterior-cabecera{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
+.cs-exterior p{font-size:14px;line-height:150%}
