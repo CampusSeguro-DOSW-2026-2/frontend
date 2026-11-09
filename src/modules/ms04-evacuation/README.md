@@ -6,7 +6,10 @@
 
 | Ruta | Pantalla | Requerimiento |
 |---|---|---|
-| `#/checkin` | Eventos activos que le aplican al usuario | RF-MS04-01 |
+| `#/checkin` | Eventos activos que le aplican al usuario. Con uno solo abre directo su reporte | RF-MS04-01 |
+| `#/checkin/{eventoId}` | Reporte de estado (F-01): estado vigente y las cuatro opciones; Estoy a salvo pide el punto de encuentro de MS02 | RF-MS04-02, RF-MS04-03 |
+
+El reporte se completa en máximo 3 interacciones desde el menú (RNF-MS04-07): elegir un estado lo envía, y con Estoy a salvo lo envía elegir el punto de encuentro. Requiero asistencia aparece deshabilitada hasta implementar su ubicación (RF-MS04-04).
 
 Solo los roles de la comunidad (`ms04:checkin:write`) ven estas pantallas; ADMIN y AUDITOR no tienen permisos de check-in.
 
@@ -14,7 +17,7 @@ Solo los roles de la comunidad (`ms04:checkin:write`) ven estas pantallas; ADMIN
 |---|---|
 | `pages/` | Pantallas (una por ruta) |
 | `components/` | Componentes que solo usa este módulo |
-| `services/` | `checkin.ts`: cliente de MS04 por el API Gateway |
+| `services/` | `checkin.ts`: cliente de MS04; `campus.ts`: consultas de solo lectura a MS02 (puntos de encuentro). Ambos por el API Gateway |
 | `hooks/` | Hooks propios del módulo |
 | `utils/` | `labels.ts`: textos y formato de fechas |
 | `styles/` | `checkin.css`: estilos propios (prefijo `chk-`) |

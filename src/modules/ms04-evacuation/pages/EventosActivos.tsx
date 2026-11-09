@@ -17,7 +17,8 @@ type Carga =
 
 /**
  * RF-MS04-01 Consultar eventos activos: los simulacros o emergencias en ejecución que convocan alguno de los roles
- * del usuario, ordenados por fecha de inicio. Si no hay ninguno, lo indica sin pasos adicionales.
+ * del usuario, ordenados por fecha de inicio. Si no hay ninguno, lo indica sin pasos adicionales; si hay uno, abre
+ * directo su reporte de estado; si hay varios, el usuario elige en cuál reportar.
  */
 export default function EventosActivos({ session }: { session: Session }) {
   const [carga, setCarga] = useState<Carga>({ estado: 'cargando' });
@@ -26,7 +27,16 @@ export default function EventosActivos({ session }: { session: Session }) {
   useEffect(() => {
     let vigente = true;
     checkinApi.eventosActivos(session)
-      .then((eventos) => { if (vigente) setCarga({ estado: 'listo', eventos }); })
+      .then((eventos) => {
+        if (!vigente) return;
+        // Con un solo evento se abre directo su reporte, para no sumar un paso (RNF-MS04-07). replace: al volver
+        // atrás no se regresa a esta pantalla, que lo abriría otra vez
+        if (eventos.length === 1) {
+          window.location.replace(`#/checkin/${encodeURIComponent(eventos[0].evento_id)}`);
+          return;
+        }
+        setCarga({ estado: 'listo', eventos });
+      })
       .catch((err: unknown) => { if (vigente) setCarga({ estado: 'error', mensaje: errorMessage(err) }); });
     return () => { vigente = false; };
   }, [session, intento]);
@@ -66,6 +76,9 @@ export default function EventosActivos({ session }: { session: Session }) {
                   )}
                   {evento.escenario.zonas.length > 0 && <span>Zonas: <b>{evento.escenario.zonas.join(', ')}</b></span>}
                 </div>
+                <a className="btn red chk-ir" href={`#/checkin/${encodeURIComponent(evento.evento_id)}`}>
+                  Reportar mi estado
+                </a>
               </li>
             ))}
           </ul>
