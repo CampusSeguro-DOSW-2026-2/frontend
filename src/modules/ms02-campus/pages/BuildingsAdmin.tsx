@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } from '../services/campus';
 import type { Campus, Edificio, EdificioRequest } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
+import GaleriaImagenes from '../components/GaleriaImagenes';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import '../styles/campus.css';
 import '../styles/admin.css';
@@ -209,7 +210,8 @@ export default function BuildingsAdmin() {
                     );
                   }
                   return (
-                    <tr key={edificio.id} className={activo ? '' : 'inactivo'}>
+                    <Fragment key={edificio.id}>
+                    <tr className={activo ? '' : 'inactivo'}>
                       <td className="cs-codigo">{edificio.nombre}</td>
                       <td>{campuses?.find((c) => c.id === edificio.campusId)?.nombre ?? '—'}</td>
                       <td className="cs-descripcion">{edificio.descripcion || '—'}</td>
@@ -227,8 +229,15 @@ export default function BuildingsAdmin() {
                             </button>
                           )}
                         </div>
+                        </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={5}>
+                        <GaleriaImagenes tipoElemento="EDIFICIO" elementoId={edificio.id}
+                          editable={activo && puedeGestionar} />
                       </td>
                     </tr>
+                    </Fragment>
                   );
                 })}
               </tbody>

@@ -1,4 +1,4 @@
-import { API_URL } from '../../../shared/services/http';
+import { API_URL, NETWORK_ERROR } from '../../../shared/services/http';
 import { getSession } from '../../../shared/services/session';
 
 const BASE = '/api/v1/images';
@@ -13,6 +13,15 @@ export interface ImagenCampus {
   tipoContenido: string;
   tamanioBytes: number;
   createdAt: string;
+}
+
+/** fetch que convierte el fallo de red del navegador ("Failed to fetch") en un mensaje legible. */
+async function llamar(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch {
+    throw new Error(NETWORK_ERROR);
+  }
 }
 
 function encabezados(): Record<string, string> {
@@ -44,7 +53,7 @@ async function comprobarRespuesta(respuesta: Response): Promise<void> {
 export const imagenesApi = {
   async listar(tipoElemento: TipoElementoImagen, elementoId: string): Promise<ImagenCampus[]> {
     const params = new URLSearchParams({ tipoElemento, elementoId });
-    const respuesta = await fetch(`${API_URL}${BASE}?${params}`, {
+    const respuesta = await llamar(`${API_URL}${BASE}?${params}`, {
       headers: { ...encabezados(), Accept: 'application/json' },
     });
     await comprobarRespuesta(respuesta);
@@ -52,7 +61,7 @@ export const imagenesApi = {
   },
 
   async obtenerArchivo(id: string): Promise<Blob> {
-    const respuesta = await fetch(`${API_URL}${BASE}/${encodeURIComponent(id)}`, {
+    const respuesta = await llamar(`${API_URL}${BASE}/${encodeURIComponent(id)}`, {
       headers: { ...encabezados(), Accept: 'image/*' },
     });
     await comprobarRespuesta(respuesta);
@@ -65,7 +74,7 @@ export const imagenesApi = {
     datos.append('elementoId', elementoId);
     datos.append('archivo', archivo);
 
-    const respuesta = await fetch(`${API_URL}${BASE}`, {
+    const respuesta = await llamar(`${API_URL}${BASE}`, {
       method: 'POST',
       headers: encabezados(),
       body: datos,
@@ -75,7 +84,7 @@ export const imagenesApi = {
   },
 
   async eliminar(id: string): Promise<void> {
-    const respuesta = await fetch(`${API_URL}${BASE}/${encodeURIComponent(id)}`, {
+    const respuesta = await llamar(`${API_URL}${BASE}/${encodeURIComponent(id)}`, {
       method: 'DELETE',
       headers: encabezados(),
     });
