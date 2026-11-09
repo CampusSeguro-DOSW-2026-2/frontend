@@ -111,6 +111,9 @@ function parseDetails(value: unknown): ErrorDetail[] {
   for (const item of value) {
     if (isObject(item) && typeof item.campo === 'string' && typeof item.mensaje === 'string') {
       details.push({ campo: item.campo, mensaje: item.mensaje });
+    } else if (isObject(item) && typeof item.field === 'string' && typeof item.message === 'string') {
+      // Formato de MS03, MS05 y MS06: { field, message }
+      details.push({ campo: item.field, mensaje: item.message });
     }
   }
   return details;
@@ -138,6 +141,9 @@ function messageFor(status: number, code: string, server: string, unmapped: Erro
       return server || GENERIC_ERROR;
     case 'SERVICIO_NO_DISPONIBLE':
       return BAD_GATEWAY_ERROR;
+    case 'DEPENDENCIA_NO_DISPONIBLE':
+      // MS04 (503): MS02 o MS05 no respondieron; el mensaje ya viene en español
+      return server || BAD_GATEWAY_ERROR;
     case 'TIEMPO_AGOTADO':
       return TIMEOUT_ERROR;
     case 'METODO_NO_PERMITIDO':
@@ -146,6 +152,11 @@ function messageFor(status: number, code: string, server: string, unmapped: Erro
       return GENERIC_ERROR;
     default:
       break;
+  }
+
+  // MS05 responde { codigo: <número>, error, mensaje } con el mensaje ya en español: se muestra tal cual
+  if (!code && server && status >= 400 && status < 500 && status !== 401) {
+    return server;
   }
 
   // Respuesta sin el cuerpo estándar (por ejemplo, un proxy intermedio): se decide por el estado HTTP
@@ -185,9 +196,10 @@ function buildError(
   fieldMap: Record<string, string>,
 ): ApiError {
   const data = isObject(body) ? body : {};
-  const code = text(data.codigo);
+  // Los MS en Java (MS03, MS05, MS06) responden { code, message, details } en lugar de { codigo, mensaje, errores }
+  const code = text(data.codigo) || text(data.code);
   const server = text(data.mensaje);
-  const details = parseDetails(data.errores);
+  const details = parseDetails(data.errores ?? data.details);
   const correlationId = text(data.correlation_id) || headerCorrelationId || '';
 
   const fields: FieldErrors = {};
