@@ -1,52 +1,107 @@
-import { useEffect, useState } from 'react';
-import { PageHeader } from '../../../shared/components/Layout';
-import { Check, MapIcon } from '../../../shared/components/Icons';
+import { useCallback, useEffect, useState } from 'react';
+import { errorMessage } from '../../../shared/services/http';
+import type { Session } from '../../../shared/types';
+import { eventsApi } from '../../ms06-drills/services/events';
+import type { EventSummary } from '../../ms06-drills/types';
+import { formatDate, scopeLabel } from '../../ms06-drills/utils/labels';
 import { brigadesApi } from '../services/brigades';
-import type { AssistanceRequest, Brigadista } from '../types';
+import type { Asignacion, EstadoBrigadista } from '../types';
+import '../../ms06-drills/styles/events.css';
 
-const minutesAgo = (iso: string) => Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+/**
+ * RF-BEI-03 y RF-BEI-06: panel de responsabilidades del brigadista. Activa o desactiva su disponibilidad,
+ * muestra el evento en ejecución con su zona y da acceso a elegir zona y reportar incidentes.
+ */
+export default function BrigadistaPanel({ session }: { session: Session }) {
+  const [events, setEvents] = useState<EventSummary[]>([]);
+  const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
+  const [estado, setEstado] = useState<EstadoBrigadista | null>(null);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
 
-export default function BrigadistaPanel() {
-  const [me, setMe] = useState<Brigadista | null>(null);
-  const [reqs, setReqs] = useState<AssistanceRequest[]>([]);
-  const load = () => brigadesApi.getRequests().then(setReqs);
-  useEffect(() => { brigadesApi.getBrigadista().then(setMe); load(); }, []);
-  const count = (s: AssistanceRequest['status']) => reqs.filter((r) => r.status === s).length;
-  const featured = reqs.find((r) => r.priority);
-  const done = featured?.status === 'RESUELTA';
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [ev, as] = await Promise.allSettled([eventsApi.active(session), brigadesApi.misAsignaciones(session)]);
+    if (ev.status === 'fulfilled') setEvents(ev.value);
+    if (as.status === 'fulfilled') setAsignaciones(as.value);
+    const failed = [ev, as].find((r) => r.status === 'rejected') as PromiseRejectedResult | undefined;
+    setError(failed ? errorMessage(failed.reason) : '');
+    setLoading(false);
+  }, [session]);
 
-  const resolve = async () => {
-    if (!featured || done) return;
-    if (!window.confirm('¿Marcar este caso como resuelto?')) return;
-    await brigadesApi.resolveRequest(featured.id); load();
+  useEffect(() => { load(); }, [load]);
+
+  const cambiarEstado = async (nuevo: EstadoBrigadista) => {
+    setBusy(true);
+    setNotice('');
+    try {
+      const res = await brigadesApi.cambiarEstado(session, nuevo);
+      setEstado(res.estado);
+      setNotice(res.estado === 'ACTIVO' ? 'Quedaste disponible para recibir asignaciones e incidentes.' : 'Quedaste no disponible.');
+    } catch (err) {
+      setNotice(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
   };
-  if (!me) return null;
+
+  const zonaDe = (eventId: string) => asignaciones.find((a) => a.eventoId === eventId && a.estado === 'VIGENTE');
 
   return (
     <>
-      <PageHeader badge={me.status} title={`Brigadista: ${me.name}`} subtitle="Panel de Respuesta Oficial" />
-      <main className="content">
-        <section style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <h2 className="title sm22">Resumen Operativo de Solicitudes</h2>
-          <div className="stats">
-            <div className="stat"><b style={{ color: 'var(--red)' }}>{count('REPORTADA')}</b><span>Reportadas</span></div>
-            <div className="stat"><b style={{ color: 'var(--blue)' }}>{count('ASIGNADA')}</b><span>Asignadas</span></div>
-            <div className="stat"><b style={{ color: 'var(--amber)' }}>{count('EN_ATENCION')}</b><span>En Atención</span></div>
-          </div>
-        </section>
-        <div className="assign">
-          <aside className="zone"><MapIcon /><div><small>Zona de evacuación asignada</small><p>{me.zone}</p></div></aside>
-          {featured && (
-            <section className="casecol">
-              <h2 className="title sm22">Caso Asignado Prioritario</h2>
-              <article className={`case${done ? ' done' : ''}`}>
-                <div className="ctop"><span className="tag">{featured.priority}</span><span className="age">Hace {minutesAgo(featured.reportedAt)} minutos</span></div>
-                <div><h3>{featured.location}</h3><p className="rep">{featured.reporter}</p></div>
-                <div className="cbtn"><button className="btn red" onClick={resolve} disabled={done}><Check />{done ? 'Resuelto' : 'Marcar Resuelto'}</button></div>
-              </article>
-            </section>
-          )}
+      <header className="ev-head" style={{ background: 'var(--ink)' }}>
+        <div>
+          <span className="badge" style={{ background: 'var(--amber)', color: '#fff' }}>BRIGADISTA</span>
+          <h1 style={{ marginTop: 10 }}>Panel de responsabilidades</h1>
+          <p>Tu disponibilidad, tu zona en el evento y los incidentes que te corresponden.</p>
         </div>
+        <div className="hbtns" role="group" aria-label="Mi disponibilidad">
+          <button type="button" className="btn light" disabled={busy} aria-pressed={estado === 'ACTIVO'} onClick={() => cambiarEstado('ACTIVO')}>
+            {estado === 'ACTIVO' ? '✓ Disponible' : 'Estoy disponible'}
+          </button>
+          <button type="button" className="btn ghost" disabled={busy} aria-pressed={estado === 'INACTIVO'} onClick={() => cambiarEstado('INACTIVO')}>
+            {estado === 'INACTIVO' ? '✓ No disponible' : 'No disponible'}
+          </button>
+        </div>
+      </header>
+      <main className="ev-main">
+        {notice && <p className="notice" role="status">{notice}</p>}
+        {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
+        {loading && <p className="notice" role="status">Cargando…</p>}
+
+        {!loading && events.length === 0 && (
+          <div className="ev-empty">No hay un evento en ejecución. Cuando inicie uno, aquí verás tu zona y podrás reportar incidentes.</div>
+        )}
+
+        {events.map((ev) => {
+          const zona = zonaDe(ev.id);
+          return (
+            <section key={ev.id} className="ev-card" style={{ borderColor: 'var(--red)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div>
+                  <span className="st IN_PROGRESS">● En ejecución</span>
+                  <h2 style={{ marginTop: 8 }}>{ev.name}</h2>
+                  <span className="help">Inició {formatDate(ev.startedAt)}</span>
+                </div>
+                <a className="btn red" href={`#/brigadista/reportar/${ev.id}`}>Reportar incidente</a>
+              </div>
+              <div className="ev-zone">
+                <span>Mi zona</span>
+                {zona
+                  ? <b>{scopeLabel(zona.ubicacionId)}</b>
+                  : <a className="plink" href={`#/brigadista/zona/${ev.id}`}>Elegir zona →</a>}
+              </div>
+              {zona && <span className="help">Para cambiar de zona, pídeselo al coordinador (solo él reasigna).</span>}
+            </section>
+          );
+        })}
+
+        <section className="ev-card">
+          <h2>Incidentes de mi zona</h2>
+          <p className="help">MS05 todavía no expone el listado de incidentes ni las acciones "Iniciar atención" y "Marcar como resuelto". Aparecerán aquí cuando el servicio los publique.</p>
+        </section>
       </main>
     </>
   );

@@ -151,6 +151,11 @@ function messageFor(status: number, code: string, server: string, unmapped: Erro
       break;
   }
 
+  // MS05 responde { codigo: <número>, error, mensaje } con el mensaje ya en español: se muestra tal cual
+  if (!code && server && status >= 400 && status < 500 && status !== 401) {
+    return server;
+  }
+
   // Respuesta sin el cuerpo estándar (por ejemplo, un proxy intermedio): se decide por el estado HTTP
   if (status === 400) {
     return VALIDATION_ERROR;
