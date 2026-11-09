@@ -1,12 +1,16 @@
 # CI/CD del frontend (sigue la guía "Conexión al API Gateway" de la wiki).
 # - CI: en cada pull request y push revisa tipos, lint y compila.
-# - CD prueba: cada push a develop publica en Azure Static Web Apps (entorno "test") contra el GW de prueba.
-# - CD producción: cada push a main publica en producción contra el GW de producción (requiere aprobación).
+# - CD prueba: cada push a develop publica en el sitio web estático de Azure Storage de prueba (GW de prueba).
+# - CD producción: cada push a main publica en el de producción (GW de producción; requiere aprobación).
+#
+# Se usa Azure Storage (sitio web estático) porque Azure for Students solo permite regiones donde
+# Static Web Apps no existe.
 #
 # Configuración en GitHub (Settings > Environments):
 # - front-test (Deployment branches: develop) y front-prod (Deployment branches: main; Required reviewers: líder).
-# - En cada uno: variable GATEWAY_URL y secreto AZURE_STATIC_WEB_APPS_API_TOKEN (token de la Static Web App).
-#   Sin el token, el despliegue se omite con una advertencia.
+# - En cada uno: variables GATEWAY_URL y STORAGE_ACCOUNT (nombre de la cuenta de almacenamiento) y
+#   secreto AZURE_STORAGE_SAS_TOKEN (SAS de la cuenta: servicio Blob; contenedor y objeto; leer, escribir,
+#   eliminar, enumerar, agregar y crear). Sin ellos, el despliegue se omite con una advertencia.
 name: CI/CD
 
 on:
@@ -47,81 +51,52 @@ jobs:
         env:
           VITE_API_URL: ${{ env.GW_TEST }}
 
-  deploy-test:
-    name: Desplegar prueba (develop)
+  deploy:
+    name: Desplegar ${{ github.ref == 'refs/heads/main' && 'producción (main)' || 'prueba (develop)' }}
     needs: ci
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     environment:
-      name: front-test
+      name: ${{ github.ref == 'refs/heads/main' && 'front-prod' || 'front-test' }}
+    env:
+      VITE_API_URL: ${{ vars.GATEWAY_URL || (github.ref == 'refs/heads/main' && 'https://campusseguro-gw.northcentralus.cloudapp.azure.com' || 'https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443') }}
+      STORAGE_ACCOUNT: ${{ vars.STORAGE_ACCOUNT }}
+      SAS: ${{ secrets.AZURE_STORAGE_SAS_TOKEN }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Compilar contra el GW de prueba
-        run: npx vite build
-        env:
-          VITE_API_URL: ${{ vars.GATEWAY_URL || env.GW_TEST }}
-      - name: Verificar token
-        id: token
-        env:
-          TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+      - name: Verificar configuración
+        id: cfg
         run: |
-          if [ -z "$TOKEN" ]; then
-            echo "::warning::Falta el secreto AZURE_STATIC_WEB_APPS_API_TOKEN en front-test: no se despliega."
+          if [ -z "$STORAGE_ACCOUNT" ] || [ -z "$SAS" ]; then
+            echo "::warning::Faltan STORAGE_ACCOUNT o AZURE_STORAGE_SAS_TOKEN en el entorno: no se despliega."
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
-      - name: Publicar en el entorno "test" de la Static Web App
-        if: steps.token.outputs.ok == 'true'
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: upload
-          deployment_environment: test
-          app_location: dist
-          skip_app_build: true
-          skip_api_build: true
-
-  deploy-prod:
-    name: Desplegar producción (main)
-    needs: ci
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    environment:
-      name: front-prod
-    steps:
       - uses: actions/checkout@v5
+        if: steps.cfg.outputs.ok == 'true'
       - uses: actions/setup-node@v5
+        if: steps.cfg.outputs.ok == 'true'
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - name: Compilar contra el GW de producción
-        run: npx vite build
-        env:
-          VITE_API_URL: ${{ vars.GATEWAY_URL || env.GW_PROD }}
-      - name: Verificar token
-        id: token
-        env:
-          TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+      - name: Compilar contra ${{ env.VITE_API_URL }}
+        if: steps.cfg.outputs.ok == 'true'
         run: |
-          if [ -z "$TOKEN" ]; then
-            echo "::warning::Falta el secreto AZURE_STATIC_WEB_APPS_API_TOKEN en front-prod: no se despliega."
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Publicar en producción de la Static Web App
-        if: steps.token.outputs.ok == 'true'
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: upload
-          app_location: dist
-          skip_app_build: true
-          skip_api_build: true
+          npm ci
+          npx vite build
+      - name: Publicar en Azure Storage ($web)
+        if: steps.cfg.outputs.ok == 'true'
+        run: |
+          command -v azcopy >/dev/null || {
+            curl -fsSL https://aka.ms/downloadazcopy-v10-linux | sudo tar -xz --strip-components=1 -C /usr/local/bin --wildcards '*/azcopy'
+          }
+          SAS="${SAS#\?}"
+          echo "::add-mask::$SAS"
+          DEST="https://${STORAGE_ACCOUNT}.blob.core.windows.net/\$web"
+          # Archivos con hash: caché larga. Se sincroniza todo y se borra lo que ya no existe.
+          azcopy sync dist "${DEST}?${SAS}" --recursive --delete-destination=true
+          azcopy copy "dist/assets/*" "${DEST}/assets?${SAS}" --recursive --overwrite=true \
+            --cache-control "public, max-age=31536000, immutable"
+          # index.html nunca en caché para que cada despliegue se vea de inmediato
+          azcopy copy dist/index.html "${DEST}/index.html?${SAS}" --overwrite=true --cache-control "no-cache"
+          echo "Publicado en: https://${STORAGE_ACCOUNT}.z*.web.core.windows.net (ver *Sitio web estático* en el portal)" >> "$GITHUB_STEP_SUMMARY"
