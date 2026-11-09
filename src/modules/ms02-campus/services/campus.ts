@@ -4,7 +4,7 @@ import type {
   Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, Salida,
   SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest,
 } from '../types';
-import { ApiError, GENERIC_ERROR, request } from '../../../shared/services/http';
+import { API_URL, ApiError, GENERIC_ERROR, NETWORK_ERROR, request } from '../../../shared/services/http';
 import { getSession } from '../../../shared/services/session';
 
 const BASE = '/api/v1';
@@ -41,6 +41,31 @@ async function pedir<T>(metodo: 'GET' | 'POST' | 'PUT' | 'PATCH', ruta: string, 
     throw comoCampusError(e);
   }
 }
+
+async function imagen(ruta: string): Promise<Blob> {
+  const correlationId = crypto.randomUUID();
+  const session = getSession();
+  const headers: Record<string, string> = { Accept: 'image/png', 'X-Correlation-ID': correlationId };
+  if (session) headers.Authorization = `Bearer ${session.token}`;
+
+  let r: Response;
+  try {
+    r = await fetch(`${API_URL}${BASE}${ruta}`, { headers });
+  } catch {
+    throw new CampusApiError(0, 'SIN_CONEXION', NETWORK_ERROR, {}, correlationId);
+  }
+  if (r.ok) return r.blob();
+
+  const cuerpo = (await r.json().catch(() => ({}))) as { codigo?: string; mensaje?: string; correlation_id?: string };
+  const mensaje = r.status === 403 ? 'No tienes permiso para generar códigos QR.' : cuerpo.mensaje || GENERIC_ERROR;
+  throw new CampusApiError(r.status, cuerpo.codigo ?? 'ERROR', mensaje, {}, cuerpo.correlation_id ?? correlationId);
+}
+
+export type ElementoQr = 'espacio' | 'salida' | 'zona';
+
+const RUTAS_QR: Record<ElementoQr, string> = { espacio: 'spaces', salida: 'exits', zona: 'safe-zones' };
+
+export const descargarQr = (elemento: ElementoQr, id: string) => imagen(`/${RUTAS_QR[elemento]}/${id}/qr`);
 
 const filtro = (incluirInactivos?: boolean) => (incluirInactivos ? '?incluirInactivos=true' : '');
 

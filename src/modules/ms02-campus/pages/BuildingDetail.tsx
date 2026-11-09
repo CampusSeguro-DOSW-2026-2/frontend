@@ -6,6 +6,7 @@ import { Botones, Campo, Falla } from '../components/comun';
 import { TIPOS } from '../types';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import SalidasEdificio from '../components/SalidasEdificio';
+import { BotonQr } from '../components/BotonQr';
 import '../styles/campus.css';
 
 type Edicion =
@@ -201,6 +202,9 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
             Mostrar inactivos{inactivos > 0 && ` (${inactivos})`}
           </label>
           {edificio.estado === 'ACTIVO' && (
+            <a className="cs-mini cs-enlace-boton" href={`#/admin/edificios/${edificioId}/qr`}>Imprimir QR</a>
+          )}
+          {edificio.estado === 'ACTIVO' && (
             <button type="button" className="btn red cs-agregar" onClick={() => editar({ tipo: 'nuevo-piso' })}>Agregar piso</button>
           )}
         </div>
@@ -284,6 +288,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                             <td>{estadoEspacio(espacio)}</td>
                             <td>
                               <div className="cs-acciones">
+                                {espacioActivo && <BotonQr elemento="espacio" id={espacio.id} nombre={`${espacio.codigo} ${espacio.nombre}`} />}
                                 {espacioActivo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'espacio', id: espacio.id })}>Modificar</button>}
                                 <button type="button" className={`cs-mini${espacioActivo ? ' peligro' : ''}`} disabled={ocupado === espacio.id}
                                   onClick={() => cambiarEstado(espacio.id, piso.id, () => (espacioActivo ? campus.espacios.inactivar(espacio.id) : campus.espacios.reactivar(espacio.id)))}>

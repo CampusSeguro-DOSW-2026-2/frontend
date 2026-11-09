@@ -4,6 +4,7 @@ import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } f
 import type { ZonaSegura, ZonaSeguraRequest } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
+import { BotonQr } from '../components/BotonQr';
 import '../styles/campus.css';
 import '../styles/admin.css';
 
@@ -213,6 +214,7 @@ export default function ZonesAdmin() {
                       <td>
                         {puedeGestionar && (
                           <div className="cs-acciones">
+                            {activa && <BotonQr elemento="zona" id={zona.id} nombre={`${zona.codigo} ${zona.nombre}`} />}
                             {activa && (
                               <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona', id: zona.id })}>Modificar</button>
                             )}
