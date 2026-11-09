@@ -6,6 +6,7 @@
 .chk-meta{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px;color:var(--mut)}
 .chk-meta b{font-weight:600;color:var(--ink)}
 .chk-retry{align-self:flex-start}
+.chk-ir{align-self:flex-start;text-decoration:none;margin-top:4px}
 /* Reporte de estado (F-01) */
 .chk-actual{display:flex;flex-direction:column;gap:4px;background:var(--cream);border:1px solid var(--red);border-radius:16px;padding:20px 24px}
 .chk-actual small{font-size:13px;color:var(--mut)}
