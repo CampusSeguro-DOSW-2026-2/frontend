@@ -85,11 +85,47 @@ export interface ZonaSegura {
   descripcion: string;
   capacidad: number;
   estado: Estado;
+  latitud?: number | null;
+  longitud?: number | null;
+  zonaAbiertaId?: string | null;
+  puntoEncuentro: boolean;
 }
 
-export type ZonaSeguraRequest = Omit<ZonaSegura, 'id' | 'estado'>;
+export interface ZonaSeguraRequest {
+  codigo: string;
+  nombre: string;
+  ubicacion: string;
+  descripcion: string;
+  capacidad: number;
+  // Latitud y longitud van juntas. Al modificar, vacías significa «sin cambios»: el backend no las borra.
+  latitud?: number;
+  longitud?: number;
+  // Al modificar, vacía significa «sin cambios».
+  zonaAbiertaId?: string;
+  // Al crear, si no se envía queda como punto de encuentro.
+  puntoEncuentro?: boolean;
+}
 // El código de la zona es fijo (RF-04): el PUT no lo recibe.
 export type ModificarZonaSeguraRequest = Omit<ZonaSeguraRequest, 'codigo'>;
+
+export type TipoZonaAbierta = 'ZONA_VERDE' | 'PLAZOLETA' | 'CANCHA' | 'PARQUEADERO' | 'OTRA';
+
+export interface Campus {
+  id: string;
+  nombre: string;
+  descripcion?: string | null;
+  estado: Estado;
+}
+
+export interface ZonaAbierta {
+  id: string;
+  campusId: string;
+  nombre: string;
+  tipo: TipoZonaAbierta;
+  latitud?: number | null;
+  longitud?: number | null;
+  estado: Estado;
+}
 
 export interface Ruta {
   id: string;
@@ -119,6 +155,59 @@ export interface CambiarEstadoRequest {
   motivo?: string;
 }
 
+export interface Coordenada {
+  latitud: number;
+  longitud: number;
+}
+
+export interface PasoRuta {
+  instruccion: string;
+  distanciaMetros: number;
+  duracionSegundos: number;
+}
+
+export interface RutaExterior {
+  id: string;
+  salidaOrigenId: string;
+  zonaSeguraDestinoId: string;
+  estado: EstadoRuta;
+  motivo?: string | null;
+  distanciaMetros?: number | null;
+  duracionSegundos?: number | null;
+  geometria: Coordenada[];
+  pasos: PasoRuta[];
+  calculadaEn: string;
+}
+
+export interface EscaleraGuia {
+  id: string;
+  codigo: string;
+  nombre: string;
+}
+
+export interface SalidaGuia {
+  id: string;
+  nombre: string;
+  latitud?: number | null;
+  longitud?: number | null;
+}
+
+// Guía completa desde un espacio. Si no hay salida o escalera utilizable, `salida` y `rutaExterior`
+// vienen vacías y `mensaje` explica por qué.
+export interface GuiaEvacuacion {
+  edificioId: string;
+  edificioNombre?: string | null;
+  pisoId: string;
+  pisoNumero?: number | null;
+  requiereEscalera: boolean;
+  escaleras: EscaleraGuia[];
+  salida?: SalidaGuia | null;
+  rutaExterior?: RutaExterior | null;
+  zonaSeguraNombre?: string | null;
+  indicacion?: string | null;
+  mensaje?: string | null;
+}
+
 export interface RutaConsultada {
   espacioId: string;
   espacioNombre: string;
@@ -132,6 +221,8 @@ export interface RutaConsultada {
   destinoActivo?: boolean;
   mensaje?: string;
   recomendacionesPreventivas: RecomendacionPreventiva[];
+  // Solo viene al consultar un espacio; al consultar todo el edificio llega vacía.
+  guia?: GuiaEvacuacion | null;
 }
 
 export interface RecomendacionPreventiva {
@@ -168,6 +259,14 @@ export const TIPOS: Record<TipoEspacio, string> = {
   AUDITORIO: 'Auditorio',
   OFICINA: 'Oficina',
   ESPACIO_COMUN: 'Espacio común',
+};
+
+export const TIPOS_ZONA_ABIERTA: Record<TipoZonaAbierta, string> = {
+  ZONA_VERDE: 'Zona verde',
+  PLAZOLETA: 'Plazoleta',
+  CANCHA: 'Cancha',
+  PARQUEADERO: 'Parqueadero',
+  OTRA: 'Otra',
 };
 
 export interface EspacioPublico {

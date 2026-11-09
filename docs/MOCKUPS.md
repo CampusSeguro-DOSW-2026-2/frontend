@@ -85,6 +85,38 @@ Referencia visual para el equipo.
 
 ---
 
+### 4.1 Consultar ruta · guía de evacuación
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/rutas` |
+| Archivo | `src/modules/ms02-campus/pages/RouteQuery.tsx`, `components/GuiaEvacuacion.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- Cada tarjeta de ruta suma la sección «Guía de evacuación»: la indicación completa, la escalera a usar, la salida, la distancia y el tiempo de la ruta exterior, la zona segura y, desplegable, los pasos del recorrido exterior.
+- Si la salida está en el mismo piso del espacio, la guía dice que no hace falta escalera.
+- Si no hay escalera disponible o ninguna salida con ruta exterior, la sección muestra solo el aviso del backend.
+- Al consultar un espacio la guía ya viene con la ruta. Al consultar todo el edificio el backend no la calcula, así que cada tarjeta ofrece el botón «Ver guía de evacuación», que la pide para ese espacio.
+
+---
+
+### 4.2 Zonas seguras con coordenadas
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/zonas` |
+| Archivo | `src/modules/ms02-campus/pages/ZonesAdmin.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- El formulario suma latitud y longitud (opcionales, van juntas), la zona abierta donde queda la zona segura y si es punto de encuentro (por defecto sí).
+- La tabla muestra las coordenadas con el enlace «Ver en OpenStreetMap» y marca «Sin coordenadas» en las zonas que no las tienen.
+- Encima de la tabla se avisa cuántas zonas activas no tienen coordenadas: no pueden ser destino de una ruta exterior.
+- Las coordenadas y la zona abierta ya guardadas se pueden cambiar pero no borrar, porque el backend interpreta el campo vacío como «sin cambios».
+
+---
+
 ### 5. _Nueva pantalla_ (copiar esta sección)
 
 | Campo | Detalle |

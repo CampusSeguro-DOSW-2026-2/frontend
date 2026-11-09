@@ -1,5 +1,5 @@
 import type {
-  ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
+  Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
   EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, ModificarSalidaRequest, ModificarZonaSeguraRequest,
   Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, Salida,
   SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest, EspacioPublico, SalidaPublica, ZonaSeguraPublica,
@@ -90,6 +90,13 @@ export const campus = {
     modificar: (id: string, datos: ModificarZonaSeguraRequest) => pedir<ZonaSegura>('PUT', `/safe-zones/${id}`, datos),    
     inactivar: (id: string) => pedir<ZonaSegura>('PATCH', `/safe-zones/${id}/deactivate`),
     reactivar: (id: string) => pedir<ZonaSegura>('PATCH', `/safe-zones/${id}/reactivate`),
+  },
+  campuses: {
+    listar: (incluirInactivos?: boolean) => pedir<Campus[]>('GET', `/campuses${filtro(incluirInactivos)}`),
+  },
+  zonasAbiertas: {
+    listarPorCampus: (campusId: string, incluirInactivos?: boolean) =>
+      pedir<ZonaAbierta[]>('GET', `/campuses/${campusId}/open-zones${filtro(incluirInactivos)}`),
   },
   rutas: {
     listar: () => pedir<Ruta[]>('GET', '/evacuation-routes'),
