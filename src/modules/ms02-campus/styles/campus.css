@@ -94,3 +94,73 @@
 .cs-preventivas strong{font:700 14px/20px 'Outfit',sans-serif;overflow-wrap:anywhere}
 .cs-preventivas p{font-size:14px;line-height:150%;margin-top:6px;white-space:pre-line;overflow-wrap:anywhere}
 .cs-ambito{display:block;font-size:12px;line-height:16px;color:var(--mut);margin-top:2px}
+
+/* Galería de fotografías de elementos del campus */
+.cs-galeria {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border, #d9dce3);
+  border-radius: 10px;
+  background: var(--surface, #fff);
+}
+
+.cs-galeria-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.cs-galeria-subir {
+  cursor: pointer;
+}
+
+.cs-galeria-subir input {
+  display: none;
+}
+
+.cs-galeria-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cs-galeria-foto {
+  width: 150px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--border, #d9dce3);
+  border-radius: 8px;
+}
+
+.cs-galeria-foto a {
+  display: block;
+  height: 105px;
+  background: #f2f3f5;
+}
+
+.cs-galeria-foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cs-galeria-foto figcaption {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  font-size: 12px;
+}
+
+.cs-galeria-foto figcaption span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cs-galeria-sin-foto {
+  margin: 0;
+  color: var(--text-muted, #697386);
+  font-size: 13px;
+}
