@@ -11,6 +11,7 @@
 | `#/admin/edificios/{id}` | Detalle de edificio: pisos, espacios y salidas, con el QR de cada uno | ADMIN |
 | `#/admin/edificios/{id}/qr` | Hoja imprimible con los QR de las salidas y espacios del edificio | ADMIN |
 | `#/admin/zonas` | Zonas seguras, con el QR de cada una | ADMIN |
+| `#/admin/campus` | Campus y zonas abiertas | ADMIN |
 | `#/admin/rutas` | Rutas de evacuación | ADMIN; COORDINADOR cambia el estado |
 | `#/admin/preventiva` | Información preventiva | ADMIN |
 | `#/qr/{espacios\|salidas\|zonas}/{id}` | Lo que se ve al escanear un QR: lugar y guía de evacuación | Pública, sin sesión |
