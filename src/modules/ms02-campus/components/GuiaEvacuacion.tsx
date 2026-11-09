@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { campus, comoCampusError } from '../services/campus';
 import type { CampusApiError } from '../services/campus';
 import type { GuiaEvacuacion as Guia } from '../types';
+import { MapaRuta } from './MapaRuta';
 import { distancia, duracion } from '../utils/formato';
 import { Falla } from './comun';
 import '../styles/guia.css';
@@ -54,6 +55,13 @@ function GuiaDetalle({ guia }: { guia: Guia }) {
           </div>
         )}
       </dl>
+      {exterior && exterior.geometria.length > 0 && (
+        <MapaRuta
+          ruta={exterior}
+          salida={guia.salida}
+          zonaSeguraNombre={guia.zonaSeguraNombre}
+        />
+      )}
       {pasos.length > 0 && (
         <details className="cs-guia-pasos">
           <summary>Pasos de la ruta exterior ({pasos.length})</summary>
