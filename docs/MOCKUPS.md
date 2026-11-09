@@ -32,7 +32,7 @@ Referencia visual para el equipo.
 | Campo | Detalle |
 |---|---|
 | Ruta | `#/crear-simulacro` |
-| Archivo | `src/pages/CreateSimulation.tsx` |
+| Archivo | `src/modules/ms06-drills/pages/CreateSimulation.tsx` |
 | Microservicio | MS06 — Simulacros |
 
 ![Crear simulacro](/docs/mockups/web/simulacro-crear-web.png)
@@ -47,7 +47,7 @@ Referencia visual para el equipo.
 | Campo | Detalle |
 |---|---|
 | Ruta | `#/simulacro` |
-| Archivo | `src/pages/ActiveSimulation.tsx` |
+| Archivo | `src/modules/ms03-alerts/pages/ActiveSimulation.tsx` |
 | Microservicio | MS03 — Alertas / MS06 — Simulacros |
 
 ![Simulacro activo](/docs/mockups/web/alerta-activa-web.png)
@@ -62,7 +62,7 @@ Referencia visual para el equipo.
 | Campo | Detalle |
 |---|---|
 | Ruta | `#/brigadista` |
-| Archivo | `src/pages/BrigadistaPanel.tsx` |
+| Archivo | `src/modules/ms05-brigades/pages/BrigadistaPanel.tsx` |
 | Microservicio | MS05 — Brigadistas e Incidentes |
 
 ![Panel del brigadista](/docs/mockups/web/panel-brigadista-web.png)
@@ -90,7 +90,7 @@ Referencia visual para el equipo.
 | Campo | Detalle |
 |---|---|
 | Ruta | `#/…` |
-| Archivo | `src/pages/….tsx` |
+| Archivo | `src/modules/msXX-…/pages/….tsx` |
 | Microservicio | _MS0X_ |
 
 ![Nombre de la pantalla](/docs/mockups/nombre.png)
