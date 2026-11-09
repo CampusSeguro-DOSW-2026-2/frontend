@@ -1,0 +1,8 @@
+/* MS04 · Evacuación y check-in */
+.chk-eventos{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+.chk-evento{display:flex;flex-direction:column;gap:12px;background:#fff;border:1.5px solid var(--red);border-radius:16px;padding:24px}
+.chk-evento .tag{align-self:flex-start}
+.chk-evento h3{font:700 22px/28px 'Outfit',sans-serif}
+.chk-meta{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px;color:var(--mut)}
+.chk-meta b{font-weight:600;color:var(--ink)}
+.chk-retry{align-self:flex-start}
