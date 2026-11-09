@@ -50,9 +50,31 @@ function menuFor(roles: string[]): MenuSection[] {
     });
     sections.push({ title: 'Brigada e incidentes', items: [{ href: '#/brigadistas', icon: <Users />, label: 'Gestión de brigadistas' }] });
   }
+  const campusRead = has(
+    'ESTUDIANTE',
+    'PROFESOR',
+    'ADMINISTRATIVO',
+    'BRIGADISTA',
+    'COORDINADOR',
+    'ORGANIZADOR',
+    'ADMIN',
+    'AUDITOR',
+  );
+
+  const campusItems: MenuItem[] = [];
+
+  if (campusRead) {
+    campusItems.push(
+      { href: '#/edificios', icon: <HomeIcon />, label: 'Edificios y espacios' },
+      { href: '#/rutas', icon: <MapLine />, label: 'Rutas de evacuación' },
+    );
+  }
+
+  campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
+
   sections.push({
     title: 'Campus',
-    items: [{ href: '#/rutas', icon: <MapLine />, label: 'Rutas de evacuación' }, { href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' }],
+    items: campusItems,
   });
   if (oversight) {
     const items: MenuItem[] = [{ href: '#/usuarios', icon: <Users />, label: 'Usuarios' }];

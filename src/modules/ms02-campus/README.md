@@ -6,6 +6,8 @@
 
 | Ruta | Pantalla | Rol |
 |---|---|---|
+| `#/edificios` | Consultar edificios y fotografías | Todos |
+| `#/edificios/{id}` | Consultar pisos, espacios y fotografías | Todos |
 | `#/rutas` | Consultar ruta de evacuación | Todos |
 | `#/admin/edificios` | Edificios | ADMIN; COORDINADOR consulta |
 | `#/admin/edificios/{id}` | Detalle de edificio: pisos, espacios y salidas, con el QR de cada uno | ADMIN |
