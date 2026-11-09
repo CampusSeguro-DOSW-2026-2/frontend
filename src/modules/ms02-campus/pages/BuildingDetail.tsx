@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import GaleriaImagenes from '../components/GaleriaImagenes';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError } from '../services/campus';
 import type { Edificio, Espacio, EspacioRequest, Piso, PisoRequest, TipoEspacio } from '../types';
@@ -191,6 +192,9 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
         )}
         {errorCarga && <Falla error={errorCarga} />}
 
+        <GaleriaImagenes tipoElemento="EDIFICIO" elementoId={edificio.id}
+          editable={edificio.estado === 'ACTIVO'} />
+
         <div className="cs-barra">
           <div className="cs-barra-titulo">
             <h2 className="title sm22">Pisos y espacios</h2>
@@ -282,7 +286,8 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                           );
                         }
                         return (
-                          <tr key={espacio.id} className={espacioActivo ? '' : 'inactivo'}>
+                          <Fragment key={espacio.id}>
+                          <tr className={espacioActivo ? '' : 'inactivo'}>
                             <td className="cs-codigo">{espacio.codigo}</td>
                             <td>{espacio.nombre}</td>
                             <td>{TIPOS[espacio.tipo]}</td>
@@ -298,6 +303,13 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                               </div>
                             </td>
                           </tr>
+                          <tr>
+                            <td colSpan={5}>
+                              <GaleriaImagenes tipoElemento="ESPACIO" elementoId={espacio.id}
+                                editable={espacioActivo && edificio.estado === 'ACTIVO'} />
+                            </td>
+                          </tr>
+                          </Fragment>
                         );
                       })}
                     </tbody>

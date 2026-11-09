@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import GaleriaImagenes from './GaleriaImagenes';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { campus, CampusApiError, comoCampusError as comoError } from '../services/campus';
 import type { Edificio, Piso, Salida, SalidaRequest } from '../types';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
@@ -177,7 +178,8 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
                 }
                 const activa = s.estado === 'ACTIVO';
                 return (
-                  <tr key={s.id} className={activa ? '' : 'inactivo'}>
+                  <Fragment key={s.id}>
+                  <tr className={activa ? '' : 'inactivo'}>
                     <td className="cs-codigo">{s.codigo}</td>
                     <td>{s.nombre}</td>
                     <td>Piso {s.pisoNumero ?? numeroPiso.get(s.pisoId) ?? '—'}</td>
@@ -194,6 +196,13 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
                       </div>
                     </td>
                   </tr>
+                  <tr>
+                    <td colSpan={6}>
+                      <GaleriaImagenes tipoElemento="SALIDA" elementoId={s.id}
+                        editable={activa && edificio.estado === 'ACTIVO'} />
+                    </td>
+                  </tr>
+                  </Fragment>
                 );
               })}
             </tbody>

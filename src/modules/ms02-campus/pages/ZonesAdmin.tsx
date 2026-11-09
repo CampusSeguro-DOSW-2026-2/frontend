@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import GaleriaImagenes from '../components/GaleriaImagenes';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } from '../services/campus';
 import type { ZonaAbierta, ZonaSegura, ZonaSeguraRequest } from '../types';
@@ -264,7 +265,8 @@ export default function ZonesAdmin() {
                     );
                   }
                   return (
-                    <tr key={zona.id} className={activa ? '' : 'inactivo'}>
+                    <Fragment key={zona.id}>
+                    <tr className={activa ? '' : 'inactivo'}>
                       <td className="cs-codigo">{zona.codigo}</td>
                       <td>
                         {zona.nombre}
@@ -302,6 +304,13 @@ export default function ZonesAdmin() {
                         )}
                       </td>
                     </tr>
+                    <tr>
+                      <td colSpan={7}>
+                        <GaleriaImagenes tipoElemento="ZONA_SEGURA" elementoId={zona.id}
+                          editable={activa && puedeGestionar} />
+                      </td>
+                    </tr>
+                    </Fragment>
                   );
                 })}
               </tbody>
