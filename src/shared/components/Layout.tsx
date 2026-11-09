@@ -70,7 +70,7 @@ function menuFor(roles: string[]): MenuSection[] {
     );
   }
 
-  campusItems.push({ href: '#/campus/edificios', icon: <HomeIcon />, label: 'Edificios' });
+  campusItems.push({ href: '#/edificios', icon: <HomeIcon />, label: 'Edificios y espacios' });
   campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
 
   sections.push({
