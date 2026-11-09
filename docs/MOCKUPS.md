@@ -85,6 +85,22 @@ Referencia visual para el equipo.
 
 ---
 
+### 4.1 Consultar ruta · guía de evacuación
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/rutas` |
+| Archivo | `src/modules/ms02-campus/pages/RouteQuery.tsx`, `components/GuiaEvacuacion.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- Cada tarjeta de ruta suma la sección «Guía de evacuación»: la indicación completa, la escalera a usar, la salida, la distancia y el tiempo de la ruta exterior, la zona segura y, desplegable, los pasos del recorrido exterior.
+- Si la salida está en el mismo piso del espacio, la guía dice que no hace falta escalera.
+- Si no hay escalera disponible o ninguna salida con ruta exterior, la sección muestra solo el aviso del backend.
+- Al consultar un espacio la guía ya viene con la ruta. Al consultar todo el edificio el backend no la calcula, así que cada tarjeta ofrece el botón «Ver guía de evacuación», que la pide para ese espacio.
+
+---
+
 ### 5. _Nueva pantalla_ (copiar esta sección)
 
 | Campo | Detalle |
