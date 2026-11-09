@@ -3,6 +3,7 @@ import { PageHeader } from '../../../shared/components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } from '../services/campus';
 import type { CrearRutaRequest, Edificio, Espacio, EstadoRuta, Ruta, ZonaSegura } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
+import { RutaExteriorAdmin } from '../components/RutaExteriorAdmin';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import '../styles/campus.css';
 
@@ -348,6 +349,8 @@ export default function RoutesAdmin() {
             </table>
           </div>
         )}
+
+        <RutaExteriorAdmin edificios={datos.edificios} zonas={datos.zonas} puedeCalcular={puedeGestionar} />
       </main>
     </>
   );

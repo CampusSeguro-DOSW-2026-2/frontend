@@ -117,6 +117,22 @@ Referencia visual para el equipo.
 
 ---
 
+### 4.3 Rutas de evacuación · ruta exterior
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/rutas` |
+| Archivo | `src/modules/ms02-campus/pages/RoutesAdmin.tsx`, `components/RutaExteriorAdmin.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- Debajo de la tabla de rutas hay la sección «Ruta exterior»: se elige edificio, salida y zona segura y se calcula el recorrido a pie con OpenStreetMap (distancia, tiempo y pasos). Calcular es solo del ADMIN; el COORDINADOR solo consulta lo guardado.
+- Las zonas activas sin coordenadas aparecen deshabilitadas, porque no pueden ser destino.
+- Al elegir una salida se listan sus rutas exteriores guardadas, sin volver a llamar al proveedor de navegación.
+- Si el proveedor no responde o no hay recorrido peatonal, se muestra el mensaje del backend.
+
+---
+
 ### 5. _Nueva pantalla_ (copiar esta sección)
 
 | Campo | Detalle |
