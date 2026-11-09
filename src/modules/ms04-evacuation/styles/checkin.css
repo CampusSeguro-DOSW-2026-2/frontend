@@ -7,6 +7,10 @@
 .chk-meta b{font-weight:600;color:var(--ink)}
 .chk-retry{align-self:flex-start}
 /* Reporte de estado (F-01) */
+.chk-actual{display:flex;flex-direction:column;gap:4px;background:var(--cream);border:1px solid var(--red);border-radius:16px;padding:20px 24px}
+.chk-actual small{font-size:13px;color:var(--mut)}
+.chk-actual b{font:700 20px/26px 'Outfit',sans-serif}
+.chk-actual span{font-size:13px;color:var(--mut)}
 .chk-opciones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .chk-opcion{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:96px;padding:20px 24px;border:1.5px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);font:700 20px/26px 'Outfit',sans-serif;text-align:left;cursor:pointer}
 .chk-opcion small{font:400 13px/18px 'Geist',sans-serif;color:var(--mut)}
