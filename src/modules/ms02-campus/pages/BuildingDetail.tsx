@@ -5,6 +5,7 @@ import type { Edificio, Espacio, EspacioRequest, Piso, PisoRequest, TipoEspacio 
 import { Botones, Campo, Falla } from '../components/comun';
 import { TIPOS } from '../types';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
+import SalidasEdificio from '../components/SalidasEdificio';
 import '../styles/campus.css';
 
 type Edicion =
@@ -300,6 +301,8 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
             </section>
           );
         })}
+
+        <SalidasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos} />
       </main>
     </>
   );
