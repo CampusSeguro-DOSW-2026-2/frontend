@@ -43,11 +43,13 @@ function menuFor(roles: string[]): MenuSection[] {
     if (coordination) items.push({ href: '#/eventos/nuevo', icon: <CalendarPlus />, label: 'Crear evento' });
     sections.push({ title: 'Eventos', items });
   }
+  // Permisos de MS03 (ms03-alerts/permissions.ts): historial para coordinador, organizador y auditor; crear, solo coordinador
+  if (coordination || has('AUDITOR')) {
+    const items: MenuItem[] = [{ href: '#/alertas', icon: <BellIcon />, label: 'Alertas' }];
+    if (has('COORDINADOR')) items.push({ href: '#/alertas/nueva', icon: <Megaphone />, label: 'Crear alerta' });
+    sections.push({ title: 'Alertas', items });
+  }
   if (coordination) {
-    sections.push({
-      title: 'Alertas',
-      items: [{ href: '#/alertas', icon: <BellIcon />, label: 'Alertas' }, { href: '#/alertas/nueva', icon: <Megaphone />, label: 'Crear alerta' }],
-    });
     sections.push({ title: 'Brigada e incidentes', items: [{ href: '#/brigadistas', icon: <Users />, label: 'Gestión de brigadistas' }] });
   }
   sections.push({

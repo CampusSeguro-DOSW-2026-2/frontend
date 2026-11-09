@@ -1,8 +1,8 @@
 # MS03 · Alertas y emergencias
 
-**Alcance:** Crear, programar, activar, finalizar y archivar alertas; confirmación de los destinatarios.
+**Alcance:** Crear, programar, activar y archivar alertas; bandeja personal y confirmación de recepción de los destinatarios.
 
-**Estado:** Conectado a MS03 (`services/ms03.ts`), contrato en `ms03-alerts-and-emergencies/docs/api/openapi.yaml`.
+**Estado:** Conectado a MS03 a través del API Gateway (`services/ms03.ts` usa el cliente compartido), contrato v3.0.0 en `ms03-alerts-and-emergencies/docs/api/openapi.yaml`. Ciclo de vida: BORRADOR → PROGRAMADA → ACTIVA → ARCHIVADA. `permissions.ts` oculta las acciones según el rol (el backend sigue siendo quien decide).
 
 | Carpeta | Contenido |
 |---|---|
