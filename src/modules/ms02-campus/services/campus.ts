@@ -1,7 +1,7 @@
 import type {
   CampusRequest, ZonaAbiertaRequest, CalcularRutaExteriorRequest, ResumenGeneracionRutas, RutaExterior, Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
   EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, ModificarSalidaRequest, ModificarZonaSeguraRequest,
-  Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, Salida,
+  Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, RutaListada, Salida,
   SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest, EspacioPublico, SalidaPublica, ZonaSeguraPublica, Escalera, EscaleraRequest, CambiarDisponibilidadEscaleraRequest,
 } from '../types';
 import { API_URL, ApiError, GENERIC_ERROR, NETWORK_ERROR, request } from '../../../shared/services/http';
@@ -154,7 +154,7 @@ export const campus = {
     reactivar: (id: string) => pedir<ZonaAbierta>('PATCH', `/open-zones/${id}/reactivate`),
   },
   rutas: {
-    listar: () => pedir<Ruta[]>('GET', '/evacuation-routes'),
+    listar: () => pedir<RutaListada[]>('GET', '/evacuation-routes'),
     obtener: (id: string) => pedir<Ruta>('GET', `/evacuation-routes/${id}`),
     crear: (datos: CrearRutaRequest) => pedir<Ruta>('POST', '/evacuation-routes', datos),
     actualizar: (id: string, datos: ActualizarRutaRequest) => pedir<Ruta>('PUT', `/evacuation-routes/${id}`, datos),
