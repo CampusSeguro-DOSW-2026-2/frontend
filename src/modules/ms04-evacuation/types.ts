@@ -73,11 +73,34 @@ export interface CheckinRequest {
   ubicacion?: Ubicacion;
 }
 
-/** Zona segura o punto de encuentro de MS02 (GET /api/v1/safe-zones). */
+/** Estado de un elemento del campus en MS02. */
+export type EstadoMs02 = 'ACTIVO' | 'INACTIVO';
+
+/** Zona segura de MS02 marcada como punto de encuentro (GET /api/v1/safe-zones?puntoEncuentro=true). */
 export interface PuntoEncuentro {
   id: string;
   codigo: string;
   nombre: string;
   ubicacion?: string;
-  estado: 'ACTIVO' | 'INACTIVO';
+  estado: EstadoMs02;
+  puntoEncuentro?: boolean;
+}
+
+/** Edificio de MS02 (GET /api/v1/buildings). */
+export interface Edificio {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  estado: EstadoMs02;
+}
+
+/** Espacio de MS02 dentro de un edificio (GET /api/v1/buildings/{id}/spaces y GET /api/v1/spaces/{id}). */
+export interface Espacio {
+  id: string;
+  edificioId: string;
+  edificioNombre?: string;
+  pisoNumero?: number;
+  nombre: string;
+  tipo?: string;
+  estado: EstadoMs02;
 }
