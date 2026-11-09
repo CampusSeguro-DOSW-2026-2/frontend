@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } from '../services/campus';
-import type { Edificio, EdificioRequest } from '../types';
+import type { Campus, Edificio, EdificioRequest } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import '../styles/campus.css';
@@ -17,12 +17,13 @@ const FILTROS: { valor: Filtro; texto: string }[] = [
 ];
 
 // El código es fijo (RF-01): solo se escribe al crear y queda bloqueado al modificar.
-function EdificioForm({ inicial, onGuardar, onCancelar }: {
-  inicial?: Edificio; onGuardar: (datos: EdificioRequest) => Promise<void>; onCancelar: () => void;
+function EdificioForm({ inicial, campuses, onGuardar, onCancelar }: {
+  inicial?: Edificio; campuses: Campus[]; onGuardar: (datos: EdificioRequest) => Promise<void>; onCancelar: () => void;
 }) {
   const [codigo, setCodigo] = useState(inicial?.codigo ?? '');
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
   const [descripcion, setDescripcion] = useState(inicial?.descripcion ?? '');
+  const [campusId, setCampusId] = useState(inicial?.campusId ?? '');
   const { errores, general, guardando, enviar } = useEnvio(onGuardar);
   const id = inicial?.id ?? 'nuevo';
 
@@ -38,7 +39,7 @@ function EdificioForm({ inicial, onGuardar, onCancelar }: {
   return (
     <form className="cs-editor" noValidate onSubmit={(e) => {
       e.preventDefault();
-      enviar(validar(), { codigo: codigo.trim(), nombre: nombre.trim(), descripcion: descripcion.trim() || undefined });
+      enviar(validar(), { codigo: codigo.trim(), nombre: nombre.trim(), descripcion: descripcion.trim() || undefined, campusId: campusId || undefined });
     }}>
       <div className="cs-campos">
         <Campo id={`edificio-codigo-${id}`} etiqueta={inicial ? 'Código (no se puede cambiar)' : 'Código'} error={errores.codigo}>
@@ -48,6 +49,12 @@ function EdificioForm({ inicial, onGuardar, onCancelar }: {
           <input id={`edificio-nombre-${id}`} value={nombre} placeholder="Bloque G" onChange={(e) => setNombre(e.target.value)} />
         </Campo>
       </div>
+      <Campo id={`edificio-campus-${id}`} etiqueta="Campus (opcional)" error={errores.campusId}>
+        <select id={`edificio-campus-${id}`} value={campusId} onChange={(e) => setCampusId(e.target.value)}>
+          <option value="">{inicial?.campusId ? 'Mantener el actual' : 'Sin campus'}</option>
+          {campuses.filter((c) => c.estado === 'ACTIVO' || c.id === inicial?.campusId).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+        </select>
+      </Campo>
       <Campo id={`edificio-descripcion-${id}`} etiqueta="Descripción (opcional)" error={errores.descripcion}>
         <textarea id={`edificio-descripcion-${id}`} value={descripcion} placeholder="Laboratorios y aulas de ingeniería" onChange={(e) => setDescripcion(e.target.value)} />
       </Campo>
@@ -64,6 +71,7 @@ export default function BuildingsAdmin() {
   const [edicion, setEdicion] = useState<Edicion>(null);
   const [aviso, setAviso] = useState<CampusApiError | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  const [campuses, setCampuses] = useState<Campus[]>([]);
 
   const roles = rolesDeSesion();
   const puedeGestionar = roles === null || roles.includes('ADMIN');
@@ -77,6 +85,15 @@ export default function BuildingsAdmin() {
       .catch((e) => { if (vigente) setErrorCarga(comoError(e)); });
     return () => { vigente = false; };
   }, [aplicar]);
+
+  // Los campus solo alimentan un selector opcional: si no cargan, la pantalla sigue funcionando.
+  useEffect(() => {
+    let vigente = true;
+    campus.campuses.listar(true)
+      .then((lista) => { if (vigente) setCampuses(lista); })
+      .catch(() => { if (vigente) setCampuses([]); });
+    return () => { vigente = false; };
+  }, []);
 
   const recargar = async () => {
     try {
@@ -147,6 +164,7 @@ export default function BuildingsAdmin() {
               </button>
             ))}
           </div>
+          <a className="cs-mini" href="#/admin/campus">Campus y zonas abiertas</a>
           {puedeGestionar && (
             <button type="button" className="btn red cs-agregar" onClick={() => editar({ tipo: 'nuevo' })}>Crear edificio</button>
           )}
@@ -155,7 +173,7 @@ export default function BuildingsAdmin() {
         {edicion?.tipo === 'nuevo' && (
           <section className="cs-piso">
             <h3 className="cs-piso-titulo">Nuevo edificio</h3>
-            <EdificioForm onCancelar={() => editar(null)}
+            <EdificioForm campuses={campuses} onCancelar={() => editar(null)}
               onGuardar={(datos) => guardar(() => campus.edificios.crear(datos))} />
           </section>
         )}
@@ -170,16 +188,16 @@ export default function BuildingsAdmin() {
           <div className="cs-tabla">
             <table>
               <thead>
-                <tr><th>Código</th><th>Nombre</th><th>Descripción</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr>
+                <tr><th>Código</th><th>Nombre</th><th>Campus</th><th>Descripción</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr>
               </thead>
               <tbody>
                 {visibles.map((edificio) => {
                   const activo = edificio.estado === 'ACTIVO';
                   if (edicion?.tipo === 'edificio' && edicion.id === edificio.id) {
                     return (
-                      <tr key={edificio.id}><td colSpan={5}>
-                        <EdificioForm inicial={edificio} onCancelar={() => editar(null)}
-                          onGuardar={(datos) => guardar(() => campus.edificios.modificar(edificio.id, { nombre: datos.nombre, descripcion: datos.descripcion }))} />
+                      <tr key={edificio.id}><td colSpan={6}>
+                        <EdificioForm inicial={edificio} campuses={campuses} onCancelar={() => editar(null)}
+                          onGuardar={(datos) => guardar(() => campus.edificios.modificar(edificio.id, { nombre: datos.nombre, descripcion: datos.descripcion, campusId: datos.campusId }))} />
                       </td></tr>
                     );
                   }
@@ -187,6 +205,7 @@ export default function BuildingsAdmin() {
                     <tr key={edificio.id} className={activo ? '' : 'inactivo'}>
                       <td className="cs-codigo">{edificio.codigo}</td>
                       <td>{edificio.nombre}</td>
+                      <td>{campuses.find((c) => c.id === edificio.campusId)?.nombre ?? '—'}</td>
                       <td className="cs-descripcion">{edificio.descripcion || '—'}</td>
                       <td><span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{edificio.estado}</span></td>
                       <td>
