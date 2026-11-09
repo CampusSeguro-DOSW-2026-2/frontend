@@ -1,4 +1,4 @@
-import type { EstadoCheckin } from '../types';
+import type { EstadoCheckin, TipoUbicacion } from '../types';
 
 /** Texto que ve el usuario para cada estado, en el orden en que se muestran (F-01, RN-MS04-03). */
 export const ESTADOS: { codigo: EstadoCheckin; texto: string }[] = [
@@ -10,6 +10,13 @@ export const ESTADOS: { codigo: EstadoCheckin; texto: string }[] = [
 
 export const textoEstado = (codigo: EstadoCheckin): string =>
   ESTADOS.find((e) => e.codigo === codigo)?.texto ?? codigo;
+
+/** Tipos de lugar de MS02 donde se puede pedir asistencia (RN-MS04-09), en el orden en que se muestran. */
+export const TIPOS_UBICACION: { codigo: TipoUbicacion; texto: string; ayuda: string }[] = [
+  { codigo: 'EDIFICIO', texto: 'Un edificio', ayuda: 'Estoy dentro o junto a un edificio' },
+  { codigo: 'ESPACIO', texto: 'Un espacio', ayuda: 'Salón, laboratorio u otro espacio de un edificio' },
+  { codigo: 'PUNTO_ENCUENTRO', texto: 'Un punto de encuentro', ayuda: 'Estoy en un punto de encuentro' },
+];
 
 /** Simulacro o emergencia real, como lo marca MS06 en el evento. */
 export const tipoEvento = (simulacro: boolean): string => (simulacro ? 'Simulacro' : 'Emergencia');

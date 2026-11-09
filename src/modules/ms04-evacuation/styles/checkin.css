@@ -25,5 +25,8 @@
 .chk-punto:hover:not(:disabled){border-color:var(--red)}
 .chk-punto[aria-pressed=true]{background:var(--cream);border-color:var(--red)}
 .chk-punto:disabled{cursor:default;opacity:.6}
+.chk-tipos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.chk-link{border:0;background:none;padding:0;color:var(--blue);font:inherit;text-decoration:underline;cursor:pointer}
+.chk-link:disabled{cursor:default;opacity:.6}
 .notice.chk-ok{background:#F0FDF4;border-color:#BBF7D0;color:#14532D}
-@media(max-width:900px){.chk-opciones{grid-template-columns:1fr}}
+@media(max-width:900px){.chk-opciones,.chk-tipos{grid-template-columns:1fr}}

@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
+import SelectorUbicacion from '../components/SelectorUbicacion';
 import { campusApi } from '../services/campus';
 import { checkinApi } from '../services/checkin';
-import type { Checkin, CheckinRequest, EstadoCheckin, Evento, PuntoEncuentro } from '../types';
+import type { Checkin, CheckinRequest, EstadoCheckin, Evento, PuntoEncuentro, Ubicacion } from '../types';
 import { ESTADOS, fechaHora, textoEstado, tipoEvento } from '../utils/labels';
 import '../styles/checkin.css';
 
@@ -27,7 +28,8 @@ type Vigente =
  * si el usuario ya reportó, muestra su estado vigente y le permite cambiarlo. Las cuatro opciones se ven siempre.
  * Elegir Me estoy evacuando o No estoy en el campus envía el reporte; Estoy a salvo muestra los puntos de encuentro
  * de MS02 y elegir uno lo envía. Así el reporte se completa en máximo 3 interacciones desde el menú (RNF-MS04-07).
- * Requiero asistencia se habilita con su ubicación en RF-MS04-04.
+ * Requiero asistencia pide dónde se necesita la asistencia (edificio, espacio o punto de encuentro de MS02) y MS04
+ * genera la solicitud en MS05 (RF-MS04-04).
  */
 export default function ReporteEstado({ session, eventoId }: { session: Session; eventoId: string }) {
   const [evento, setEvento] = useState<Evento | null>(null);
@@ -38,8 +40,14 @@ export default function ReporteEstado({ session, eventoId }: { session: Session;
   const [confirmado, setConfirmado] = useState(false);
   const [error, setError] = useState('');
   const [errorCampo, setErrorCampo] = useState('');
+  /** Nombre legible de cada ubicación de MS02 ya conocida (id → nombre) */
+  const [lugares, setLugares] = useState<Record<string, string>>({});
 
   const actual = vigente.estado === 'listo' ? vigente.checkin : null;
+
+  const recordarLugar = (ubicacion: Ubicacion, nombre: string) => {
+    if (nombre) setLugares((previos) => ({ ...previos, [ubicacion.id]: nombre }));
+  };
 
   const cargarPuntos = () => {
     setPuntos({ estado: 'cargando' });
@@ -70,6 +78,12 @@ export default function ReporteEstado({ session, eventoId }: { session: Session;
             .then((lista) => { if (activo) setPuntos({ estado: 'listo', puntos: lista }); })
             .catch(() => { /* se muestra sin el nombre del punto */ });
         }
+        // Para mostrar dónde pidió la asistencia
+        const ubicacion = checkin?.ubicacion;
+        if (ubicacion) {
+          campusApi.nombreUbicacion(session, ubicacion)
+            .then((nombre) => { if (activo) recordarLugar(ubicacion, nombre); });
+        }
       })
       .catch((err: unknown) => { if (activo) setVigente({ estado: 'error', mensaje: errorMessage(err) }); });
     return () => { activo = false; };
@@ -85,10 +99,13 @@ export default function ReporteEstado({ session, eventoId }: { session: Session;
       setVigente({ estado: 'listo', checkin });
       setConfirmado(true);
     } catch (err) {
-      // Si no se guardó, la opción marcada vuelve a ser el estado vigente (con Estoy a salvo sigue abierta la lista)
-      if (cuerpo.estado !== 'SAFE') setElegido(null);
+      // Si no se guardó, la opción marcada vuelve a ser el estado vigente (con Estoy a salvo y Requiero asistencia
+      // sigue abierta la lista de lugares)
+      if (cuerpo.estado !== 'SAFE' && cuerpo.estado !== 'NEEDS_ASSISTANCE') setElegido(null);
       setError(errorMessage(err));
-      if (err instanceof ApiError) setErrorCampo(err.fields.punto ?? err.fields.estado ?? '');
+      if (err instanceof ApiError) {
+        setErrorCampo(err.fields.punto ?? err.fields.ubicacion ?? err.fields.estado ?? '');
+      }
     } finally {
       setEnviando(false);
     }
@@ -102,15 +119,28 @@ export default function ReporteEstado({ session, eventoId }: { session: Session;
       if (puntos.estado === 'sin-cargar' || puntos.estado === 'error') cargarPuntos();
       return;
     }
+    if (estado === 'NEEDS_ASSISTANCE') {
+      setError('');
+      setErrorCampo('');
+      setConfirmado(false);
+      return;
+    }
     void enviar({ estado });
+  };
+
+  const pedirAsistencia = (ubicacion: Ubicacion, nombre: string) => {
+    recordarLugar(ubicacion, nombre);
+    void enviar({ estado: 'NEEDS_ASSISTANCE', ubicacion });
   };
 
   const nombrePunto = (id: string | null) =>
     (puntos.estado === 'listo' ? puntos.puntos.find((p) => p.id === id)?.nombre : undefined);
 
   const describir = (checkin: Checkin) => {
-    const punto = checkin.estado === 'SAFE' ? nombrePunto(checkin.punto_encuentro_id) : undefined;
-    return punto ? `${textoEstado(checkin.estado)} en ${punto}` : textoEstado(checkin.estado);
+    const lugar = checkin.estado === 'SAFE'
+      ? nombrePunto(checkin.punto_encuentro_id)
+      : (checkin.ubicacion ? lugares[checkin.ubicacion.id] : undefined);
+    return lugar ? `${textoEstado(checkin.estado)} en ${lugar}` : textoEstado(checkin.estado);
   };
 
   // La opción marcada es la que el usuario acaba de elegir o, si no ha elegido, su estado vigente
@@ -146,16 +176,12 @@ export default function ReporteEstado({ session, eventoId }: { session: Session;
         <section aria-labelledby="chk-estado-titulo">
           <h2 id="chk-estado-titulo" className="title sm22">{actual ? 'Cambiar mi estado' : 'Mi estado'}</h2>
           <div className="chk-opciones" role="group" aria-label="Estado" style={{ marginTop: 16 }}>
-            {ESTADOS.map(({ codigo, texto }) => {
-              const pendiente = codigo === 'NEEDS_ASSISTANCE';
-              return (
-                <button key={codigo} type="button" className="chk-opcion" aria-pressed={marcado === codigo}
-                  disabled={enviando || pendiente} onClick={() => elegir(codigo)}>
-                  {texto}
-                  {pendiente && <small>Disponible pronto</small>}
-                </button>
-              );
-            })}
+            {ESTADOS.map(({ codigo, texto }) => (
+              <button key={codigo} type="button" className="chk-opcion" aria-pressed={marcado === codigo}
+                disabled={enviando} onClick={() => elegir(codigo)}>
+                {texto}
+              </button>
+            ))}
           </div>
         </section>
 
@@ -188,6 +214,15 @@ export default function ReporteEstado({ session, eventoId }: { session: Session;
             )}
             {errorCampo && <p className="error" role="alert">{errorCampo}</p>}
           </section>
+        )}
+
+        {elegido === 'NEEDS_ASSISTANCE' && (
+          <>
+            <SelectorUbicacion session={session} deshabilitado={enviando}
+              seleccionada={actual?.estado === 'NEEDS_ASSISTANCE' ? actual.ubicacion : null}
+              onElegir={pedirAsistencia} />
+            {errorCampo && <p className="error" role="alert">{errorCampo}</p>}
+          </>
         )}
 
         {enviando && <p className="notice" role="status">Enviando su estado…</p>}
