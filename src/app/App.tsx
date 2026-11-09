@@ -46,7 +46,7 @@ export default function App() {
     : identityRoutes(route)
       ?? campusRoutes(route)
       ?? alertRoutes(route, session)
-      ?? evacuationRoutes(route)
+      ?? evacuationRoutes(route, session)
       ?? brigadesRoutes(route, session)
       ?? drillsRoutes(route, session)
       ?? trainingRoutes(route)
