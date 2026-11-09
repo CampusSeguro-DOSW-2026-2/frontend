@@ -85,11 +85,47 @@ export interface ZonaSegura {
   descripcion: string;
   capacidad: number;
   estado: Estado;
+  latitud?: number | null;
+  longitud?: number | null;
+  zonaAbiertaId?: string | null;
+  puntoEncuentro: boolean;
 }
 
-export type ZonaSeguraRequest = Omit<ZonaSegura, 'id' | 'estado'>;
+export interface ZonaSeguraRequest {
+  codigo: string;
+  nombre: string;
+  ubicacion: string;
+  descripcion: string;
+  capacidad: number;
+  // Latitud y longitud van juntas. Al modificar, vacías significa «sin cambios»: el backend no las borra.
+  latitud?: number;
+  longitud?: number;
+  // Al modificar, vacía significa «sin cambios».
+  zonaAbiertaId?: string;
+  // Al crear, si no se envía queda como punto de encuentro.
+  puntoEncuentro?: boolean;
+}
 // El código de la zona es fijo (RF-04): el PUT no lo recibe.
 export type ModificarZonaSeguraRequest = Omit<ZonaSeguraRequest, 'codigo'>;
+
+export type TipoZonaAbierta = 'ZONA_VERDE' | 'PLAZOLETA' | 'CANCHA' | 'PARQUEADERO' | 'OTRA';
+
+export interface Campus {
+  id: string;
+  nombre: string;
+  descripcion?: string | null;
+  estado: Estado;
+}
+
+export interface ZonaAbierta {
+  id: string;
+  campusId: string;
+  nombre: string;
+  tipo: TipoZonaAbierta;
+  latitud?: number | null;
+  longitud?: number | null;
+  estado: Estado;
+}
 
 export interface Ruta {
   id: string;
@@ -223,4 +259,12 @@ export const TIPOS: Record<TipoEspacio, string> = {
   AUDITORIO: 'Auditorio',
   OFICINA: 'Oficina',
   ESPACIO_COMUN: 'Espacio común',
+};
+
+export const TIPOS_ZONA_ABIERTA: Record<TipoZonaAbierta, string> = {
+  ZONA_VERDE: 'Zona verde',
+  PLAZOLETA: 'Plazoleta',
+  CANCHA: 'Cancha',
+  PARQUEADERO: 'Parqueadero',
+  OTRA: 'Otra',
 };
