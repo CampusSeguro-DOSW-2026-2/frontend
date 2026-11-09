@@ -273,3 +273,57 @@ export const TIPOS_ZONA_ABIERTA: Record<TipoZonaAbierta, string> = {
   PARQUEADERO: 'Parqueadero',
   OTRA: 'Otra',
 };
+
+export interface EspacioPublico {
+  codigo: string;
+  nombre: string;
+  tipo: TipoEspacio;
+  edificio?: string;
+  piso?: number;
+  disponible: boolean;
+  evacuacion?: {
+    tieneRuta: boolean;
+    zonaSegura?: string;
+    ubicacionZonaSegura?: string;
+    recorrido?: string;
+    estado?: EstadoRuta;
+    motivo?: string;
+    mensaje?: string;
+    recomendaciones: { titulo: string; recomendacion: string }[];
+  };
+  guia?: {
+    indicacion?: string;
+    mensaje?: string;
+    escaleras: string[];
+    salida?: string;
+    salidaLatitud?: number;
+    salidaLongitud?: number;
+    zonaSegura?: string;
+    distanciaMetros?: number;
+    duracionSegundos?: number;
+    pasos: { instruccion: string; distanciaMetros: number }[];
+  };
+  aviso?: string;
+}
+
+export interface SalidaPublica {
+  codigo: string;
+  nombre: string;
+  edificio?: string;
+  piso?: number;
+  latitud: number;
+  longitud: number;
+  disponible: boolean;
+  aviso?: string;
+}
+
+export interface ZonaSeguraPublica {
+  codigo: string;
+  nombre: string;
+  ubicacion?: string;
+  puntoEncuentro: boolean;
+  latitud?: number;
+  longitud?: number;
+  disponible: boolean;
+  aviso?: string;
+}
