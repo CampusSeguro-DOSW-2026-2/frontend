@@ -1,4 +1,18 @@
-import type { EstadoCheckin, TipoUbicacion } from '../types';
+import type { EstadoCheckin, EstadoEnvio, TipoUbicacion } from '../types';
+
+/** Mensajes de éxito de F-01 con Requiero asistencia, según cómo quedó la solicitud en MS05 (RF-MS04-04). */
+export const MENSAJE_SOLICITUD: Record<EstadoEnvio, string> = {
+  ENVIADA: 'Su estado quedó registrado y su solicitud de asistencia fue enviada.',
+  PENDIENTE_ENVIO: 'Su estado quedó registrado. La solicitud de asistencia se enviará en cuanto el servicio esté disponible.',
+  RECHAZADA: 'Su estado quedó registrado, pero la solicitud de asistencia no pudo crearse. Un coordinador la revisará.',
+};
+
+/** Estado de la solicitud de asistencia, tal como se muestra junto al estado vigente. */
+export const TEXTO_ENVIO: Record<EstadoEnvio, string> = {
+  ENVIADA: 'Enviada',
+  PENDIENTE_ENVIO: 'Pendiente de envío',
+  RECHAZADA: 'No pudo crearse; un coordinador la revisará',
+};
 
 /** Texto que ve el usuario para cada estado, en el orden en que se muestran (F-01, RN-MS04-03). */
 export const ESTADOS: { codigo: EstadoCheckin; texto: string }[] = [

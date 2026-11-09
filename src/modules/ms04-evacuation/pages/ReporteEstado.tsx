@@ -6,7 +6,7 @@ import SelectorUbicacion from '../components/SelectorUbicacion';
 import { campusApi } from '../services/campus';
 import { checkinApi } from '../services/checkin';
 import type { Checkin, CheckinRequest, EstadoCheckin, Evento, PuntoEncuentro, Ubicacion } from '../types';
-import { ESTADOS, fechaHora, textoEstado, tipoEvento } from '../utils/labels';
+import { ESTADOS, MENSAJE_SOLICITUD, TEXTO_ENVIO, fechaHora, textoEstado, tipoEvento } from '../utils/labels';
 import '../styles/checkin.css';
 
 /** Mensaje de éxito del reporte (F-01). */
@@ -22,6 +22,17 @@ type Vigente =
   | { estado: 'cargando' }
   | { estado: 'listo'; checkin: Checkin | null }
   | { estado: 'error'; mensaje: string };
+
+/**
+ * Mensaje después de un reporte aceptado. Con Requiero asistencia es el de F-01 según cómo quedó la solicitud en MS05:
+ * ENVIADA, PENDIENTE_ENVIO (MS04 la reenvía cuando MS05 se recupera) o RECHAZADA (la revisa un coordinador).
+ */
+function Confirmacion({ checkin, descripcion }: { checkin: Checkin; descripcion: string }) {
+  const solicitud = checkin.estado === 'NEEDS_ASSISTANCE' ? checkin.solicitud_asistencia : null;
+  if (!solicitud) return <p className="notice chk-ok" role="status">{ESTADO_REGISTRADO} {descripcion}.</p>;
+  const clase = { ENVIADA: 'notice chk-ok', PENDIENTE_ENVIO: 'notice', RECHAZADA: 'notice err' }[solicitud.estado_envio];
+  return <p className={clase} role="status">{MENSAJE_SOLICITUD[solicitud.estado_envio]}</p>;
+}
 
 /**
  * F-01 Reporte de estado (RF-MS04-02 y RF-MS04-03). El mismo formulario registra el primer check-in y lo actualiza:
@@ -163,6 +174,9 @@ export default function ReporteEstado({ session, eventoId }: { session: Session;
                 <small>Su estado actual</small>
                 <b>{describir(actual)}</b>
                 {actual.fecha_hora && <span>Reportado: {fechaHora(actual.fecha_hora)} · Puede cambiarlo.</span>}
+                {actual.estado === 'NEEDS_ASSISTANCE' && actual.solicitud_asistencia && (
+                  <span>Solicitud de asistencia: <b className="chk-envio">{TEXTO_ENVIO[actual.solicitud_asistencia.estado_envio]}</b></span>
+                )}
               </>
             ) : (
               <>
@@ -227,9 +241,7 @@ export default function ReporteEstado({ session, eventoId }: { session: Session;
 
         {enviando && <p className="notice" role="status">Enviando su estado…</p>}
         {error && !errorCampo && <p className="notice err" role="alert">{error}</p>}
-        {confirmado && actual && (
-          <p className="notice chk-ok" role="status">{ESTADO_REGISTRADO} {describir(actual)}.</p>
-        )}
+        {confirmado && actual && <Confirmacion checkin={actual} descripcion={describir(actual)} />}
       </main>
     </>
   );
