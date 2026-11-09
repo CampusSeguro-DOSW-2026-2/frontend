@@ -6,6 +6,7 @@ import { Botones, Campo, Falla } from '../components/comun';
 import { TIPOS } from '../types';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import SalidasEdificio from '../components/SalidasEdificio';
+import EscalerasEdificio from '../components/EscalerasEdificio';
 import { BotonQr } from '../components/BotonQr';
 import '../styles/campus.css';
 
@@ -308,6 +309,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
         })}
 
         <SalidasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos} />
+        <EscalerasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos} />
       </main>
     </>
   );

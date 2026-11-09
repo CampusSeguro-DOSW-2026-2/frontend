@@ -170,3 +170,19 @@ Referencia visual para el equipo.
 - [ ] Tutor AI
 - [ ] Perfil
 
+
+
+### 4.4 Escaleras de un edificio
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/edificios/{id}` |
+| Archivo | `src/modules/ms02-campus/components/EscalerasEdificio.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- El detalle del edificio permite consultar las escaleras que conectan sus pisos.
+- ADMIN puede registrar escaleras seleccionando al menos dos pisos activos, e inactivarlas o reactivarlas.
+- ADMIN y COORDINADOR pueden cambiar la disponibilidad de una escalera.
+- Para bloquear una escalera o ponerla fuera de servicio se debe indicar el motivo.
+- Las escaleras inactivas se pueden consultar cuando se activa la opción correspondiente.
