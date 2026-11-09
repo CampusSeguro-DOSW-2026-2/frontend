@@ -56,7 +56,7 @@ function RecomendacionForm({ inicial, edificios, onGuardar, onCancelar }: {
           <Campo id={`rec-edificio-${id}`} etiqueta="Edificio" error={errores.edificioId}>
             <select id={`rec-edificio-${id}`} value={edificioId} onChange={(e) => setEdificioId(e.target.value)}>
               <option value="">Selecciona un edificio</option>
-              {edificios.map((e) => <option key={e.id} value={e.id}>{e.codigo} · {e.nombre}{e.estado === 'INACTIVO' ? ' (inactivo)' : ''}</option>)}
+              {edificios.map((e) => <option key={e.id} value={e.id}>{e.nombre}{e.estado === 'INACTIVO' ? ' (inactivo)' : ''}</option>)}
             </select>
           </Campo>
         ) : (

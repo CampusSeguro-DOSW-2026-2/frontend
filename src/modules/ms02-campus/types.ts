@@ -5,22 +5,19 @@ export type AmbitoRecomendacion = 'EDIFICIO' | 'TIPO_ESPACIO';
 
 export interface Edificio {
   id: string;
-  codigo: string;
   nombre: string;
   descripcion?: string;
   estado: Estado;
-  campusId?: string | null;
+  campusId: string;
 }
 
 export interface EdificioRequest {
-  codigo: string;
   nombre: string;
   descripcion?: string;
-  // Al modificar, vacío significa «sin cambios»: el backend no quita el campus de un edificio.
-  campusId?: string;
+  campusId: string;
 }
 
-export type ModificarEdificioRequest = Omit<EdificioRequest, 'codigo'>;
+export type ModificarEdificioRequest = EdificioRequest;
 
 export interface Piso {
   id: string;
@@ -41,7 +38,6 @@ export interface Espacio {
   edificioNombre?: string;
   pisoId: string;
   pisoNumero?: number;
-  codigo: string;
   nombre: string;
   tipo: TipoEspacio;
   estado: Estado;
@@ -54,7 +50,6 @@ export interface Salida {
   edificioNombre?: string;
   pisoId: string;
   pisoNumero?: number;
-  codigo: string;
   nombre: string;
   latitud: number;
   longitud: number;
@@ -64,21 +59,19 @@ export interface Salida {
 
 export interface SalidaRequest {
   pisoId: string;
-  codigo: string;
   nombre: string;
   latitud: number;
   longitud: number;
 }
 
-export type ModificarSalidaRequest = Omit<SalidaRequest, 'codigo'>;
+export type ModificarSalidaRequest = SalidaRequest;
 
 export interface EspacioRequest {
-  codigo: string;
   nombre: string;
   tipo: TipoEspacio;
 }
 
-export type ModificarEspacioRequest = Omit<EspacioRequest, 'codigo'>;
+export type ModificarEspacioRequest = EspacioRequest;
 
 export interface ZonaSegura {
   id: string;
@@ -291,7 +284,6 @@ export const TIPOS_ZONA_ABIERTA: Record<TipoZonaAbierta, string> = {
 };
 
 export interface EspacioPublico {
-  codigo: string;
   nombre: string;
   tipo: TipoEspacio;
   edificio?: string;
@@ -323,7 +315,6 @@ export interface EspacioPublico {
 }
 
 export interface SalidaPublica {
-  codigo: string;
   nombre: string;
   edificio?: string;
   piso?: number;
