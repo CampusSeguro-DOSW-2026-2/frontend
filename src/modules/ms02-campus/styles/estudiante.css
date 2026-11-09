@@ -1,0 +1,97 @@
+.cs-estudiante-edificios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.cs-estudiante-edificio {
+  min-width: 0;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.cs-estudiante-edificio-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cs-estudiante-edificio-info h2 {
+  font: 700 20px/26px 'Outfit', sans-serif;
+}
+
+.cs-estudiante-edificio-info p {
+  font-size: 14px;
+  line-height: 150%;
+  color: var(--mut);
+}
+
+.cs-estudiante-edificio .cs-galeria {
+  margin-top: 20px;
+}
+
+.cs-estudiante-resumen {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 24px 0 16px;
+}
+
+.cs-estudiante-pisos {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cs-estudiante-espacios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.cs-estudiante-espacio {
+  min-width: 0;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.cs-estudiante-espacio h4 {
+  font: 700 16px/22px 'Outfit', sans-serif;
+  overflow-wrap: anywhere;
+  margin-bottom: 4px;
+}
+
+.cs-estudiante-espacio > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-estudiante-espacio > div:first-child > span:not(.cs-estado) {
+  font-size: 13px;
+  color: var(--mut);
+}
+
+.cs-estudiante-espacio .cs-galeria {
+  margin-top: 16px;
+}
+
+@media (max-width: 700px) {
+  .cs-estudiante-edificios,
+  .cs-estudiante-espacios {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-estudiante-edificio {
+    padding: 16px;
+  }
+}
