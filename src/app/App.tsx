@@ -3,7 +3,7 @@ import { Navbar } from '../shared/components/Layout';
 import { getSession, setSessionNotice } from '../shared/services/session';
 import { logoutUser } from '../modules/ms01-identity/services/identity';
 import { PUBLIC_ROUTES, useIdentityRoutes } from '../modules/ms01-identity/routes';
-import { campusRoutes } from '../modules/ms02-campus/routes';
+import { campusRoutes, esRutaPublicaCampus } from '../modules/ms02-campus/routes';
 import { alertRoutes } from '../modules/ms03-alerts/routes';
 import { evacuationRoutes } from '../modules/ms04-evacuation/routes';
 import { brigadesRoutes } from '../modules/ms05-brigades/routes';
@@ -29,14 +29,15 @@ export default function App() {
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
 
-  // Cerrar sesión desde el menú (RF-MS01-04): igual que en Perfil
+  // Cerrar sesión desde el menú (RF-MS01-04).
   const logout = async () => {
     if (!session) return;
     setSessionNotice(await logoutUser(session));
     window.location.hash = '#/login';
   };
 
-  const blocked = !PUBLIC_ROUTES.includes(route) && !session;
+  const isPublic = PUBLIC_ROUTES.includes(route) || esRutaPublicaCampus(route);
+  const blocked = !isPublic && !session;
 
   useEffect(() => {
     if (blocked) window.location.hash = '#/login';
@@ -55,7 +56,7 @@ export default function App() {
 
   return (
     <>
-      {!PUBLIC_ROUTES.includes(route) && <Navbar current={route} session={session} onLogout={logout} />}
+      {!isPublic && <Navbar current={route} session={session} onLogout={logout} />}
       {page}
       {/* Solo en desarrollo: acceso a las pantallas de prueba (la barra del mockup no tiene "Alertas"). */}
       {import.meta.env.DEV && <footer className="demo-nav">

@@ -1,0 +1,21 @@
+.qr-pagina{min-height:100vh;background:var(--bg);display:flex;flex-direction:column}
+.qr-cabecera{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--red);color:#fff;padding:16px 20px}
+.qr-marca{font:800 20px/24px 'Outfit',sans-serif}
+.qr-sello{background:#fff;color:var(--red);font:800 12px/15px 'Outfit',sans-serif;padding:5px 10px;border-radius:6px}
+.qr-contenido{width:100%;max-width:640px;margin:0 auto;padding:24px 20px 40px;display:flex;flex-direction:column;gap:20px}
+.qr-lugar{font:800 30px/115% 'Outfit',sans-serif;overflow-wrap:anywhere}
+.qr-donde{font-size:16px;color:var(--mut);margin-top:-12px}
+.qr-tarjeta{display:flex;flex-direction:column;gap:14px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}
+.qr-tarjeta h2{font:700 20px/26px 'Outfit',sans-serif}
+.qr-pasos{margin:0;padding-left:28px;display:flex;flex-direction:column;gap:12px;font:600 19px/145% 'Geist',sans-serif}
+.qr-pasos li::marker{font:800 19px 'Outfit',sans-serif;color:var(--red)}
+.qr-texto{font-size:17px;line-height:150%}
+.qr-boton{display:flex;justify-content:center;align-items:center;min-height:52px;padding:0 20px;border-radius:14px;background:var(--ink);color:#fff;font:700 16px/20px 'Outfit',sans-serif;text-decoration:none}
+.qr-boton:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.qr-detalle summary{cursor:pointer;font:600 15px/20px 'Geist',sans-serif;color:var(--mut);padding:6px 0}
+.qr-detalle ol{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:15px;line-height:145%}
+.qr-aviso{background:#FEF2F2;border:1px solid #FCA5A5;color:#7F1D1D;border-radius:12px;padding:14px 16px;font:600 16px/150% 'Geist',sans-serif}
+.qr-recomendaciones{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.qr-recomendaciones li{display:flex;flex-direction:column;gap:4px;font-size:15px;line-height:150%}
+.qr-recomendaciones strong{font:700 15px/20px 'Outfit',sans-serif}
+.qr-ayuda{font-size:14px;color:var(--mut);text-align:center}
