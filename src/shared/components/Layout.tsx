@@ -39,7 +39,7 @@ export function Navbar({ current, roles = [] }: { current: string; roles?: strin
       <ul>
         {items.map((n) => (
           <li key={n.href}>
-            <a href={n.href} aria-current={isCurrent(current, n.href) ? 'page' : undefined}>{n.icon}{n.label}</a>
+            <a href={n.href} aria-current={(n === CAMPUS_NAV ? current.startsWith('/admin/') : isCurrent(current, n.href)) ? 'page' : undefined}>{n.icon}{n.label}</a>
           </li>
         ))}
       </ul>
