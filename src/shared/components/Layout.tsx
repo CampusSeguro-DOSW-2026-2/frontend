@@ -61,6 +61,12 @@ function menuFor(roles: string[]): MenuSection[] {
     if (has('ADMIN')) items.push({ href: '#/roles', icon: <ShieldCheck />, label: 'Roles y permisos' });
     sections.push({ title: 'Administración', items });
   }
+  if (has('ADMIN', 'COORDINADOR')) {
+    sections.push({
+      title: 'Administración campus',
+      items: [{ href: '#/admin/edificios', icon: <HomeIcon />, label: 'Edificios, zonas y rutas' }],
+    });
+  }
   sections.push({ title: 'Cuenta', items: [{ href: '#/perfil', icon: <UserIcon />, label: 'Perfil' }] });
   return sections;
 }

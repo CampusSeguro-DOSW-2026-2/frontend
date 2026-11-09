@@ -72,7 +72,83 @@ Referencia visual para el equipo.
 
 ---
 
-### 4. _Nueva pantalla_ (copiar esta sección)
+### 4. Administración
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/edificios` |
+| Archivo | `src/components/Layout.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- La opción «Administración» solo aparece para los roles ADMIN y COORDINADOR.
+
+---
+
+### 4.1 Consultar ruta · guía de evacuación
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/rutas` |
+| Archivo | `src/modules/ms02-campus/pages/RouteQuery.tsx`, `components/GuiaEvacuacion.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- Cada tarjeta de ruta suma la sección «Guía de evacuación»: la indicación completa, la escalera a usar, la salida, la distancia y el tiempo de la ruta exterior, la zona segura y, desplegable, los pasos del recorrido exterior.
+- Si la salida está en el mismo piso del espacio, la guía dice que no hace falta escalera.
+- Si no hay escalera disponible o ninguna salida con ruta exterior, la sección muestra solo el aviso del backend.
+- Al consultar un espacio la guía ya viene con la ruta. Al consultar todo el edificio el backend no la calcula, así que cada tarjeta ofrece el botón «Ver guía de evacuación», que la pide para ese espacio.
+
+---
+
+### 4.2 Zonas seguras con coordenadas
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/zonas` |
+| Archivo | `src/modules/ms02-campus/pages/ZonesAdmin.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- El formulario suma latitud y longitud (opcionales, van juntas), la zona abierta donde queda la zona segura y si es punto de encuentro (por defecto sí).
+- La tabla muestra las coordenadas con el enlace «Ver en OpenStreetMap» y marca «Sin coordenadas» en las zonas que no las tienen.
+- Encima de la tabla se avisa cuántas zonas activas no tienen coordenadas: no pueden ser destino de una ruta exterior.
+- Las coordenadas y la zona abierta ya guardadas se pueden cambiar pero no borrar, porque el backend interpreta el campo vacío como «sin cambios».
+
+---
+
+### 4.3 Rutas de evacuación · ruta exterior
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/rutas` |
+| Archivo | `src/modules/ms02-campus/pages/RoutesAdmin.tsx`, `components/RutaExteriorAdmin.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- Debajo de la tabla de rutas hay la sección «Ruta exterior»: se elige edificio, salida y zona segura y se calcula el recorrido a pie con OpenStreetMap (distancia, tiempo y pasos). Calcular es solo del ADMIN; el COORDINADOR solo consulta lo guardado.
+- Las zonas activas sin coordenadas aparecen deshabilitadas, porque no pueden ser destino.
+- Al elegir una salida se listan sus rutas exteriores guardadas, sin volver a llamar al proveedor de navegación.
+- Si el proveedor no responde o no hay recorrido peatonal, se muestra el mensaje del backend.
+
+---
+
+### 4.4 Campus y zonas abiertas
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/campus` |
+| Archivo | `src/modules/ms02-campus/pages/CampusAdmin.tsx`, `pages/BuildingsAdmin.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- Pantalla nueva: cada campus es una tarjeta con sus zonas abiertas (zona verde, plazoleta, cancha, parqueadero u otra). El ADMIN crea, modifica, inactiva y reactiva campus y zonas abiertas; el backend rechaza inactivar lo que aún tiene zonas activas y el mensaje se muestra tal cual.
+- Latitud y longitud de una zona abierta son opcionales, van juntas y se revisan con «Ver en OpenStreetMap».
+- En «Edificios» el formulario permite elegir el campus (opcional), la tabla muestra una columna «Campus» y un enlace lleva a esta pantalla. El campus de un edificio se puede cambiar pero no quitar, porque el backend interpreta el campo vacío como «sin cambios».
+
+---
+
+### 5. _Nueva pantalla_ (copiar esta sección)
 
 | Campo | Detalle |
 |---|---|
@@ -94,3 +170,19 @@ Referencia visual para el equipo.
 - [ ] Tutor AI
 - [ ] Perfil
 
+
+
+### 4.4 Escaleras de un edificio
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/edificios/{id}` |
+| Archivo | `src/modules/ms02-campus/components/EscalerasEdificio.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- El detalle del edificio permite consultar las escaleras que conectan sus pisos.
+- ADMIN puede registrar escaleras seleccionando al menos dos pisos activos, e inactivarlas o reactivarlas.
+- ADMIN y COORDINADOR pueden cambiar la disponibilidad de una escalera.
+- Para bloquear una escalera o ponerla fuera de servicio se debe indicar el motivo.
+- Las escaleras inactivas se pueden consultar cuando se activa la opción correspondiente.

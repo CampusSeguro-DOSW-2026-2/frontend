@@ -1,0 +1,6 @@
+.cs-subnav{background:#fff;border-bottom:1px solid var(--line);padding:0 48px}
+.cs-subnav ul{display:flex;flex-wrap:wrap;gap:8px 28px;list-style:none;margin:0;padding:0}
+.cs-subnav a{display:block;padding:14px 0 11px;border-bottom:3px solid transparent;color:var(--mut);text-decoration:none;font-size:14px;line-height:18px}
+.cs-subnav a:hover{color:var(--ink)}
+.cs-subnav a[aria-current="page"]{color:var(--red);border-bottom-color:var(--red);font-weight:600}
+@media (max-width:640px){.cs-subnav{padding:0 16px}}
