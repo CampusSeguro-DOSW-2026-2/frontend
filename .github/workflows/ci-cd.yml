@@ -1,18 +1,19 @@
-# CI/CD del frontend.
+# CI/CD del frontend (sigue la guía "Conexión al API Gateway" de la wiki).
 # - CI: en cada pull request y push revisa tipos, lint y compila.
-# - CD: en cada push a develop (o a mano) publica la compilación en Azure Static Web Apps.
+# - CD prueba: cada push a develop publica en Azure Static Web Apps (entorno "test") contra el GW de prueba.
+# - CD producción: cada push a main publica en producción contra el GW de producción (requiere aprobación).
 #
-# Configuración en GitHub (Settings > Secrets and variables > Actions):
-# - Secreto AZURE_STATIC_WEB_APPS_API_TOKEN: token de despliegue de la Static Web App (portal de Azure >
-#   la Static Web App > Manage deployment token). Sin él, el job de despliegue se omite.
-# - Variable API_URL (opcional): URL pública del API Gateway. Si no existe, se usa el Gateway de prueba.
+# Configuración en GitHub (Settings > Environments):
+# - front-test (Deployment branches: develop) y front-prod (Deployment branches: main; Required reviewers: líder).
+# - En cada uno: variable GATEWAY_URL y secreto AZURE_STATIC_WEB_APPS_API_TOKEN (token de la Static Web App).
+#   Sin el token, el despliegue se omite con una advertencia.
 name: CI/CD
 
 on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop]
+    branches: [develop, main]
   workflow_dispatch:
 
 permissions:
@@ -23,10 +24,11 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  API_URL: ${{ vars.API_URL || 'https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443' }}
+  GW_TEST: https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443
+  GW_PROD: https://campusseguro-gw.northcentralus.cloudapp.azure.com
 
 jobs:
-  build:
+  ci:
     name: Revisar y compilar
     runs-on: ubuntu-latest
     steps:
@@ -43,44 +45,83 @@ jobs:
       - name: Compilar
         run: npx vite build
         env:
-          VITE_API_URL: ${{ env.API_URL }}
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist
-          retention-days: 7
+          VITE_API_URL: ${{ env.GW_TEST }}
 
-  deploy:
-    name: Desplegar en Azure Static Web Apps
-    needs: build
-    # Solo develop (o ejecución manual), y solo si el token de Azure está configurado
-    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch')
+  deploy-test:
+    name: Desplegar prueba (develop)
+    needs: ci
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     environment:
-      name: azure-frontend
+      name: front-test
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          name: dist
-          path: dist
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Compilar contra el GW de prueba
+        run: npx vite build
+        env:
+          VITE_API_URL: ${{ vars.GATEWAY_URL || env.GW_TEST }}
       - name: Verificar token
         id: token
         env:
           TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
         run: |
           if [ -z "$TOKEN" ]; then
-            echo "::warning::Falta el secreto AZURE_STATIC_WEB_APPS_API_TOKEN: no se despliega."
+            echo "::warning::Falta el secreto AZURE_STATIC_WEB_APPS_API_TOKEN en front-test: no se despliega."
             echo "ok=false" >> "$GITHUB_OUTPUT"
           else
             echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
-      - name: Publicar
+      - name: Publicar en el entorno "test" de la Static Web App
         if: steps.token.outputs.ok == 'true'
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: upload
-          # Ya compilado en el job anterior: se sube dist tal cual
+          deployment_environment: test
+          app_location: dist
+          skip_app_build: true
+          skip_api_build: true
+
+  deploy-prod:
+    name: Desplegar producción (main)
+    needs: ci
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: front-prod
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Compilar contra el GW de producción
+        run: npx vite build
+        env:
+          VITE_API_URL: ${{ vars.GATEWAY_URL || env.GW_PROD }}
+      - name: Verificar token
+        id: token
+        env:
+          TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::Falta el secreto AZURE_STATIC_WEB_APPS_API_TOKEN en front-prod: no se despliega."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publicar en producción de la Static Web App
+        if: steps.token.outputs.ok == 'true'
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
           app_location: dist
           skip_app_build: true
           skip_api_build: true

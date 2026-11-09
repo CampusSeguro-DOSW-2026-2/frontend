@@ -13,29 +13,36 @@ Currently, two official plugins are available:
 
 ## Despliegue en Azure (CI/CD)
 
-El frontend se publica en **Azure Static Web Apps** con GitHub Actions (`.github/workflows/ci-cd.yml`):
+El frontend se publica en **Azure Static Web Apps** (plan Free) con GitHub Actions (`.github/workflows/ci-cd.yml`),
+siguiendo la guía [Conexión al API Gateway](https://github.com/CampusSeguro-DOSW-2026-2/documentation/wiki/Conexión-al-API-Gateway) de la wiki.
+El navegador llama solo al **API Gateway** (`VITE_API_URL`) por HTTPS con JWT; el CORS lo maneja el GW.
 
-| Evento | Qué hace |
-|---|---|
-| Pull request a `develop` o `main` | Revisa tipos, lint y compila (CI) |
-| Push a `develop` | CI y, si existe el token, publica en Azure (CD) |
-| Ejecución manual (Actions > CI/CD > Run workflow) | Igual que un push |
-
-La app llama al **API Gateway** (`VITE_API_URL`). Por defecto usa el Gateway de prueba
-`https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443`; para cambiarlo, crear la variable de repositorio `API_URL`.
+| Evento | Qué hace | Entorno de GitHub | API Gateway |
+|---|---|---|---|
+| Pull request a `develop` o `main` | Revisa tipos, lint y compila (CI) | — | — |
+| Push a `develop` | CI y publica en el entorno `test` de la Static Web App | `front-test` | Prueba (`:8443`) |
+| Push a `main` | CI y publica en producción (requiere aprobación) | `front-prod` | Producción (`:443`) |
 
 ### Pasos (una sola vez)
 
-1. **Azure (portal, cuenta de estudiante):** Crear un recurso > *Static Web App* > plan **Free**, región cercana
-   (East US 2), origen de implementación **Otro** (el despliegue lo hace este workflow, no Azure).
+1. **Azure (portal, cuenta de estudiante):** Crear un recurso > *Static Web App* > plan **Free**, región East US 2,
+   origen de implementación **Otro** (el despliegue lo hace este workflow, no Azure).
 2. En la Static Web App: *Manage deployment token* > copiar el token.
-3. **GitHub (un admin del repositorio):** Settings > Secrets and variables > Actions > *New repository secret*
-   `AZURE_STATIC_WEB_APPS_API_TOKEN` con el token. Opcional: variable `API_URL`.
-4. **API Gateway (responsable del GW):** agregar la URL de la Static Web App (`https://<nombre>.azurestaticapps.net`)
-   a `CORS_ALLOWED_ORIGINS` del entorno `gw-test` (y de `gw-prod` cuando se use).
-5. Hacer merge a `develop` o ejecutar el workflow a mano. La URL queda en el job "Desplegar en Azure Static Web Apps".
+3. **GitHub (admin del repositorio):** *Settings > Environments*:
+   * `front-test`: *Deployment branches* `develop`.
+   * `front-prod`: *Deployment branches* `main`; *Required reviewers*: el líder.
+   * En cada uno: secreto `AZURE_STATIC_WEB_APPS_API_TOKEN` (el token) y variable `GATEWAY_URL`:
 
-`public/staticwebapp.config.json` configura la página de respaldo (`index.html`), la caché de `/assets` y cabeceras de seguridad.
+   | Variable | `front-test` | `front-prod` |
+   |---|---|---|
+   | `GATEWAY_URL` | `https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443` | `https://campusseguro-gw.northcentralus.cloudapp.azure.com` |
+
+4. Hacer merge a `develop`. La URL de prueba queda en el job "Desplegar prueba" (`https://<nombre>-test.<región>.azurestaticapps.net`).
+5. **Equipo del GW (mensaje privado):** pedir que agreguen esa URL a `CORS_ALLOWED_ORIGINS` de `gw-test`, y la URL de producción
+   (`https://<nombre>.azurestaticapps.net`) a `gw-prod` cuando se use. Mientras tanto el navegador bloquea las llamadas por CORS.
+
+Nunca se suben tokens ni `.env` al repositorio. `public/staticwebapp.config.json` configura la página de respaldo
+(`index.html`), la caché de `/assets` y cabeceras de seguridad.
 
 ## React Compiler
 
