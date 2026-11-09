@@ -13,29 +13,40 @@ Currently, two official plugins are available:
 
 ## Despliegue en Azure (CI/CD)
 
-El frontend se publica en **Azure Static Web Apps** con GitHub Actions (`.github/workflows/ci-cd.yml`):
+El frontend se publica como **sitio web estático de Azure Storage** con GitHub Actions (`.github/workflows/ci-cd.yml`),
+siguiendo la guía [Conexión al API Gateway](https://github.com/CampusSeguro-DOSW-2026-2/documentation/wiki/Conexión-al-API-Gateway) de la wiki.
+El navegador llama solo al **API Gateway** (`VITE_API_URL`) por HTTPS con JWT; el CORS lo maneja el GW.
+(No se usa Static Web Apps porque Azure for Students solo permite regiones donde ese servicio no existe.)
 
-| Evento | Qué hace |
-|---|---|
-| Pull request a `develop` o `main` | Revisa tipos, lint y compila (CI) |
-| Push a `develop` | CI y, si existe el token, publica en Azure (CD) |
-| Ejecución manual (Actions > CI/CD > Run workflow) | Igual que un push |
+| Evento | Qué hace | Entorno de GitHub | API Gateway |
+|---|---|---|---|
+| Pull request a `develop` o `main` | Revisa tipos, lint y compila (CI) | — | — |
+| Push a `develop` | CI y publica en la cuenta de almacenamiento de prueba | `front-test` | Prueba (`:8443`) |
+| Push a `main` | CI y publica en la de producción (requiere aprobación) | `front-prod` | Producción (`:443`) |
 
-La app llama al **API Gateway** (`VITE_API_URL`). Por defecto usa el Gateway de prueba
-`https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443`; para cambiarlo, crear la variable de repositorio `API_URL`.
+### Pasos (una sola vez por entorno)
 
-### Pasos (una sola vez)
+1. **Azure (cuenta de estudiante):** Crear *Cuenta de almacenamiento*: región permitida (p. ej. Mexico Central),
+   rendimiento **Estándar**, redundancia **LRS**. Nombre: solo minúsculas y números (p. ej. `campusseguroftest`).
+2. En la cuenta: *Administración de datos > Sitio web estático* > **Habilitado**; documento de índice y de error: `index.html`.
+   Guardar y copiar el **punto de conexión principal** (`https://<cuenta>.z<n>.web.core.windows.net`).
+3. En la cuenta: *Seguridad y redes > Firma de acceso compartido*: servicio **Blob**; tipos de recurso **Contenedor** y
+   **Objeto**; permisos **Leer, Escribir, Eliminar, Enumerar, Agregar, Crear**; fecha de expiración (fin del semestre);
+   solo HTTPS. Generar y copiar el **token SAS**.
+4. **GitHub (admin del repositorio):** *Settings > Environments*:
+   * `front-test`: *Deployment branches* `develop`. `front-prod`: *Deployment branches* `main`; *Required reviewers*: el líder.
+   * En cada uno: variable `STORAGE_ACCOUNT` (nombre de la cuenta), secreto `AZURE_STORAGE_SAS_TOKEN` y variable `GATEWAY_URL`:
 
-1. **Azure (portal, cuenta de estudiante):** Crear un recurso > *Static Web App* > plan **Free**, región cercana
-   (East US 2), origen de implementación **Otro** (el despliegue lo hace este workflow, no Azure).
-2. En la Static Web App: *Manage deployment token* > copiar el token.
-3. **GitHub (un admin del repositorio):** Settings > Secrets and variables > Actions > *New repository secret*
-   `AZURE_STATIC_WEB_APPS_API_TOKEN` con el token. Opcional: variable `API_URL`.
-4. **API Gateway (responsable del GW):** agregar la URL de la Static Web App (`https://<nombre>.azurestaticapps.net`)
-   a `CORS_ALLOWED_ORIGINS` del entorno `gw-test` (y de `gw-prod` cuando se use).
-5. Hacer merge a `develop` o ejecutar el workflow a mano. La URL queda en el job "Desplegar en Azure Static Web Apps".
+   | Variable | `front-test` | `front-prod` |
+   |---|---|---|
+   | `GATEWAY_URL` | `https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443` | `https://campusseguro-gw.northcentralus.cloudapp.azure.com` |
 
-`public/staticwebapp.config.json` configura la página de respaldo (`index.html`), la caché de `/assets` y cabeceras de seguridad.
+5. Hacer merge a `develop` (o *Actions > CI/CD > Run workflow* sobre `develop`).
+6. **Equipo del GW (mensaje privado):** pedir que agreguen el punto de conexión del paso 2 (sin `/` final) a
+   `CORS_ALLOWED_ORIGINS` de `gw-test` (y el de producción a `gw-prod` cuando se use). Mientras tanto el navegador bloquea
+   las llamadas por CORS.
+
+Nunca se suben tokens ni `.env` al repositorio. El token SAS vence: renovarlo en el entorno cuando expire.
 
 ## React Compiler
 
