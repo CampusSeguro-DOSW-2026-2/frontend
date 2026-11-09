@@ -3,6 +3,7 @@ import { campus, CampusApiError, comoCampusError as comoError } from '../service
 import type { Edificio, Piso, Salida, SalidaRequest } from '../types';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import { Botones, Campo, Falla } from './comun';
+import { BotonQr } from './BotonQr';
 
 type Edicion = { tipo: 'nueva' } | { tipo: 'modificar'; id: string } | null;
 
@@ -184,6 +185,7 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
                     <td>{estado(s)}</td>
                     <td>
                       <div className="cs-acciones">
+                        {activa && <BotonQr elemento="salida" id={s.id} nombre={`${s.codigo} ${s.nombre}`} />}
                         {activa && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: s.id })}>Modificar</button>}
                         <button type="button" className={`cs-mini${activa ? ' peligro' : ''}`} disabled={ocupado === s.id}
                           onClick={() => cambiarEstado(s)}>

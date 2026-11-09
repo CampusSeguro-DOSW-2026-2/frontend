@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import BuildingDetail from './pages/BuildingDetail';
 import BuildingsAdmin from './pages/BuildingsAdmin';
+import HojaQr from './pages/HojaQr';
 import PreventiveAdmin from './pages/PreventiveAdmin';
 import QrPublico, { type TipoQr } from './pages/QrPublico';
 import RouteQuery from './pages/RouteQuery';
@@ -23,6 +24,8 @@ export function campusRoutes(route: string): ReactNode | undefined {
     default: {
       const qr = route.match(RUTA_QR);
       if (qr) return <QrPublico key={route} tipo={qr[1] as TipoQr} id={qr[2]} />;
+      const hoja = route.match(/^\/admin\/edificios\/([^/]+)\/qr$/);
+      if (hoja) return <HojaQr key={hoja[1]} edificioId={hoja[1]} />;
       const m = route.match(/^\/admin\/edificios\/([^/]+)$/);
       return m ? <BuildingDetail key={m[1]} edificioId={m[1]} /> : undefined;
     }
