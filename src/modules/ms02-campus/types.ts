@@ -146,6 +146,15 @@ export interface Ruta {
   actualizadaEn: string;
 }
 
+/**
+ * Lo que devuelve GET /evacuation-routes: rutas de espacio (legado) y también rutas exteriores,
+ * que salen de una salida y no tienen espacio de origen.
+ */
+export interface RutaListada extends Omit<Ruta, 'espacioOrigenId'> {
+  espacioOrigenId?: string | null;
+  salidaOrigenId?: string | null;
+}
+
 export interface CrearRutaRequest {
   espacioOrigenId: string;
   zonaSeguraDestinoId: string;
