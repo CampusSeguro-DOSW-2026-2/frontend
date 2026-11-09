@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } from '../services/campus';
-import type { ZonaSegura, ZonaSeguraRequest } from '../types';
+import type { ZonaAbierta, ZonaSegura, ZonaSeguraRequest } from '../types';
+import { TIPOS_ZONA_ABIERTA } from '../types';
+import { enlaceOsm, leerCoordenada, textoCoordenadas } from '../utils/coordenadas';
 import { Botones, Campo, Falla } from '../components/comun';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import { BotonQr } from '../components/BotonQr';
@@ -19,14 +21,18 @@ const FILTROS: { valor: Filtro; texto: string }[] = [
 
 // El código identifica el punto de encuentro (p. ej. MP-H-01) y es fijo (RF-04):
 // solo se escribe al crear y queda bloqueado al modificar.
-function ZonaForm({ inicial, onGuardar, onCancelar }: {
-  inicial?: ZonaSegura; onGuardar: (datos: ZonaSeguraRequest) => Promise<void>; onCancelar: () => void;
+function ZonaForm({ inicial, zonasAbiertas, onGuardar, onCancelar }: {
+  inicial?: ZonaSegura; zonasAbiertas: ZonaAbierta[]; onGuardar: (datos: ZonaSeguraRequest) => Promise<void>; onCancelar: () => void;
 }) {
   const [codigo, setCodigo] = useState(inicial?.codigo ?? '');
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
   const [ubicacion, setUbicacion] = useState(inicial?.ubicacion ?? '');
   const [descripcion, setDescripcion] = useState(inicial?.descripcion ?? '');
   const [capacidad, setCapacidad] = useState(inicial ? String(inicial.capacidad) : '');
+  const [latitud, setLatitud] = useState(inicial?.latitud != null ? String(inicial.latitud) : '');
+  const [longitud, setLongitud] = useState(inicial?.longitud != null ? String(inicial.longitud) : '');
+  const [zonaAbiertaId, setZonaAbiertaId] = useState(inicial?.zonaAbiertaId ?? '');
+  const [puntoEncuentro, setPuntoEncuentro] = useState(inicial ? inicial.puntoEncuentro : true);
   const { errores, general, guardando, enviar } = useEnvio(onGuardar);
   const id = inicial?.id ?? 'nueva';
 
@@ -40,6 +46,13 @@ function ZonaForm({ inicial, onGuardar, onCancelar }: {
     else if (ubicacion.trim().length > 255) e.ubicacion = 'La ubicación no puede superar 255 caracteres.';
     if (!descripcion.trim()) e.descripcion = 'La descripción es obligatoria.';
     if (!/^\d+$/.test(capacidad.trim()) || Number(capacidad.trim()) < 1) e.capacidad = 'Escribe una capacidad entera mayor que 0.';
+    const lat = leerCoordenada(latitud, 'latitud');
+    const lon = leerCoordenada(longitud, 'longitud');
+    if (typeof lat === 'string') e.latitud = lat;
+    if (typeof lon === 'string') e.longitud = lon;
+    // El backend exige las dos juntas o ninguna.
+    if (lat === undefined && lon !== undefined) e.latitud = 'Escribe también la latitud.';
+    if (lon === undefined && lat !== undefined) e.longitud = 'Escribe también la longitud.';
     return e;
   };
 
@@ -49,6 +62,10 @@ function ZonaForm({ inicial, onGuardar, onCancelar }: {
       enviar(validar(), {
         codigo: codigo.trim(), nombre: nombre.trim(), ubicacion: ubicacion.trim(),
         descripcion: descripcion.trim(), capacidad: Number(capacidad.trim()),
+        latitud: leerCoordenada(latitud, 'latitud') as number | undefined,
+        longitud: leerCoordenada(longitud, 'longitud') as number | undefined,
+        zonaAbiertaId: zonaAbiertaId || undefined,
+        puntoEncuentro,
       });
     }}>
       <div className="cs-campos">
@@ -70,6 +87,27 @@ function ZonaForm({ inicial, onGuardar, onCancelar }: {
       <Campo id={`zona-descripcion-${id}`} etiqueta="Descripción" error={errores.descripcion}>
         <textarea id={`zona-descripcion-${id}`} value={descripcion} placeholder="Zona abierta y despejada" onChange={(e) => setDescripcion(e.target.value)} />
       </Campo>
+      <div className="cs-campos">
+        <Campo id={`zona-latitud-${id}`} etiqueta="Latitud (opcional)" error={errores.latitud}>
+          <input id={`zona-latitud-${id}`} inputMode="decimal" value={latitud} placeholder="4.78271" onChange={(e) => setLatitud(e.target.value)} />
+        </Campo>
+        <Campo id={`zona-longitud-${id}`} etiqueta="Longitud (opcional)" error={errores.longitud}>
+          <input id={`zona-longitud-${id}`} inputMode="decimal" value={longitud} placeholder="-74.04263" onChange={(e) => setLongitud(e.target.value)} />
+        </Campo>
+        <Campo id={`zona-abierta-${id}`} etiqueta="Zona abierta (opcional)" error={errores.zonaAbiertaId}>
+          <select id={`zona-abierta-${id}`} value={zonaAbiertaId} onChange={(e) => setZonaAbiertaId(e.target.value)}>
+            <option value="">{inicial?.zonaAbiertaId ? 'Mantener la actual' : 'Sin zona abierta'}</option>
+            {zonasAbiertas.map((z) => <option key={z.id} value={z.id}>{z.nombre} · {TIPOS_ZONA_ABIERTA[z.tipo]}</option>)}
+          </select>
+        </Campo>
+      </div>
+      <label className="cs-check">
+        <input type="checkbox" checked={puntoEncuentro} onChange={(e) => setPuntoEncuentro(e.target.checked)} />
+        Es un punto de encuentro
+      </label>
+      <p className="cs-sub">
+        Sin coordenadas la zona no puede ser destino de una ruta exterior. Las coordenadas y la zona abierta ya guardadas se pueden cambiar, pero no borrar.
+      </p>
       {general && <Falla error={general} />}
       <Botones guardando={guardando} onCancelar={onCancelar} />
     </form>
@@ -83,6 +121,7 @@ export default function ZonesAdmin() {
   const [edicion, setEdicion] = useState<Edicion>(null);
   const [aviso, setAviso] = useState<CampusApiError | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  const [zonasAbiertas, setZonasAbiertas] = useState<ZonaAbierta[]>([]);
 
   const roles = rolesDeSesion();
   const puedeGestionar = roles === null || roles.includes('ADMIN');
@@ -96,6 +135,16 @@ export default function ZonesAdmin() {
       .catch((e) => { if (vigente) setErrorCarga(comoError(e)); });
     return () => { vigente = false; };
   }, [aplicar]);
+
+  // Las zonas abiertas solo alimentan un selector opcional: si no cargan, la pantalla sigue funcionando.
+  useEffect(() => {
+    let vigente = true;
+    campus.campuses.listar()
+      .then((lista) => Promise.all(lista.map((c) => campus.zonasAbiertas.listarPorCampus(c.id))))
+      .then((listas) => { if (vigente) setZonasAbiertas(listas.flat()); })
+      .catch(() => { if (vigente) setZonasAbiertas([]); });
+    return () => { vigente = false; };
+  }, []);
 
   const recargar = async () => {
     try {
@@ -144,6 +193,8 @@ export default function ZonesAdmin() {
   const inactivas = zonas.length - activas;
   const conteo: Record<Filtro, number> = { TODOS: zonas.length, ACTIVO: activas, INACTIVO: inactivas };
   const visibles = zonas.filter((z) => filtro === 'TODOS' || z.estado === filtro);
+  const sinCoordenadas = zonas.filter((z) => z.estado === 'ACTIVO' && (z.latitud == null || z.longitud == null)).length;
+  const abierta = new Map(zonasAbiertas.map((z) => [z.id, z]));
 
   return (
     <>
@@ -151,6 +202,12 @@ export default function ZonesAdmin() {
       <main className="content">
         {errorCarga && <Falla error={errorCarga} />}
         {aviso && <Falla error={aviso} />}
+        {sinCoordenadas > 0 && (
+          <p className="cs-alert warn">
+            {sinCoordenadas === 1 ? '1 zona activa no tiene coordenadas' : `${sinCoordenadas} zonas activas no tienen coordenadas`}:
+            {' '}no pueden ser destino de una ruta exterior.
+          </p>
+        )}
 
         <div className="cs-barra">
           <div className="cs-barra-titulo">
@@ -174,7 +231,7 @@ export default function ZonesAdmin() {
         {edicion?.tipo === 'nueva' && (
           <section className="cs-piso">
             <h3 className="cs-piso-titulo">Nueva zona segura</h3>
-            <ZonaForm onCancelar={() => editar(null)}
+            <ZonaForm zonasAbiertas={zonasAbiertas} onCancelar={() => editar(null)}
               onGuardar={(datos) => guardar(() => campus.zonas.crear(datos))} />
           </section>
         )}
@@ -189,17 +246,19 @@ export default function ZonesAdmin() {
           <div className="cs-tabla">
             <table>
               <thead>
-                <tr><th>Código</th><th>Nombre</th><th>Ubicación</th><th>Capacidad</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr>
+                <tr><th>Código</th><th>Nombre</th><th>Ubicación</th><th>Coordenadas</th><th>Capacidad</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr>
               </thead>
               <tbody>
                 {visibles.map((zona) => {
                   const activa = zona.estado === 'ACTIVO';
                   if (edicion?.tipo === 'zona' && edicion.id === zona.id) {
                     return (
-                      <tr key={zona.id}><td colSpan={6}>
-                        <ZonaForm inicial={zona} onCancelar={() => editar(null)}
+                      <tr key={zona.id}><td colSpan={7}>
+                        <ZonaForm inicial={zona} zonasAbiertas={zonasAbiertas} onCancelar={() => editar(null)}
                           onGuardar={(datos) => guardar(() => campus.zonas.modificar(zona.id, {
                             nombre: datos.nombre, ubicacion: datos.ubicacion, descripcion: datos.descripcion, capacidad: datos.capacidad,
+                            latitud: datos.latitud, longitud: datos.longitud, zonaAbiertaId: datos.zonaAbiertaId,
+                            puntoEncuentro: datos.puntoEncuentro,
                           }))} />
                       </td></tr>
                     );
@@ -207,8 +266,25 @@ export default function ZonesAdmin() {
                   return (
                     <tr key={zona.id} className={activa ? '' : 'inactivo'}>
                       <td className="cs-codigo">{zona.codigo}</td>
-                      <td>{zona.nombre}<span className="cs-sub">{zona.descripcion}</span></td>
+                      <td>
+                        {zona.nombre}
+                        <span className="cs-sub">{zona.descripcion}</span>
+                        <span className="cs-sub">
+                          {zona.puntoEncuentro ? 'Punto de encuentro' : 'No es punto de encuentro'}
+                          {zona.zonaAbiertaId && abierta.get(zona.zonaAbiertaId) ? ` · ${abierta.get(zona.zonaAbiertaId)?.nombre}` : ''}
+                        </span>
+                      </td>
                       <td className="cs-descripcion">{zona.ubicacion}</td>
+                      <td>
+                        {zona.latitud != null && zona.longitud != null ? (
+                          <>
+                            {textoCoordenadas(zona.latitud, zona.longitud)}
+                            <a className="cs-sub" href={enlaceOsm(zona.latitud, zona.longitud)} target="_blank" rel="noopener noreferrer">Ver en OpenStreetMap</a>
+                          </>
+                        ) : (
+                          <span className="cs-estado warn">SIN COORDENADAS</span>
+                        )}
+                      </td>
                       <td>{zona.capacidad}</td>
                       <td><span className={`cs-estado ${activa ? 'ok' : 'info'}`}>{zona.estado}</span></td>
                       <td>

@@ -4,6 +4,7 @@ import { MapIcon } from '../../../shared/components/Icons';
 import { campus, CampusApiError, comoCampusError as comoError } from '../services/campus';
 import type { Edificio, Espacio, EstadoRuta, RutaConsultada } from '../types';
 import { Falla } from '../components/comun';
+import { GuiaDeRuta } from '../components/GuiaEvacuacion';
 import '../styles/campus.css';
 
 type Tono = 'ok' | 'warn' | 'stop' | 'info';
@@ -45,6 +46,7 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
         </>
       )}
       {ruta.mensaje && <p className={`cs-alert ${tono}`}>{ruta.mensaje}</p>}
+      <GuiaDeRuta espacioId={ruta.espacioId} inicial={ruta.guia} />
       {recomendaciones.length > 0 && (
         <section className="cs-preventivas" aria-label="Recomendaciones preventivas">
           <h4>Recomendaciones preventivas</h4>
@@ -85,6 +87,7 @@ export default function RouteQuery() {
   const [espacioId, setEspacioId] = useState('');
   const [rutas, setRutas] = useState<RutaConsultada[] | null>(null);
   const [consultando, setConsultando] = useState(false);
+  const [consulta, setConsulta] = useState(0);
   const [error, setError] = useState<CampusApiError | null>(null);
   const edificioActual = useRef('');
 
@@ -111,6 +114,7 @@ export default function RouteQuery() {
     if (!edificioId) return;
     setConsultando(true);
     setError(null);
+    setConsulta((n) => n + 1);
     try {
       setRutas(espacioId ? [await campus.consulta.porEspacio(espacioId)] : await campus.consulta.porEdificio(edificioId));
     } catch (e) {
@@ -163,7 +167,7 @@ export default function RouteQuery() {
             </div>
             {rutas.length === 0
               ? <p className="cs-alert info">Este edificio no tiene espacios disponibles para consultar.</p>
-              : <div className="cs-lista">{rutas.map((r) => <Resultado key={r.espacioId} ruta={r} />)}</div>}
+              : <div className="cs-lista">{rutas.map((r) => <Resultado key={`${consulta}-${r.espacioId}`} ruta={r} />)}</div>}
           </section>
         )}
       </main>

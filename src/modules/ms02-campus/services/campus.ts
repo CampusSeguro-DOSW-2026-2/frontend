@@ -1,8 +1,8 @@
 import type {
-  ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
+  CalcularRutaExteriorRequest, RutaExterior, Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
   EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, ModificarSalidaRequest, ModificarZonaSeguraRequest,
   Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, Salida,
-  SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest,
+  SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest, EspacioPublico, SalidaPublica, ZonaSeguraPublica,
 } from '../types';
 import { API_URL, ApiError, GENERIC_ERROR, NETWORK_ERROR, request } from '../../../shared/services/http';
 import { getSession } from '../../../shared/services/session';
@@ -30,9 +30,10 @@ export const comoCampusError = (e: unknown) =>
 
 export const rolesDeSesion = (): string[] | null => getSession()?.user.roles ?? null;
 
-async function pedir<T>(metodo: 'GET' | 'POST' | 'PUT' | 'PATCH', ruta: string, cuerpo?: unknown): Promise<T> {
+async function pedir<T>(metodo: 'GET' | 'POST' | 'PUT' | 'PATCH', ruta: string, cuerpo?: unknown, publica = false): Promise<T> {
   try {
-    return (await request(BASE + ruta, { method: metodo, body: cuerpo, session: getSession() ?? undefined })) as T;
+    const session = publica ? undefined : getSession() ?? undefined;
+    return (await request(BASE + ruta, { method: metodo, body: cuerpo, session })) as T;
   } catch (e) {
     if (e instanceof ApiError) {
       const campos = Object.fromEntries(e.details.map((d) => [d.campo, d.mensaje]));
@@ -107,6 +108,10 @@ export const campus = {
     inactivar: (id: string) => pedir<Salida>('PATCH', `/exits/${id}/deactivate`),
     reactivar: (id: string) => pedir<Salida>('PATCH', `/exits/${id}/reactivate`),
   },
+  rutasExteriores: {
+    calcular: (datos: CalcularRutaExteriorRequest) => pedir<RutaExterior>('POST', '/evacuation-routes/exterior', datos),
+    porSalida: (salidaId: string) => pedir<RutaExterior[]>('GET', `/exits/${salidaId}/evacuation-route`),
+  },
   zonas: {
     listar: (incluirInactivos?: boolean) => pedir<ZonaSegura[]>('GET', `/safe-zones${filtro(incluirInactivos)}`),
     obtener: (id: string) => pedir<ZonaSegura>('GET', `/safe-zones/${id}`),
@@ -114,6 +119,13 @@ export const campus = {
     modificar: (id: string, datos: ModificarZonaSeguraRequest) => pedir<ZonaSegura>('PUT', `/safe-zones/${id}`, datos),    
     inactivar: (id: string) => pedir<ZonaSegura>('PATCH', `/safe-zones/${id}/deactivate`),
     reactivar: (id: string) => pedir<ZonaSegura>('PATCH', `/safe-zones/${id}/reactivate`),
+  },
+  campuses: {
+    listar: (incluirInactivos?: boolean) => pedir<Campus[]>('GET', `/campuses${filtro(incluirInactivos)}`),
+  },
+  zonasAbiertas: {
+    listarPorCampus: (campusId: string, incluirInactivos?: boolean) =>
+      pedir<ZonaAbierta[]>('GET', `/campuses/${campusId}/open-zones${filtro(incluirInactivos)}`),
   },
   rutas: {
     listar: () => pedir<Ruta[]>('GET', '/evacuation-routes'),
@@ -134,6 +146,11 @@ export const campus = {
     modificar: (id: string, datos: RecomendacionPreventivaRequest) =>
       pedir<RecomendacionPreventiva>('PUT', `/preventive-recommendations/${id}`, datos),
     inactivar: (id: string) => pedir<RecomendacionPreventiva>('PATCH', `/preventive-recommendations/${id}/deactivate`),
+  },
+  publico: {
+    espacio: (id: string) => pedir<EspacioPublico>('GET', `/public/spaces?id=${encodeURIComponent(id)}`, undefined, true),
+    salida: (id: string) => pedir<SalidaPublica>('GET', `/public/exits?id=${encodeURIComponent(id)}`, undefined, true),
+    zona: (id: string) => pedir<ZonaSeguraPublica>('GET', `/public/safe-zones?id=${encodeURIComponent(id)}`, undefined, true),
   },
   consulta: {
     porEspacio: (espacioId: string) => pedir<RutaConsultada>('GET', `/spaces/${espacioId}/evacuation-route`),
