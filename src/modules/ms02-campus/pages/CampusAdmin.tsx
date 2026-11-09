@@ -6,6 +6,7 @@ import { TIPOS_ZONA_ABIERTA } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import { enlaceOsm, leerCoordenada, textoCoordenadas } from '../utils/coordenadas';
+import { AyudaCoordenadas } from '../components/AyudaCoordenadas';
 import '../styles/campus.css';
 import '../styles/admin.css';
 
@@ -105,6 +106,7 @@ function ZonaAbiertaForm({ inicial, onGuardar, onCancelar }: {
           <input id={`abierta-longitud-${id}`} inputMode="decimal" value={longitud} placeholder="-74.04263" onChange={(e) => setLongitud(e.target.value)} />
         </Campo>
       </div>
+      <AyudaCoordenadas latitud={latitud} longitud={longitud} />
       {general && <Falla error={general} />}
       <Botones guardando={guardando} onCancelar={onCancelar} />
     </form>
