@@ -101,6 +101,22 @@ Referencia visual para el equipo.
 
 ---
 
+### 4.2 Zonas seguras con coordenadas
+
+| Campo | Detalle |
+|---|---|
+| Ruta | `#/admin/zonas` |
+| Archivo | `src/modules/ms02-campus/pages/ZonesAdmin.tsx` |
+| Microservicio | MS02 · Campus y seguridad |
+
+**Notas:**
+- El formulario suma latitud y longitud (opcionales, van juntas), la zona abierta donde queda la zona segura y si es punto de encuentro (por defecto sí).
+- La tabla muestra las coordenadas con el enlace «Ver en OpenStreetMap» y marca «Sin coordenadas» en las zonas que no las tienen.
+- Encima de la tabla se avisa cuántas zonas activas no tienen coordenadas: no pueden ser destino de una ruta exterior.
+- Las coordenadas y la zona abierta ya guardadas se pueden cambiar pero no borrar, porque el backend interpreta el campo vacío como «sin cambios».
+
+---
+
 ### 5. _Nueva pantalla_ (copiar esta sección)
 
 | Campo | Detalle |
