@@ -16,12 +16,14 @@ const ESTADOS: Record<EstadoRuta, { texto: string; tono: string }> = {
 type Edicion = { tipo: 'nueva' } | { tipo: 'modificar'; id: string } | { tipo: 'estado'; id: string } | null;
 
 const leer = async () => {
-  const [rutas, edificios, zonas] = await Promise.all([
+  const [todas, edificios, zonas] = await Promise.all([
     campus.rutas.listar(),
     campus.edificios.listar(true),
     campus.zonas.listar(true),
   ]);
   const espacios = (await Promise.all(edificios.map((e) => campus.espacios.listarPorEdificio(e.id, true)))).flat();
+  // Las rutas exteriores (salida -> zona, generadas por MS02) no tienen espacio de origen: se ven en "Ruta exterior".
+  const rutas = todas.filter((r): r is Ruta => Boolean(r.espacioOrigenId));
   return { rutas, edificios, zonas, espacios };
 };
 
