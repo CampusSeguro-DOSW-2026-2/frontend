@@ -5,6 +5,7 @@ import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } f
 import type { ZonaAbierta, ZonaSegura, ZonaSeguraRequest } from '../types';
 import { TIPOS_ZONA_ABIERTA } from '../types';
 import { enlaceOsm, leerCoordenada, textoCoordenadas } from '../utils/coordenadas';
+import { AyudaCoordenadas } from '../components/AyudaCoordenadas';
 import { Botones, Campo, Falla } from '../components/comun';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import '../styles/campus.css';
@@ -101,6 +102,7 @@ function ZonaForm({ inicial, zonasAbiertas, onGuardar, onCancelar }: {
           </select>
         </Campo>
       </div>
+      <AyudaCoordenadas latitud={latitud} longitud={longitud} />
       <label className="cs-check">
         <input type="checkbox" checked={puntoEncuentro} onChange={(e) => setPuntoEncuentro(e.target.checked)} />
         Es un punto de encuentro

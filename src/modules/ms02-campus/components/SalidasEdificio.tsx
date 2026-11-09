@@ -4,6 +4,7 @@ import { campus, CampusApiError, comoCampusError as comoError } from '../service
 import type { Edificio, Piso, Salida, SalidaRequest } from '../types';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import { Botones, Campo, Falla } from './comun';
+import { AyudaCoordenadas } from './AyudaCoordenadas';
 import { BotonQr } from './BotonQr';
 
 type Edicion = { tipo: 'nueva' } | { tipo: 'modificar'; id: string } | null;
@@ -62,9 +63,7 @@ function SalidaForm({ inicial, pisos, onGuardar, onCancelar }: {
           <input id={`salida-longitud-${id}`} inputMode="decimal" value={longitud} placeholder="-74.04263" onChange={(e) => setLongitud(e.target.value)} />
         </Campo>
       </div>
-      {lat !== null && lng !== null && (
-        <a className="cs-enlace" href={enMapa({ latitud: lat, longitud: lng })} target="_blank" rel="noreferrer">Revisar estas coordenadas en OpenStreetMap</a>
-      )}
+      <AyudaCoordenadas latitud={latitud} longitud={longitud} />
       {general && <Falla error={general} />}
       <Botones guardando={guardando} onCancelar={onCancelar} />
     </form>
