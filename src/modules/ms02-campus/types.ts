@@ -9,12 +9,15 @@ export interface Edificio {
   nombre: string;
   descripcion?: string;
   estado: Estado;
+  campusId?: string | null;
 }
 
 export interface EdificioRequest {
   codigo: string;
   nombre: string;
   descripcion?: string;
+  // Al modificar, vacío significa «sin cambios»: el backend no quita el campus de un edificio.
+  campusId?: string;
 }
 
 export type ModificarEdificioRequest = Omit<EdificioRequest, 'codigo'>;
@@ -107,6 +110,19 @@ export interface ZonaSeguraRequest {
 }
 // El código de la zona es fijo (RF-04): el PUT no lo recibe.
 export type ModificarZonaSeguraRequest = Omit<ZonaSeguraRequest, 'codigo'>;
+
+export interface CampusRequest {
+  nombre: string;
+  descripcion?: string;
+}
+
+export interface ZonaAbiertaRequest {
+  nombre: string;
+  tipo: TipoZonaAbierta;
+  // Latitud y longitud van juntas o ninguna.
+  latitud?: number;
+  longitud?: number;
+}
 
 export type TipoZonaAbierta = 'ZONA_VERDE' | 'PLAZOLETA' | 'CANCHA' | 'PARQUEADERO' | 'OTRA';
 
