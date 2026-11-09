@@ -11,6 +11,32 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
+## Despliegue en Azure (CI/CD)
+
+El frontend se publica en **Azure Static Web Apps** con GitHub Actions (`.github/workflows/ci-cd.yml`):
+
+| Evento | Qué hace |
+|---|---|
+| Pull request a `develop` o `main` | Revisa tipos, lint y compila (CI) |
+| Push a `develop` | CI y, si existe el token, publica en Azure (CD) |
+| Ejecución manual (Actions > CI/CD > Run workflow) | Igual que un push |
+
+La app llama al **API Gateway** (`VITE_API_URL`). Por defecto usa el Gateway de prueba
+`https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443`; para cambiarlo, crear la variable de repositorio `API_URL`.
+
+### Pasos (una sola vez)
+
+1. **Azure (portal, cuenta de estudiante):** Crear un recurso > *Static Web App* > plan **Free**, región cercana
+   (East US 2), origen de implementación **Otro** (el despliegue lo hace este workflow, no Azure).
+2. En la Static Web App: *Manage deployment token* > copiar el token.
+3. **GitHub (un admin del repositorio):** Settings > Secrets and variables > Actions > *New repository secret*
+   `AZURE_STATIC_WEB_APPS_API_TOKEN` con el token. Opcional: variable `API_URL`.
+4. **API Gateway (responsable del GW):** agregar la URL de la Static Web App (`https://<nombre>.azurestaticapps.net`)
+   a `CORS_ALLOWED_ORIGINS` del entorno `gw-test` (y de `gw-prod` cuando se use).
+5. Hacer merge a `develop` o ejecutar el workflow a mano. La URL queda en el job "Desplegar en Azure Static Web Apps".
+
+`public/staticwebapp.config.json` configura la página de respaldo (`index.html`), la caché de `/assets` y cabeceras de seguridad.
+
 ## React Compiler
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).

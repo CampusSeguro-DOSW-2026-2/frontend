@@ -1,0 +1,86 @@
+# CI/CD del frontend.
+# - CI: en cada pull request y push revisa tipos, lint y compila.
+# - CD: en cada push a develop (o a mano) publica la compilación en Azure Static Web Apps.
+#
+# Configuración en GitHub (Settings > Secrets and variables > Actions):
+# - Secreto AZURE_STATIC_WEB_APPS_API_TOKEN: token de despliegue de la Static Web App (portal de Azure >
+#   la Static Web App > Manage deployment token). Sin él, el job de despliegue se omite.
+# - Variable API_URL (opcional): URL pública del API Gateway. Si no existe, se usa el Gateway de prueba.
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  API_URL: ${{ vars.API_URL || 'https://campusseguro-gw.northcentralus.cloudapp.azure.com:8443' }}
+
+jobs:
+  build:
+    name: Revisar y compilar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Revisar tipos
+        run: npx tsc -p .
+      - name: Lint
+        run: npm run lint
+      - name: Compilar
+        run: npx vite build
+        env:
+          VITE_API_URL: ${{ env.API_URL }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7
+
+  deploy:
+    name: Desplegar en Azure Static Web Apps
+    needs: build
+    # Solo develop (o ejecución manual), y solo si el token de Azure está configurado
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/develop' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    environment:
+      name: azure-frontend
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Verificar token
+        id: token
+        env:
+          TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::warning::Falta el secreto AZURE_STATIC_WEB_APPS_API_TOKEN: no se despliega."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Publicar
+        if: steps.token.outputs.ok == 'true'
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          # Ya compilado en el job anterior: se sube dist tal cual
+          app_location: dist
+          skip_app_build: true
+          skip_api_build: true
