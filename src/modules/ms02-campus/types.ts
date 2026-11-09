@@ -188,6 +188,13 @@ export interface RutaExterior {
   calculadaEn: string;
 }
 
+/** Resultado de generar las rutas exteriores de todo el campus. `interrumpida`: el proveedor de mapas dejó de responder. */
+export interface ResumenGeneracionRutas {
+  generadas: number;
+  omitidas: number;
+  interrumpida: boolean;
+}
+
 export interface CalcularRutaExteriorRequest {
   salidaId: string;
   zonaSeguraId: string;

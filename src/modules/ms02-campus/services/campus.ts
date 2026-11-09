@@ -1,5 +1,5 @@
 import type {
-  CampusRequest, ZonaAbiertaRequest, CalcularRutaExteriorRequest, RutaExterior, Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
+  CampusRequest, ZonaAbiertaRequest, CalcularRutaExteriorRequest, ResumenGeneracionRutas, RutaExterior, Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
   EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, ModificarSalidaRequest, ModificarZonaSeguraRequest,
   Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, Salida,
   SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest, EspacioPublico, SalidaPublica, ZonaSeguraPublica, Escalera, EscaleraRequest, CambiarDisponibilidadEscaleraRequest,
@@ -123,6 +123,9 @@ export const campus = {
   rutasExteriores: {
     calcular: (datos: CalcularRutaExteriorRequest) => pedir<RutaExterior>('POST', '/evacuation-routes/exterior', datos),
     porSalida: (salidaId: string) => pedir<RutaExterior[]>('GET', `/exits/${salidaId}/evacuation-route`),
+    /** Genera las rutas de todas las salidas hacia sus zonas más cercanas. Por defecto solo las que faltan. */
+    generar: (recalcular = false) =>
+      pedir<ResumenGeneracionRutas>('POST', `/evacuation-routes/exterior/generate${recalcular ? '?recalcular=true' : ''}`),
   },
   zonas: {
     listar: (incluirInactivos?: boolean) => pedir<ZonaSegura[]>('GET', `/safe-zones${filtro(incluirInactivos)}`),

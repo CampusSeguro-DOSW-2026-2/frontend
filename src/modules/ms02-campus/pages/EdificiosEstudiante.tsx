@@ -175,60 +175,67 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
       />
 
       <main className="content">
-        <GaleriaImagenes
-          tipoElemento="EDIFICIO"
-          elementoId={edificio.id}
-          editable={false}
-        />
+        <div className="cs-estudiante-detalle">
+          <div className="cs-estudiante-detalle-info">
+            <div className="cs-estudiante-resumen">
+              <h2 className="title sm22">Pisos y espacios</h2>
+              <span className="cs-resumen">
+                {pisos.length} {pisos.length === 1 ? 'piso' : 'pisos'} · {espacios.length} {espacios.length === 1 ? 'espacio' : 'espacios'}
+              </span>
+            </div>
 
-        <div className="cs-estudiante-resumen">
-          <h2 className="title sm22">Pisos y espacios</h2>
-          <span className="cs-resumen">
-            {pisos.length} {pisos.length === 1 ? 'piso' : 'pisos'} · {espacios.length} {espacios.length === 1 ? 'espacio' : 'espacios'}
-          </span>
-        </div>
+            {pisos.length === 0 ? (
+              <p className="cs-alert info">Este edificio todavía no tiene pisos activos.</p>
+            ) : (
+              <div className="cs-estudiante-pisos">
+                {pisos.map((piso) => {
+                  const espaciosDelPiso = espacios.filter((espacio) => espacio.pisoId === piso.id);
 
-        {pisos.length === 0 ? (
-          <p className="cs-alert info">Este edificio todavía no tiene pisos activos.</p>
-        ) : (
-          <div className="cs-estudiante-pisos">
-            {pisos.map((piso) => {
-              const espaciosDelPiso = espacios.filter((espacio) => espacio.pisoId === piso.id);
+                  return (
+                    <section className="cs-piso" key={piso.id}>
+                      <h3 className="cs-piso-titulo">
+                        Piso {piso.numero}{piso.nombre ? ` · ${piso.nombre}` : ''}
+                      </h3>
 
-              return (
-                <section className="cs-piso" key={piso.id}>
-                  <h3 className="cs-piso-titulo">
-                    Piso {piso.numero}{piso.nombre ? ` · ${piso.nombre}` : ''}
-                  </h3>
+                      {espaciosDelPiso.length === 0 ? (
+                        <p className="cs-vacio">Este piso no tiene espacios activos.</p>
+                      ) : (
+                        <div className="cs-estudiante-espacios">
+                          {espaciosDelPiso.map((espacio) => (
+                            <article className="cs-estudiante-espacio" key={espacio.id}>
+                              <div>
+                                <h4>{espacio.nombre}</h4>
+                                <span>{TIPOS[espacio.tipo]}</span>
+                                <span className={`cs-estado ${espacio.disponible ? 'ok' : 'warn'}`}>
+                                  {espacio.disponible ? 'DISPONIBLE' : 'NO DISPONIBLE'}
+                                </span>
+                              </div>
 
-                  {espaciosDelPiso.length === 0 ? (
-                    <p className="cs-vacio">Este piso no tiene espacios activos.</p>
-                  ) : (
-                    <div className="cs-estudiante-espacios">
-                      {espaciosDelPiso.map((espacio) => (
-                        <article className="cs-estudiante-espacio" key={espacio.id}>
-                          <div>
-                            <h4>{espacio.nombre}</h4>
-                            <span>{TIPOS[espacio.tipo]}</span>
-                            <span className={`cs-estado ${espacio.disponible ? 'ok' : 'warn'}`}>
-                              {espacio.disponible ? 'DISPONIBLE' : 'NO DISPONIBLE'}
-                            </span>
-                          </div>
-
-                          <GaleriaImagenes
-                            tipoElemento="ESPACIO"
-                            elementoId={espacio.id}
-                            editable={false}
-                          />
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              );
-            })}
+                              <GaleriaImagenes
+                                tipoElemento="ESPACIO"
+                                elementoId={espacio.id}
+                                editable={false}
+                              />
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  );
+                })}
+              </div>
+            )}
           </div>
-        )}
+
+          <aside className="cs-estudiante-detalle-fotos" aria-label="Fotografías del edificio">
+            <GaleriaImagenes
+              tipoElemento="EDIFICIO"
+              elementoId={edificio.id}
+              editable={false}
+              grande
+            />
+          </aside>
+        </div>
       </main>
     </>
   );
