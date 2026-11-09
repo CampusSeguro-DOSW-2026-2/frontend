@@ -327,3 +327,30 @@ export interface ZonaSeguraPublica {
   disponible: boolean;
   aviso?: string;
 }
+
+
+export type DisponibilidadEscalera =
+  | 'DISPONIBLE'
+  | 'BLOQUEADA'
+  | 'FUERA_DE_SERVICIO';
+
+export interface Escalera {
+  id: string;
+  edificioId: string;
+  codigo: string;
+  nombre: string;
+  disponibilidad: DisponibilidadEscalera;
+  motivo: string | null;
+  estado: Estado;
+  pisoIds: string[];
+}
+
+export interface EscaleraRequest {
+  nombre: string;
+  pisoIds: string[];
+}
+
+export interface CambiarDisponibilidadEscaleraRequest {
+  disponibilidad: DisponibilidadEscalera;
+  motivo?: string;
+}
