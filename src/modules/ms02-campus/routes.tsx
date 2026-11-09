@@ -9,6 +9,7 @@ import QrPublico, { type TipoQr } from './pages/QrPublico';
 import RouteQuery from './pages/RouteQuery';
 import RoutesAdmin from './pages/RoutesAdmin';
 import ZonesAdmin from './pages/ZonesAdmin';
+import { NavegacionAdmin } from './components/NavegacionAdmin';
 
 const RUTA_QR = /^\/qr\/(espacios|salidas|zonas)\/([^/]+)$/;
 
@@ -17,6 +18,13 @@ export const esRutaPublicaCampus = (route: string) => RUTA_QR.test(route);
 
 /** Rutas de MS02. Devuelve undefined si la ruta no es de este módulo. */
 export function campusRoutes(route: string): ReactNode | undefined {
+  const pagina = paginaCampus(route);
+  // Las pantallas de administración llevan las pestañas; las hojas de QR (para imprimir) no.
+  if (pagina === undefined || !route.startsWith('/admin/') || route.endsWith('/qr')) return pagina;
+  return <><NavegacionAdmin ruta={route} />{pagina}</>;
+}
+
+function paginaCampus(route: string): ReactNode | undefined {
   switch (route) {
     case '/rutas': return <RouteQuery />;
     case '/admin/edificios': return <BuildingsAdmin />;
