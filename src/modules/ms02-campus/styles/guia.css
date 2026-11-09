@@ -1,0 +1,12 @@
+/* Guía de evacuación dentro de la tarjeta de ruta (escalera, salida y ruta exterior). */
+.cs-guia{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:16px}
+.cs-guia h4{font:700 15px/20px 'Outfit',sans-serif}
+.cs-guia-indicacion{font:600 16px/150% 'Geist',sans-serif;background:var(--cream);border-radius:12px;padding:14px 16px;overflow-wrap:anywhere}
+.cs-guia-datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 16px;margin:0}
+.cs-guia-datos div{display:flex;flex-direction:column;gap:2px}
+.cs-guia-datos dt{font-size:13px;line-height:17px;color:var(--mut)}
+.cs-guia-datos dd{margin:0;font:600 14px/150% 'Geist',sans-serif;overflow-wrap:anywhere}
+.cs-guia-pasos summary{cursor:pointer;font:600 14px/20px 'Geist',sans-serif}
+.cs-guia-pasos ol{margin:10px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:150%}
+.cs-guia-pasos li span{color:var(--mut)}
+.cs-guia-pedir{display:flex;flex-direction:column;gap:12px;align-items:flex-start;border-top:1px solid var(--line);padding-top:16px}
