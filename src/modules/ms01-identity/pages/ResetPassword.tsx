@@ -129,7 +129,7 @@ export default function ResetPassword() {
   return (
     <div className="reg login">
       <main className="reg-main">
-        <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
+        <img className="login-logo" src={`${import.meta.env.BASE_URL}logo.svg`} alt="CampusSeguro" />
 
         <h1>Cambia tu contraseña</h1>
         <p className="reg-sub">Crea una nueva contraseña para proteger el acceso a tu cuenta.</p>
@@ -178,7 +178,7 @@ export default function ResetPassword() {
       </main>
 
       <div className="reg-photo" aria-hidden="true">
-        <img src="/cambiar-campus.jpg" alt="" />
+        <img src={`${import.meta.env.BASE_URL}cambiar-campus.jpg`} alt="" />
       </div>
     </div>
   );

@@ -159,7 +159,7 @@ export default function ForgotPassword() {
   return (
     <div className="reg login">
       <main className="reg-main">
-        <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
+        <img className="login-logo" src={`${import.meta.env.BASE_URL}logo.svg`} alt="CampusSeguro" />
 
         <h1>¿Olvidaste tu contraseña?</h1>
         <p className="reg-sub">No te preocupes. Ingresa tu correo y te ayudaremos a recuperar tu acceso.</p>
@@ -219,7 +219,7 @@ export default function ForgotPassword() {
       </main>
 
       <div className="reg-photo" aria-hidden="true">
-        <img src="/recuperar-campus.jpg" alt="" />
+        <img src={`${import.meta.env.BASE_URL}recuperar-campus.jpg`} alt="" />
       </div>
     </div>
   );

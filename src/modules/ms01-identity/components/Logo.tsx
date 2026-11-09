@@ -1,7 +1,7 @@
 /**
  * Logo provisional (escudo con edificio). El manual de identidad aún dice "LOGO POR DEFINIR".
  * Para usar el logo oficial: guárdalo en public/logo.svg y reemplaza el <svg> por
- * <img className={className} src="/logo.svg" alt="CampusSeguro" />
+ * <img className={className} src={`${import.meta.env.BASE_URL}logo.svg`} alt="CampusSeguro" />
  */
 export function Logo({ className }: { className?: string }) {
   return (

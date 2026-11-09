@@ -110,7 +110,7 @@ export default function Login() {
   return (
     <div className="reg login">
       <main className="reg-main">
-        <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
+        <img className="login-logo" src={`${import.meta.env.BASE_URL}logo.svg`} alt="CampusSeguro" />
 
         <h1>¡Qué bueno verte de nuevo!</h1>
         <p className="reg-sub">
@@ -174,7 +174,7 @@ export default function Login() {
       </main>
 
       <div className="reg-photo" aria-hidden="true">
-        <img src="/login-campus.jpg" alt="" />
+        <img src={`${import.meta.env.BASE_URL}login-campus.jpg`} alt="" />
       </div>
     </div>
   );

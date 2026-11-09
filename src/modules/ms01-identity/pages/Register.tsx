@@ -155,7 +155,7 @@ export default function Register() {
       </main>
 
       <div className="reg-photo" aria-hidden="true">
-        <img src="/campus.jpg" alt="" />
+        <img src={`${import.meta.env.BASE_URL}campus.jpg`} alt="" />
       </div>
     </div>
   );
