@@ -125,13 +125,13 @@ export function RutaExteriorAdmin({ edificios, zonas, puedeCalcular }: {
           <Campo id="exterior-edificio" etiqueta="Edificio">
             <select id="exterior-edificio" value={edificioId} onChange={(e) => elegirEdificio(e.target.value)}>
               <option value="">Selecciona un edificio</option>
-              {edificios.filter((e) => e.estado === 'ACTIVO').map((e) => <option key={e.id} value={e.id}>{e.codigo} · {e.nombre}</option>)}
+              {edificios.filter((e) => e.estado === 'ACTIVO').map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
             </select>
           </Campo>
           <Campo id="exterior-salida" etiqueta="Salida de origen" error={errores.salidaId}>
             <select id="exterior-salida" value={salidaId} disabled={!salidas?.length} onChange={(e) => elegirSalida(e.target.value)}>
               <option value="">{sinSalidas}</option>
-              {salidas?.map((s) => <option key={s.id} value={s.id}>{s.codigo} · {s.nombre}</option>)}
+              {salidas?.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
             </select>
           </Campo>
           {puedeCalcular && (

@@ -16,45 +16,39 @@ const FILTROS: { valor: Filtro; texto: string }[] = [
   { valor: 'INACTIVO', texto: 'Inactivos' },
 ];
 
-// El código es fijo (RF-01): solo se escribe al crear y queda bloqueado al modificar.
 function EdificioForm({ inicial, campuses, onGuardar, onCancelar }: {
   inicial?: Edificio; campuses: Campus[]; onGuardar: (datos: EdificioRequest) => Promise<void>; onCancelar: () => void;
 }) {
-  const [codigo, setCodigo] = useState(inicial?.codigo ?? '');
+  const opciones = campuses.filter((c) => c.estado === 'ACTIVO' || c.id === inicial?.campusId);
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
   const [descripcion, setDescripcion] = useState(inicial?.descripcion ?? '');
-  const [campusId, setCampusId] = useState(inicial?.campusId ?? '');
+  const [campusId, setCampusId] = useState(inicial?.campusId ?? opciones[0]?.id ?? '');
   const { errores, general, guardando, enviar } = useEnvio(onGuardar);
   const id = inicial?.id ?? 'nuevo';
 
   const validar = () => {
     const e: Errores = {};
-    if (!inicial && !codigo.trim()) e.codigo = 'El código es obligatorio.';
-    else if (codigo.trim().length > 50) e.codigo = 'El código no puede superar 50 caracteres.';
     if (!nombre.trim()) e.nombre = 'El nombre es obligatorio.';
     else if (nombre.trim().length > 100) e.nombre = 'El nombre no puede superar 100 caracteres.';
+    if (!campusId) e.campusId = 'Elige el campus al que pertenece el edificio.';
     return e;
   };
 
   return (
     <form className="cs-editor" noValidate onSubmit={(e) => {
       e.preventDefault();
-      enviar(validar(), { codigo: codigo.trim(), nombre: nombre.trim(), descripcion: descripcion.trim() || undefined, campusId: campusId || undefined });
+      enviar(validar(), { nombre: nombre.trim(), descripcion: descripcion.trim() || undefined, campusId });
     }}>
       <div className="cs-campos">
-        <Campo id={`edificio-codigo-${id}`} etiqueta={inicial ? 'Código (no se puede cambiar)' : 'Código'} error={errores.codigo}>
-          <input id={`edificio-codigo-${id}`} value={codigo} placeholder="ED-G" disabled={!!inicial} onChange={(e) => setCodigo(e.target.value)} />
-        </Campo>
         <Campo id={`edificio-nombre-${id}`} etiqueta="Nombre" error={errores.nombre}>
           <input id={`edificio-nombre-${id}`} value={nombre} placeholder="Bloque G" onChange={(e) => setNombre(e.target.value)} />
         </Campo>
+        <Campo id={`edificio-campus-${id}`} etiqueta="Campus" error={errores.campusId}>
+          <select id={`edificio-campus-${id}`} value={campusId} onChange={(e) => setCampusId(e.target.value)}>
+            {opciones.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+          </select>
+        </Campo>
       </div>
-      <Campo id={`edificio-campus-${id}`} etiqueta="Campus (opcional)" error={errores.campusId}>
-        <select id={`edificio-campus-${id}`} value={campusId} onChange={(e) => setCampusId(e.target.value)}>
-          <option value="">{inicial?.campusId ? 'Mantener el actual' : 'Sin campus'}</option>
-          {campuses.filter((c) => c.estado === 'ACTIVO' || c.id === inicial?.campusId).map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-        </select>
-      </Campo>
       <Campo id={`edificio-descripcion-${id}`} etiqueta="Descripción (opcional)" error={errores.descripcion}>
         <textarea id={`edificio-descripcion-${id}`} value={descripcion} placeholder="Laboratorios y aulas de ingeniería" onChange={(e) => setDescripcion(e.target.value)} />
       </Campo>
@@ -71,7 +65,8 @@ export default function BuildingsAdmin() {
   const [edicion, setEdicion] = useState<Edicion>(null);
   const [aviso, setAviso] = useState<CampusApiError | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
-  const [campuses, setCampuses] = useState<Campus[]>([]);
+  const [campuses, setCampuses] = useState<Campus[] | null>(null);
+  const [errorCampus, setErrorCampus] = useState<CampusApiError | null>(null);
 
   const roles = rolesDeSesion();
   const puedeGestionar = roles === null || roles.includes('ADMIN');
@@ -86,12 +81,12 @@ export default function BuildingsAdmin() {
     return () => { vigente = false; };
   }, [aplicar]);
 
-  // Los campus solo alimentan un selector opcional: si no cargan, la pantalla sigue funcionando.
+  // Todo edificio pertenece a un campus: sin la lista no se puede crear ni modificar.
   useEffect(() => {
     let vigente = true;
     campus.campuses.listar(true)
       .then((lista) => { if (vigente) setCampuses(lista); })
-      .catch(() => { if (vigente) setCampuses([]); });
+      .catch((e) => { if (vigente) setErrorCampus(comoError(e)); });
     return () => { vigente = false; };
   }, []);
 
@@ -142,6 +137,7 @@ export default function BuildingsAdmin() {
   const inactivos = edificios.length - activos;
   const conteo: Record<Filtro, number> = { TODOS: edificios.length, ACTIVO: activos, INACTIVO: inactivos };
   const visibles = edificios.filter((e) => filtro === 'TODOS' || e.estado === filtro);
+  const hayCampusActivo = !!campuses?.some((c) => c.estado === 'ACTIVO');
 
   return (
     <>
@@ -149,6 +145,17 @@ export default function BuildingsAdmin() {
       <main className="content">
         {errorCarga && <Falla error={errorCarga} />}
         {aviso && <Falla error={aviso} />}
+        {errorCampus && (
+          <p className="cs-alert stop" role="alert">
+            No se pudieron cargar los campus, así que no puedes crear ni modificar edificios. {errorCampus.message}
+            {errorCampus.correlationId && <small>Código para soporte: {errorCampus.correlationId}</small>}
+          </p>
+        )}
+        {puedeGestionar && campuses && !hayCampusActivo && (
+          <p className="cs-alert info">
+            Para crear edificios primero registra un campus activo en <a href="#/admin/campus">Campus y zonas abiertas</a>.
+          </p>
+        )}
 
         <div className="cs-barra">
           <div className="cs-barra-titulo">
@@ -166,11 +173,11 @@ export default function BuildingsAdmin() {
           </div>
           <a className="cs-mini" href="#/admin/campus">Campus y zonas abiertas</a>
           {puedeGestionar && (
-            <button type="button" className="btn red cs-agregar" onClick={() => editar({ tipo: 'nuevo' })}>Crear edificio</button>
+            <button type="button" className="btn red cs-agregar" disabled={!hayCampusActivo} onClick={() => editar({ tipo: 'nuevo' })}>Crear edificio</button>
           )}
         </div>
 
-        {edicion?.tipo === 'nuevo' && (
+        {edicion?.tipo === 'nuevo' && campuses && (
           <section className="cs-piso">
             <h3 className="cs-piso-titulo">Nuevo edificio</h3>
             <EdificioForm campuses={campuses} onCancelar={() => editar(null)}
@@ -188,30 +195,29 @@ export default function BuildingsAdmin() {
           <div className="cs-tabla">
             <table>
               <thead>
-                <tr><th>Código</th><th>Nombre</th><th>Campus</th><th>Descripción</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr>
+                <tr><th>Nombre</th><th>Campus</th><th>Descripción</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr>
               </thead>
               <tbody>
                 {visibles.map((edificio) => {
                   const activo = edificio.estado === 'ACTIVO';
                   if (edicion?.tipo === 'edificio' && edicion.id === edificio.id) {
                     return (
-                      <tr key={edificio.id}><td colSpan={6}>
-                        <EdificioForm inicial={edificio} campuses={campuses} onCancelar={() => editar(null)}
+                      <tr key={edificio.id}><td colSpan={5}>
+                        <EdificioForm inicial={edificio} campuses={campuses ?? []} onCancelar={() => editar(null)}
                           onGuardar={(datos) => guardar(() => campus.edificios.modificar(edificio.id, { nombre: datos.nombre, descripcion: datos.descripcion, campusId: datos.campusId }))} />
                       </td></tr>
                     );
                   }
                   return (
                     <tr key={edificio.id} className={activo ? '' : 'inactivo'}>
-                      <td className="cs-codigo">{edificio.codigo}</td>
-                      <td>{edificio.nombre}</td>
-                      <td>{campuses.find((c) => c.id === edificio.campusId)?.nombre ?? '—'}</td>
+                      <td className="cs-codigo">{edificio.nombre}</td>
+                      <td>{campuses?.find((c) => c.id === edificio.campusId)?.nombre ?? '—'}</td>
                       <td className="cs-descripcion">{edificio.descripcion || '—'}</td>
                       <td><span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{edificio.estado}</span></td>
                       <td>
                         <div className="cs-acciones">
                           <a className="cs-mini" href={`#/admin/edificios/${edificio.id}`}>Pisos y espacios</a>
-                          {puedeGestionar && activo && (
+                          {puedeGestionar && activo && campuses && (
                             <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'edificio', id: edificio.id })}>Modificar</button>
                           )}
                           {puedeGestionar && (

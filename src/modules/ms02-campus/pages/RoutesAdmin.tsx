@@ -105,13 +105,13 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
         <Campo id="ruta-edificio-nueva" etiqueta="Edificio">
           <select id="ruta-edificio-nueva" value={edificioId} onChange={(e) => { setEdificioId(e.target.value); setEspacioId(''); }}>
             <option value="">Selecciona un edificio</option>
-            {datos.edificios.filter((e) => e.estado === 'ACTIVO').map((e) => <option key={e.id} value={e.id}>{e.codigo} · {e.nombre}</option>)}
+            {datos.edificios.filter((e) => e.estado === 'ACTIVO').map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
           </select>
         </Campo>
         <Campo id="ruta-espacio-nueva" etiqueta="Espacio de origen" error={errores.espacioOrigenId}>
           <select id="ruta-espacio-nueva" value={espacioId} disabled={!edificioId || espaciosLibres.length === 0} onChange={(e) => setEspacioId(e.target.value)}>
             <option value="">{sinEspacios()}</option>
-            {espaciosLibres.map((s) => <option key={s.id} value={s.id}>{s.codigo} · {s.nombre}</option>)}
+            {espaciosLibres.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
           </select>
         </Campo>
         <Campo id="ruta-zona-nueva" etiqueta="Zona segura de destino" error={errores.zonaSeguraDestinoId}>
@@ -256,7 +256,7 @@ export default function RoutesAdmin() {
     const e: Edificio | undefined = s && edificio.get(s.edificioId);
     return (
       <>
-        <span className="cs-codigo">{s ? `${s.codigo} · ${s.nombre}` : 'Espacio desconocido'}</span>
+        <span className="cs-codigo">{s ? s.nombre : 'Espacio desconocido'}</span>
         <small className="cs-sub">{e?.nombre ?? ''}{s && !s.disponible ? ' · no disponible' : ''}</small>
       </>
     );
@@ -291,7 +291,7 @@ export default function RoutesAdmin() {
           <Campo id="filtro-edificio" etiqueta="Edificio">
             <select id="filtro-edificio" value={filtroEdificio} onChange={(e) => setFiltroEdificio(e.target.value)}>
               <option value="">Todos los edificios</option>
-              {datos.edificios.map((e) => <option key={e.id} value={e.id}>{e.codigo} · {e.nombre}</option>)}
+              {datos.edificios.map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
             </select>
           </Campo>
           <Campo id="filtro-estado" etiqueta="Estado">
