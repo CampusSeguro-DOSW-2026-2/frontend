@@ -54,7 +54,6 @@ function PisoForm({ inicial, onGuardar, onCancelar }: {
 function EspacioForm({ inicial, onGuardar, onCancelar }: {
   inicial?: Espacio; onGuardar: (datos: EspacioRequest) => Promise<void>; onCancelar: () => void;
 }) {
-  const [codigo, setCodigo] = useState(inicial?.codigo ?? '');
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
   const [tipo, setTipo] = useState<TipoEspacio | ''>(inicial?.tipo ?? '');
   const { errores, general, guardando, enviar } = useEnvio(onGuardar);
@@ -62,8 +61,6 @@ function EspacioForm({ inicial, onGuardar, onCancelar }: {
 
   const validar = () => {
     const e: Errores = {};
-    if (!inicial && !codigo.trim()) e.codigo = 'El código es obligatorio.';
-    else if (codigo.trim().length > 50) e.codigo = 'El código no puede superar 50 caracteres.';
     if (!nombre.trim()) e.nombre = 'El nombre es obligatorio.';
     else if (nombre.trim().length > 100) e.nombre = 'El nombre no puede superar 100 caracteres.';
     if (!tipo) e.tipo = 'Selecciona el tipo de espacio.';
@@ -73,12 +70,9 @@ function EspacioForm({ inicial, onGuardar, onCancelar }: {
   return (
     <form className="cs-editor" noValidate onSubmit={(e) => {
       e.preventDefault();
-      enviar(validar(), { codigo: codigo.trim(), nombre: nombre.trim(), tipo: tipo as TipoEspacio });
+      enviar(validar(), { nombre: nombre.trim(), tipo: tipo as TipoEspacio });
     }}>
       <div className="cs-campos">
-        <Campo id={`espacio-codigo-${id}`} etiqueta={inicial ? 'Código (no se puede cambiar)' : 'Código'} error={errores.codigo}>
-          <input id={`espacio-codigo-${id}`} value={codigo} placeholder="G-101" disabled={!!inicial} onChange={(e) => setCodigo(e.target.value)} />
-        </Campo>
         <Campo id={`espacio-nombre-${id}`} etiqueta="Nombre" error={errores.nombre}>
           <input id={`espacio-nombre-${id}`} value={nombre} placeholder="Laboratorio de redes" onChange={(e) => setNombre(e.target.value)} />
         </Campo>
@@ -183,7 +177,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
   return (
     <>
       <PageHeader badge="ADMINISTRACIÓN" title={edificio.nombre}
-        subtitle={[`Código ${edificio.codigo}`, edificio.descripcion].filter(Boolean).join(' · ')}
+        subtitle={edificio.descripcion || 'Pisos, espacios, escaleras y salidas del edificio.'}
         context={<a className="cs-volver" href="#/admin/edificios">← Edificios</a>} />
       <main className="content">
         {edificio.estado === 'INACTIVO' && (
@@ -269,13 +263,13 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
               ) : (
                 <div className="cs-tabla">
                   <table>
-                    <thead><tr><th>Código</th><th>Nombre</th><th>Tipo</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr></thead>
+                    <thead><tr><th>Nombre</th><th>Tipo</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr></thead>
                     <tbody>
                       {delPiso.map((espacio) => {
                         const espacioActivo = espacio.estado === 'ACTIVO';
                         if (edicion?.tipo === 'espacio' && edicion.id === espacio.id) {
                           return (
-                            <tr key={espacio.id}><td colSpan={5}>
+                            <tr key={espacio.id}><td colSpan={4}>
                               <EspacioForm inicial={espacio} onCancelar={() => editar(null)}
                                 onGuardar={(datos) => guardar(() => campus.espacios.modificar(espacio.id, { nombre: datos.nombre, tipo: datos.tipo }))} />
                             </td></tr>
@@ -283,13 +277,12 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                         }
                         return (
                           <tr key={espacio.id} className={espacioActivo ? '' : 'inactivo'}>
-                            <td className="cs-codigo">{espacio.codigo}</td>
-                            <td>{espacio.nombre}</td>
+                            <td className="cs-codigo">{espacio.nombre}</td>
                             <td>{TIPOS[espacio.tipo]}</td>
                             <td>{estadoEspacio(espacio)}</td>
                             <td>
                               <div className="cs-acciones">
-                                {espacioActivo && <BotonQr elemento="espacio" id={espacio.id} nombre={`${espacio.codigo} ${espacio.nombre}`} />}
+                                {espacioActivo && <BotonQr elemento="espacio" id={espacio.id} nombre={espacio.nombre} />}
                                 {espacioActivo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'espacio', id: espacio.id })}>Modificar</button>}
                                 <button type="button" className={`cs-mini${espacioActivo ? ' peligro' : ''}`} disabled={ocupado === espacio.id}
                                   onClick={() => cambiarEstado(espacio.id, piso.id, () => (espacioActivo ? campus.espacios.inactivar(espacio.id) : campus.espacios.reactivar(espacio.id)))}>

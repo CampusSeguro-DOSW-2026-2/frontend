@@ -19,7 +19,6 @@ function SalidaForm({ inicial, pisos, onGuardar, onCancelar }: {
   inicial?: Salida; pisos: Piso[]; onGuardar: (datos: SalidaRequest) => Promise<void>; onCancelar: () => void;
 }) {
   const [pisoId, setPisoId] = useState(inicial?.pisoId ?? '');
-  const [codigo, setCodigo] = useState(inicial?.codigo ?? '');
   const [nombre, setNombre] = useState(inicial?.nombre ?? '');
   const [latitud, setLatitud] = useState(inicial ? String(inicial.latitud) : '');
   const [longitud, setLongitud] = useState(inicial ? String(inicial.longitud) : '');
@@ -31,8 +30,6 @@ function SalidaForm({ inicial, pisos, onGuardar, onCancelar }: {
   const validar = () => {
     const e: Errores = {};
     if (!pisoId) e.pisoId = 'Selecciona el piso desde el que se sale.';
-    if (!inicial && !codigo.trim()) e.codigo = 'El código es obligatorio.';
-    else if (codigo.trim().length > 50) e.codigo = 'El código no puede superar 50 caracteres.';
     if (!nombre.trim()) e.nombre = 'El nombre es obligatorio.';
     else if (nombre.trim().length > 100) e.nombre = 'El nombre no puede superar 100 caracteres.';
     if (lat === null || lat < -90 || lat > 90) e.latitud = 'Escribe una latitud entre -90 y 90, por ejemplo 4.78271.';
@@ -43,7 +40,7 @@ function SalidaForm({ inicial, pisos, onGuardar, onCancelar }: {
   return (
     <form className="cs-editor" noValidate onSubmit={(e) => {
       e.preventDefault();
-      enviar(validar(), { pisoId, codigo: codigo.trim(), nombre: nombre.trim(), latitud: lat ?? 0, longitud: lng ?? 0 });
+      enviar(validar(), { pisoId, nombre: nombre.trim(), latitud: lat ?? 0, longitud: lng ?? 0 });
     }}>
       <div className="cs-campos">
         <Campo id={`salida-piso-${id}`} etiqueta="Piso desde el que se sale" error={errores.pisoId}>
@@ -51,9 +48,6 @@ function SalidaForm({ inicial, pisos, onGuardar, onCancelar }: {
             <option value="">Selecciona un piso</option>
             {pisos.map((p) => <option key={p.id} value={p.id}>Piso {p.numero}{p.nombre ? ` · ${p.nombre}` : ''}</option>)}
           </select>
-        </Campo>
-        <Campo id={`salida-codigo-${id}`} etiqueta={inicial ? 'Código (no se puede cambiar)' : 'Código'} error={errores.codigo}>
-          <input id={`salida-codigo-${id}`} value={codigo} placeholder="G-S1" disabled={!!inicial} onChange={(e) => setCodigo(e.target.value)} />
         </Campo>
         <Campo id={`salida-nombre-${id}`} etiqueta="Nombre" error={errores.nombre}>
           <input id={`salida-nombre-${id}`} value={nombre} placeholder="Salida principal" onChange={(e) => setNombre(e.target.value)} />
@@ -162,12 +156,12 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
       ) : (
         <div className="cs-tabla">
           <table>
-            <thead><tr><th>Código</th><th>Nombre</th><th>Piso</th><th>Coordenadas</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr></thead>
+            <thead><tr><th>Nombre</th><th>Piso</th><th>Coordenadas</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr></thead>
             <tbody>
               {visibles.map((s) => {
                 if (edicion?.tipo === 'modificar' && edicion.id === s.id) {
                   return (
-                    <tr key={s.id}><td colSpan={6}>
+                    <tr key={s.id}><td colSpan={5}>
                       <SalidaForm inicial={s} pisos={pisos.filter((p) => p.estado === 'ACTIVO' || p.id === s.pisoId)}
                         onCancelar={() => setEdicion(null)}
                         onGuardar={(datos) => guardar(() => campus.salidas.modificar(s.id,
@@ -178,14 +172,13 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
                 const activa = s.estado === 'ACTIVO';
                 return (
                   <tr key={s.id} className={activa ? '' : 'inactivo'}>
-                    <td className="cs-codigo">{s.codigo}</td>
-                    <td>{s.nombre}</td>
+                    <td className="cs-codigo">{s.nombre}</td>
                     <td>Piso {s.pisoNumero ?? numeroPiso.get(s.pisoId) ?? '—'}</td>
                     <td><a className="cs-enlace" href={enMapa(s)} target="_blank" rel="noreferrer">{s.latitud}, {s.longitud}</a></td>
                     <td>{estado(s)}</td>
                     <td>
                       <div className="cs-acciones">
-                        {activa && <BotonQr elemento="salida" id={s.id} nombre={`${s.codigo} ${s.nombre}`} />}
+                        {activa && <BotonQr elemento="salida" id={s.id} nombre={s.nombre} />}
                         {activa && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: s.id })}>Modificar</button>}
                         <button type="button" className={`cs-mini${activa ? ' peligro' : ''}`} disabled={ocupado === s.id}
                           onClick={() => cambiarEstado(s)}>

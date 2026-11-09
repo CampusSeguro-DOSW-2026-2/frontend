@@ -138,7 +138,7 @@ export default function RouteQuery() {
             <div className="input">
               <select id="cs-edificio" value={edificioId} disabled={!edificios?.length} onChange={(e) => elegirEdificio(e.target.value)}>
                 <option value="">{edificios === null ? 'Cargando edificios…' : 'Selecciona un edificio'}</option>
-                {edificios?.map((e) => <option key={e.id} value={e.id}>{e.codigo} · {e.nombre}</option>)}
+                {edificios?.map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
               </select>
             </div>
           </div>
@@ -147,7 +147,7 @@ export default function RouteQuery() {
             <div className="input">
               <select id="cs-espacio" value={espacioId} disabled={!edificioId || espacios === null} onChange={(e) => { setEspacioId(e.target.value); setRutas(null); }}>
                 <option value="">{edificioId && espacios === null ? 'Cargando espacios…' : 'Todo el edificio'}</option>
-                {espacios?.map((s) => <option key={s.id} value={s.id}>{s.codigo} · {s.nombre}</option>)}
+                {espacios?.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
               </select>
             </div>
           </div>

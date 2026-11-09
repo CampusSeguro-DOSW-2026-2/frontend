@@ -29,12 +29,12 @@ async function leer(edificioId: string) {
   const clave = (n?: number) => String((n ?? 0) + 1000).padStart(5, '0');
   const tarjetas: Tarjeta[] = [
     ...salidas.map((s) => ({
-      id: s.id, elemento: 'salida' as const, titulo: s.nombre, orden: `0-${clave(piso(s.pisoId))}-${s.codigo}`,
-      detalle: `Salida ${s.codigo} · Piso ${piso(s.pisoId) ?? '—'}`,
+      id: s.id, elemento: 'salida' as const, titulo: s.nombre, orden: `0-${clave(piso(s.pisoId))}-${s.nombre}`,
+      detalle: `Salida · Piso ${piso(s.pisoId) ?? '—'}`,
     })),
     ...espacios.map((e) => ({
-      id: e.id, elemento: 'espacio' as const, titulo: e.nombre, orden: `1-${clave(piso(e.pisoId))}-${e.codigo}`,
-      detalle: `${TIPOS[e.tipo]} ${e.codigo} · Piso ${piso(e.pisoId) ?? '—'}`,
+      id: e.id, elemento: 'espacio' as const, titulo: e.nombre, orden: `1-${clave(piso(e.pisoId))}-${e.nombre}`,
+      detalle: `${TIPOS[e.tipo]} · Piso ${piso(e.pisoId) ?? '—'}`,
     })),
   ].sort((a, b) => a.orden.localeCompare(b.orden));
   return { edificio, tarjetas };
