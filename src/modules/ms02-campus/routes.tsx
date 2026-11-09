@@ -28,6 +28,8 @@ export function campusRoutes(route: string): ReactNode | undefined {
     default: {
       const qr = route.match(RUTA_QR);
       if (qr) return <QrPublico key={route} tipo={qr[1] as TipoQr} id={qr[2]} />;
+      const hojaZona = route.match(/^\/admin\/zonas\/([^/]+)\/qr$/);
+      if (hojaZona) return <HojaQrZonas key={hojaZona[1]} zonaId={hojaZona[1]} />;
       const hoja = route.match(/^\/admin\/edificios\/([^/]+)\/qr$/);
       if (hoja) return <HojaQr key={hoja[1]} edificioId={hoja[1]} />;
       const m = route.match(/^\/admin\/edificios\/([^/]+)$/);

@@ -14,8 +14,8 @@ interface Tarjeta {
   error?: string;
 }
 
-/** Hoja imprimible con el QR de cada zona segura activa (igual que la de un edificio). */
-export default function HojaQrZonas() {
+/** Hoja imprimible con el QR de las zonas seguras activas (igual que la de un edificio). Con zonaId, solo esa zona. */
+export default function HojaQrZonas({ zonaId }: { zonaId?: string }) {
   const [tarjetas, setTarjetas] = useState<Tarjeta[] | null>(null);
   const [error, setError] = useState<CampusApiError | null>(null);
 
@@ -26,7 +26,7 @@ export default function HojaQrZonas() {
       .then(async (zonas) => {
         if (!vigente) return;
         const lista: Tarjeta[] = zonas
-          .filter((z) => z.estado === 'ACTIVO')
+          .filter((z) => z.estado === 'ACTIVO' && (!zonaId || z.id === zonaId))
           .sort((a, b) => a.codigo.localeCompare(b.codigo))
           .map((z) => ({
             id: z.id,
@@ -47,15 +47,15 @@ export default function HojaQrZonas() {
       })
       .catch((e) => { if (vigente) setError(comoError(e)); });
     return () => { vigente = false; urls.forEach((u) => URL.revokeObjectURL(u)); };
-  }, []);
+  }, [zonaId]);
 
   const pendientes = tarjetas?.filter((t) => !t.imagen && !t.error).length ?? 0;
 
   return (
     <>
       <div className="no-imprimir">
-        <PageHeader badge="ADMINISTRACIÓN" title="Códigos QR · Zonas seguras"
-          subtitle="Imprime y pega cada código en su punto de encuentro. Al escanearlo se ve cómo llegar."
+        <PageHeader badge="ADMINISTRACIÓN" title={zonaId && tarjetas?.length === 1 ? `Código QR · ${tarjetas[0].titulo}` : 'Códigos QR · Zonas seguras'}
+          subtitle="Imprime y pega el código en su punto de encuentro. Al escanearlo se ve cómo llegar."
           context={<a className="cs-volver" href="#/admin/zonas">← Zonas seguras</a>} />
       </div>
       <main className="content">
@@ -73,7 +73,7 @@ export default function HojaQrZonas() {
           </div>
         )}
         {tarjetas?.length === 0 && (
-          <p className="cs-alert info">No hay zonas seguras activas para imprimir.</p>
+          <p className="cs-alert info">{zonaId ? 'Esta zona no existe o no está activa.' : 'No hay zonas seguras activas para imprimir.'}</p>
         )}
         {tarjetas && tarjetas.length > 0 && (
           <ul className="qr-hoja">
