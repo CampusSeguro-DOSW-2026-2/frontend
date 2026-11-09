@@ -119,6 +119,59 @@ export interface CambiarEstadoRequest {
   motivo?: string;
 }
 
+export interface Coordenada {
+  latitud: number;
+  longitud: number;
+}
+
+export interface PasoRuta {
+  instruccion: string;
+  distanciaMetros: number;
+  duracionSegundos: number;
+}
+
+export interface RutaExterior {
+  id: string;
+  salidaOrigenId: string;
+  zonaSeguraDestinoId: string;
+  estado: EstadoRuta;
+  motivo?: string | null;
+  distanciaMetros?: number | null;
+  duracionSegundos?: number | null;
+  geometria: Coordenada[];
+  pasos: PasoRuta[];
+  calculadaEn: string;
+}
+
+export interface EscaleraGuia {
+  id: string;
+  codigo: string;
+  nombre: string;
+}
+
+export interface SalidaGuia {
+  id: string;
+  nombre: string;
+  latitud?: number | null;
+  longitud?: number | null;
+}
+
+// Guía completa desde un espacio. Si no hay salida o escalera utilizable, `salida` y `rutaExterior`
+// vienen vacías y `mensaje` explica por qué.
+export interface GuiaEvacuacion {
+  edificioId: string;
+  edificioNombre?: string | null;
+  pisoId: string;
+  pisoNumero?: number | null;
+  requiereEscalera: boolean;
+  escaleras: EscaleraGuia[];
+  salida?: SalidaGuia | null;
+  rutaExterior?: RutaExterior | null;
+  zonaSeguraNombre?: string | null;
+  indicacion?: string | null;
+  mensaje?: string | null;
+}
+
 export interface RutaConsultada {
   espacioId: string;
   espacioNombre: string;
@@ -132,6 +185,8 @@ export interface RutaConsultada {
   destinoActivo?: boolean;
   mensaje?: string;
   recomendacionesPreventivas: RecomendacionPreventiva[];
+  // Solo viene al consultar un espacio; al consultar todo el edificio llega vacía.
+  guia?: GuiaEvacuacion | null;
 }
 
 export interface RecomendacionPreventiva {
