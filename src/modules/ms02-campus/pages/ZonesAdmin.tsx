@@ -224,6 +224,7 @@ export default function ZonesAdmin() {
               </button>
             ))}
           </div>
+          <a className="cs-mini cs-enlace-boton" href="#/admin/zonas/qr">Imprimir QR</a>
           {puedeGestionar && (
             <button type="button" className="btn red cs-agregar" onClick={() => editar({ tipo: 'nueva' })}>Crear zona segura</button>
           )}
