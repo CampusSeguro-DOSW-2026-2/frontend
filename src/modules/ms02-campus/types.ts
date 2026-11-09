@@ -179,6 +179,11 @@ export interface RutaExterior {
   calculadaEn: string;
 }
 
+export interface CalcularRutaExteriorRequest {
+  salidaId: string;
+  zonaSeguraId: string;
+}
+
 export interface EscaleraGuia {
   id: string;
   codigo: string;
