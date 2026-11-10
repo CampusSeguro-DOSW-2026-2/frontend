@@ -15,8 +15,12 @@ const ESTADOS: Record<EstadoRuta, { texto: string; tono: Tono }> = {
   BLOQUEADA: { texto: 'BLOQUEADA', tono: 'stop' },
 };
 
+// La guía de evacuación se arma sola con las escaleras, salidas y rutas exteriores: un espacio puede no
+// tener una ruta escrita a mano (`tieneRuta`) y aun así tener guía completa.
+const conGuia = (r: RutaConsultada) => Boolean(r.guia?.salida);
+
 function tonoDe(r: RutaConsultada): Tono {
-  if (!r.tieneRuta) return 'info';
+  if (!r.tieneRuta) return conGuia(r) ? 'ok' : 'info';
   if (!r.destinoActivo) return 'stop';
   return r.estado ? ESTADOS[r.estado].tono : 'info';
 }
@@ -25,11 +29,14 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
   const tono = tonoDe(ruta);
   const estado = ruta.estado ? ESTADOS[ruta.estado] : null;
   const recomendaciones = ruta.recomendacionesPreventivas ?? [];
+  const soloGuia = !ruta.tieneRuta && conGuia(ruta);
   return (
     <article className={`cs-ruta ${tono}`}>
       <div className="ctop">
         <h3>{ruta.espacioNombre}</h3>
-        {estado ? <span className={`cs-estado ${estado.tono}`}>{estado.texto}</span> : <span className="cs-estado info">SIN RUTA</span>}
+        {estado ? <span className={`cs-estado ${estado.tono}`}>{estado.texto}</span> : soloGuia
+          ? <span className="cs-estado ok">GUÍA DISPONIBLE</span>
+          : <span className="cs-estado info">SIN RUTA</span>}
       </div>
       {ruta.tieneRuta && (
         <>
@@ -45,7 +52,7 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
           {ruta.motivo && <div className="sm"><small>Motivo</small><p>{ruta.motivo}</p></div>}
         </>
       )}
-      {ruta.mensaje && <p className={`cs-alert ${tono}`}>{ruta.mensaje}</p>}
+      {ruta.mensaje && !soloGuia && <p className={`cs-alert ${tono}`}>{ruta.mensaje}</p>}
       <GuiaDeRuta espacioId={ruta.espacioId} inicial={ruta.guia} />
       {recomendaciones.length > 0 && (
         <section className="cs-preventivas" aria-label="Recomendaciones preventivas">
@@ -69,11 +76,11 @@ function resumen(rutas: RutaConsultada[]) {
   const contar = (f: (r: RutaConsultada) => boolean) => rutas.filter(f).length;
   const partes = [
     `${rutas.length} ${rutas.length === 1 ? 'espacio' : 'espacios'}`,
-    `${contar((r) => r.estado === 'DISPONIBLE' && r.destinoActivo === true)} con ruta disponible`,
+    `${contar((r) => (r.estado === 'DISPONIBLE' && r.destinoActivo === true) || (!r.tieneRuta && conGuia(r)))} con ruta disponible`,
   ];
   const restringidas = contar((r) => r.estado === 'RESTRINGIDA');
   const bloqueadas = contar((r) => r.estado === 'BLOQUEADA');
-  const sinRuta = contar((r) => !r.tieneRuta);
+  const sinRuta = contar((r) => !r.tieneRuta && !conGuia(r));
   if (restringidas) partes.push(`${restringidas} ${restringidas === 1 ? 'restringida' : 'restringidas'}`);
   if (bloqueadas) partes.push(`${bloqueadas} ${bloqueadas === 1 ? 'bloqueada' : 'bloqueadas'}`);
   if (sinRuta) partes.push(`${sinRuta} sin ruta`);
