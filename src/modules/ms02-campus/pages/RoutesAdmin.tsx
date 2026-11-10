@@ -231,7 +231,7 @@ export default function RoutesAdmin() {
 
   const encabezado = (
     <PageHeader badge="ADMINISTRACIÓN" title="Rutas de evacuación"
-      subtitle="Las rutas desde cada salida hasta las zonas seguras se generan solas; aquí las revisas y mantienes al día el estado de las rutas por espacio." context="Campus y seguridad" />
+      subtitle="Las rutas desde cada salida hasta las zonas seguras se generan solas, y la guía de cada espacio se arma con sus escaleras y salidas. Las rutas por espacio de esta tabla son opcionales: solo hacen falta para dar una indicación escrita propia." context="Campus y seguridad" />
   );
 
   if (!datos) {

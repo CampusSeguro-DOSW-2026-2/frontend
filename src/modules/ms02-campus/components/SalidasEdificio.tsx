@@ -63,7 +63,8 @@ function SalidaForm({ inicial, pisos, onGuardar, onCancelar }: {
           <input id={`salida-longitud-${id}`} inputMode="decimal" value={longitud} placeholder="-74.04263" onChange={(e) => setLongitud(e.target.value)} />
         </Campo>
       </div>
-      <AyudaCoordenadas latitud={latitud} longitud={longitud} />
+      <AyudaCoordenadas latitud={latitud} longitud={longitud}
+        onElegir={(la, lo) => { setLatitud(String(la)); setLongitud(String(lo)); }} />
       {general && <Falla error={general} />}
       <Botones guardando={guardando} onCancelar={onCancelar} />
     </form>
