@@ -6,15 +6,19 @@
 
 | Ruta | Pantalla | Rol |
 |---|---|---|
+| `#/edificios` | Consultar edificios y fotografías | Todos |
+| `#/edificios/{id}` | Consultar pisos, espacios y fotografías | Todos |
 | `#/rutas` | Consultar ruta de evacuación | Todos |
 | `#/admin/edificios` | Edificios | ADMIN; COORDINADOR consulta |
 | `#/admin/edificios/{id}` | Detalle de edificio: pisos, espacios y salidas, con el QR de cada uno | ADMIN |
 | `#/admin/edificios/{id}/qr` | Hoja imprimible con los QR de las salidas y espacios del edificio | ADMIN |
 | `#/admin/zonas` | Zonas seguras, con el QR de cada una | ADMIN |
 | `#/admin/campus` | Campus y zonas abiertas | ADMIN |
-| `#/admin/rutas` | Rutas de evacuación | ADMIN; COORDINADOR cambia el estado |
+| `#/admin/rutas` | Rutas de evacuación: rutas por espacio y rutas exteriores (salida → zonas seguras, generadas automáticamente; el ADMIN puede completarlas o recalcularlas) | ADMIN; COORDINADOR cambia el estado |
 | `#/admin/preventiva` | Información preventiva | ADMIN |
 | `#/qr/{espacios\|salidas\|zonas}/{id}` | Lo que se ve al escanear un QR: lugar y guía de evacuación | Pública, sin sesión |
+
+**Rutas exteriores automáticas.** MS02 genera solo las rutas `salida → zona segura` (las 3 zonas más cercanas de cada salida) cuando se crea, mueve o reactiva una salida o una zona segura con coordenadas. El front no las crea una por una: `RutaExteriorAdmin` las muestra por salida (la más corta primero, con un botón Actualizar porque se generan en segundo plano) y el ADMIN puede llamar a `campus.rutasExteriores.generar()` para completar o recalcular todo el campus.
 
 Todas las llamadas pasan por `services/campus.ts`, que usa `request` de `shared/services/http.ts` con la sesión común. Las imágenes de los QR se descargan aparte (`descargarQr`) porque `request` solo lee JSON, y la pantalla `#/qr/…` llama a `/api/v1/public/…` sin token. Las rutas `#/qr/…` se declaran públicas con `esRutaPublicaCampus` en `routes.tsx`.
 

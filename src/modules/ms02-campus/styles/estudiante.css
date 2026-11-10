@@ -1,0 +1,168 @@
+.cs-estudiante-edificios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.cs-estudiante-edificio {
+  min-width: 0;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+
+.cs-estudiante-edificio-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cs-estudiante-edificio-info h2 {
+  font: 700 20px/26px 'Outfit', sans-serif;
+}
+
+.cs-estudiante-edificio-info p {
+  font-size: 14px;
+  line-height: 150%;
+  color: var(--mut);
+}
+
+.cs-estudiante-edificio .cs-galeria {
+  margin-top: 20px;
+}
+
+.cs-estudiante-resumen {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 24px 0 16px;
+}
+
+.cs-estudiante-pisos {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cs-estudiante-espacios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.cs-estudiante-espacio {
+  min-width: 0;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.cs-estudiante-espacio h4 {
+  font: 700 16px/22px 'Outfit', sans-serif;
+  overflow-wrap: anywhere;
+  margin-bottom: 4px;
+}
+
+.cs-estudiante-espacio > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-estudiante-espacio > div:first-child > span:not(.cs-estado) {
+  font-size: 13px;
+  color: var(--mut);
+}
+
+.cs-estudiante-espacio .cs-galeria {
+  margin-top: 16px;
+}
+
+/* Detalle de edificio: espacios a la izquierda y fotografías grandes a la derecha (como el mapa en Rutas). */
+.cs-estudiante-detalle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+.cs-estudiante-detalle-info {
+  min-width: 0;
+}
+
+.cs-estudiante-detalle-info .cs-estudiante-resumen {
+  margin-top: 0;
+}
+
+.cs-estudiante-detalle-fotos {
+  min-width: 0;
+  order: -1;
+}
+
+.cs-galeria-grande .cs-galeria-lista {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.cs-galeria-grande .cs-galeria-foto {
+  width: 100%;
+}
+
+.cs-galeria-grande .cs-galeria-foto a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  min-height: 260px;
+}
+
+.cs-galeria-grande .cs-galeria-foto img {
+  width: 100%;
+  height: auto;
+  max-height: 70vh;
+  object-fit: contain;
+}
+
+@media (min-width: 1100px) {
+  .cs-estudiante-detalle {
+    grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
+  }
+
+  .cs-estudiante-detalle-fotos {
+    order: 0;
+    position: sticky;
+    top: 24px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+
+  .cs-estudiante-detalle-fotos .cs-galeria {
+    margin-top: 0;
+  }
+
+  .cs-galeria-grande .cs-galeria-foto a {
+    min-height: 420px;
+  }
+
+  .cs-galeria-grande .cs-galeria-foto img {
+    max-height: calc(100vh - 160px);
+  }
+}
+
+@media (max-width: 700px) {
+  .cs-estudiante-edificios,
+  .cs-estudiante-espacios {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-estudiante-edificio {
+    padding: 16px;
+  }
+}

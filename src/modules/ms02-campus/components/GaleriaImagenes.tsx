@@ -14,12 +14,15 @@ interface Props {
   tipoElemento: TipoElementoImagen;
   elementoId: string;
   editable?: boolean;
+  /** Fotos grandes, una debajo de otra (vista de detalle). */
+  grande?: boolean;
 }
 
 export default function GaleriaImagenes({
   tipoElemento,
   elementoId,
   editable = true,
+  grande = false,
 }: Props) {
   const [fotos, setFotos] = useState<FotoCargada[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -113,7 +116,7 @@ export default function GaleriaImagenes({
   };
 
   return (
-    <section className="cs-galeria" aria-label="Fotografías del elemento">
+    <section className={`cs-galeria${grande ? ' cs-galeria-grande' : ''}`} aria-label="Fotografías del elemento">
       <div className="cs-galeria-cabecera">
         <strong>Fotografías</strong>
         {editable && (

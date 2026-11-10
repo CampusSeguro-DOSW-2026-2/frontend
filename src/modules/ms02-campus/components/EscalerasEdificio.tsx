@@ -44,6 +44,9 @@ export default function EscalerasEdificio({
   const [disponibilidad, setDisponibilidad] =
     useState<DisponibilidadEscalera>('DISPONIBLE');
   const [motivo, setMotivo] = useState('');
+  const [prioridadNueva, setPrioridadNueva] = useState('');
+  const [prioridadEditarId, setPrioridadEditarId] = useState<string | null>(null);
+  const [prioridadEditar, setPrioridadEditar] = useState('');
 
   const roles = rolesDeSesion() ?? [];
   const esAdmin = roles.includes('ADMIN');
@@ -59,7 +62,7 @@ export default function EscalerasEdificio({
         edificio.id,
         mostrarInactivos,
       );
-      setEscaleras(datos);
+      setEscaleras([...datos].sort((a, b) => a.prioridad - b.prioridad || a.codigo.localeCompare(b.codigo)));
     } catch (e) {
       setError(comoCampusError(e).message);
     } finally {
@@ -93,14 +96,22 @@ export default function EscalerasEdificio({
       return;
     }
 
+    const prioridad = prioridadNueva.trim() ? Number(prioridadNueva) : undefined;
+    if (prioridad !== undefined && (!Number.isInteger(prioridad) || prioridad < 1)) {
+      setError('La prioridad debe ser un número entero de 1 en adelante.');
+      return;
+    }
+
     setGuardando(true);
     try {
       await campus.escaleras.crear(edificio.id, {
         nombre: nombre.trim(),
         pisoIds,
+        prioridad,
       });
       setNombre('');
       setPisoIds([]);
+      setPrioridadNueva('');
       setMostrarFormulario(false);
       setMensaje('Escalera registrada correctamente.');
       await cargar();
@@ -141,6 +152,28 @@ export default function EscalerasEdificio({
     }
   };
 
+  const guardarPrioridad = async (e: React.FormEvent<HTMLFormElement>, escaleraId: string) => {
+    e.preventDefault();
+    setError('');
+    setMensaje('');
+    const prioridad = Number(prioridadEditar);
+    if (!prioridadEditar.trim() || !Number.isInteger(prioridad) || prioridad < 1) {
+      setError('La prioridad debe ser un número entero de 1 en adelante.');
+      return;
+    }
+    setGuardando(true);
+    try {
+      await campus.escaleras.cambiarPrioridad(escaleraId, prioridad);
+      setPrioridadEditarId(null);
+      setMensaje('Prioridad actualizada correctamente.');
+      await cargar();
+    } catch (err) {
+      setError(comoCampusError(err).message);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   const cambiarEstado = async (escalera: Escalera) => {
     setError('');
     setMensaje('');
@@ -172,7 +205,10 @@ export default function EscalerasEdificio({
       <div className="cs-piso-cabecera">
         <div>
           <h2>Escaleras del edificio</h2>
-          <p>Conexiones entre los pisos para la evacuación.</p>
+          <p>
+            Conexiones entre los pisos para la evacuación. Si hay más de una, la prioridad 1 es la principal
+            y la guía de evacuación nombra las demás como alternas.
+          </p>
         </div>
         {esAdmin && (
           <div className="cs-acciones">
@@ -201,6 +237,19 @@ export default function EscalerasEdificio({
               maxLength={100}
               required
               placeholder="Ej. Escalera principal"
+            />
+          </label>
+
+          <label className="cs-campo">
+            Prioridad (opcional)
+            <input
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              value={prioridadNueva}
+              onChange={(e) => setPrioridadNueva(e.target.value)}
+              placeholder="1 es la principal; vacío la deja después de las demás"
             />
           </label>
 
@@ -254,6 +303,8 @@ export default function EscalerasEdificio({
                     <strong>{escalera.codigo}</strong>
                     {' · '}
                     {escalera.estado === 'ACTIVO' ? 'Activa' : 'Inactiva'}
+                    {' · '}
+                    {escalera.prioridad === 1 ? 'Principal' : `Prioridad ${escalera.prioridad}`}
                   </p>
                 </div>
                 <span className="cs-mini">
@@ -285,6 +336,19 @@ export default function EscalerasEdificio({
                   </button>
                 )}
 
+                {esAdmin && escalera.estado === 'ACTIVO' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPrioridadEditarId(prioridadEditarId === escalera.id ? null : escalera.id);
+                      setPrioridadEditar(String(escalera.prioridad));
+                      setError('');
+                    }}
+                  >
+                    {prioridadEditarId === escalera.id ? 'Cancelar prioridad' : 'Cambiar prioridad'}
+                  </button>
+                )}
+
                 {esAdmin && (
                   <button
                     type="button"
@@ -295,6 +359,29 @@ export default function EscalerasEdificio({
                   </button>
                 )}
               </div>
+
+              {prioridadEditarId === escalera.id && (
+                <form
+                  className="cs-editor"
+                  onSubmit={(e) => void guardarPrioridad(e, escalera.id)}
+                >
+                  <label className="cs-campo">
+                    Prioridad (1 es la principal)
+                    <input
+                      type="number"
+                      min={1}
+                      step={1}
+                      inputMode="numeric"
+                      value={prioridadEditar}
+                      onChange={(e) => setPrioridadEditar(e.target.value)}
+                      required
+                    />
+                  </label>
+                  <button type="submit" disabled={guardando}>
+                    {guardando ? 'Guardando…' : 'Guardar prioridad'}
+                  </button>
+                </form>
+              )}
 
               {editarId === escalera.id && (
                 <form

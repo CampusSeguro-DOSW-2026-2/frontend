@@ -1,7 +1,7 @@
 import type {
-  CampusRequest, ZonaAbiertaRequest, CalcularRutaExteriorRequest, RutaExterior, Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
+  CampusRequest, ZonaAbiertaRequest, CalcularRutaExteriorRequest, ResumenGeneracionRutas, RutaExterior, Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
   EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, ModificarSalidaRequest, ModificarZonaSeguraRequest,
-  Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, Salida,
+  Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, RutaListada, Salida,
   SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest, EspacioPublico, SalidaPublica, ZonaSeguraPublica, Escalera, EscaleraRequest, CambiarDisponibilidadEscaleraRequest,
 } from '../types';
 import { API_URL, ApiError, GENERIC_ERROR, NETWORK_ERROR, request } from '../../../shared/services/http';
@@ -106,6 +106,8 @@ export const campus = {
       pedir<Escalera>('POST', `/buildings/${edificioId}/stairs`, datos),
     cambiarDisponibilidad: (id: string, datos: CambiarDisponibilidadEscaleraRequest) =>
       pedir<Escalera>('PATCH', `/stairs/${id}/status`, datos),
+    cambiarPrioridad: (id: string, prioridad: number) =>
+      pedir<Escalera>('PATCH', `/stairs/${id}/priority`, { prioridad }),
     inactivar: (id: string) =>
       pedir<Escalera>('PATCH', `/stairs/${id}/deactivate`),
     reactivar: (id: string) =>
@@ -123,6 +125,9 @@ export const campus = {
   rutasExteriores: {
     calcular: (datos: CalcularRutaExteriorRequest) => pedir<RutaExterior>('POST', '/evacuation-routes/exterior', datos),
     porSalida: (salidaId: string) => pedir<RutaExterior[]>('GET', `/exits/${salidaId}/evacuation-route`),
+    /** Genera las rutas de todas las salidas hacia sus zonas más cercanas. Por defecto solo las que faltan. */
+    generar: (recalcular = false) =>
+      pedir<ResumenGeneracionRutas>('POST', `/evacuation-routes/exterior/generate${recalcular ? '?recalcular=true' : ''}`),
   },
   zonas: {
     listar: (incluirInactivos?: boolean) => pedir<ZonaSegura[]>('GET', `/safe-zones${filtro(incluirInactivos)}`),
@@ -151,7 +156,7 @@ export const campus = {
     reactivar: (id: string) => pedir<ZonaAbierta>('PATCH', `/open-zones/${id}/reactivate`),
   },
   rutas: {
-    listar: () => pedir<Ruta[]>('GET', '/evacuation-routes'),
+    listar: () => pedir<RutaListada[]>('GET', '/evacuation-routes'),
     obtener: (id: string) => pedir<Ruta>('GET', `/evacuation-routes/${id}`),
     crear: (datos: CrearRutaRequest) => pedir<Ruta>('POST', '/evacuation-routes', datos),
     actualizar: (id: string, datos: ActualizarRutaRequest) => pedir<Ruta>('PUT', `/evacuation-routes/${id}`, datos),

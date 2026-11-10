@@ -146,6 +146,15 @@ export interface Ruta {
   actualizadaEn: string;
 }
 
+/**
+ * Lo que devuelve GET /evacuation-routes: rutas de espacio (legado) y también rutas exteriores,
+ * que salen de una salida y no tienen espacio de origen.
+ */
+export interface RutaListada extends Omit<Ruta, 'espacioOrigenId'> {
+  espacioOrigenId?: string | null;
+  salidaOrigenId?: string | null;
+}
+
 export interface CrearRutaRequest {
   espacioOrigenId: string;
   zonaSeguraDestinoId: string;
@@ -188,6 +197,13 @@ export interface RutaExterior {
   calculadaEn: string;
 }
 
+/** Resultado de generar las rutas exteriores de todo el campus. `interrumpida`: el proveedor de mapas dejó de responder. */
+export interface ResumenGeneracionRutas {
+  generadas: number;
+  omitidas: number;
+  interrumpida: boolean;
+}
+
 export interface CalcularRutaExteriorRequest {
   salidaId: string;
   zonaSeguraId: string;
@@ -197,6 +213,10 @@ export interface EscaleraGuia {
   id: string;
   codigo: string;
   nombre: string;
+  /** Orden en el recorrido (1 es el primer tramo). Puede faltar en respuestas antiguas. */
+  tramo?: number;
+  /** La recomendada del tramo; las demás son alternas. */
+  principal?: boolean;
 }
 
 export interface SalidaGuia {
@@ -349,12 +369,16 @@ export interface Escalera {
   disponibilidad: DisponibilidadEscalera;
   motivo: string | null;
   estado: Estado;
+  /** 1 es la escalera principal del edificio; las de número mayor son alternas. */
+  prioridad: number;
   pisoIds: string[];
 }
 
 export interface EscaleraRequest {
   nombre: string;
   pisoIds: string[];
+  /** Opcional: sin valor queda después de las escaleras que ya tiene el edificio. */
+  prioridad?: number;
 }
 
 export interface CambiarDisponibilidadEscaleraRequest {
