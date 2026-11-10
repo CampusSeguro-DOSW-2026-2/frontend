@@ -106,6 +106,8 @@ export const campus = {
       pedir<Escalera>('POST', `/buildings/${edificioId}/stairs`, datos),
     cambiarDisponibilidad: (id: string, datos: CambiarDisponibilidadEscaleraRequest) =>
       pedir<Escalera>('PATCH', `/stairs/${id}/status`, datos),
+    cambiarPrioridad: (id: string, prioridad: number) =>
+      pedir<Escalera>('PATCH', `/stairs/${id}/priority`, { prioridad }),
     inactivar: (id: string) =>
       pedir<Escalera>('PATCH', `/stairs/${id}/deactivate`),
     reactivar: (id: string) =>

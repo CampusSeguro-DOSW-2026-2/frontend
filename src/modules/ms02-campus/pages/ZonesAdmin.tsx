@@ -102,7 +102,8 @@ function ZonaForm({ inicial, zonasAbiertas, onGuardar, onCancelar }: {
           </select>
         </Campo>
       </div>
-      <AyudaCoordenadas latitud={latitud} longitud={longitud} />
+      <AyudaCoordenadas latitud={latitud} longitud={longitud}
+        onElegir={(la, lo) => { setLatitud(String(la)); setLongitud(String(lo)); }} />
       <label className="cs-check">
         <input type="checkbox" checked={puntoEncuentro} onChange={(e) => setPuntoEncuentro(e.target.checked)} />
         Es un punto de encuentro

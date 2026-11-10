@@ -213,6 +213,10 @@ export interface EscaleraGuia {
   id: string;
   codigo: string;
   nombre: string;
+  /** Orden en el recorrido (1 es el primer tramo). Puede faltar en respuestas antiguas. */
+  tramo?: number;
+  /** La recomendada del tramo; las demás son alternas. */
+  principal?: boolean;
 }
 
 export interface SalidaGuia {
@@ -365,12 +369,16 @@ export interface Escalera {
   disponibilidad: DisponibilidadEscalera;
   motivo: string | null;
   estado: Estado;
+  /** 1 es la escalera principal del edificio; las de número mayor son alternas. */
+  prioridad: number;
   pisoIds: string[];
 }
 
 export interface EscaleraRequest {
   nombre: string;
   pisoIds: string[];
+  /** Opcional: sin valor queda después de las escaleras que ya tiene el edificio. */
+  prioridad?: number;
 }
 
 export interface CambiarDisponibilidadEscaleraRequest {
