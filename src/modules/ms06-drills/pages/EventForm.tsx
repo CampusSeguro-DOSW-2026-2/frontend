@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DateTimeField } from '../../../shared/components/DateTimeField';
 import { ApiError, errorMessage, type FieldErrors } from '../../../shared/services/http';
+import { FilePen, Info } from '../../../shared/components/Icons';
 import { PickerBox } from '../../ms03-alerts/components/PickerBox';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { labelOf, listEs, type CatalogItem } from '../../ms03-alerts/services/catalog';
@@ -200,15 +201,26 @@ export default function EventForm({ session, editId }: { session: Session; editI
           </div>
         </form>
         <aside className="ev-side">
-          <div className="ev-sum">
-            <h2>Resumen</h2>
-            <small>Tipo</small><b>{typeIds.length ? listEs(typeIds.map((t) => labelOf(typeItems, t))) : 'Sin tipo'}</b>
-            <small>Cuándo</small><b>{form.start ? new Date(form.start).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin fecha'}</b>
-            <small>Alcance</small><b>{form.scope.length ? form.scope.map((s) => labelOf(scopeItems, s.id)).join(' · ') : 'Sin alcance'}</b>
-            <small>Participantes</small><b>{form.roles.length ? listEs(form.roles.map((r) => labelOf(PARTICIPANT_ROLE_ITEMS, r))) : 'Sin participantes'}</b>
+          <div className="sum2">
+            <div className="sum2-head">
+              <h2>Resumen del evento</h2>
+              <span className="unsent"><FilePen />{editId && status ? STATUS_LABEL[status] : 'Sin guardar'}</span>
+            </div>
+            <div className="sum2-msg">
+              <small>Nombre del evento</small>
+              <strong>{form.name.trim() || 'Pendiente de completar'}</strong>
+              <p className="clamp">{form.description.trim() || 'Añade la descripción que verán los participantes.'}</p>
+            </div>
             <div className="sep" />
-            <div className="row"><span>{inProgress ? 'Sigue en' : 'Quedará como'}</span><span className={`st ${willBe}`}>{STATUS_LABEL[willBe]}</span></div>
+            <div className="sum2-row"><small>Tipo</small><span>{typeIds.length ? listEs(typeIds.map((t) => labelOf(typeItems, t))) : '—'}</span></div>
+            <div className="sum2-row"><small>Inicio</small><span>{form.start ? new Date(form.start).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</span></div>
+            <div className="sum2-row"><small>Edificios y zonas</small><span>{form.scope.length ? form.scope.map((s) => labelOf(scopeItems, s.id)).join(' · ') : '—'}</span></div>
+            <div className="sum2-row"><small>Participantes</small><span>{form.roles.length ? listEs(form.roles.map((r) => labelOf(PARTICIPANT_ROLE_ITEMS, r))) : '—'}</span></div>
+            <div className="sep" />
+            <div className="sum2-row"><small>{inProgress ? 'Sigue en' : 'Quedará como'}</small><span><span className={`st ${willBe}`}>{STATUS_LABEL[willBe]}</span></span></div>
           </div>
+          <div className="notice2"><Info /><div><b>Programar avisará a los brigadistas</b>
+            <p>Con fecha, alcance y participantes completos el evento queda Programado. Si falta alguno, se guarda como Borrador y no se envía ningún aviso.</p></div></div>
           {message && <p className="notice err" role="alert">{message}</p>}
           <div className="actions">
             <button type="button" className="btn red" onClick={save} disabled={saving || finished}>{saving ? 'Guardando…' : editId ? 'Guardar cambios' : 'Guardar evento'}</button>
