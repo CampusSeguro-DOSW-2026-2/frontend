@@ -4,6 +4,7 @@ import { Check, EmptyLogo, MapIcon } from '../../../shared/components/Icons';
 import { errorMessage } from '../../../shared/services/http';
 import { USE_MS03, activeAlertApi, type ActiveAlert } from '../services/activeAlert';
 import { scopeText } from '../services/catalog';
+import { useScopeCatalog } from '../hooks/useScopeCatalog';
 
 const REFRESH_MS = 15000;
 const timeOf = (iso: string) => new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -12,6 +13,8 @@ const stepsOf = (text: string) => text.split(/\r?\n+/).map((s) => s.trim()).filt
 
 export default function ActiveSimulation() {
   const [alert, setAlert] = useState<ActiveAlert | null>(null);
+  // Nombres de edificios y zonas desde MS02; sin MS03 activo la pantalla es de demostración y no consulta.
+  const { catalog } = useScopeCatalog(USE_MS03);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [confirmError, setConfirmError] = useState('');
@@ -52,7 +55,7 @@ export default function ActiveSimulation() {
   const operational = alert.types.length === 1 && alert.types[0] === 'OPERATIVA';
   return (
     <>
-      <PageHeader badge="EN PROGRESO" title={alert.title} subtitle={`Alcance: ${scopeText(alert.scope)}`} context={`Iniciado: ${timeOf(alert.startedAt)}`} />
+      <PageHeader badge="EN PROGRESO" title={alert.title} subtitle={`Alcance: ${scopeText(alert.scope, catalog)}`} context={`Iniciado: ${timeOf(alert.startedAt)}`} />
       <main className="content">
         <h2 className="title">{operational ? 'Instrucciones' : 'Instrucciones de Emergencia'}</h2>
         <div className="steps">
