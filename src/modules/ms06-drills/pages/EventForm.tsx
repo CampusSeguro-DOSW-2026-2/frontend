@@ -34,6 +34,8 @@ export default function EventForm({ session, editId }: { session: Session; editI
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(!!editId);
   const [saving, setSaving] = useState(false);
+  const [finishing, setFinishing] = useState(false);
+  const [confirmFinish, setConfirmFinish] = useState(false);
   // Buildings and zones come from MS02: MS06 validates these same UUIDs when the event is saved.
   const { catalog, loading: scopeLoading, error: scopeError, retry: retryScope } = useScopeCatalog();
   const scopeItems = useMemo<CatalogItem[]>(() => {
@@ -137,6 +139,22 @@ export default function EventForm({ session, editId }: { session: Session; editI
     }
   };
 
+  // Finish the event from the summary card. The backend only accepts it while the event is in progress.
+  const finish = async () => {
+    if (!editId) return;
+    setFinishing(true);
+    setMessage('');
+    try {
+      await eventsApi.finish(session, editId);
+      window.location.hash = `#/eventos/${editId}`;
+    } catch (err) {
+      setMessage(errorMessage(err));
+      setConfirmFinish(false);
+    } finally {
+      setFinishing(false);
+    }
+  };
+
   if (loading) return <main className="ev-main"><p className="notice" role="status">Cargando evento…</p></main>;
 
   return (
@@ -226,6 +244,25 @@ export default function EventForm({ session, editId }: { session: Session; editI
             <button type="button" className="btn red" onClick={save} disabled={saving || finished}>{saving ? 'Guardando…' : editId ? 'Guardar cambios' : 'Guardar evento'}</button>
             <a className="btn white" href={editId ? `#/eventos/${editId}` : '#/eventos'}>Cancelar</a>
           </div>
+          {editId && !finished && (
+            <div className="actions">
+              {confirmFinish ? (
+                <>
+                  <button type="button" className="btn red" onClick={finish} disabled={finishing}>{finishing ? 'Finalizando…' : 'Sí, finalizar'}</button>
+                  <button type="button" className="btn white" onClick={() => setConfirmFinish(false)} disabled={finishing}>No</button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="btn light"
+                  onClick={() => setConfirmFinish(true)}
+                  disabled={!inProgress || saving}
+                  title={inProgress ? undefined : 'Solo se puede finalizar un evento en ejecución'}
+                >Finalizar evento</button>
+              )}
+            </div>
+          )}
+          {editId && !finished && !inProgress && <span className="help">Finalizar solo está disponible cuando el evento está en ejecución.</span>}
         </aside>
       </main>
     </>
