@@ -43,7 +43,7 @@ export const brigadesApi = {
     request(`/api/v1/asignaciones/${enc(idAsignacion)}/retiro`, { method: 'PATCH', session }) as Promise<Asignacion>,
 
   registrarIncidente: (session: Session, eventoId: string, body: NuevoIncidente) =>
-    request(`/api/v1/eventos/${enc(eventoId)}/incidentes`, {
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}`, {
       method: 'POST', session, body,
       fields: { prioridadId: 'prioridad', ubicacionId: 'ubicacion', tipoUbicacion: 'ubicacion', descripcion: 'descripcion', nombreAfectado: 'nombreAfectado' },
     }) as Promise<Incidente>,
@@ -54,7 +54,7 @@ export const brigadesApi = {
     form.append('archivo', archivo);
     let res: Response;
     try {
-      res = await fetch(`${API_URL}/api/v1/eventos/${enc(eventoId)}/incidentes/${enc(incidenteId)}/evidencias`, {
+      res = await fetch(`${API_URL}/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/evidencias`, {
         method: 'POST',
         headers: { Accept: 'application/json', Authorization: `Bearer ${session.token}`, 'X-Correlation-ID': crypto.randomUUID() },
         body: form,
