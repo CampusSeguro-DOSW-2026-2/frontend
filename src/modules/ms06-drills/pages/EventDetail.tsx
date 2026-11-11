@@ -3,7 +3,9 @@ import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { canManageEvent, eventsApi } from '../services/events';
 import type { EventDetail as Detail, Evaluation, EventWarning, Monitoring } from '../types';
-import { CHECKIN_LABEL, ROLE_LABEL, STATUS_LABEL, formatDate, formatDuration, scopeLabel, warningText } from '../utils/labels';
+import { CHECKIN_LABEL, ROLE_LABEL, STATUS_LABEL, formatDate, formatDuration, scopeLabelIn, warningText } from '../utils/labels';
+import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
+import type { ScopeCatalog } from '../../ms03-alerts/services/catalog';
 import '../styles/events.css';
 
 const REFRESH_MS = 15000;
@@ -19,7 +21,7 @@ function Warnings({ items }: { items: EventWarning[] }) {
   return <>{shown.map((w) => <div key={w.code + w.message} className="ev-warn" role="status">{warningText(w)}</div>)}</>;
 }
 
-function Live({ m }: { m: Monitoring }) {
+function Live({ m, catalog }: { m: Monitoring; catalog: ScopeCatalog | null }) {
   const c = m.checkIn;
   const i = m.incidents;
   return (
@@ -38,7 +40,7 @@ function Live({ m }: { m: Monitoring }) {
           {m.brigadiersByZone.length === 0 && <p className="help">Todavía no hay brigadistas asignados.</p>}
           {m.brigadiersByZone.map((z) => (
             <div className="ev-zone" key={z.zoneId}>
-              <b>{scopeLabel(z.zoneId)}</b>
+              <b>{scopeLabelIn(z.zoneId, catalog)}</b>
               <span>{z.activeCount} activos · {z.brigadiers.map((b) => b.name).join(', ') || '—'}</span>
             </div>
           ))}
@@ -80,6 +82,7 @@ function Results({ e }: { e: Evaluation }) {
 /** RF-EVE-03 y RF-EVE-04: detalle del evento, monitoreo en vivo, finalizar y resultados. */
 export default function EventDetail({ session, id, canManage }: { session: Session; id: string; canManage: boolean }) {
   const [data, setData] = useState<Detail | null>(null);
+  const { catalog } = useScopeCatalog();
   const [error, setError] = useState('');
   const [confirm, setConfirm] = useState(false);
   const [finishing, setFinishing] = useState(false);
@@ -145,7 +148,7 @@ export default function EventDetail({ session, id, canManage }: { session: Sessi
         {error && <p className="notice err" role="alert">{error}</p>}
         <Warnings items={[...ev.warnings, ...finishWarnings, ...(data.monitoring?.messages ?? [])]} />
 
-        {live && data.monitoring && <Live m={data.monitoring} />}
+        {live && data.monitoring && <Live m={data.monitoring} catalog={catalog} />}
         {live && !data.monitoring && <p className="notice">Por ahora no es posible monitorear el evento: check-in o brigadistas no respondieron.</p>}
         {ev.status === 'FINISHED' && data.evaluation && <Results e={data.evaluation} />}
 
@@ -154,7 +157,7 @@ export default function EventDetail({ session, id, canManage }: { session: Sessi
           <dl className="ev-grid2">
             <dt>Descripción</dt><dd>{ev.description || '—'}</dd>
             <dt>Inicio programado</dt><dd>{formatDate(ev.startDate)}</dd>
-            <dt>Alcance</dt><dd>{ev.scope.map((s) => scopeLabel(s.id)).join(', ') || 'Pendiente'}</dd>
+            <dt>Alcance</dt><dd>{ev.scope.map((s) => scopeLabelIn(s.id, catalog)).join(', ') || 'Pendiente'}</dd>
             <dt>Participantes</dt><dd>{ev.participantRoles.map((r) => ROLE_LABEL[r] ?? r).join(', ') || 'Pendiente'}</dd>
             <dt>Creado</dt><dd>{formatDate(ev.createdAt)} por {ev.createdBy}</dd>
             <dt>Alertas</dt><dd>{ev.alerts.length ? `${ev.alerts.length} asociadas` : 'Ninguna todavía'}</dd>

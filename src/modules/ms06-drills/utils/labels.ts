@@ -1,4 +1,4 @@
-import { SCOPE_ITEMS } from '../../ms03-alerts/services/catalog';
+import { SCOPE_ITEMS, type ScopeCatalog } from '../../ms03-alerts/services/catalog';
 import type { EventStatus, ParticipantRole, ScopeItem } from '../types';
 
 export const STATUS_LABEL: Record<EventStatus, string> = {
@@ -22,6 +22,18 @@ export const SCOPE_OPTIONS: ScopeItem[] = SCOPE_ITEMS
   .map((i) => ({ type: i.id.startsWith('ZON') ? 'ZONE' : 'BUILDING', id: i.id }));
 
 export const scopeLabel = (id: string) => SCOPE_ITEMS.find((i) => i.id === id)?.label ?? id;
+
+/**
+ * Name of a building or zone from the live MS02 catalog. While the catalog has not arrived (or the id
+ * is not in it) it falls back to the demo catalog and then to the raw id, so nothing is hidden.
+ */
+export const scopeLabelIn = (id: string, catalog?: ScopeCatalog | null) => {
+  const live = catalog ? [...catalog.buildings, ...catalog.zones].find((i) => i.id === id) : undefined;
+  return live?.label ?? scopeLabel(id);
+};
+
+/** Roles that MS06 accepts as participants, with the same labels the alert form uses. */
+export const PARTICIPANT_ROLE_ITEMS = PARTICIPANT_ROLES.map((r) => ({ id: r, label: ROLE_LABEL[r], group: 'Roles' }));
 
 export const CHECKIN_LABEL: Record<string, string> = {
   SAFE: 'En punto de encuentro',
