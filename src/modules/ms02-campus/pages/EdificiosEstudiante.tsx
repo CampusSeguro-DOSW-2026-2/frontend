@@ -210,12 +210,6 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
                                   {espacio.disponible ? 'DISPONIBLE' : 'NO DISPONIBLE'}
                                 </span>
                               </div>
-
-                              <GaleriaImagenes
-                                tipoElemento="ESPACIO"
-                                elementoId={espacio.id}
-                                editable={false}
-                              />
                             </article>
                           ))}
                         </div>
