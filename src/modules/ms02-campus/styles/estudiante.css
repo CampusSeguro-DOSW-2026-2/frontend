@@ -81,10 +81,6 @@
   color: var(--mut);
 }
 
-.cs-estudiante-espacio .cs-galeria {
-  margin-top: 16px;
-}
-
 /* Detalle de edificio: espacios a la izquierda y fotografías grandes a la derecha (como el mapa en Rutas). */
 .cs-estudiante-detalle {
   display: grid;
