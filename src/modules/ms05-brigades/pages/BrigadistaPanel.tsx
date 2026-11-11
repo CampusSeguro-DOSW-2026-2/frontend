@@ -4,6 +4,7 @@ import type { Session } from '../../../shared/types';
 import { eventsApi } from '../../ms06-drills/services/events';
 import type { EventSummary } from '../../ms06-drills/types';
 import { formatDate, scopeLabel } from '../../ms06-drills/utils/labels';
+import IncidentesEvento from '../components/IncidentesEvento';
 import { brigadesApi } from '../services/brigades';
 import type { Asignacion, EstadoBrigadista } from '../types';
 import '../../ms06-drills/styles/events.css';
@@ -93,15 +94,18 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
                   ? <b>{scopeLabel(zona.ubicacionId)}</b>
                   : <a className="plink" href={`#/brigadista/zona/${ev.id}`}>Elegir zona →</a>}
               </div>
-              {zona && <span className="help">Para cambiar de zona, pídeselo al coordinador (solo él reasigna).</span>}
+              {zona && <span className="help">Para cambiar de zona, pídeselo al coordinador o al organizador (solo ellos reasignan).</span>}
             </section>
           );
         })}
 
-        <section className="ev-card">
-          <h2>Incidentes de mi zona</h2>
-          <p className="help">MS05 todavía no expone el listado de incidentes ni las acciones "Iniciar atención" y "Marcar como resuelto". Aparecerán aquí cuando el servicio los publique.</p>
-        </section>
+        {events.map((ev) => (
+          <section key={`inc-${ev.id}`} className="ev-card">
+            <h2>Mis incidentes · {ev.name}</h2>
+            <p className="help">Los que reportaste, los que tienes asignados y los de tu zona. Inicia la atención y márcalos como resueltos.</p>
+            <IncidentesEvento session={session} eventoId={ev.id} modo="brigadista" />
+          </section>
+        ))}
       </main>
     </>
   );
