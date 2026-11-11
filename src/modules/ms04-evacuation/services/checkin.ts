@@ -1,6 +1,6 @@
 import { ApiError, request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
-import type { Checkin, CheckinRequest, Evento } from '../types';
+import type { Checkin, CheckinRequest, EstadoEvento, Evento, EventoPage } from '../types';
 
 /**
  * Cliente de MS04 (Evacuación y check-in). Todo pasa por el API Gateway con el JWT de la sesión: el Gateway agrega
@@ -50,5 +50,25 @@ export const checkinApi = {
       if (err instanceof ApiError && err.status === 404 && err.message === SIN_CHECKIN) return null;
       throw err;
     }
+  },
+
+  /**
+   * Lista de eventos en cualquier estado (RF-MS04-13, F-07), del más reciente al más antiguo; solo roles con
+   * ms04:dashboard:read. Sin `estado` trae todos. La página empieza en 0.
+   */
+  async listarEventos(
+    session: Session,
+    filtro: { estado?: EstadoEvento; page: number; size: number },
+  ): Promise<EventoPage> {
+    const params = new URLSearchParams({ page: String(filtro.page), size: String(filtro.size) });
+    if (filtro.estado) params.set('estado', filtro.estado);
+    const data = (await request(`${BASE}?${params.toString()}`, { session })) as Partial<EventoPage> | null;
+    return {
+      contenido: Array.isArray(data?.contenido) ? data.contenido : [],
+      page: data?.page ?? filtro.page,
+      size: data?.size ?? filtro.size,
+      total_elementos: data?.total_elementos ?? 0,
+      total_paginas: data?.total_paginas ?? 0,
+    };
   },
 };
