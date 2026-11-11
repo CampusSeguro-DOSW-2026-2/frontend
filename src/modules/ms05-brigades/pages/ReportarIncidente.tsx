@@ -82,7 +82,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
   const back = forOther ? '#/brigadista' : '#/simulacro';
   return (
     <>
-      <header className="ev-head" style={forOther ? { background: 'var(--ink)' } : undefined}>
+      <header className="ev-head" style={forOther ? { background: 'var(--dark)' } : undefined}>
         <div>
           <a className="back" href={back}>← {forOther ? 'Panel de responsabilidades' : 'Inicio'}</a>
           <h1>{forOther ? 'Reportar incidente' : 'Necesito ayuda'}</h1>
