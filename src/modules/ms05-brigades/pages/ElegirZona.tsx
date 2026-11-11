@@ -36,7 +36,7 @@ export default function ElegirZona({ session, eventId }: { session: Session; eve
 
   return (
     <>
-      <header className="ev-head" style={{ background: 'var(--ink)' }}>
+      <header className="ev-head">
         <div>
           <a className="back" href="#/brigadista">← Panel de responsabilidades</a>
           <h1>Elige tu zona</h1>

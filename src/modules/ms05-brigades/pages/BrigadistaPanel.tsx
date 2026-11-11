@@ -52,7 +52,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
 
   return (
     <>
-      <header className="ev-head" style={{ background: 'var(--ink)' }}>
+      <header className="ev-head">
         <div>
           <span className="badge" style={{ background: 'var(--amber)', color: '#fff' }}>BRIGADISTA</span>
           <h1 style={{ marginTop: 10 }}>Panel de responsabilidades</h1>
