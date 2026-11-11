@@ -73,6 +73,15 @@ export interface CheckinRequest {
   ubicacion?: Ubicacion;
 }
 
+/** Página de la lista de eventos (RF-MS04-13): paginación de los Estándares, con `page` desde 0. */
+export interface EventoPage {
+  contenido: Evento[];
+  page: number;
+  size: number;
+  total_elementos: number;
+  total_paginas: number;
+}
+
 /** Zona segura o punto de encuentro de MS02 (GET /api/v1/safe-zones). */
 export interface PuntoEncuentro {
   id: string;

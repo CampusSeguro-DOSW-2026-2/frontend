@@ -1,4 +1,24 @@
-import type { EstadoCheckin } from '../types';
+import type { EstadoCheckin, EstadoEvento } from '../types';
+
+/** Estados del evento en el orden del filtro (F-07); '' es Todos. */
+export const ESTADOS_EVENTO: { codigo: EstadoEvento | ''; texto: string }[] = [
+  { codigo: '', texto: 'Todos' },
+  { codigo: 'BORRADOR', texto: 'Borrador' },
+  { codigo: 'PROGRAMADO', texto: 'Programado' },
+  { codigo: 'EN_EJECUCION', texto: 'En ejecución' },
+  { codigo: 'FINALIZADO', texto: 'Finalizado' },
+];
+
+export const textoEstadoEvento = (codigo: EstadoEvento): string =>
+  ESTADOS_EVENTO.find((e) => e.codigo === codigo)?.texto ?? codigo;
+
+const ROLES: Record<string, string> = {
+  ESTUDIANTE: 'Estudiantes', PROFESOR: 'Profesores', ADMINISTRATIVO: 'Personal administrativo',
+  BRIGADISTA: 'Brigadistas', COORDINADOR: 'Coordinadores', ORGANIZADOR: 'Organizadores',
+};
+
+/** Rol convocado en plural, como se lista en el evento. */
+export const textoRol = (rol: string): string => ROLES[rol] ?? rol;
 
 /** Texto que ve el usuario para cada estado, en el orden en que se muestran (F-01, RN-MS04-03). */
 export const ESTADOS: { codigo: EstadoCheckin; texto: string }[] = [

@@ -44,6 +44,10 @@ function menuFor(roles: string[]): MenuSection[] {
     sections.push({ title: 'Eventos', items });
   }
   // Permisos de MS03 (ms03-alerts/permissions.ts): historial para coordinador, organizador y auditor; crear, solo coordinador
+  // Lista de eventos de MS04 (RF-MS04-13): ms04:dashboard:read
+  if (has('BRIGADISTA', 'COORDINADOR', 'ORGANIZADOR', 'AUDITOR')) {
+    sections.push({ title: 'Evacuación', items: [{ href: '#/evacuacion/eventos', icon: <CalendarIcon />, label: 'Eventos de evacuación' }] });
+  }
   if (coordination || has('AUDITOR')) {
     const items: MenuItem[] = [{ href: '#/alertas', icon: <BellIcon />, label: 'Alertas' }];
     if (has('COORDINADOR')) items.push({ href: '#/alertas/nueva', icon: <Megaphone />, label: 'Crear alerta' });
