@@ -296,12 +296,6 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                               </div>
                             </td>
                           </tr>
-                          <tr>
-                            <td colSpan={4}>
-                              <GaleriaImagenes tipoElemento="ESPACIO" elementoId={espacio.id}
-                                editable={espacioActivo && edificio.estado === 'ACTIVO'} />
-                            </td>
-                          </tr>
                           </Fragment>
                         );
                       })}
