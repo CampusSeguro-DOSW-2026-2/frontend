@@ -4,7 +4,8 @@ import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { canManageEvent, eventsApi } from '../services/events';
 import type { EventStatus, EventSummary, Page } from '../types';
-import { STATUS_LABEL, formatDate, scopeLabel } from '../utils/labels';
+import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
+import { STATUS_LABEL, formatDate, scopeLabelIn } from '../utils/labels';
 import '../styles/events.css';
 
 const FILTERS: (EventStatus | '')[] = ['', 'DRAFT', 'SCHEDULED', 'IN_PROGRESS', 'FINISHED'];
@@ -20,6 +21,8 @@ export default function EventList({ session, canManage }: { session: Session; ca
   const [data, setData] = useState<Page<EventSummary> | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  // Building and zone names come from MS02, the same source the alert form uses.
+  const { catalog } = useScopeCatalog();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -36,7 +39,7 @@ export default function EventList({ session, canManage }: { session: Session; ca
   useEffect(() => { load(); }, [load]);
 
   const items = data?.content ?? [];
-  const scopeText = (e: EventSummary) => (e.scope.length ? e.scope.map((s) => scopeLabel(s.id)).join(', ') : 'Sin alcance');
+  const scopeText = (e: EventSummary) => (e.scope.length ? e.scope.map((s) => scopeLabelIn(s.id, catalog)).join(', ') : 'Sin alcance');
 
   return (
     <>

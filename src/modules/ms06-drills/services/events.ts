@@ -4,20 +4,20 @@ import type { EventDetail, EventFinish, EventInput, EventStatus, EventSummary, E
 
 /**
  * Cliente de MS06 (Eventos). Todo pasa por el API Gateway con el JWT de la sesión (Estándares §2).
- * MS06 responde los errores en inglés con { code, message, details }; aquí se traducen por código.
+ * MS06 responde los errores en el formato estándar { status, codigo, mensaje, errores, correlation_id }; aquí se cambia el mensaje por uno propio según el código.
  */
 const BASE = '/api/v1/eventos';
 
 const MESSAGES: Record<string, string> = {
-  VALIDATION_ERROR: 'Revisa los campos marcados.',
-  FORBIDDEN: 'Tu rol no puede hacer esta acción: los simulacros los gestiona el organizador y los eventos reales el coordinador.',
-  RESOURCE_NOT_FOUND: 'El evento no existe.',
-  CONFLICT: 'No se pudo guardar: choca con otro evento (solo puede haber uno en ejecución a la vez).',
-  CONCURRENT_MODIFICATION: 'Otra persona cambió el evento. Recarga e inténtalo de nuevo.',
-  INVALID_STATE_TRANSITION: 'El evento ya no admite esa acción en su estado actual.',
-  EVENT_NOT_EDITABLE: 'Un evento Finalizado no se puede editar.',
-  EVENT_NOT_ACTIVE: 'Solo se puede finalizar un evento en ejecución.',
-  EXTERNAL_SERVICE_UNAVAILABLE: 'Un servicio del campus no respondió. Inténtalo en unos minutos.',
+  VALIDACION: 'Revisa los campos marcados.',
+  PROHIBIDO: 'Tu rol no puede hacer esta acción: los simulacros los gestiona el organizador y los eventos reales el coordinador.',
+  NO_ENCONTRADO: 'El evento no existe.',
+  CONFLICTO: 'No se pudo guardar: choca con otro evento (solo puede haber uno en ejecución a la vez).',
+  MODIFICACION_CONCURRENTE: 'Otra persona cambió el evento. Recarga e inténtalo de nuevo.',
+  TRANSICION_INVALIDA: 'El evento ya no admite esa acción en su estado actual.',
+  EVENTO_NO_EDITABLE: 'Un evento Finalizado no se puede editar.',
+  EVENTO_NO_ACTIVO: 'Solo se puede finalizar un evento en ejecución.',
+  SERVICIO_EXTERNO_NO_DISPONIBLE: 'Un servicio del campus no respondió. Inténtalo en unos minutos.',
 };
 
 /** Campo del contrato → campo del formulario, para marcar los errores 400. */
@@ -36,14 +36,27 @@ async function call<T>(path: string, session: Session, options: { method?: 'GET'
   }
 }
 
+/**
+ * MS06 pages follow the Gateway standard: { contenido, page, size, total_elementos, total_paginas }.
+ * The screens use { content, totalElements, totalPages }, so the answer is converted here.
+ */
+interface StandardPage<T> { contenido?: T[]; page?: number; size?: number; total_elementos?: number; total_paginas?: number }
+const toPage = <T>(raw: StandardPage<T>): Page<T> => ({
+  content: raw.contenido ?? [],
+  page: raw.page ?? 0,
+  size: raw.size ?? 0,
+  totalElements: raw.total_elementos ?? 0,
+  totalPages: raw.total_paginas ?? 0,
+});
+
 export const eventsApi = {
-  search(session: Session, filters: { title?: string; status?: EventStatus | ''; page?: number; size?: number }) {
+  async search(session: Session, filters: { title?: string; status?: EventStatus | ''; page?: number; size?: number }) {
     const q = new URLSearchParams();
     if (filters.title?.trim()) q.set('title', filters.title.trim());
     if (filters.status) q.set('status', filters.status);
     q.set('page', String(filters.page ?? 0));
     q.set('size', String(filters.size ?? 20));
-    return call<Page<EventSummary>>(`${BASE}?${q}`, session);
+    return toPage(await call<StandardPage<EventSummary>>(`${BASE}?${q}`, session));
   },
   active: (session: Session) => call<EventSummary[]>(`${BASE}/activos`, session),
   detail: (session: Session, id: string) => call<EventDetail>(`${BASE}/${encodeURIComponent(id)}`, session),
