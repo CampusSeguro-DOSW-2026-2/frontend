@@ -1,19 +1,30 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search } from '../../../shared/components/Icons';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
+import { eventsApi } from '../../ms06-drills/services/events';
+import type { EventSummary } from '../../ms06-drills/types';
 import { SCOPE_OPTIONS, scopeLabel } from '../../ms06-drills/utils/labels';
+import IncidentesEvento from '../components/IncidentesEvento';
 import { brigadesApi, tipoDesdeAlcance } from '../services/brigades';
 import type { BrigadistaEncontrado } from '../types';
 import '../../ms06-drills/styles/events.css';
 
-/** RF-BEI-01 (opción 1) y RF-BEI-02: el coordinador busca brigadistas y reasigna o retira su zona. */
+/**
+ * RF-BEI-01 (opción 1) y RF-BEI-02: el coordinador o el organizador busca brigadistas y reasigna o retira su zona,
+ * y monitorea los incidentes del evento en ejecución.
+ */
 export default function GestionBrigadistas({ session }: { session: Session }) {
   const [nombre, setNombre] = useState('');
   const [result, setResult] = useState<BrigadistaEncontrado[] | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState('');
+  const [enEjecucion, setEnEjecucion] = useState<EventSummary[]>([]);
+
+  useEffect(() => {
+    eventsApi.active(session).then(setEnEjecucion).catch(() => setEnEjecucion([]));
+  }, [session]);
 
   const buscar = async () => {
     if (!nombre.trim()) { setError('Escribe un nombre o apellido.'); return; }
@@ -102,7 +113,15 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
             </tbody>
           </table>
         )}
-        <p className="help">Un brigadista tiene una sola zona a la vez. Solo el coordinador reasigna; el cambio queda en auditoría.</p>
+        <p className="help">Un brigadista tiene una sola zona a la vez. Solo el coordinador o el organizador reasigna; el cambio queda en auditoría.</p>
+
+        {enEjecucion.map((ev) => (
+          <section key={ev.id} className="ev-card">
+            <h2>Incidentes · {ev.name}</h2>
+            <p className="help">Todos los incidentes reportados en el evento en ejecución, con su estado y si ya tienen un brigadista responsable.</p>
+            <IncidentesEvento session={session} eventoId={ev.id} modo="monitoreo" />
+          </section>
+        ))}
       </main>
     </>
   );

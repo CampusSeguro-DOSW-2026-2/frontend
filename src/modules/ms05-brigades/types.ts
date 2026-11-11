@@ -55,3 +55,21 @@ export interface NuevoIncidente {
 }
 
 export interface Evidencia { id: string; nombreArchivo: string; tipoContenido: string; referenciaArchivo: string; fechaCarga: string }
+
+/** Estados de un incidente en MS05: REPORTADO → ASIGNADO → EN_ATENCION → RESUELTO → CERRADO. */
+export type EstadoIncidente = 'REPORTADO' | 'ASIGNADO' | 'EN_ATENCION' | 'RESUELTO' | 'CERRADO';
+
+/** Un incidente del listado de MS05 (GET /api/v1/incidentes/eventos/{eventoId}/consulta). */
+export interface IncidenteResumen {
+  incidenteId: string;
+  eventoId: string;
+  zonaId: string;
+  tipoUbicacion: TipoUbicacion;
+  prioridad: string;
+  estado: EstadoIncidente | string;
+  brigadistaResponsableId: string | null;
+  reportadoEn: string;
+}
+
+/** Página con el formato de los Estándares (§9). */
+export interface Pagina<T> { contenido: T[]; page: number; size: number; total_elementos: number; total_paginas: number }

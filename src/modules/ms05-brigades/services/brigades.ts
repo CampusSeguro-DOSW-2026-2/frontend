@@ -1,7 +1,8 @@
 import { API_URL, ApiError, NETWORK_ERROR, request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import type {
-  ActivacionResponse, Asignacion, BusquedaBrigadistas, EstadoBrigadista, Evidencia, Incidente, NuevoIncidente, TipoUbicacion,
+  ActivacionResponse, Asignacion, BusquedaBrigadistas, EstadoBrigadista, Evidencia, Incidente, IncidenteResumen, NuevoIncidente, Pagina,
+  TipoUbicacion,
 } from '../types';
 
 /**
@@ -47,6 +48,23 @@ export const brigadesApi = {
       method: 'POST', session, body,
       fields: { prioridadId: 'prioridad', ubicacionId: 'ubicacion', tipoUbicacion: 'ubicacion', descripcion: 'descripcion', nombreAfectado: 'nombreAfectado' },
     }) as Promise<Incidente>,
+
+  /**
+   * Incidentes del evento según el rol (MS05 filtra): el coordinador, el organizador y el auditor ven todos;
+   * el brigadista, los que reportó, los que tiene asignados y los de sus zonas.
+   */
+  incidentes: (session: Session, eventoId: string, page = 0, size = 20) =>
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}/consulta?page=${page}&size=${size}`, { session }) as Promise<Pagina<IncidenteResumen>>,
+
+  /** El brigadista responsable inicia la atención de un incidente ASIGNADO. */
+  iniciarAtencion: (session: Session, eventoId: string, incidenteId: string) =>
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/iniciar-atencion`, { method: 'POST', session }),
+
+  /** El brigadista responsable marca como resuelto un incidente EN_ATENCION. */
+  resolver: (session: Session, eventoId: string, incidenteId: string, observaciones: string) =>
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/resolver`, {
+      method: 'POST', session, body: { observaciones },
+    }),
 
   /** Sube una evidencia (multipart). Se hace fuera de request() porque ese cliente solo envía JSON. */
   async subirEvidencia(session: Session, eventoId: string, incidenteId: string, archivo: File): Promise<Evidencia> {
