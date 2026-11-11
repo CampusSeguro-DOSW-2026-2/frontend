@@ -1,8 +1,18 @@
 import type { AlertType, Recipient } from './alerts';
 
-// Catálogo local (ids y nombres del catálogo de prueba de MS03). MS03 no expone un endpoint de catálogo;
-// cuando MS02/MS01 lo ofrezcan, sustituir este archivo por una llamada HTTP.
 export interface CatalogItem { id: string; label: string; group: string }
+
+/** Catálogo de alcance cargado de MS02: los ids que MS03 acepta en `scope.ids`. */
+export interface ScopeCatalog {
+  buildings: CatalogItem[];
+  zones: CatalogItem[];
+}
+
+/** Único alcance que no depende del catálogo remoto. */
+export const CAMPUS_ITEM: CatalogItem = { id: 'CAMPUS', label: 'Todo el campus', group: 'Campus' };
+
+// LEGADO: ids de demostración del catálogo de prueba. MS03 ya no los usa (su picker sale de MS02,
+// ver `services/scope.ts`); se conservan porque MS06 los reutiliza para el alcance de sus eventos.
 export const SCOPE_ITEMS: CatalogItem[] = [
   { id: 'CAMPUS', label: 'Todo el campus', group: 'Campus' },
   { id: 'BLD-001', label: 'Edificio A', group: 'Edificios' },
@@ -64,5 +74,9 @@ export const recipientsText = (recipients: Recipient[]) => {
   if (users) names.push(users === 1 ? '1 usuario' : `${users} usuarios`);
   return listEs(names);
 };
-export const scopeText = (s: { type: string; ids?: string[] }) =>
-  s.type === 'CAMPUS' ? 'Todo el campus' : scopeIdsOf(s).map((id) => labelOf(SCOPE_ITEMS, id)).join(', ');
+/** Texto del alcance; si el catálogo de MS02 aún no llegó, muestra el id para no ocultar información. */
+export const scopeText = (s: { type: string; ids?: string[] }, catalog?: ScopeCatalog | null) => {
+  if (s.type === 'CAMPUS') return 'Todo el campus';
+  const items = catalog ? [...catalog.buildings, ...catalog.zones] : [];
+  return scopeIdsOf(s).map((id) => labelOf(items, id)).join(', ');
+};

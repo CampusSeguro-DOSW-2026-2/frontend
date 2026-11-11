@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PickerBox } from '../components/PickerBox';
 import { DateTimeField } from '../../../shared/components/DateTimeField';
 import { FilePen, Info, Send } from '../../../shared/components/Icons';
-import { alertsApi, type Alert, type AlertInput, type AlertType, type Recipient } from '../services/alerts';
+import { alertsApi, type Alert, type AlertInput, type AlertType, type Recipient, type Scope } from '../services/alerts';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { getSession } from '../../../shared/services/session';
 import { alertAccess } from '../permissions';
-import { DEFAULT_TYPES, ROLE_ITEMS, SCOPE_ITEMS, TYPE_ITEMS, labelOf, listEs, scopeIdsOf, toggleType } from '../services/catalog';
+import { useScopeCatalog } from '../hooks/useScopeCatalog';
+import { CAMPUS_ITEM, DEFAULT_TYPES, ROLE_ITEMS, TYPE_ITEMS, labelOf, listEs, scopeIdsOf, toggleType } from '../services/catalog';
 
-const typeOf = (id: string) => (id === 'CAMPUS' ? 'CAMPUS' : id.startsWith('BLD') ? 'BUILDING' : 'ZONE');
 const toLocalInput = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 const msg = errorMessage;
 
@@ -39,7 +39,16 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const [title, setTitle] = useState('');
   const [instructions, setInstructions] = useState('');
   const [start, setStart] = useState('');
+  // El alcance sale de MS02: MS03 valida esos mismos ids por UUID al crear la alerta.
+  const { catalog, loading: scopeLoading, error: scopeError, retry: retryScope } = useScopeCatalog();
+  const scopeItems = useMemo(
+    () => [CAMPUS_ITEM, ...(catalog ? [...catalog.buildings, ...catalog.zones] : [])],
+    [catalog],
+  );
+  const kindOf = (id: string): Scope['type'] =>
+    id === 'CAMPUS' ? 'CAMPUS' : catalog?.buildings.some((building) => building.id === id) ? 'BUILDING' : 'ZONE';
   const [scopeIds, setScopeIds] = useState<string[]>([]);
+  const [scopeType, setScopeType] = useState<Scope['type'] | null>(null);
   const [roles, setRoles] = useState<string[]>([]);
   const [types, setTypes] = useState<AlertType[]>(DEFAULT_TYPES);
   // Destinatarios individuales (USER) que pudo fijar otro servicio: se conservan al editar.
@@ -53,7 +62,8 @@ export default function AlertForm({ editId }: { editId?: string }) {
   useEffect(() => {
     if (!editId) return;
     alertsApi.get(editId).then((a) => {
-      setAlert(a); setTitle(a.title); setInstructions(a.instructions); setScopeIds(scopeIdsOf(a.scope));
+      setAlert(a); setTitle(a.title); setInstructions(a.instructions);
+      setScopeType(a.scope.type); setScopeIds(scopeIdsOf(a.scope));
       setRoles(a.recipients.filter((r) => r.type === 'ROLE').map((r) => r.id));
       setUsers(a.recipients.filter((r) => r.type === 'USER')); setTypes(a.types);
       if (a.activationAt) setStart(toLocalInput(a.activationAt));
@@ -66,11 +76,18 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const blocked = !!alert && status !== 'DRAFT' && !scheduled;
   const forbidden = editId ? !!alert && !access.canManage(alert.origin) : !access.canCreate;
 
-  const toggleScope = (id: string) => setScopeIds((cur) => {
-    if (cur.includes(id)) return cur.filter((x) => x !== id);
-    const same = cur.length > 0 && typeOf(cur[0]) === typeOf(id) && typeOf(id) !== 'CAMPUS';
-    return same ? [...cur, id] : [id]; // una alerta admite un solo tipo de alcance
-  });
+  // Una alerta admite un solo tipo de alcance: cambiar de edificio a zona (o a campus) reinicia la selección.
+  const toggleScope = (id: string) => {
+    if (id === 'CAMPUS') {
+      const selected = scopeType === 'CAMPUS' && scopeIds.includes('CAMPUS');
+      setScopeType(selected ? null : 'CAMPUS');
+      setScopeIds(selected ? [] : ['CAMPUS']);
+      return;
+    }
+    const kind = kindOf(id);
+    if (kind !== scopeType) { setScopeType(kind); setScopeIds([id]); return; }
+    setScopeIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
+  };
   const toggleRole = (id: string) => setRoles((c) => (c.includes(id) ? c.filter((x) => x !== id) : [...c, id]));
 
   const validate = () => {
@@ -88,7 +105,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
     const e = validate(); setErrors(e); setApiError('');
     if (Object.keys(e).length) return;
     setBusy(true);
-    const t = typeOf(scopeIds[0]);
+    const t = scopeIds[0] === 'CAMPUS' ? 'CAMPUS' : scopeType ?? kindOf(scopeIds[0]);
     const payload: AlertInput = {
       types, title: title.trim(), instructions: instructions.trim(),
       scope: t === 'CAMPUS' ? { type: 'CAMPUS' } : { type: t, ids: scopeIds },
@@ -115,7 +132,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
     } finally { setBusy(false); }
   };
 
-  const scopeText = scopeIds.map((i) => labelOf(SCOPE_ITEMS, i)).join(' · ');
+  const scopeText = scopeIds.map((i) => labelOf(scopeItems, i)).join(' · ');
   const rolesText = listEs(roles.map((r) => labelOf(ROLE_ITEMS, r)));
   const badge = !alert ? 'BORRADOR' : scheduled ? 'PROGRAMADA' : alert.status === 'DRAFT' ? 'BORRADOR' : alert.status;
   const star = (on: boolean) => on && <span className="req"> *</span>;
@@ -151,9 +168,14 @@ export default function AlertForm({ editId }: { editId?: string }) {
           <div className="fgroup">
             <span className="flabel">Alcance y destinatarios{star(!editId)}</span>
             <div className="two">
-              <PickerBox label="Edificios y zonas" required={!editId} help="La alerta se dirigirá a los lugares seleccionados." editLabel="Editar edificios y zonas" items={SCOPE_ITEMS} selected={scopeIds} onToggle={toggleScope} error={errors.scope} />
+              <PickerBox label="Edificios y zonas" required={!editId} help="La alerta se dirigirá a los lugares seleccionados." editLabel="Editar edificios y zonas" items={scopeItems} selected={scopeIds} onToggle={toggleScope} error={errors.scope} loading={scopeLoading} />
               <PickerBox label="Destinatarios" required={!editId} help="Grupos que recibirán el aviso en este alcance." editLabel="Editar destinatarios" items={ROLE_ITEMS} selected={roles} onToggle={toggleRole} error={errors.roles} />
             </div>
+            {scopeError && (
+              <p className="notice err" role="alert">
+                {scopeError} <button type="button" className="plink" onClick={retryScope}>Reintentar</button>
+              </p>
+            )}
           </div>
         </form>
         <aside className="sidecol">

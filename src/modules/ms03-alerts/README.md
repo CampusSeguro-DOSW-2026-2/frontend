@@ -4,6 +4,8 @@
 
 **Estado:** Conectado a MS03 a través del API Gateway (`services/ms03.ts` usa el cliente compartido), contrato v3.0.0 en `ms03-alerts-and-emergencies/docs/api/openapi.yaml`. Ciclo de vida: BORRADOR → PROGRAMADA → ACTIVA → ARCHIVADA. `permissions.ts` oculta las acciones según el rol (el backend sigue siendo quien decide).
 
+**Alcance:** el selector de edificios y zonas se carga de MS02 (`GET /api/v1/buildings` y `GET /api/v1/safe-zones`, ver `services/scope.ts`), porque MS03 valida esos ids por UUID al crear la alerta. `CAMPUS` es el único alcance que no consulta catálogo.
+
 | Carpeta | Contenido |
 |---|---|
 | `pages/` | Pantallas (una por ruta) |

@@ -5,6 +5,7 @@ import { getSession } from '../../../shared/services/session';
 import { alertAccess } from '../permissions';
 import { alertsApi, type AlertStatus, type AlertSummary } from '../services/alerts';
 import { recipientsText, scopeText } from '../services/catalog';
+import { useScopeCatalog } from '../hooks/useScopeCatalog';
 
 const ST: Record<AlertStatus, { label: string; color: string; off?: boolean }> = {
   DRAFT: { label: 'Borrador', color: '#0F172A' }, SCHEDULED: { label: 'Programada', color: '#2563EB' },
@@ -23,6 +24,8 @@ const fetchPage = async (status: AlertStatus | '', page: number, size = PAGE_SIZ
 
 export default function AlertList() {
   const access = alertAccess(getSession()?.user.roles ?? []);
+  // Nombres de edificios y zonas desde MS02; si no llega, el alcance se muestra con su id.
+  const { catalog } = useScopeCatalog();
   const [items, setItems] = useState<AlertSummary[]>([]);
   const [pg, setPg] = useState({ page: 0, totalPages: 0 });
   const [loading, setLoading] = useState(true);
@@ -106,7 +109,7 @@ export default function AlertList() {
           {empty && <><EmptyLogo /><h2>El campus está seguro. No hay alertas</h2></>}
           {shown.map((a, i) => {
             const s = ST[a.status];
-            const scope = scopeText(a.scope);
+            const scope = scopeText(a.scope, catalog);
             const rec = recipientsText(a.recipients);
             const manage = access.canManage(a.origin);
             return (
