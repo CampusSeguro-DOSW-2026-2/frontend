@@ -77,7 +77,7 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
       {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
       {!error && data === null && <p className="notice" role="status">Cargando incidentes…</p>}
       {data && incidentes.length === 0 && (
-        <div className="ev-empty">{modo === 'brigadista' ? 'No tienes incidentes en este evento.' : 'No hay incidentes reportados en este evento.'}</div>
+        <div className="ev-empty">{modo === 'brigadista' ? 'No tiene incidentes en este evento.' : 'No hay incidentes reportados en este evento.'}</div>
       )}
       {incidentes.length > 0 && (
         <table className="ev-table">

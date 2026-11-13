@@ -5,7 +5,7 @@ import ElegirZona from './pages/ElegirZona';
 import GestionBrigadistas from './pages/GestionBrigadistas';
 import ReportarIncidente from './pages/ReportarIncidente';
 
-const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tienes permisos para ver esta sección.</p></main>;
+const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
 
 /** Rutas de MS05 (Brigadistas e incidentes). Devuelve undefined si la ruta no es de este módulo. */
 export function brigadesRoutes(route: string, session: Session | null): ReactNode | undefined {

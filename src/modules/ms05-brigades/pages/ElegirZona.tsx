@@ -21,7 +21,7 @@ export default function ElegirZona({ session, eventId }: { session: Session; eve
   }, [session, eventId]);
 
   const confirmar = async () => {
-    if (!selected) { setMessage('Elige una zona.'); return; }
+    if (!selected) { setMessage('Elija una zona.'); return; }
     setSaving(true);
     setMessage('');
     try {
@@ -39,14 +39,14 @@ export default function ElegirZona({ session, eventId }: { session: Session; eve
       <header className="ev-head">
         <div>
           <a className="back" href="#/brigadista">← Panel de responsabilidades</a>
-          <h1>Elige tu zona</h1>
+          <h1>Elija su zona</h1>
           <p>{event ? event.name : 'Evento'} · Tendrás una sola zona a la vez.</p>
         </div>
       </header>
       <main className="ev-main" style={{ maxWidth: 720 }}>
         {event === undefined && <p className="notice" role="status">Cargando evento…</p>}
         {event === null && !message && (
-          <p className="notice err" role="alert">Este evento no está en ejecución o no te corresponde. Por ahora solo se puede elegir zona cuando el evento ya inició.</p>
+          <p className="notice err" role="alert">Este evento no está en ejecución o no le corresponde. La zona se elige cuando el evento ya inició.</p>
         )}
         {event && (
           <fieldset className="ev-box">

@@ -21,14 +21,19 @@ export const API_URL = (configured ? configured : 'http://localhost:8080').repla
 /** Tiempo máximo de espera del navegador; el Gateway ya corta a los 3 s hacia cada servicio. */
 const TIMEOUT_MS = 15000;
 
-export const NETWORK_ERROR = 'No se pudo conectar con el servidor. Intenta de nuevo en unos minutos.';
-export const GENERIC_ERROR = 'Ocurrió un error inesperado. Intenta de nuevo más tarde.';
-export const SESSION_EXPIRED = 'Tu sesión no es válida o venció. Inicia sesión de nuevo.';
-const VALIDATION_ERROR = 'Revisa los datos ingresados.';
-const FORBIDDEN_ERROR = 'No cuentas con permisos para realizar esta operación.';
-const NOT_FOUND_ERROR = 'No se encontró lo que buscas.';
-const BAD_GATEWAY_ERROR = 'El servicio no está disponible en este momento. Intenta de nuevo en unos minutos.';
-const TIMEOUT_ERROR = 'El servicio tardó demasiado en responder. Intenta de nuevo.';
+/**
+ * Mensaje único (acordado por todos los equipos) para cuando un servicio no responde: sin conexión,
+ * 502/503/504 o tiempo agotado. Tono acordado: directo, sin tutear y breve.
+ */
+export const SERVICE_UNAVAILABLE = 'El servicio no está disponible en este momento, puede reintentar en unos minutos.';
+export const NETWORK_ERROR = SERVICE_UNAVAILABLE;
+export const GENERIC_ERROR = 'Ocurrió un error inesperado. Intente de nuevo más tarde.';
+export const SESSION_EXPIRED = 'Su sesión venció o no es válida. Inicie sesión de nuevo.';
+const VALIDATION_ERROR = 'Revise los datos ingresados.';
+const FORBIDDEN_ERROR = 'No tiene permisos para realizar esta operación.';
+const NOT_FOUND_ERROR = 'No se encontró la información solicitada.';
+const BAD_GATEWAY_ERROR = SERVICE_UNAVAILABLE;
+const TIMEOUT_ERROR = SERVICE_UNAVAILABLE;
 const INVALID_CODE_ERROR = 'Código incorrecto o vencido.';
 
 export type Json = Record<string, unknown>;
@@ -172,7 +177,7 @@ function messageFor(status: number, code: string, server: string, unmapped: Erro
   if (status === 404) {
     return NOT_FOUND_ERROR;
   }
-  if (status === 502) {
+  if (status === 502 || status === 503) {
     return BAD_GATEWAY_ERROR;
   }
   if (status === 504) {
@@ -183,7 +188,8 @@ function messageFor(status: number, code: string, server: string, unmapped: Erro
 
 /** Los errores del servidor se acompañan de la referencia de la petición para que soporte pueda rastrearla. */
 function withReference(message: string, status: number, correlationId: string): string {
-  if (status >= 500 && correlationId) {
+  // El aviso de servicio no disponible se muestra tal cual se acordó, sin referencia
+  if (status >= 500 && correlationId && message !== SERVICE_UNAVAILABLE) {
     return `${message} Referencia: ${correlationId}.`;
   }
   return message;

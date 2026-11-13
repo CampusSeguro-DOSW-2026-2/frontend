@@ -4,7 +4,7 @@ import EventList from './pages/EventList';
 import EventForm from './pages/EventForm';
 import EventDetail from './pages/EventDetail';
 
-const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tienes permisos para ver esta sección.</p></main>;
+const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
 
 /** Rutas de MS06 (Eventos). Devuelve undefined si la ruta no es de este módulo. */
 export function drillsRoutes(route: string, session: Session | null): ReactNode | undefined {
