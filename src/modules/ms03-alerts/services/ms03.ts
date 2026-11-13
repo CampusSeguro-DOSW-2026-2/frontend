@@ -1,4 +1,4 @@
-import { ApiError, request } from '../../../shared/services/http';
+import { ApiError, request, SERVICE_UNAVAILABLE } from '../../../shared/services/http';
 import { getSession } from '../../../shared/services/session';
 
 /**
@@ -13,19 +13,19 @@ import { getSession } from '../../../shared/services/session';
 // Códigos de dominio de MS03 que el cliente compartido no conoce. Los demás (VALIDACION, NO_AUTENTICADO,
 // NO_ENCONTRADO, ERROR_INTERNO...) los traduce http.ts.
 const MESSAGES: Record<string, string> = {
-  VALIDACION: 'Revisa los campos marcados.',
+  VALIDACION: 'Revise los campos marcados.',
   REFERENCIA_INVALIDA: 'Algún edificio, zona o destinatario no existe en el catálogo.',
   PAGINACION_INVALIDA: 'Los parámetros de consulta no son válidos.',
   FECHA_ACTIVACION_INVALIDA: 'La fecha de inicio debe ser futura.',
-  PROHIBIDO: 'No tienes permiso para realizar esta acción.',
-  NO_ES_DESTINATARIO: 'No eres destinatario de esta alerta.',
+  PROHIBIDO: 'No tiene permiso para realizar esta acción.',
+  NO_ES_DESTINATARIO: 'Esta alerta no está dirigida a usted.',
   ALERTA_NO_ENCONTRADA: 'La alerta no existe.',
   ESTADO_ALERTA_INVALIDO: 'La alerta ya no se puede modificar en su estado actual.',
   TRANSICION_INVALIDA: 'La alerta ya no admite esa acción en su estado actual.',
   ALERTA_NO_ACTIVA: 'La alerta no está activa.',
   SIMULACION_DUPLICADA: 'Ya existe una alerta para este simulacro con otros datos.',
-  MODIFICACION_CONCURRENTE: 'Otra persona modificó la alerta. Recarga e inténtalo de nuevo.',
-  SERVICIO_EXTERNO_NO_DISPONIBLE: 'Un servicio del campus no está disponible. Inténtalo más tarde.',
+  MODIFICACION_CONCURRENTE: 'Otra persona modificó la alerta. Recargue la página e intente de nuevo.',
+  SERVICIO_EXTERNO_NO_DISPONIBLE: SERVICE_UNAVAILABLE,
 };
 
 export async function ms03<T>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', path: string, body?: unknown): Promise<T> {

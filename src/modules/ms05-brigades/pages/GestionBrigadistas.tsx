@@ -27,7 +27,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
   }, [session]);
 
   const buscar = async () => {
-    if (!nombre.trim()) { setError('Escribe un nombre o apellido.'); return; }
+    if (!nombre.trim()) { setError('Escriba un nombre o apellido.'); return; }
     setError('');
     setMessage('');
     try {

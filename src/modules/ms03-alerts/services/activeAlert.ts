@@ -21,8 +21,8 @@ export const localApi: ActiveAlertApi = {
       id: 'demo', types: ['EARTHQUAKE'], title: 'Simulacro Sísmico Nacional', scope: { type: 'CAMPUS' },
       instructions: [
         'Agáchate, cúbrete debajo de una mesa y sostente.',
-        'Evacúa ordenadamente usando las salidas indicadas.',
-        'Dirígete inmediatamente al Punto de Encuentro X.',
+        'Evacúe ordenadamente por las salidas indicadas.',
+        'Diríjase al Punto de Encuentro X.',
       ].join('\n'),
       startedAt: read('cs.startedAt', ago(3)),
       confirmed: read('cs.alertConfirmed', false),
