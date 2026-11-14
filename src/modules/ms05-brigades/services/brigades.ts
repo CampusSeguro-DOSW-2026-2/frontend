@@ -37,6 +37,19 @@ export const brigadesApi = {
   buscar: (session: Session, nombre: string) =>
     request(`/api/v1/brigadistas/buscar?nombreBrigadista=${enc(nombre)}`, { session }) as Promise<BusquedaBrigadistas>,
 
+  /**
+   * Todos los brigadistas, activos o no y con zona o sin ella. Requiere que MS05 acepte la búsqueda sin
+   * nombre; mientras no lo haga responde 400 y la pantalla vuelve a la búsqueda por nombre.
+   */
+  listar: (session: Session) =>
+    request('/api/v1/brigadistas/buscar', { session }) as Promise<BusquedaBrigadistas>,
+
+  /** El coordinador o el organizador asigna el brigadista responsable de una solicitud de atención. */
+  asignarResponsable: (session: Session, eventoId: string, incidenteId: string, responsableId: string) =>
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/responsable`, {
+      method: 'PATCH', session, body: { responsableId },
+    }),
+
   reasignar: (session: Session, idAsignacion: string, ubicacionId: string, tipoUbicacion: TipoUbicacion) =>
     request(`/api/v1/asignaciones/${enc(idAsignacion)}`, { method: 'PUT', session, body: { ubicacionId, tipoUbicacion } }) as Promise<Asignacion>,
 

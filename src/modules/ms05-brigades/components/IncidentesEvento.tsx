@@ -20,15 +20,20 @@ const prioridadTexto = (codigo: string) => PRIORIDADES.find((p) => p.codigo === 
 interface Props {
   session: Session;
   eventoId: string;
-  /** brigadista: ve los suyos y atiende los que tiene asignados. monitoreo: solo lectura (coordinador u organizador). */
+  /** brigadista: ve los suyos y atiende los que tiene asignados. monitoreo: el coordinador o el organizador asigna responsables. */
   modo: 'brigadista' | 'monitoreo';
+  /** Brigadistas que se pueden asignar como responsables (solo en monitoreo). */
+  brigadistas?: { id: string; nombre: string }[];
 }
+
+/** Estados en los que el coordinador todavía puede asignar o cambiar el responsable. */
+const ASIGNABLES = ['REPORTADO', 'ASIGNADO'];
 
 /**
  * Incidentes de un evento, desde MS05 (que filtra según el rol). El brigadista inicia la atención de los que
  * tiene asignados y los marca como resueltos; el coordinador y el organizador los monitorean.
  */
-export default function IncidentesEvento({ session, eventoId, modo }: Props) {
+export default function IncidentesEvento({ session, eventoId, modo, brigadistas = [] }: Props) {
   const [data, setData] = useState<Pagina<IncidenteResumen> | null>(null);
   const [page, setPage] = useState(0);
   const [error, setError] = useState('');
@@ -67,7 +72,29 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
     }
   };
 
+  const asignar = async (incidente: IncidenteResumen, responsableId: string) => {
+    if (!responsableId || responsableId === incidente.brigadistaResponsableId) return;
+    setBusy(incidente.incidenteId);
+    setNotice('');
+    try {
+      await brigadesApi.asignarResponsable(session, eventoId, incidente.incidenteId, responsableId);
+      setNotice('Responsable asignado.');
+      load();
+    } catch (err) {
+      setNotice(errorMessage(err));
+    } finally {
+      setBusy('');
+    }
+  };
+
   const propio = (i: IncidenteResumen) => i.brigadistaResponsableId === session.user.id;
+  const nombreDe = (id: string) => brigadistas.find((b) => b.id === id)?.nombre;
+  const responsable = (i: IncidenteResumen) => {
+    if (!i.brigadistaResponsableId) return <span className="help">Sin asignar</span>;
+    if (propio(i)) return 'Usted';
+    return nombreDe(i.brigadistaResponsableId) ?? 'Asignado';
+  };
+  const puedeAsignar = modo === 'monitoreo' && brigadistas.length > 0;
   // contenido llega con la paginación estándar de MS05; sin ella (versión anterior del servicio) la lista queda vacía.
   const incidentes = data?.contenido ?? [];
 
@@ -84,7 +111,7 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
           <thead>
             <tr>
               <th>Prioridad</th><th>Estado</th><th>Ubicación</th><th>Reportado</th><th>Responsable</th>
-              {modo === 'brigadista' && <th style={{ textAlign: 'right' }}>Acciones</th>}
+              {(modo === 'brigadista' || puedeAsignar) && <th style={{ textAlign: 'right' }}>Acciones</th>}
             </tr>
           </thead>
           <tbody>
@@ -96,7 +123,22 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
                   <td><span className={`st ${estado.clase}`}>{estado.texto}</span></td>
                   <td>{scopeLabelIn(i.zonaId, catalog)}</td>
                   <td>{formatDate(i.reportadoEn)}</td>
-                  <td>{i.brigadistaResponsableId ? (propio(i) ? 'Tú' : 'Asignado') : <span className="help">Sin asignar</span>}</td>
+                  <td>{responsable(i)}</td>
+                  {puedeAsignar && (
+                    <td>
+                      <div className="ev-acts">
+                        {ASIGNABLES.includes(i.estado) ? (
+                          <select aria-label="Asignar responsable" value={i.brigadistaResponsableId ?? ''} disabled={busy === i.incidenteId}
+                            onChange={(e) => asignar(i, e.target.value)}
+                            style={{ font: 'inherit', padding: '8px 10px', borderRadius: 10, border: '1px solid var(--line)' }}>
+                            <option value="" disabled>Asignar brigadista…</option>
+                            {i.brigadistaResponsableId && !nombreDe(i.brigadistaResponsableId) && <option value={i.brigadistaResponsableId}>Asignado</option>}
+                            {brigadistas.map((b) => <option key={b.id} value={b.id}>{b.nombre}</option>)}
+                          </select>
+                        ) : <span className="help">En curso o cerrada</span>}
+                      </div>
+                    </td>
+                  )}
                   {modo === 'brigadista' && (
                     <td>
                       <div className="ev-acts">
