@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { errorMessage } from '../../../shared/services/http';
+import { ApiError, errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { formatDate, scopeLabelIn } from '../../ms06-drills/utils/labels';
@@ -20,8 +20,11 @@ const prioridadTexto = (codigo: string) => PRIORIDADES.find((p) => p.codigo === 
 interface Props {
   session: Session;
   eventoId: string;
-  /** brigadista: ve los suyos y atiende los que tiene asignados. monitoreo: el coordinador o el organizador asigna responsables. */
-  modo: 'brigadista' | 'monitoreo';
+  /**
+   * brigadista: ve los suyos y atiende los que tiene asignados. monitoreo: el coordinador o el organizador asigna
+   * responsables. propias: cualquier usuario ve, en solo lectura, las solicitudes que reportó.
+   */
+  modo: 'brigadista' | 'monitoreo' | 'propias';
   /**
    * Brigadistas activos con sus zonas vigentes (solo en monitoreo). MS05 solo acepta como responsable a uno
    * asignado a la ubicación de la solicitud en el mismo evento.
@@ -46,14 +49,20 @@ export default function IncidentesEvento({ session, eventoId, modo, brigadistas 
   const [version, setVersion] = useState(0);
   const { catalog } = useScopeCatalog();
   const load = () => setVersion((v) => v + 1);
+  const [oculto, setOculto] = useState(false);
 
   useEffect(() => {
     let ignore = false;
     brigadesApi.incidentes(session, eventoId, page)
       .then((pagina) => { if (!ignore) { setData(pagina); setError(''); } })
-      .catch((err) => { if (!ignore) setError(errorMessage(err)); });
+      .catch((err) => {
+        if (ignore) return;
+        // Una versión de MS05 que todavía no deja ver las propias responde 403: la sección no se muestra
+        if (modo === 'propias' && err instanceof ApiError && err.status === 403) setOculto(true);
+        else setError(errorMessage(err));
+      });
     return () => { ignore = true; };
-  }, [session, eventoId, page, version]);
+  }, [session, eventoId, page, version, modo]);
 
   const actuar = async (incidente: IncidenteResumen, accion: 'iniciar' | 'resolver') => {
     let observaciones = '';
@@ -103,13 +112,19 @@ export default function IncidentesEvento({ session, eventoId, modo, brigadistas 
   // contenido llega con la paginación estándar de MS05; sin ella (versión anterior del servicio) la lista queda vacía.
   const incidentes = data?.contenido ?? [];
 
+  if (oculto) return null;
+
+  const vacio = modo === 'brigadista' ? 'No tiene incidentes en este evento.'
+    : modo === 'propias' ? 'No ha enviado solicitudes en este evento.'
+      : 'No hay incidentes reportados en este evento.';
+
   return (
     <>
       {notice && <p className="notice" role="status">{notice}</p>}
       {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
-      {!error && data === null && <p className="notice" role="status">Cargando incidentes…</p>}
+      {!error && data === null && <p className="notice" role="status">{modo === 'propias' ? 'Cargando solicitudes…' : 'Cargando incidentes…'}</p>}
       {data && incidentes.length === 0 && (
-        <div className="ev-empty">{modo === 'brigadista' ? 'No tiene incidentes en este evento.' : 'No hay incidentes reportados en este evento.'}</div>
+        <div className="ev-empty">{vacio}</div>
       )}
       {incidentes.length > 0 && (
         <table className="ev-table">

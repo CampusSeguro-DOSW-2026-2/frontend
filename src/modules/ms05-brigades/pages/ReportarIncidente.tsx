@@ -4,6 +4,9 @@ import type { Session } from '../../../shared/types';
 import { eventsApi } from '../../ms06-drills/services/events';
 import type { EventSummary } from '../../ms06-drills/types';
 import { scopeLabel } from '../../ms06-drills/utils/labels';
+import { campus } from '../../ms02-campus/services/campus';
+import type { Espacio } from '../../ms02-campus/types';
+import IncidentesEvento from '../components/IncidentesEvento';
 import { EVIDENCE_TYPES, MAX_EVIDENCES, brigadesApi, tipoDesdeAlcance } from '../services/brigades';
 import { PRIORIDADES, type Incidente } from '../types';
 import '../../ms06-drills/styles/events.css';
@@ -25,6 +28,9 @@ const ESTADO_TEXTO: Record<string, string> = {
 export default function ReportarIncidente({ session, eventId, forOther = false }: Props) {
   const [event, setEvent] = useState<EventSummary | null | undefined>(undefined);
   const [ubicacion, setUbicacion] = useState('');
+  // Lugar exacto dentro del edificio (MS02). Si no hay espacios o MS02 no responde, no se muestra.
+  const [espacios, setEspacios] = useState<Espacio[]>([]);
+  const [espacioId, setEspacioId] = useState('');
   const [prioridad, setPrioridad] = useState<number | null>(null);
   const [descripcion, setDescripcion] = useState('');
   const [afectado, setAfectado] = useState('');
@@ -39,6 +45,29 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
       .then((list) => setEvent((eventId ? list.find((e) => e.id === eventId) : list[0]) ?? null))
       .catch((err) => { setMessage(errorMessage(err)); setEvent(null); });
   }, [session, eventId]);
+
+  useEffect(() => {
+    const zona = event?.scope.find((s) => s.id === ubicacion);
+    if (!zona || zona.type !== 'BUILDING') return;
+    let ignore = false;
+    campus.espacios.listarPorEdificio(zona.id)
+      .then((lista) => {
+        if (ignore) return;
+        const ordenados = [...lista].sort((a, b) => (a.pisoNumero ?? 0) - (b.pisoNumero ?? 0) || a.nombre.localeCompare(b.nombre, 'es'));
+        setEspacios(ordenados);
+      })
+      .catch(() => { if (!ignore) setEspacios([]); });
+    return () => { ignore = true; };
+  }, [event, ubicacion]);
+
+  const elegirUbicacion = (id: string) => {
+    setUbicacion(id);
+    setEspacios([]);
+    setEspacioId('');
+    setErrors((e) => ({ ...e, ubicacion: undefined }));
+  };
+
+  const etiquetaEspacio = (e: Espacio) => `${e.pisoNumero !== undefined ? `Piso ${e.pisoNumero} · ` : ''}${e.nombre}`;
 
   const elegirArchivos = (files: FileList | null) => {
     const list = Array.from(files ?? []);
@@ -59,12 +88,15 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
     if (Object.keys(local).length) return;
 
     const zona = event.scope.find((s) => s.id === ubicacion)!;
+    // MS05 registra la ubicación por edificio o zona: el lugar exacto viaja al inicio de la descripción
+    const espacio = espacios.find((e) => e.id === espacioId);
+    const detalle = [espacio ? `Lugar exacto: ${etiquetaEspacio(espacio)}.` : '', descripcion.trim()].filter(Boolean).join(' ').slice(0, 1000);
     setSaving(true);
     setMessage('');
     try {
       const incidente = await brigadesApi.registrarIncidente(session, event.id, {
         prioridadId: prioridad!, ubicacionId: zona.id, tipoUbicacion: tipoDesdeAlcance(zona.type),
-        descripcion: descripcion.trim() || undefined, nombreAfectado: forOther ? afectado.trim() : undefined,
+        descripcion: detalle || undefined, nombreAfectado: forOther ? afectado.trim() : undefined,
       });
       const fallidas: string[] = [];
       for (const f of archivos) {
@@ -86,7 +118,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
         <div>
           <a className="back" href={back}>← {forOther ? 'Panel de responsabilidades' : 'Inicio'}</a>
           <h1>{forOther ? 'Reportar incidente' : 'Necesito ayuda'}</h1>
-          <p>{forOther ? 'Para una persona que no puede pedir ayuda por sí misma.' : 'La solicitud llega a la brigada de su zona.'}</p>
+          <p>{forOther ? 'Para una persona que no puede pedir ayuda por sí misma.' : 'Indique dónde se encuentra y la gravedad. La solicitud llega a la brigada de su zona.'}</p>
         </div>
       </header>
       <main className="ev-main" style={{ maxWidth: 760 }}>
@@ -119,10 +151,21 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
               <legend className="lbl">¿Dónde {forOther ? 'está la persona' : 'se encuentra'}? <span className="req">*</span></legend>
               <div className="pills">
                 {event.scope.map((s) => (
-                  <button key={s.id} type="button" className="pill" aria-pressed={ubicacion === s.id} onClick={() => { setUbicacion(s.id); setErrors((e) => ({ ...e, ubicacion: undefined })); }}>{scopeLabel(s.id)}</button>
+                  <button key={s.id} type="button" className="pill" aria-pressed={ubicacion === s.id} onClick={() => elegirUbicacion(s.id)}>{scopeLabel(s.id)}</button>
                 ))}
               </div>
               {errors.ubicacion && <span className="error" role="alert">{errors.ubicacion}</span>}
+              {espacios.length > 0 && (
+                <div className="field" style={{ marginTop: 10 }}>
+                  <label htmlFor="espacio">Lugar exacto</label>
+                  <select id="espacio" value={espacioId} onChange={(e) => setEspacioId(e.target.value)}
+                    style={{ font: 'inherit', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--line)' }}>
+                    <option value="">Sin precisar</option>
+                    {espacios.map((e) => <option key={e.id} value={e.id}>{etiquetaEspacio(e)}</option>)}
+                  </select>
+                  <span className="help">Opcional. Ayuda a la brigada a llegar más rápido.</span>
+                </div>
+              )}
             </fieldset>
             <fieldset className="ev-box">
               <legend className="lbl">Gravedad <span className="req">*</span></legend>
@@ -148,6 +191,14 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
             </div>
             <button type="submit" className="btn red" disabled={saving}>{saving ? 'Enviando…' : forOther ? 'Reportar incidente' : 'Enviar solicitud'}</button>
           </form>
+        )}
+
+        {event && !forOther && (
+          <section className="ev-card">
+            <h2>Mis solicitudes</h2>
+            <p className="help">Estado de las solicitudes de ayuda que envió en este evento.</p>
+            <IncidentesEvento key={done?.incidente.idIncidente ?? 'inicial'} session={session} eventoId={event.id} modo="propias" />
+          </section>
         )}
       </main>
     </>
