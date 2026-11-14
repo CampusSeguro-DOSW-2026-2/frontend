@@ -112,9 +112,13 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
     return true;
   }), [brigadistas, soloBusqueda, texto, estado, zona]);
 
-  // Para asignar responsables solo se ofrecen brigadistas activos
+  // Para asignar responsables solo se ofrecen brigadistas activos, con sus zonas vigentes
   const activos = useMemo(
-    () => (brigadistas ?? []).filter((b) => b.estado === 'ACTIVO').map((b) => ({ id: b.idBrigadista, nombre: b.nombre })),
+    () => (brigadistas ?? []).filter((b) => b.estado === 'ACTIVO').map((b) => ({
+      id: b.idBrigadista,
+      nombre: b.nombre,
+      zonas: vigentes(b).map((a) => ({ eventoId: a.eventoId, ubicacionId: a.ubicacionId })),
+    })),
     [brigadistas],
   );
 
@@ -187,7 +191,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
         {enEjecucion.map((ev) => (
           <section key={ev.id} className="ev-card">
             <h2>Solicitudes de atención por evento · {ev.name}</h2>
-            <p className="help">Solicitudes de ayuda del evento en ejecución. Asigne un brigadista activo como responsable de cada una.</p>
+            <p className="help">Solicitudes de ayuda del evento en ejecución. Asigne como responsable a un brigadista activo de la misma ubicación.</p>
             <IncidentesEvento session={session} eventoId={ev.id} modo="monitoreo" brigadistas={activos} />
           </section>
         ))}

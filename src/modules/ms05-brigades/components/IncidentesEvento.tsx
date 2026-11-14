@@ -22,8 +22,11 @@ interface Props {
   eventoId: string;
   /** brigadista: ve los suyos y atiende los que tiene asignados. monitoreo: el coordinador o el organizador asigna responsables. */
   modo: 'brigadista' | 'monitoreo';
-  /** Brigadistas que se pueden asignar como responsables (solo en monitoreo). */
-  brigadistas?: { id: string; nombre: string }[];
+  /**
+   * Brigadistas activos con sus zonas vigentes (solo en monitoreo). MS05 solo acepta como responsable a uno
+   * asignado a la ubicación de la solicitud en el mismo evento.
+   */
+  brigadistas?: { id: string; nombre: string; zonas: { eventoId: string; ubicacionId: string }[] }[];
 }
 
 /** Estados en los que el coordinador todavía puede asignar o cambiar el responsable. */
@@ -94,6 +97,8 @@ export default function IncidentesEvento({ session, eventoId, modo, brigadistas 
     if (propio(i)) return 'Usted';
     return nombreDe(i.brigadistaResponsableId) ?? 'Asignado';
   };
+  const candidatos = (i: IncidenteResumen) =>
+    brigadistas.filter((b) => b.zonas.some((z) => z.eventoId === eventoId && z.ubicacionId === i.zonaId));
   const puedeAsignar = modo === 'monitoreo' && brigadistas.length > 0;
   // contenido llega con la paginación estándar de MS05; sin ella (versión anterior del servicio) la lista queda vacía.
   const incidentes = data?.contenido ?? [];
@@ -127,15 +132,16 @@ export default function IncidentesEvento({ session, eventoId, modo, brigadistas 
                   {puedeAsignar && (
                     <td>
                       <div className="ev-acts">
-                        {ASIGNABLES.includes(i.estado) ? (
+                        {!ASIGNABLES.includes(i.estado) ? <span className="help">En curso o cerrada</span>
+                          : candidatos(i).length === 0 ? <span className="help">Sin brigadistas en esta ubicación</span> : (
                           <select aria-label="Asignar responsable" value={i.brigadistaResponsableId ?? ''} disabled={busy === i.incidenteId}
                             onChange={(e) => asignar(i, e.target.value)}
                             style={{ font: 'inherit', padding: '8px 10px', borderRadius: 10, border: '1px solid var(--line)' }}>
                             <option value="" disabled>Asignar brigadista…</option>
                             {i.brigadistaResponsableId && !nombreDe(i.brigadistaResponsableId) && <option value={i.brigadistaResponsableId}>Asignado</option>}
-                            {brigadistas.map((b) => <option key={b.id} value={b.id}>{b.nombre}</option>)}
+                            {candidatos(i).map((b) => <option key={b.id} value={b.id}>{b.nombre}</option>)}
                           </select>
-                        ) : <span className="help">En curso o cerrada</span>}
+                        )}
                       </div>
                     </td>
                   )}
