@@ -162,7 +162,7 @@ export default function EventDetail({ session, id, canManage }: { session: Sessi
             <dt>Creado</dt><dd>{formatDate(ev.createdAt)} por {ev.createdBy}</dd>
             <dt>Alertas</dt><dd>{ev.alerts.length ? `${ev.alerts.length} asociadas` : 'Ninguna todavía'}</dd>
           </dl>
-          {ev.status === 'DRAFT' && <p className="help">Para programarlo, completa la fecha de inicio, el alcance y los participantes.</p>}
+          {ev.status === 'DRAFT' && <p className="help">Para programarlo, complete la fecha de inicio, el alcance y los participantes.</p>}
         </section>
       </main>
 
