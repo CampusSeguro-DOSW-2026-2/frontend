@@ -113,7 +113,7 @@ export default function ChangePassword({ session }: { session: Session }) {
       <PageHeader
         badge="MI PERFIL"
         title="Cambiar contraseña"
-        subtitle="Escribe tu contraseña actual y elige una nueva. Debe ser distinta de la actual."
+        subtitle="Ingrese su contraseña actual y elija una nueva, distinta de la actual."
       />
       <main className="content narrow">
         {done ? (
@@ -135,7 +135,7 @@ export default function ChangePassword({ session }: { session: Session }) {
               id="current"
               label="Contraseña actual"
               type="password"
-              placeholder="Ingresa tu contraseña actual"
+              placeholder="Ingrese su contraseña actual"
               value={form.current}
               onChange={(v) => set('current', v)}
               error={errors.current}
@@ -146,7 +146,7 @@ export default function ChangePassword({ session }: { session: Session }) {
               id="next"
               label="Nueva contraseña"
               type="password"
-              placeholder="Ingresa tu nueva contraseña"
+              placeholder="Ingrese su nueva contraseña"
               value={form.next}
               onChange={(v) => set('next', v)}
               error={errors.next}
@@ -157,7 +157,7 @@ export default function ChangePassword({ session }: { session: Session }) {
               id="confirm"
               label="Confirmar nueva contraseña"
               type="password"
-              placeholder="Ingresa tu nueva contraseña de nuevo"
+              placeholder="Ingrese de nuevo su nueva contraseña"
               value={form.confirm}
               onChange={(v) => set('confirm', v)}
               error={errors.confirm}

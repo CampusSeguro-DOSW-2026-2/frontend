@@ -1,11 +1,11 @@
 import { ApiError, request } from '../../../shared/services/http';
 import type { Json } from '../../../shared/services/http';
-import type { RoleChange, RolePermissions, RolesDraft } from '../types';
+import type { PermissionItem, RoleChange, RoleDetail, RoleDraft, RolePermissions, RolesDraft } from '../types';
 import type { Session } from '../../../shared/types';
 
 /**
- * Cliente de MS01 para roles y permisos (RF-MS01-05), a través del API Gateway. El Gateway valida el JWT
- * e inyecta la identidad: aquí solo se envía el token de la sesión.
+ * Cliente de MS01 para roles y permisos (RF-MS01-05 y RF-MS01-10), a través del API Gateway. El Gateway valida el
+ * JWT e inyecta la identidad: aquí solo se envía el token de la sesión.
  */
 
 /** Campos del formulario F-09 a los que puede apuntar un error 400 del back. */
@@ -53,7 +53,7 @@ function toRolesError(err: unknown): unknown {
       // Los ids no tienen campo propio en la pantalla (vienen de la selección): su mensaje va arriba
       message = fields.ids;
     } else if (fields.add || fields.remove) {
-      message = 'Revisa los datos ingresados.';
+      message = 'Revise los datos ingresados.';
     }
   }
 
@@ -110,4 +110,61 @@ export async function changeUserRoles(session: Session, ids: string[], d: RolesD
     const r = record(item);
     return { id: String(r.id), roles: list(r.roles) };
   });
+}
+
+// ---- Gestión de roles (RF-MS01-10) -------------------------------------------
+
+/** Campo del contrato → campo de los formularios F-10, F-11 y F-12, para los errores 400 por campo. */
+const ROLE_FORM_FIELDS: Record<string, string> = { rol: 'name', descripcion: 'description', permisos: 'permissions' };
+
+const rolePath = (role: string) => `/api/v1/roles/${encodeURIComponent(role)}`;
+
+function toRoleDetail(value: unknown): RoleDetail {
+  const r = record(value);
+  return { role: text(r.rol), description: text(r.descripcion), permissions: list(r.permisos), system: r.es_sistema === true };
+}
+
+/** GET /api/v1/roles/details: todos los roles con su descripción, sus permisos y si son de sistema (ms01:role:read_all). */
+export async function getRoleDetails(session: Session): Promise<RoleDetail[]> {
+  const data = await request('/api/v1/roles/details', { session });
+  return (Array.isArray(data) ? data : []).map(toRoleDetail);
+}
+
+/** GET /api/v1/permissions: catálogo de permisos, ordenado por código (ms01:role:read_all). */
+export async function getPermissionCatalog(session: Session): Promise<PermissionItem[]> {
+  const data = await request('/api/v1/permissions', { session });
+  return (Array.isArray(data) ? data : []).map((row) => {
+    const r = record(row);
+    return { code: text(r.permiso), description: text(r.descripcion) };
+  });
+}
+
+/**
+ * POST /api/v1/roles (F-10): crea un rol que no es de sistema. El nombre se envía recortado y en mayúsculas (RG-08);
+ * el sistema agrega siempre ms01:profile:read y ms01:session:logout (RN-MS01-41).
+ */
+export async function createRole(session: Session, d: RoleDraft): Promise<RoleDetail> {
+  const body = { rol: d.name.trim().toUpperCase(), descripcion: d.description.trim(), permisos: d.permissions };
+  const data = await request('/api/v1/roles', { method: 'POST', body, session, fields: ROLE_FORM_FIELDS });
+  return toRoleDetail(data);
+}
+
+/** PUT /api/v1/roles/{rol} (F-11): cambia el nombre y la descripción. Los permisos no se envían aquí. */
+export async function updateRole(session: Session, role: string, d: RoleDraft): Promise<RoleDetail> {
+  const body = { rol: d.name.trim().toUpperCase(), descripcion: d.description.trim() };
+  const data = await request(rolePath(role), { method: 'PUT', body, session, fields: ROLE_FORM_FIELDS });
+  return toRoleDetail(data);
+}
+
+/** PUT /api/v1/roles/{rol}/permissions (F-12): reemplaza la lista completa de permisos del rol. */
+export async function updateRolePermissions(session: Session, role: string, permissions: string[]): Promise<RoleDetail> {
+  const data = await request(`${rolePath(role)}/permissions`, {
+    method: 'PUT', body: { permisos: permissions }, session, fields: ROLE_FORM_FIELDS,
+  });
+  return toRoleDetail(data);
+}
+
+/** DELETE /api/v1/roles/{rol} (F-13): borra un rol que no es de sistema. Responde 204 sin cuerpo. */
+export async function deleteRole(session: Session, role: string): Promise<void> {
+  await request(rolePath(role), { method: 'DELETE', session });
 }

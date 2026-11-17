@@ -90,3 +90,65 @@ a.btn{text-decoration:none}
   .panel .rolesbar{width:100%}
   .perm-group li{flex-direction:column;gap:4px}
 }
+
+/* Gestión de roles (RF-MS01-10): confirmación de borrado */
+.role-confirm{display:flex;flex-direction:column;gap:12px;margin:16px 16px 0}
+.role-confirm .btns{display:flex;flex-wrap:wrap;gap:12px}
+.role-confirm .btn{width:200px;height:52px;border-radius:14px}
+.perm-groups.picker{padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff;max-height:520px;overflow:auto}
+.perm-groups.picker.bad{border-color:var(--red)}
+.perm-groups.picker label{display:flex;align-items:center;flex-wrap:wrap;gap:10px;cursor:pointer;font:400 14px/18px inherit}
+.perm-groups.picker input{flex:none;width:18px;height:18px;accent-color:var(--red)}
+.perm-groups.picker input:disabled + span{color:var(--mut)}
+.picker-tools{display:flex;flex-wrap:wrap;align-items:center;gap:16px}
+.picker-tools .input{flex:1;min-width:220px}
+.picker-only{display:flex;align-items:center;gap:8px;font:600 13px/17px 'Outfit',sans-serif;cursor:pointer}
+.picker-only input{width:18px;height:18px;accent-color:var(--red)}
+.picker-summary{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:14px}
+.picker-summary .plus,.picker-changes .plus{color:#166534}
+.picker-summary .minus,.picker-changes .minus{color:var(--red)}
+.picker-summary .linkbtn{align-self:auto}
+.picker-changes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.picker-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.picker-head .linkbtn{align-self:auto;font-size:13px}
+.picker-toggle{display:flex;align-items:center;gap:10px;padding:0;border:0;background:none;cursor:pointer;font:700 13px/17px 'Outfit',sans-serif;color:var(--ink)}
+.picker-toggle::before{content:'';width:7px;height:7px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(-45deg);transition:transform .15s}
+.picker-toggle[aria-expanded="true"]::before{transform:rotate(45deg)}
+.picker-toggle .count{font-weight:400;color:var(--mut)}
+.perm-groups.picker .tag{font:700 11px/14px 'Outfit',sans-serif;padding:2px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--mut)}
+
+/* Editar roles (F-09): una sola lista de roles con casillas de tres estados y vista previa por usuario */
+.role-checklist{list-style:none;margin:0;padding:8px 16px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:#fff}
+.role-checklist.bad{border-color:var(--red)}
+.role-checklist li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 0;border-bottom:1px solid var(--line)}
+.role-checklist li:last-child{border-bottom:0}
+.role-checklist label{display:flex;align-items:center;gap:10px;flex:1;min-width:180px;cursor:pointer}
+.role-checklist input{flex:none;width:18px;height:18px;accent-color:var(--red)}
+.role-checklist .name{font:700 14px/18px 'Outfit',sans-serif}
+.role-checklist .holders{color:var(--mut);font-size:13px}
+.role-checklist .change{font:700 12px/16px 'Outfit',sans-serif;padding:3px 10px;border-radius:999px}
+.role-checklist .change.plus{background:#F0FDF4;color:#166534}
+.role-checklist .change.minus{background:#FEF2F2;color:var(--red)}
+.role-checklist li.changed{background:var(--cream)}
+.chip-new .chip{border-style:dashed}
+.chip-new .chip::before{content:'+ '}
+
+/* Roles (RF-MS01-10): tabla de definición de roles con acciones por fila */
+.roles-table td.desc{color:var(--mut);font-size:14px;max-width:420px}
+.roles-table .row-actions{display:flex;justify-content:flex-end;gap:8px}
+.roles-table .row-actions .btn{height:40px;padding:0 16px;border-radius:12px;font-size:14px}
+.roles-table .row-detail td{background:var(--bg)}
+.roles-table .row-detail .perm-groups{padding:4px 0}
+.roles-table .row-detail .role-confirm{margin:0}
+
+/* Cambiar estado (F-08): estado por usuario; las filas que cambian se resaltan */
+.utable tr.changed td{background:var(--cream)}
+.utable td .pills{flex-wrap:nowrap}
+
+/* Editar roles (F-09): ajuste de los roles de un solo usuario dentro de la tabla */
+.utable tr.row-edit td{background:var(--bg)}
+.utable tr.row-edit .pills{flex-wrap:wrap;margin-bottom:8px}
+.utable .row-links{display:flex;justify-content:flex-end;gap:16px}
+.chip-removed .chip{text-decoration:line-through;opacity:.6}
+.chip-removed .chip::before{content:'− '}
+.panel .actions .btn.fit{width:auto;min-width:200px;padding:0 24px}

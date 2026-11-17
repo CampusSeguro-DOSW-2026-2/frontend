@@ -112,9 +112,9 @@ export default function Login() {
       <main className="reg-main">
         <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
 
-        <h1>¡Qué bueno verte de nuevo!</h1>
+        <h1>¡Qué bueno verlo de nuevo!</h1>
         <p className="reg-sub">
-          ¿Aún no tienes cuenta? <a href="#/registro">Regístrate</a>
+          ¿Aún no tiene cuenta? <a href="#/registro">Regístrese</a>
         </p>
 
         <form
@@ -132,7 +132,7 @@ export default function Login() {
             id="email"
             label="Correo institucional"
             type="email"
-            placeholder="Ingresa tu correo institucional"
+            placeholder="Ingrese su correo institucional"
             value={form.email}
             onChange={(v) => set('email', v)}
             error={errors.email}
@@ -144,7 +144,7 @@ export default function Login() {
             id="password"
             label="Contraseña"
             type="password"
-            placeholder="Ingresa tu contraseña"
+            placeholder="Ingrese su contraseña"
             value={form.password}
             onChange={(v) => set('password', v)}
             error={errors.password}
@@ -161,7 +161,7 @@ export default function Login() {
             />
           </label>
 
-          <a className="login-forgot" href="#/recuperar-contrasena">¿Olvidaste tu contraseña?</a>
+          <a className="login-forgot" href="#/recuperar-contrasena">¿Olvidó su contraseña?</a>
 
           {serverError && (
             <p className="notice err" role="alert">{serverError}</p>

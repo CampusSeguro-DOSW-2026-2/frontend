@@ -13,7 +13,14 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .nav-left{display:flex;align-items:center;gap:20px}
 .nav-burger{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);display:grid;place-items:center;cursor:pointer}
 .nav-burger svg.i{width:22px;height:22px}
-.nav-user{display:flex;align-items:center;gap:10px}
+.nav-user{position:relative;display:flex;align-items:center;gap:10px}
+/* Menú de la cuenta: el bloque del usuario (arriba a la derecha) abre Mi perfil, Cambiar contraseña y Cerrar sesión */
+.nav-user-btn{display:flex;align-items:center;gap:10px;padding:6px 8px;margin:-6px -8px;border:0;border-radius:12px;background:none;color:inherit;text-align:left;cursor:pointer}
+.nav-user-btn:hover,.nav-user-btn[aria-expanded="true"]{background:var(--bg)}
+.user-menu{position:absolute;top:calc(100% + 10px);right:0;z-index:20;min-width:230px;margin:0;padding:8px;list-style:none;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(15,23,42,.12)}
+.user-menu a,.user-menu button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-radius:8px;background:none;color:var(--ink);font:600 14px/18px 'Outfit',sans-serif;text-decoration:none;text-align:left;cursor:pointer}
+.user-menu a:hover,.user-menu button:hover,.user-menu a:focus-visible,.user-menu button:focus-visible{background:var(--cream);color:var(--red)}
+.user-menu svg.i{width:18px;height:18px}
 .nav-avatar{width:40px;height:40px;border-radius:999px;background:var(--cream);color:var(--red);display:grid;place-items:center;font:800 14px 'Outfit',sans-serif;flex:none}
 .nav-who{display:flex;flex-direction:column;font-size:14px;line-height:1.25;min-width:0}.nav-who b{font-weight:600;overflow-wrap:anywhere}.nav-who small{font-size:12px;color:var(--mut)}
 /* menú lateral */

@@ -13,14 +13,34 @@ interface Props {
   onSelectedChange: (users: UserSummary[]) => void;
 }
 
+const STATES = ['ACTIVO', 'INACTIVO'];
+
+/**
+ * Cambiar el estado de los usuarios seleccionados (F-08, RF-MS01-07): cada usuario tiene su propio estado, así que en
+ * una sola pantalla se activan unos e inactivan otros. Solo se envían los que cambian, en una petición por estado
+ * (el contrato aplica un estado por petición). El back no permite cambiar el propio estado, así que esa fila queda fija.
+ */
 export default function ChangeStatus({ session, selected, onSelectedChange }: Props) {
-  const [target, setTarget] = useState('INACTIVO');
+  // Estado elegido para cada usuario; si no está, conserva el actual
+  const [targets, setTargets] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState<StatusChange[] | null>(null);
 
-  // El back no permite que un administrador cambie su propio estado
-  const includesMe = selected.some((u) => u.id === session.user.id);
+  const isMe = (user: UserSummary) => user.id === session.user.id;
+  const targetOf = (user: UserSummary) => targets[user.id] ?? user.state;
+  const changes = selected.filter((u) => !isMe(u) && targetOf(u) !== u.state);
+
+  const setTarget = (id: string, state: string) => {
+    setTargets((current) => ({ ...current, [id]: state }));
+    setError('');
+  };
+
+  // Atajo: el mismo estado para todos los seleccionados (salvo el propio)
+  const setAll = (state: string) => {
+    setTargets(Object.fromEntries(selected.filter((u) => !isMe(u)).map((u) => [u.id, state])));
+    setError('');
+  };
 
   const remove = (id: string) => {
     onSelectedChange(selected.filter((u) => u.id !== id));
@@ -28,19 +48,30 @@ export default function ChangeStatus({ session, selected, onSelectedChange }: Pr
   };
 
   const apply = async () => {
-    if (submitting || selected.length === 0 || includesMe) return;
+    if (submitting || changes.length === 0) return;
 
     setSubmitting(true);
     setError('');
+    const results: StatusChange[] = [];
     try {
-      const results = await changeUsersStatus(session, selected.map((u) => u.id), target);
-      const next = new Map<string, string>(results.map((r): [string, string] => [r.id, r.next]));
-      onSelectedChange(selected.map((u) => ({ ...u, state: next.get(u.id) ?? u.state })));
-      setDone(results);
+      for (const state of STATES) {
+        const ids = changes.filter((u) => targetOf(u) === state).map((u) => u.id);
+        if (ids.length > 0) {
+          results.push(...await changeUsersStatus(session, ids, state));
+        }
+      }
     } catch (err) {
       setError(errorMessage(err));
     } finally {
       setSubmitting(false);
+    }
+
+    // Lo que alcanzó a aplicarse se refleja aunque una de las peticiones haya fallado
+    if (results.length > 0) {
+      const next = new Map<string, string>(results.map((r): [string, string] => [r.id, r.next]));
+      onSelectedChange(selected.map((u) => ({ ...u, state: next.get(u.id) ?? u.state })));
+      setTargets({});
+      setDone(results);
     }
   };
 
@@ -49,20 +80,21 @@ export default function ChangeStatus({ session, selected, onSelectedChange }: Pr
     window.location.hash = '#/usuarios';
   };
 
-  const changed = done ? done.filter((r) => r.previous !== r.next).length : 0;
-  const unchanged = done ? done.length - changed : 0;
+  const doneById = new Map<string, StatusChange>((done ?? []).map((r): [string, StatusChange] => [r.id, r]));
+  const activated = (done ?? []).filter((r) => r.next === 'ACTIVO' && r.previous !== r.next).length;
+  const deactivated = (done ?? []).filter((r) => r.next === 'INACTIVO' && r.previous !== r.next).length;
 
   return (
     <>
       <PageHeader
-        badge="ADMINISTRADOR"
-        title="Editar estado"
-        subtitle="Elige el nuevo estado y aplícalo a los usuarios seleccionados."
+        badge="ADMINISTRACIÓN"
+        title="Cambiar estado"
+        subtitle="Elija el estado de cada usuario seleccionado y aplique todos los cambios a la vez."
       />
       <main className="content narrow">
         {selected.length === 0 && !done ? (
           <section className="panel">
-            <p className="notice" role="status">No hay usuarios seleccionados. Vuelve al listado y marca los que quieras modificar.</p>
+            <p className="notice" role="status">No hay usuarios seleccionados. Vuelva al listado y marque los que desea modificar.</p>
             <a className="btn white" href="#/usuarios">Volver al listado</a>
           </section>
         ) : (
@@ -70,70 +102,85 @@ export default function ChangeStatus({ session, selected, onSelectedChange }: Pr
             {done ? (
               <>
                 <p className="notice" role="status">
-                  {changed} {changed === 1 ? 'usuario pasó' : 'usuarios pasaron'} a {STATE_LABEL[target] ?? target}.
-                  {unchanged > 0 && ` ${unchanged} ya ${unchanged === 1 ? 'estaba' : 'estaban'} en ese estado.`}
+                  {activated > 0 && `${activated} ${activated === 1 ? 'usuario pasó' : 'usuarios pasaron'} a Activo. `}
+                  {deactivated > 0 && `${deactivated} ${deactivated === 1 ? 'usuario pasó' : 'usuarios pasaron'} a Inactivo. `}
+                  {deactivated > 0 && 'Su sesión se cerró.'}
                 </p>
                 <button type="button" className="btn red" onClick={backToList}>Volver al listado</button>
               </>
             ) : (
-              <form
-                className="statusbar"
-                noValidate
-                onSubmit={(e) => { e.preventDefault(); void apply(); }}
-              >
-                <div className="field">
-                  <label htmlFor="target">Estado</label>
-                  <div className="input">
-                    <select id="target" value={target} onChange={(e) => setTarget(e.target.value)}>
-                      <option value="ACTIVO">{STATE_LABEL.ACTIVO}</option>
-                      <option value="INACTIVO">{STATE_LABEL.INACTIVO}</option>
-                    </select>
-                  </div>
-                </div>
-                <button type="submit" className="btn red" disabled={submitting || includesMe}>
-                  {submitting ? 'Cambiando…' : 'Cambiar'}
-                </button>
-              </form>
+              <div className="selbar">
+                <span>Todos a:</span>
+                {STATES.map((state) => (
+                  <button key={state} type="button" className="btn white" disabled={submitting} onClick={() => setAll(state)}>
+                    {STATE_LABEL[state] ?? state}
+                  </button>
+                ))}
+              </div>
             )}
 
-            {includesMe && !done && (
-              <p className="notice err" role="alert">
-                No puedes cambiar tu propio estado. Quita tu usuario de la selección para continuar.
-              </p>
-            )}
             {error && <p className="notice err" role="alert">{error}</p>}
 
-            <h2>Lista de usuarios seleccionados</h2>
+            <h2>Usuarios seleccionados</h2>
             <div className="tablewrap">
               <table className="utable">
-                <caption className="sr-only">Usuarios seleccionados</caption>
+                <caption className="sr-only">Usuarios seleccionados y su estado</caption>
                 <thead>
                   <tr>
                     <th scope="col">Correo</th>
-                    <th scope="col">Estado</th>
+                    <th scope="col">{done ? 'Estado anterior' : 'Estado actual'}</th>
+                    <th scope="col">{done ? 'Estado actual' : 'Nuevo estado'}</th>
                     {!done && <th scope="col"><span className="sr-only">Acciones</span></th>}
                   </tr>
                 </thead>
                 <tbody>
-                  {selected.map((user) => (
-                    <tr key={user.id}>
-                      <td className="mail">
-                        {user.email}
-                        {user.id === session.user.id && <span className="me"> (tú)</span>}
-                      </td>
-                      <td><StateChip state={user.state} /></td>
-                      {!done && (
-                        <td className="right">
-                          <button type="button" className="linkbtn" onClick={() => remove(user.id)} aria-label={`Quitar a ${user.email} de la selección`}>
-                            Quitar
-                          </button>
+                  {selected.map((user) => {
+                    const result = doneById.get(user.id);
+                    const target = targetOf(user);
+                    const changing = !isMe(user) && target !== user.state;
+                    return (
+                      <tr key={user.id} className={changing ? 'changed' : undefined}>
+                        <td className="mail">
+                          {user.email}
+                          {isMe(user) && <span className="me"> (usted)</span>}
                         </td>
-                      )}
-                    </tr>
-                  ))}
+                        <td><StateChip state={result ? result.previous : user.state} /></td>
+                        <td>
+                          {done && <StateChip state={result ? result.next : user.state} />}
+                          {!done && isMe(user) && <span className="hint">No puede cambiar su propio estado.</span>}
+                          {!done && !isMe(user) && (
+                            <div className="pills" role="group" aria-label={`Nuevo estado de ${user.email}`}>
+                              {STATES.map((state) => (
+                                <button key={state} type="button" className="pill" aria-pressed={target === state}
+                                  disabled={submitting} onClick={() => setTarget(user.id, state)}>
+                                  {STATE_LABEL[state] ?? state}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                        {!done && (
+                          <td className="right">
+                            <button type="button" className="linkbtn" onClick={() => remove(user.id)} aria-label={`Quitar a ${user.email} de la selección`}>
+                              Quitar
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
+
+            {!done && (
+              <div className="actions">
+                <button type="button" className="btn red" disabled={submitting || changes.length === 0} onClick={() => void apply()}>
+                  {submitting ? 'Aplicando…' : `Aplicar ${changes.length} ${changes.length === 1 ? 'cambio' : 'cambios'}`}
+                </button>
+                <a className="btn white" href="#/usuarios">Cancelar</a>
+              </div>
+            )}
           </section>
         )}
       </main>

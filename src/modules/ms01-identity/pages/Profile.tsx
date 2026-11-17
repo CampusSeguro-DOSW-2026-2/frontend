@@ -80,7 +80,7 @@ export default function Profile({ session }: { session: Session }) {
       <PageHeader
         badge="MI PERFIL"
         title={profile ? fullName(profile) : 'Mi perfil'}
-        subtitle={profile ? profile.email : 'Consulta tu información básica en CampusSeguro.'}
+        subtitle={profile ? profile.email : 'Consulte su información básica en CampusSeguro.'}
       />
       <main className="content narrow">
         {error && (
@@ -90,7 +90,7 @@ export default function Profile({ session }: { session: Session }) {
           </section>
         )}
 
-        {!error && !profile && <p className="notice" role="status">Cargando tu perfil…</p>}
+        {!error && !profile && <p className="notice" role="status">Cargando su perfil…</p>}
 
         {profile && (
           <section className="panel" aria-label="Mi perfil">
@@ -114,8 +114,8 @@ export default function Profile({ session }: { session: Session }) {
 
               {rolesChanged && (
                 <p className="notice" role="status">
-                  Tus roles cambiaron (ahora: {profile.roles.map((r) => ROLE_LABEL[r] ?? r).join(', ')}).
-                  Inicia sesión de nuevo para que se apliquen a tu sesión.
+                  Sus roles cambiaron (ahora: {profile.roles.map((r) => ROLE_LABEL[r] ?? r).join(', ')}).
+                  Inicie sesión de nuevo para que se apliquen a su sesión.
                 </p>
               )}
 
@@ -126,14 +126,14 @@ export default function Profile({ session }: { session: Session }) {
                 </>
               )}
 
-              {!rolesError && !catalog && <p className="notice" role="status">Cargando tus permisos…</p>}
+              {!rolesError && !catalog && <p className="notice" role="status">Cargando sus permisos…</p>}
 
               {catalog && (
                 <>
                   <p className="lead">
                     {mine.length === 1
-                      ? `Tu rol concede ${totalPermissions} ${permissionWord}.`
-                      : `Tus roles conceden ${totalPermissions} ${permissionWord} en total; se suman los de cada rol.`}
+                      ? `Su rol concede ${totalPermissions} ${permissionWord}.`
+                      : `Sus roles conceden ${totalPermissions} ${permissionWord} en total; se suman los de cada rol.`}
                   </p>
                   <div className="role-list">
                     {mine.map((item) => <RoleDetails key={item.role} item={item} open={mine.length === 1} />)}
