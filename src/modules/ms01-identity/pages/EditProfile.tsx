@@ -93,11 +93,11 @@ export default function EditProfile({ session }: { session: Session }) {
       <PageHeader
         badge="MI PERFIL"
         title="Editar perfil"
-        subtitle="Actualiza tus nombres y apellidos. El correo, el rol y el estado no se pueden modificar desde aquí."
+        subtitle="Actualice sus nombres y apellidos. El correo, los roles y el estado no se modifican desde aquí."
       />
       <main className="content narrow">
         {loading ? (
-          <p className="notice" role="status">Cargando tu perfil…</p>
+          <p className="notice" role="status">Cargando su perfil…</p>
         ) : (
           <form
             className="panel"
@@ -106,18 +106,18 @@ export default function EditProfile({ session }: { session: Session }) {
             onSubmit={(e) => { e.preventDefault(); void submit(); }}
           >
             <div className="two">
-              <TextField id="firstName" label="Primer nombre" placeholder="Ingresa tu primer nombre"
+              <TextField id="firstName" label="Primer nombre" placeholder="Ingrese su primer nombre"
                 value={form.firstName} onChange={(v) => set('firstName', v)} error={errors.firstName}
                 autoComplete="given-name" maxLength={30} />
-              <TextField id="secondName" label="Segundo nombre" optional placeholder="Ingresa tu segundo nombre"
+              <TextField id="secondName" label="Segundo nombre" optional placeholder="Ingrese su segundo nombre"
                 value={form.secondName} onChange={(v) => set('secondName', v)} error={errors.secondName}
                 autoComplete="additional-name" maxLength={30} />
             </div>
             <div className="two">
-              <TextField id="firstLastName" label="Primer apellido" placeholder="Ingresa tu primer apellido"
+              <TextField id="firstLastName" label="Primer apellido" placeholder="Ingrese su primer apellido"
                 value={form.firstLastName} onChange={(v) => set('firstLastName', v)} error={errors.firstLastName}
                 autoComplete="family-name" maxLength={30} />
-              <TextField id="secondLastName" label="Segundo apellido" optional placeholder="Ingresa tu segundo apellido"
+              <TextField id="secondLastName" label="Segundo apellido" optional placeholder="Ingrese su segundo apellido"
                 value={form.secondLastName} onChange={(v) => set('secondLastName', v)} error={errors.secondLastName}
                 maxLength={30} />
             </div>

@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { CodeInput } from '../components/CodeInput';
 import { Logo } from '../components/Logo';
 import { TextField } from '../components/TextField';
-import { ApiError, registerUser } from '../services/identity';
+import {
+  ApiError, REGISTRATION_RESEND_SECONDS, registerUser, resendRegistrationCode, verifyRegistration,
+} from '../services/identity';
 import { errorMessage } from '../../../shared/services/http';
 import {
-  confirmationError, nameError, passwordPolicyError, registerEmailError,
+  codeError, confirmationError, nameError, passwordPolicyError, registerEmailError,
 } from '../utils/validation';
 import type { RegisterDraft } from '../types';
 import '../styles/auth.css';
@@ -14,6 +17,9 @@ const EMPTY: RegisterDraft = {
   email: '', password: '', confirmPassword: '',
 };
 type Errors = Partial<Record<keyof RegisterDraft, string>>;
+
+// Pasos del registro (RF-MS01-01): datos (F-01), código del correo (F-14) y cuenta creada
+type Step = 'form' | 'code' | 'done';
 
 // Orden visual de los campos: sirve para enfocar el primero con error
 const FIELD_ORDER: (keyof RegisterDraft)[] = [
@@ -50,12 +56,48 @@ const focusField = (errs: Errors) => {
   return !!first;
 };
 
+/**
+ * Registro de un usuario institucional (RF-MS01-01). Con los datos válidos MS01 envía un código de 6 dígitos al
+ * correo (202) y la cuenta solo se crea cuando ese código se confirma (F-14), así no quedan cuentas de correos que no
+ * existen. El código se puede reenviar con la misma espera que aplica MS01.
+ */
 export default function Register() {
+  const [step, setStep] = useState<Step>('form');
   const [form, setForm] = useState<RegisterDraft>(EMPTY);
   const [errors, setErrors] = useState<Errors>({});
   const [serverError, setServerError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [createdEmail, setCreatedEmail] = useState('');
+  // Paso del código: correo que se verifica, token del registro (solo en memoria), código escrito, su error y el aviso
+  const [email, setEmail] = useState('');
+  const [token, setToken] = useState('');
+  const [code, setCode] = useState('');
+  const [codeErr, setCodeErr] = useState('');
+  const [info, setInfo] = useState('');
+  // Espera entre dos códigos del mismo correo: instante en que termina y reloj de la pantalla
+  const [waitUntil, setWaitUntil] = useState(0);
+  const [now, setNow] = useState(Date.now);
+  const remaining = Math.max(0, Math.ceil((waitUntil - now) / 1000));
+
+  // Cuenta regresiva del botón de reenviar: el reloj solo corre mientras hay espera
+  useEffect(() => {
+    if (waitUntil <= Date.now()) {
+      return undefined;
+    }
+    const timer = window.setInterval(() => {
+      const current = Date.now();
+      setNow(current);
+      if (current >= waitUntil) {
+        window.clearInterval(timer);
+      }
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [waitUntil]);
+
+  const startWait = () => {
+    const started = Date.now();
+    setNow(started);
+    setWaitUntil(started + REGISTRATION_RESEND_SECONDS * 1000);
+  };
 
   const set = <K extends keyof RegisterDraft>(k: K, v: RegisterDraft[K]) => {
     setForm((f) => ({ ...f, [k]: v }));
@@ -63,7 +105,14 @@ export default function Register() {
     setServerError('');
   };
 
-  const submit = async () => {
+  const onCode = (value: string) => {
+    setCode(value);
+    setCodeErr('');
+    setServerError('');
+  };
+
+  // Paso 1 (F-01): datos del registro. MS01 responde 202 y envía el código; la cuenta todavía no existe
+  const submitForm = async () => {
     const e = validate(form);
     setErrors(e);
     if (focusField(e)) return;
@@ -71,9 +120,16 @@ export default function Register() {
     setSubmitting(true);
     setServerError('');
     try {
-      await registerUser(form);
-      setCreatedEmail(form.email.trim().toLowerCase());
+      const { message, token: registrationToken } = await registerUser(form);
+      setEmail(form.email.trim().toLowerCase());
+      setToken(registrationToken);
       setForm(EMPTY);
+      setCode('');
+      setCodeErr('');
+      setInfo(message);
+      startWait();
+      setStep('code');
+      window.setTimeout(() => document.getElementById('code')?.focus(), 0);
     } catch (err) {
       if (err instanceof ApiError) {
         setErrors(err.fields);
@@ -86,23 +142,127 @@ export default function Register() {
     }
   };
 
+  // Paso 2 (F-14): confirmar el código. Con el código correcto MS01 crea la cuenta (201)
+  const submitCode = async () => {
+    const problem = codeError(code);
+    setCodeErr(problem);
+    if (problem) {
+      document.getElementById('code')?.focus();
+      return;
+    }
+
+    setSubmitting(true);
+    setServerError('');
+    try {
+      await verifyRegistration(email, code, token);
+      setStep('done');
+    } catch (err) {
+      if (err instanceof ApiError && err.fields.code) {
+        setCodeErr(err.fields.code);
+        setCode('');
+        document.getElementById('code')?.focus();
+      } else {
+        setServerError(errorMessage(err));
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const submit = async () => {
+    if (submitting) return;
+    if (step === 'form') {
+      await submitForm();
+    } else if (step === 'code') {
+      await submitCode();
+    }
+  };
+
+  // Flujo alterno A1: un código nuevo reemplaza al anterior; la respuesta es la misma exista o no el registro
+  const resend = async () => {
+    if (submitting || remaining > 0) return;
+    setSubmitting(true);
+    setServerError('');
+    try {
+      setInfo(await resendRegistrationCode(email, token));
+      setCode('');
+      setCodeErr('');
+      startWait();
+      window.setTimeout(() => document.getElementById('code')?.focus(), 0);
+    } catch (err) {
+      setServerError(errorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Volver a los datos: un registro nuevo con el mismo correo reemplaza al pendiente
+  const backToForm = () => {
+    setStep('form');
+    setServerError('');
+    setInfo('');
+    setForm({ ...EMPTY, email });
+  };
+
+  let resendLabel = 'Reenviar código';
+  if (remaining > 0) {
+    resendLabel = `Reenviar código en ${remaining} s`;
+  }
+
   return (
     <div className="reg">
       <main className="reg-main">
         <Logo className="reg-logo" />
 
-        {createdEmail ? (
+        {step === 'done' && (
           <section className="reg-done" role="status">
             <h1>¡Cuenta creada!</h1>
             <p>
-              Registramos la cuenta <b>{createdEmail}</b>. Ya puedes iniciar sesión con este correo y tu contraseña.
+              Verificamos el correo <b>{email}</b> y creamos la cuenta. Inicie sesión con este correo y su contraseña.
             </p>
             <a className="btn red" href="#/login">Iniciar sesión</a>
           </section>
-        ) : (
+        )}
+
+        {step === 'code' && (
+          <>
+            <h1>Verifique su correo</h1>
+            <p className="reg-sub">
+              Ingrese el código de 6 dígitos que enviamos a <b>{email}</b>. La cuenta se crea al confirmarlo.
+            </p>
+
+            <form
+              className="reg-form"
+              noValidate
+              aria-busy={submitting}
+              onSubmit={(e) => { e.preventDefault(); void submit(); }}
+            >
+              {info && <p className="notice" role="status">{info}</p>}
+
+              <CodeInput id="code" label="Código de verificación" value={code} onChange={onCode}
+                error={codeErr} disabled={submitting} />
+
+              {serverError && <p className="notice err" role="alert">{serverError}</p>}
+
+              <button type="submit" className="btn red" disabled={submitting}>
+                {submitting ? 'Verificando…' : 'Crear cuenta'}
+              </button>
+
+              <button type="button" className="login-forgot link" onClick={() => void resend()}
+                disabled={submitting || remaining > 0}>
+                {resendLabel}
+              </button>
+              <button type="button" className="login-forgot link" onClick={backToForm} disabled={submitting}>
+                Corregir los datos del registro
+              </button>
+            </form>
+          </>
+        )}
+
+        {step === 'form' && (
           <>
             <h1>Bienvenido a CampusSeguro</h1>
-            <p className="reg-sub">¿Ya tienes una cuenta? <a href="#/login">Inicia sesión</a></p>
+            <p className="reg-sub">¿Ya tiene una cuenta? <a href="#/login">Inicie sesión</a></p>
 
             <form
               className="reg-form"
@@ -111,43 +271,43 @@ export default function Register() {
               onSubmit={(e) => { e.preventDefault(); void submit(); }}
             >
               <TextField id="email" label="Correo institucional" type="email"
-                placeholder="Ingresa tu correo institucional" value={form.email}
+                placeholder="Ingrese su correo institucional" value={form.email}
                 onChange={(v) => set('email', v)} error={errors.email} autoComplete="email" maxLength={100} />
 
               <div className="two">
                 <TextField id="firstName" label="Primer nombre"
-                  placeholder="Ingresa tu primer nombre" value={form.firstName}
+                  placeholder="Ingrese su primer nombre" value={form.firstName}
                   onChange={(v) => set('firstName', v)} error={errors.firstName}
                   autoComplete="given-name" maxLength={30} />
                 <TextField id="secondName" label="Segundo nombre" optional
-                  placeholder="Ingresa tu segundo nombre" value={form.secondName}
+                  placeholder="Ingrese su segundo nombre" value={form.secondName}
                   onChange={(v) => set('secondName', v)} error={errors.secondName}
                   autoComplete="additional-name" maxLength={30} />
               </div>
               <div className="two">
                 <TextField id="firstLastName" label="Primer apellido"
-                  placeholder="Ingresa tu primer apellido" value={form.firstLastName}
+                  placeholder="Ingrese su primer apellido" value={form.firstLastName}
                   onChange={(v) => set('firstLastName', v)} error={errors.firstLastName}
                   autoComplete="family-name" maxLength={30} />
                 <TextField id="secondLastName" label="Segundo apellido" optional
-                  placeholder="Ingresa tu segundo apellido" value={form.secondLastName}
+                  placeholder="Ingrese su segundo apellido" value={form.secondLastName}
                   onChange={(v) => set('secondLastName', v)} error={errors.secondLastName}
                   maxLength={30} />
               </div>
 
               <TextField id="password" label="Contraseña" type="password"
-                placeholder="Ingresa tu contraseña" value={form.password}
+                placeholder="Ingrese su contraseña" value={form.password}
                 onChange={(v) => set('password', v)} error={errors.password}
                 autoComplete="new-password" maxLength={64} />
-              <TextField id="confirmPassword" label="Vuelve a ingresar la contraseña" type="password"
-                placeholder="Ingresa tu contraseña de nuevo" value={form.confirmPassword}
+              <TextField id="confirmPassword" label="Confirme la contraseña" type="password"
+                placeholder="Ingrese de nuevo su contraseña" value={form.confirmPassword}
                 onChange={(v) => set('confirmPassword', v)} error={errors.confirmPassword}
                 autoComplete="new-password" maxLength={64} />
 
               {serverError && <p className="notice err" role="alert">{serverError}</p>}
 
               <button type="submit" className="btn red" disabled={submitting}>
-                {submitting ? 'Creando cuenta…' : 'Regístrate'}
+                {submitting ? 'Enviando código…' : 'Registrarse'}
               </button>
             </form>
           </>

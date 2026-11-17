@@ -4,7 +4,9 @@ import { PageHeader } from '../../../shared/components/Layout';
 import { RoleChip, StateChip } from '../components/Chips';
 import { Search } from '../../../shared/components/Icons';
 import { errorMessage, searchUsers } from '../services/users';
-import { ROLE_OPTIONS } from '../utils/labels';
+import { useRoleOptions } from '../hooks/useRoleOptions';
+import { hasPermission } from '../../../shared/services/session';
+import { PERMISSION } from '../utils/permissions';
 import type { Session } from '../../../shared/types';
 import type { UserPage, UserSearch, UserSummary } from '../types';
 import '../styles/users.css';
@@ -27,7 +29,11 @@ interface Props {
 }
 
 export default function Users({ session, selected, onSelectedChange }: Props) {
-  const isAdmin = session.user.roles.includes('ADMIN');
+  // Consultar exige ms01:user:read; seleccionar usuarios, poder cambiarles el estado o los roles
+  const canStatus = hasPermission(session, PERMISSION.USER_STATUS);
+  const canRoles = hasPermission(session, PERMISSION.USER_ROLES);
+  const isAdmin = canStatus || canRoles;
+  const roleOptions = useRoleOptions(session);
 
   const [query, setQuery] = useState<UserSearch>({ email: '', state: '', role: '', page: 0, size: PAGE_SIZE });
   const [draft, setDraft] = useState('');
@@ -100,9 +106,11 @@ export default function Users({ session, selected, onSelectedChange }: Props) {
   return (
     <>
       <PageHeader
-        badge={isAdmin ? 'ADMINISTRADOR' : 'AUDITOR'}
+        badge={isAdmin ? 'ADMINISTRACIÓN' : 'CONSULTA'}
         title="Usuarios registrados"
-        subtitle="Busca y consulta a la comunidad que participa en la respuesta a emergencias."
+        subtitle={isAdmin
+          ? 'Busque usuarios, selecciónelos y cambie su estado o sus roles.'
+          : 'Busque y consulte a la comunidad que participa en la respuesta a emergencias.'}
         context={data ? `${total} ${total === 1 ? 'usuario' : 'usuarios'}` : undefined}
       />
       <main className="content">
@@ -116,7 +124,7 @@ export default function Users({ session, selected, onSelectedChange }: Props) {
                 type="text"
                 value={draft}
                 onChange={(e) => { setDraft(e.target.value); setDraftError(''); }}
-                placeholder="Ingresa el correo o parte del correo"
+                placeholder="Ingrese el correo o parte del correo"
                 maxLength={100}
                 aria-invalid={!!draftError}
                 aria-describedby={draftError ? 'q-msg' : undefined}
@@ -149,7 +157,7 @@ export default function Users({ session, selected, onSelectedChange }: Props) {
             <div className="input">
               <select id="role" value={query.role} onChange={(e) => setRoleFilter(e.target.value)}>
                 <option value="">Todos</option>
-                {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {roleOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
           </div>
@@ -157,17 +165,21 @@ export default function Users({ session, selected, onSelectedChange }: Props) {
 
         {isAdmin && (
           <div className="selbar">
-            <button
-              type="button"
-              className="btn navy"
-              disabled={selected.length === 0}
-              onClick={() => { window.location.hash = '#/usuarios/estado'; }}
-            >
-              Editar estado
-            </button>
+            {canStatus && (
+              <button type="button" className="btn navy" disabled={selected.length === 0}
+                onClick={() => { window.location.hash = '#/usuarios/estado'; }}>
+                Cambiar estado
+              </button>
+            )}
+            {canRoles && (
+              <button type="button" className="btn navy" disabled={selected.length === 0}
+                onClick={() => { window.location.hash = '#/usuarios/roles'; }}>
+                Editar roles
+              </button>
+            )}
             <span role="status">
               {selected.length === 0
-                ? 'Selecciona usuarios para cambiar su estado.'
+                ? 'Seleccione usuarios para cambiar su estado o sus roles.'
                 : `${selected.length} ${selected.length === 1 ? 'usuario seleccionado' : 'usuarios seleccionados'}`}
             </span>
           </div>
@@ -217,7 +229,7 @@ export default function Users({ session, selected, onSelectedChange }: Props) {
                     )}
                     <td className="mail">
                       {user.email}
-                      {user.id === session.user.id && <span className="me"> (tú)</span>}
+                      {user.id === session.user.id && <span className="me"> (usted)</span>}
                     </td>
                     <td><div className="chips">{user.roles.map((role) => <RoleChip key={role} role={role} />)}</div></td>
                     <td><StateChip state={user.state} /></td>

@@ -48,3 +48,13 @@ export interface PasswordChangeDraft { current: string; next: string; confirm: s
 
 // Nueva contraseña tras la recuperación (MS01 · F-05): la nueva contraseña y su confirmación
 export interface PasswordResetDraft { password: string; confirmPassword: string }
+
+// Gestión de roles (MS01 · RF-MS01-10, F-10 a F-13)
+// Rol con su descripción, sus permisos y si es de sistema (ESTUDIANTE y ADMIN no se borran ni se renombran)
+export interface RoleDetail { role: string; description: string; permissions: string[]; system: boolean }
+
+// Un permiso del catálogo (GET /permissions): código y descripción
+export interface PermissionItem { code: string; description: string }
+
+// Formulario de F-10 (crear) y F-11 (editar): nombre, descripción y, solo al crear, permisos
+export interface RoleDraft { name: string; description: string; permissions: string[] }

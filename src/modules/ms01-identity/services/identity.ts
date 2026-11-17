@@ -28,12 +28,30 @@ const LOGIN_FIELDS: Record<string, string> = {
   contrasena: 'password',
 };
 
+const configuredWait = Number.parseInt(String(import.meta.env.VITE_REGISTRATION_RESEND_SECONDS ?? ''), 10);
+
 /**
- * Registra a un usuario (RF-MS01-01, F-01). Aplica RG-01 (correo recortado y en minúsculas, contraseña
- * intacta) y RG-04 (solo envía los campos del contrato). Crea la cuenta ACTIVA con rol ESTUDIANTE y no
- * inicia sesión.
+ * Segundos entre dos códigos del registro para el mismo correo. Coincide con la espera de MS01
+ * (REGISTRATION_RESEND_COOLDOWN_SECONDS, 60 por defecto): antes de ese tiempo el back responde igual pero no envía otro
+ * correo. Se cambia con VITE_REGISTRATION_RESEND_SECONDS; 0 la desactiva.
  */
-export async function registerUser(d: RegisterDraft): Promise<void> {
+export const REGISTRATION_RESEND_SECONDS = Number.isNaN(configuredWait) || configuredWait < 0 ? 60 : configuredWait;
+
+const VERIFY_FIELDS: Record<string, string> = {
+  correo: 'email',
+  codigo: 'code',
+};
+
+/** Respuesta del registro: el mensaje y el token que solo recibe quien hizo el registro (RN-MS01-46). */
+export interface RegistrationAccepted { message: string; token: string }
+
+/**
+ * Solicita el registro (RF-MS01-01 flujo A, F-01): POST /api/v1/auth/register responde 202 y envía un código al
+ * correo; la cuenta todavía no existe. Aplica RG-01 (correo recortado y en minúsculas, contraseña intacta) y RG-04
+ * (solo envía los campos del contrato). Devuelve el mensaje y el token de registro, que la verificación y el reenvío
+ * exigen junto con el código. El token se guarda solo en memoria, nunca en la URL ni en el almacenamiento del navegador.
+ */
+export async function registerUser(d: RegisterDraft): Promise<RegistrationAccepted> {
   const body: Record<string, string> = {
     primer_nombre: d.firstName.trim(),
     primer_apellido: d.firstLastName.trim(),
@@ -50,7 +68,9 @@ export async function registerUser(d: RegisterDraft): Promise<void> {
   }
 
   try {
-    await request('/api/v1/auth/register', { method: 'POST', body, fields: REGISTER_FIELDS });
+    const data = await request('/api/v1/auth/register', { method: 'POST', body, fields: REGISTER_FIELDS });
+    const token = typeof data === 'object' && data !== null ? (data as Record<string, unknown>).token_registro : null;
+    return { message: messageOf(data, MESSAGES.registerSent), token: typeof token === 'string' ? token : '' };
   } catch (err) {
     // 409 CONFLICTO: el correo ya existe, el mensaje va en el campo del correo
     if (err instanceof ApiError && err.status === 409) {
@@ -59,6 +79,36 @@ export async function registerUser(d: RegisterDraft): Promise<void> {
     }
     throw err;
   }
+}
+
+/**
+ * Confirma el correo con el código y crea la cuenta (RF-MS01-01 flujo B, F-14): POST /api/v1/auth/register/verify
+ * responde 201 con el usuario creado. Un código incorrecto, vencido o reemplazado, o un token de otro registro,
+ * responde 400 CODIGO_INVALIDO con un mensaje genérico; un correo que ya tiene cuenta, 409.
+ */
+export async function verifyRegistration(email: string, code: string, token: string): Promise<void> {
+  const body = { correo: email.trim().toLowerCase(), codigo: code, token_registro: token };
+  try {
+    await request('/api/v1/auth/register/verify', { method: 'POST', body, fields: VERIFY_FIELDS });
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 409) {
+      err.message = MESSAGES.duplicatedEmail;
+    } else if (err instanceof ApiError && err.code === 'CODIGO_INVALIDO') {
+      err.fields = { ...err.fields, code: MESSAGES.code };
+    }
+    throw err;
+  }
+}
+
+/**
+ * Reenvía el código del registro (RF-MS01-01 A1, F-14): POST /api/v1/auth/register/resend. La respuesta es la misma
+ * exista o no un registro pendiente. Solo quien hizo el registro (mismo token) recibe un código nuevo. Devuelve el
+ * mensaje de confirmación.
+ */
+export async function resendRegistrationCode(email: string, token: string): Promise<string> {
+  const body = { correo: email.trim().toLowerCase(), token_registro: token };
+  const data = await request('/api/v1/auth/register/resend', { method: 'POST', body, fields: { correo: 'email' } });
+  return messageOf(data, MESSAGES.registerResent);
 }
 
 function toSession(data: unknown): Session {

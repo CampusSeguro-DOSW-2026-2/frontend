@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { ErrorBoundary } from '../shared/components/ErrorBoundary';
 import { Navbar } from '../shared/components/Layout';
 import { getSession, setSessionNotice } from '../shared/services/session';
 import { logoutUser } from '../modules/ms01-identity/services/identity';
 import { PUBLIC_ROUTES, useIdentityRoutes } from '../modules/ms01-identity/routes';
+import { useSessionGuard } from '../modules/ms01-identity/hooks/useSessionGuard';
 import { campusRoutes, esRutaPublicaCampus } from '../modules/ms02-campus/routes';
 import { alertRoutes } from '../modules/ms03-alerts/routes';
 import { evacuationRoutes } from '../modules/ms04-evacuation/routes';
@@ -22,6 +24,8 @@ export default function App() {
   const [route, setRoute] = useState(path());
   const [session, setSession] = useState(getSession);
   const identityRoutes = useIdentityRoutes(session);
+  // Cierra la sesión en cuanto el Gateway rechaza el token (cambio de roles, permisos o estado: RF-MS01-11)
+  useSessionGuard(session, route);
 
   useEffect(() => {
     const onChange = () => { setRoute(path()); setSession(getSession()); };
@@ -57,7 +61,8 @@ export default function App() {
   return (
     <>
       {!isPublic && <Navbar current={route} session={session} onLogout={logout} />}
-      {page}
+      {/* Un error al mostrar una pantalla no deja en blanco la aplicación; al cambiar de ruta se reinicia */}
+      <ErrorBoundary key={route}>{page}</ErrorBoundary>
       {/* Solo en desarrollo: acceso a las pantallas de prueba (la barra del mockup no tiene "Alertas"). */}
       {import.meta.env.DEV && <footer className="demo-nav">
         Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/recuperar-contrasena">Recuperar contraseña</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/eventos">Eventos</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a> · <a href="#/brigadistas">Gestión de brigadistas</a> · <a href="#/checkin">Reportar mi estado</a> · <a href="#/ayuda">Necesito ayuda</a> · <a href="#/alertas">Alertas</a>

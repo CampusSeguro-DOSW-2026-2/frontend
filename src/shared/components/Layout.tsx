@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Session } from '../types';
+import { sessionPermissions } from '../services/session';
 import {
   BellIcon, CalendarIcon, CalendarPlus, ChatIcon, ClipboardCheck, CloseIcon, HomeIcon, LifeBuoy, LogOut, MapLine,
   Megaphone, MenuIcon, ShieldCheck, UserIcon, Users,
@@ -18,8 +19,9 @@ const ROLE_LABEL: Record<string, string> = {
  * Menú principal según los roles de la sesión (diseño "Menú hamburguesa": comunidad, brigadista y roles
  * administrativos). Solo se muestran las opciones que el rol puede usar; nada aparece deshabilitado.
  */
-function menuFor(roles: string[]): MenuSection[] {
+function menuFor(roles: string[], permissions: string[]): MenuSection[] {
   const has = (...r: string[]) => r.some((x) => roles.includes(x));
+  const can = (...p: string[]) => p.some((x) => permissions.includes(x));
   const coordination = has('COORDINADOR', 'ORGANIZADOR');
   const oversight = has('ADMIN', 'AUDITOR');
   const community = has('ESTUDIANTE', 'PROFESOR', 'ADMINISTRATIVO', 'BRIGADISTA', 'COORDINADOR', 'ORGANIZADOR');
@@ -82,10 +84,14 @@ function menuFor(roles: string[]): MenuSection[] {
     title: 'Campus',
     items: campusItems,
   });
-  if (oversight) {
-    const items: MenuItem[] = [{ href: '#/usuarios', icon: <Users />, label: 'Usuarios' }];
-    if (has('ADMIN')) items.push({ href: '#/roles', icon: <ShieldCheck />, label: 'Roles y permisos' });
-    sections.push({ title: 'Administración', items });
+  // Administración de MS01: por permisos del token, porque los roles los define el administrador (RF-MS01-10)
+  const adminItems: MenuItem[] = [];
+  if (can('ms01:user:read')) adminItems.push({ href: '#/usuarios', icon: <Users />, label: 'Usuarios' });
+  if (can('ms01:role:read_all', 'ms01:role:manage')) {
+    adminItems.push({ href: '#/roles', icon: <ShieldCheck />, label: 'Roles' });
+  }
+  if (adminItems.length > 0) {
+    sections.push({ title: 'Administración', items: adminItems });
   }
   if (has('ADMIN', 'COORDINADOR')) {
     sections.push({
@@ -93,7 +99,6 @@ function menuFor(roles: string[]): MenuSection[] {
       items: [{ href: '#/admin/edificios', icon: <HomeIcon />, label: 'Edificios, zonas y rutas' }],
     });
   }
-  sections.push({ title: 'Cuenta', items: [{ href: '#/perfil', icon: <UserIcon />, label: 'Perfil' }] });
   return sections;
 }
 
@@ -107,10 +112,16 @@ function currentHref(current: string, sections: MenuSection[]): string | undefin
 
 export function Navbar({ current, session, onLogout }: { current: string; session: Session | null; onLogout: () => void }) {
   const [open, setOpen] = useState(false);
+  // Ruta en la que se abrió el menú de la cuenta: al cambiar de pantalla queda cerrado sin otro efecto
+  const [userOpenAt, setUserOpenAt] = useState<string | null>(null);
+  const userOpen = userOpenAt === current;
+  const setUserOpen = (value: boolean | ((v: boolean) => boolean)) =>
+    setUserOpenAt((typeof value === 'function' ? value(userOpen) : value) ? current : null);
   const panel = useRef<HTMLElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
+  const userBox = useRef<HTMLDivElement>(null);
   const roles = session?.user.roles ?? [];
-  const sections = menuFor(roles);
+  const sections = menuFor(roles, sessionPermissions(session));
   const active = currentHref(current, sections);
 
   // Se cierra al elegir una opción y con Escape; al abrir, el foco pasa al menú y al cerrar vuelve al botón
@@ -121,6 +132,16 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
+
+  // Menú de la cuenta (esquina superior derecha): se cierra con Escape, al hacer clic fuera y al cambiar de pantalla
+  useEffect(() => {
+    if (!userOpen) return undefined;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUserOpenAt(null); };
+    const onClick = (e: MouseEvent) => { if (!userBox.current?.contains(e.target as Node)) setUserOpenAt(null); };
+    window.addEventListener('keydown', onKey);
+    document.addEventListener('mousedown', onClick);
+    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onClick); };
+  }, [userOpen]);
 
   const role = roles.map((r) => ROLE_LABEL[r] ?? r).join(' · ');
   const initials = (session?.user.email ?? '?').slice(0, 2).toUpperCase();
@@ -133,7 +154,20 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
           <a className="brand" href="#/simulacro">CampusSeguro</a>
         </div>
         {session && (
-          <div className="nav-user"><span className="nav-avatar" aria-hidden="true">{initials}</span><span className="nav-who"><b>{session.user.email}</b><small>{role}</small></span></div>
+          <div className="nav-user" ref={userBox}>
+            <button type="button" className="nav-user-btn" aria-haspopup="menu" aria-expanded={userOpen} aria-controls="user-menu"
+              onClick={() => setUserOpen((v) => !v)}>
+              <span className="nav-avatar" aria-hidden="true">{initials}</span>
+              <span className="nav-who"><b>{session.user.email}</b><small>{role}</small></span>
+            </button>
+            {userOpen && (
+              <ul id="user-menu" className="user-menu" role="menu" aria-label="Mi cuenta">
+                <li role="none"><a role="menuitem" href="#/perfil"><UserIcon />Mi perfil</a></li>
+                <li role="none"><a role="menuitem" href="#/perfil/contrasena"><ShieldCheck />Cambiar contraseña</a></li>
+                <li role="none"><button type="button" role="menuitem" onClick={() => { setUserOpen(false); onLogout(); }}><LogOut />Cerrar sesión</button></li>
+              </ul>
+            )}
+          </div>
         )}
       </nav>
       {open && (
