@@ -1,8 +1,8 @@
 import { API_URL, ApiError, NETWORK_ERROR, request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import type {
-  ActivacionResponse, Asignacion, BusquedaBrigadistas, EstadoBrigadista, Evidencia, Incidente, IncidenteResumen, NuevoIncidente, Pagina,
-  TipoUbicacion,
+  ActivacionResponse, Asignacion, Autoasignacion, AutoasignacionEvento, BrigadistaGestion, BusquedaBrigadistas, EstadoBrigadista,
+  EventoOperacion, Evidencia, GestionBrigadistasEvento, Incidente, IncidenteResumen, NuevoIncidente, Pagina, TipoUbicacion,
 } from '../types';
 
 /**
@@ -30,6 +30,34 @@ export const brigadesApi = {
       // MS05 toma el brigadista del usuario autenticado; el campo se envía porque el contrato lo valida
       body: { brigadistaId: session.user.id, eventoId, ubicacionId, tipoUbicacion },
     }) as Promise<Asignacion>,
+
+  /** Eventos programados o en ejecución con sus edificios (coordinador u organizador). */
+  eventosOperacion: (session: Session) =>
+    request('/api/v1/brigadistas/eventos', { session }) as Promise<EventoOperacion[]>,
+
+  /** Panel de gestión: brigadistas activos por edificio y luego inactivos, con sus incidentes en el evento. */
+  gestionEvento: (session: Session, eventoId: string) =>
+    request(`/api/v1/brigadistas/eventos/${enc(eventoId)}/gestion`, { session }) as Promise<GestionBrigadistasEvento>,
+
+  /** El coordinador cambia el edificio de un brigadista (solo eventos reales). */
+  cambiarEdificio: (session: Session, eventoId: string, brigadistaId: string, ubicacionId: string) =>
+    request(`/api/v1/brigadistas/eventos/${enc(eventoId)}/brigadistas/${enc(brigadistaId)}/asignacion`, {
+      method: 'PUT', session, body: { ubicacionId },
+    }) as Promise<BrigadistaGestion>,
+
+  /** Auto asignación: estado del brigadista autenticado y eventos donde puede elegir edificio. */
+  autoasignacion: (session: Session) =>
+    request('/api/v1/brigadistas/autoasignacion', { session }) as Promise<Autoasignacion>,
+
+  /** El brigadista elige o cambia su edificio en el evento. */
+  elegirEdificio: (session: Session, eventoId: string, ubicacionId: string) =>
+    request(`/api/v1/brigadistas/autoasignacion/eventos/${enc(eventoId)}`, {
+      method: 'PUT', session, body: { ubicacionId },
+    }) as Promise<AutoasignacionEvento>,
+
+  /** El brigadista quita su asignación (no se permite si es el único en el edificio). */
+  quitarEdificio: (session: Session, eventoId: string) =>
+    request(`/api/v1/brigadistas/autoasignacion/eventos/${enc(eventoId)}`, { method: 'DELETE', session }) as Promise<AutoasignacionEvento>,
 
   asignacionesDelEvento: (session: Session, eventoId: string) =>
     request(`/api/v1/asignaciones/evento/${enc(eventoId)}`, { session }) as Promise<Asignacion[]>,

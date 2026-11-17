@@ -73,3 +73,34 @@ export interface IncidenteResumen {
 
 /** Página con el formato de los Estándares (§9). */
 export interface Pagina<T> { contenido: T[]; page: number; size: number; total_elementos: number; total_paginas: number }
+
+/** Edificio del alcance de un evento con cuántos brigadistas tiene asignados. */
+export interface EdificioEvento { ubicacionId: string; nombre: string; tipoUbicacion: TipoUbicacion; brigadistasAsignados: number }
+
+/** Evento programado o en ejecución para la operación de brigadistas (GET /api/v1/brigadistas/eventos). */
+export interface EventoOperacion {
+  eventoId: string;
+  nombre: string;
+  simulacro: boolean;
+  estado: 'PROGRAMADO' | 'EN_EJECUCION' | string;
+  /** El coordinador solo cambia asignaciones en eventos reales. */
+  permiteReasignar: boolean;
+  edificios: EdificioEvento[];
+}
+
+/** Brigadista del panel de gestión del coordinador. */
+export interface BrigadistaGestion {
+  brigadistaId: string;
+  nombre: string;
+  estado: EstadoBrigadista;
+  idAsignacion: string | null;
+  ubicacionId: string | null;
+  nombreUbicacion: string | null;
+  incidentesEnAtencion: number;
+  incidentesResueltos: number;
+}
+
+export interface GestionBrigadistasEvento { evento: EventoOperacion; brigadistas: BrigadistaGestion[] }
+
+export interface AutoasignacionEvento { evento: EventoOperacion; idAsignacion: string | null; ubicacionId: string | null; nombreUbicacion: string | null }
+export interface Autoasignacion { brigadistaId: string; estado: EstadoBrigadista; eventos: AutoasignacionEvento[] }
