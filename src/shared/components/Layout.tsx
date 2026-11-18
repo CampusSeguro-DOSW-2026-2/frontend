@@ -86,6 +86,8 @@ function menuFor(roles: string[], permissions: string[]): MenuSection[] {
     );
   }
   campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
+  // Evaluaciones de MS07 (RF-14): por permiso, porque los roles los define el administrador
+  if (can('ms07:quiz:take')) campusItems.push({ href: '#/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
 
   sections.push({
     title: 'Campus',
@@ -97,6 +99,7 @@ function menuFor(roles: string[], permissions: string[]): MenuSection[] {
   if (can('ms01:role:read_all', 'ms01:role:manage')) {
     adminItems.push({ href: '#/roles', icon: <ShieldCheck />, label: 'Roles' });
   }
+  if (can('ms07:content:manage')) adminItems.push({ href: '#/admin/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
   if (adminItems.length > 0) {
     sections.push({ title: 'Administración', items: adminItems });
   }
