@@ -4,7 +4,7 @@ import type { Session } from '../types';
 import { PERMISSION } from '../permissions';
 import { sessionPermissions } from '../services/session';
 import {
-  BellIcon, CalendarIcon, CalendarPlus, ChatIcon, ClipboardCheck, CloseIcon, HomeIcon, LifeBuoy, LogOut, MapLine,
+  BellIcon, CalendarIcon, CalendarPlus, ChatIcon, ClipboardCheck, CloseIcon, FilePen, HomeIcon, LifeBuoy, LogOut, MapLine,
   Megaphone, MenuIcon, ShieldCheck, UserIcon, Users,
 } from './Icons';
 
@@ -87,6 +87,18 @@ function menuFor(permissions: string[]): MenuSection[] {
   }
   if (campusItems.length > 0) {
     sections.push({ title: 'Campus', items: campusItems });
+  }
+
+  // MS08: indicators and audit (what each permission sees is decided by MS08)
+  const analyticsItems: MenuItem[] = [];
+  if (can(PERMISSION.MS08_INDICATORS_READ)) {
+    analyticsItems.push({ href: '#/indicadores', icon: <ClipboardCheck />, label: 'Indicadores' });
+  }
+  if (can(PERMISSION.MS08_AUDIT_READ)) {
+    analyticsItems.push({ href: '#/auditoria', icon: <FilePen />, label: 'Auditoría' });
+  }
+  if (analyticsItems.length > 0) {
+    sections.push({ title: 'Analítica', items: analyticsItems });
   }
 
   // MS01 administration

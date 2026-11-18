@@ -35,4 +35,7 @@ export const PERMISSION = {
   MS06_REAL_EVENT_READ: 'ms06:real_event:read',
 
   MS07_TUTOR_USE: 'ms07:tutor:use',
+
+  MS08_INDICATORS_READ: 'ms08:indicators:read',
+  MS08_AUDIT_READ: 'ms08:audit:read',
 } as const;
