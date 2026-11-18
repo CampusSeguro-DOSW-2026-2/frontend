@@ -73,7 +73,10 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
         {loading && <p className="notice" role="status">Cargando…</p>}
 
         {!loading && events.length === 0 && (
-          <div className="ev-empty">No hay un evento en ejecución. Cuando inicie uno, aquí verá su zona y podrá reportar incidentes.</div>
+          <div className="ev-empty">
+            No hay un evento en ejecución. Cuando inicie uno, aquí verá su zona y podrá reportar incidentes.
+            {' '}Si hay un evento programado, elija su edificio en <a className="plink" href="#/brigadista/autoasignacion">Auto asignación</a>.
+          </div>
         )}
 
         {events.map((ev) => {
@@ -92,9 +95,9 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
                 <span>Mi zona</span>
                 {zona
                   ? <b>{scopeLabel(zona.ubicacionId)}</b>
-                  : <a className="plink" href={`#/brigadista/zona/${ev.id}`}>Elegir zona →</a>}
+                  : <a className="plink" href={`#/brigadista/autoasignacion/${ev.id}`}>Elegir edificio →</a>}
               </div>
-              {zona && <span className="help">Para cambiar de zona, pídeselo al coordinador o al organizador (solo ellos reasignan).</span>}
+              {zona && <span className="help">Para cambiar de edificio o quitar su asignación, entre a <a className="plink" href={`#/brigadista/autoasignacion/${ev.id}`}>Auto asignación</a>.</span>}
             </section>
           );
         })}

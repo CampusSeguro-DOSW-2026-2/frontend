@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Session } from '../../shared/types';
 import BrigadistaPanel from './pages/BrigadistaPanel';
-import ElegirZona from './pages/ElegirZona';
+import AutoAsignacion from './pages/AutoAsignacion';
 import GestionBrigadistas from './pages/GestionBrigadistas';
 import ReportarIncidente from './pages/ReportarIncidente';
 
@@ -22,8 +22,10 @@ export function brigadesRoutes(route: string, session: Session | null): ReactNod
 
   if (!isBrigadista) return NO_ACCESS;
   if (route === '/brigadista') return <BrigadistaPanel session={session} />;
-  const zona = route.match(/^\/brigadista\/zona\/([^/]+)$/);
-  if (zona) return <ElegirZona key={zona[1]} session={session} eventId={zona[1]} />;
+  // Auto asignación (RF-BEI-01, opción 2): desde el menú o desde el enlace del aviso del evento
+  if (route === '/brigadista/autoasignacion') return <AutoAsignacion session={session} />;
+  const auto = route.match(/^\/brigadista\/(?:autoasignacion|zona)\/([^/]+)$/);
+  if (auto) return <AutoAsignacion key={auto[1]} session={session} eventId={auto[1]} />;
   const rep = route.match(/^\/brigadista\/reportar\/([^/]+)$/);
   if (rep) return <ReportarIncidente key={rep[1]} session={session} eventId={rep[1]} forOther />;
   return undefined;

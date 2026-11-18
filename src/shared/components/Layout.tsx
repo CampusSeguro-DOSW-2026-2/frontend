@@ -28,7 +28,14 @@ function menuFor(roles: string[], permissions: string[]): MenuSection[] {
   const sections: MenuSection[] = [{ items: [{ href: '#/simulacro', icon: <HomeIcon />, label: 'Inicio' }] }];
 
   if (has('BRIGADISTA')) {
-    sections.push({ title: 'Brigada', items: [{ href: '#/brigadista', icon: <ClipboardCheck />, label: 'Panel de responsabilidades' }] });
+    sections.push({
+      title: 'Brigada',
+      items: [
+        { href: '#/brigadista', icon: <ClipboardCheck />, label: 'Panel de responsabilidades' },
+        // Auto asignación (RF-BEI-01, opción 2): elegir edificio en el mapa en eventos programados o en ejecución
+        { href: '#/brigadista/autoasignacion', icon: <MapLine />, label: 'Auto asignación' },
+      ],
+    });
   }
   if (community) {
     sections.push({
