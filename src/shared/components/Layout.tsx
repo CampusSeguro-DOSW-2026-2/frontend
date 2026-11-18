@@ -90,6 +90,7 @@ function menuFor(roles: string[], permissions: string[]): MenuSection[] {
   // Centro de aprendizaje de MS07 (RF-12): contenidos preventivos, por permiso
   if (can('ms07:content:read')) campusItems.push({ href: '#/aprendizaje', icon: <LifeBuoy />, label: 'Aprendizaje' });
   if (can('ms07:quiz:take')) campusItems.push({ href: '#/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
+  if (can('ms07:quiz:take')) campusItems.push({ href: '#/mi-progreso', icon: <ClipboardCheck />, label: 'Mi progreso' });
 
   sections.push({
     title: 'Campus',

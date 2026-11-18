@@ -102,3 +102,26 @@ export interface Intento {
   attemptedAt: string;
   answers: { questionId: string; optionId: string; correct: boolean; correctOptionId: string }[];
 }
+
+/** Progreso del usuario (GET /api/v1/training/progress/me). `available` es false si se inactivó después. */
+export interface Progreso {
+  contents: {
+    contentId: string;
+    title: string;
+    categoryId: string;
+    firstViewedAt: string;
+    lastViewedAt: string;
+    available: boolean;
+  }[];
+  /** Mejor intento de cada evaluación: su puntaje, el tema con que se presentó y su fecha. */
+  evaluations: {
+    evaluationId: string;
+    title: string;
+    categoryId: string;
+    topic: string;
+    bestScore: number;
+    attemptedAt: string;
+    attempts: number;
+    available: boolean;
+  }[];
+}
