@@ -85,7 +85,8 @@ function menuFor(roles: string[], permissions: string[]): MenuSection[] {
       { href: '#/rutas', icon: <MapLine />, label: 'Rutas de evacuación' },
     );
   }
-  campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
+  // Tutor CampusSeguro de MS07 (RF-15): por permiso
+  if (can('ms07:tutor:use')) campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
   // Evaluaciones de MS07 (RF-14): por permiso, porque los roles los define el administrador
   // Centro de aprendizaje de MS07 (RF-12): contenidos preventivos, por permiso
   if (can('ms07:content:read')) campusItems.push({ href: '#/aprendizaje', icon: <LifeBuoy />, label: 'Aprendizaje' });
