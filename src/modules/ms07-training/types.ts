@@ -18,6 +18,35 @@ export interface Categoria {
   status: Estado;
 }
 
+/** Cuerpo para crear o modificar una categoría. */
+export interface CategoriaRequest {
+  name: string;
+  description: string | null;
+}
+
+/** Contenido en un listado (GET /api/v1/training/contents): no trae el cuerpo. */
+export interface ContenidoResumen {
+  id: string;
+  title: string;
+  categoryId: string;
+  status: Estado;
+  updatedAt: string;
+}
+
+/** Contenido completo (GET /api/v1/training/contents/{id}). */
+export interface Contenido extends Omit<ContenidoResumen, 'updatedAt'> {
+  body: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Cuerpo para crear o modificar un contenido. */
+export interface ContenidoRequest {
+  title: string;
+  body: string;
+  categoryId: string;
+}
+
 /** Evaluación en un listado. */
 export interface EvaluacionResumen {
   id: string;

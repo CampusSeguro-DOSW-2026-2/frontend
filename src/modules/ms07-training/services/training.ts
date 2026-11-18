@@ -1,7 +1,8 @@
 import { request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import type {
-  Categoria, Evaluacion, EvaluacionRequest, EvaluacionResumen, Intento, Pagina, Respuesta,
+  Categoria, CategoriaRequest, Contenido, ContenidoRequest, ContenidoResumen, Evaluacion, EvaluacionRequest,
+  EvaluacionResumen, Intento, Pagina, Respuesta,
 } from '../types';
 
 /**
@@ -13,6 +14,8 @@ const enc = encodeURIComponent;
 
 /** Campo del contrato → campo del formulario, para marcar los errores 400 por campo del editor. */
 const CAMPOS_EVALUACION: Record<string, string> = { title: 'title', topic: 'topic', categoryId: 'categoryId' };
+const CAMPOS_CONTENIDO: Record<string, string> = { title: 'title', body: 'body', categoryId: 'categoryId' };
+const CAMPOS_CATEGORIA: Record<string, string> = { name: 'name', description: 'description' };
 
 function consulta(params: Record<string, string | number | boolean | undefined>): string {
   const q = new URLSearchParams();
@@ -27,6 +30,67 @@ export const trainingApi = {
     const ruta = `${BASE}/categories${consulta({ size: 100, includeInactive: includeInactive || undefined })}`;
     const data = (await request(ruta, { session })) as Pagina<Categoria>;
     return data?.contenido ?? [];
+  },
+
+  async crearCategoria(session: Session, cuerpo: CategoriaRequest): Promise<Categoria> {
+    return (await request(`${BASE}/categories`, {
+      method: 'POST', body: cuerpo, session, fields: CAMPOS_CATEGORIA,
+    })) as Categoria;
+  },
+
+  async modificarCategoria(session: Session, id: string, cuerpo: CategoriaRequest): Promise<Categoria> {
+    return (await request(`${BASE}/categories/${enc(id)}`, {
+      method: 'PUT', body: cuerpo, session, fields: CAMPOS_CATEGORIA,
+    })) as Categoria;
+  },
+
+  async inactivarCategoria(session: Session, id: string): Promise<Categoria> {
+    return (await request(`${BASE}/categories/${enc(id)}/deactivate`, { method: 'PATCH', session })) as Categoria;
+  },
+
+  async reactivarCategoria(session: Session, id: string): Promise<Categoria> {
+    return (await request(`${BASE}/categories/${enc(id)}/reactivate`, { method: 'PATCH', session })) as Categoria;
+  },
+
+  /**
+   * Contenidos activos (sin el cuerpo). Un contenido activo se ve aunque su categoría esté inactiva (RF-12 regla 2).
+   * Con `includeInactive` también los inactivos: solo aplica con permiso de administración.
+   */
+  async contenidos(
+    session: Session,
+    filtro: { categoryId?: string; includeInactive?: boolean; page?: number; size?: number } = {},
+  ): Promise<Pagina<ContenidoResumen>> {
+    return (await request(`${BASE}/contents${consulta(filtro)}`, { session })) as Pagina<ContenidoResumen>;
+  },
+
+  /** Contenido completo. Un contenido inactivo responde 404 a la comunidad. */
+  async contenido(session: Session, id: string): Promise<Contenido> {
+    return (await request(`${BASE}/contents/${enc(id)}`, { session })) as Contenido;
+  },
+
+  async crearContenido(session: Session, cuerpo: ContenidoRequest): Promise<Contenido> {
+    return (await request(`${BASE}/contents`, {
+      method: 'POST', body: cuerpo, session, fields: CAMPOS_CONTENIDO,
+    })) as Contenido;
+  },
+
+  async modificarContenido(session: Session, id: string, cuerpo: ContenidoRequest): Promise<Contenido> {
+    return (await request(`${BASE}/contents/${enc(id)}`, {
+      method: 'PUT', body: cuerpo, session, fields: CAMPOS_CONTENIDO,
+    })) as Contenido;
+  },
+
+  async inactivarContenido(session: Session, id: string): Promise<Contenido> {
+    return (await request(`${BASE}/contents/${enc(id)}/deactivate`, { method: 'PATCH', session })) as Contenido;
+  },
+
+  async reactivarContenido(session: Session, id: string): Promise<Contenido> {
+    return (await request(`${BASE}/contents/${enc(id)}/reactivate`, { method: 'PATCH', session })) as Contenido;
+  },
+
+  /** Registra que el usuario abrió el contenido (progreso, RF-13). Un solo registro por usuario y contenido. */
+  async registrarVista(session: Session, id: string): Promise<void> {
+    await request(`${BASE}/contents/${enc(id)}/views`, { method: 'POST', session });
   },
 
   /** Evaluaciones activas; con `includeInactive` también las inactivas (solo para quien administra). */
