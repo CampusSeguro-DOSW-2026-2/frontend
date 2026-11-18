@@ -17,8 +17,8 @@ interface Props {
 }
 
 const ESTADO_TEXTO: Record<string, string> = {
-  REPORTADO: 'Tu solicitud quedó registrada. Todavía no hay un brigadista libre en esa zona; la coordinación ya la ve.',
-  ASIGNADO: 'Tu solicitud quedó registrada y la brigada de tu zona ya fue avisada. Quédate donde estás.',
+  REPORTADO: 'Su solicitud quedó registrada. La coordinación ya la recibió y asignará un brigadista.',
+  ASIGNADO: 'Su solicitud quedó registrada y la brigada de su zona ya fue avisada. Permanezca en un lugar seguro.',
 };
 
 /** RF-BEI-04 y RF-BEI-05: "Necesito ayuda" (solicitud propia) y "Reportar incidente" (brigadista, para otra persona). */
@@ -52,9 +52,9 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
   const enviar = async () => {
     if (!event) return;
     const local: FieldErrors = {};
-    if (!ubicacion) local.ubicacion = forOther ? 'Elige dónde está la persona.' : 'Elige dónde estás.';
-    if (!prioridad) local.prioridad = 'Elige la gravedad.';
-    if (forOther && !afectado.trim()) local.nombreAfectado = 'Escribe el nombre de la persona afectada.';
+    if (!ubicacion) local.ubicacion = forOther ? 'Indique dónde está la persona.' : 'Indique dónde se encuentra.';
+    if (!prioridad) local.prioridad = 'Seleccione la gravedad.';
+    if (forOther && !afectado.trim()) local.nombreAfectado = 'Escriba el nombre de la persona afectada.';
     setErrors(local);
     if (Object.keys(local).length) return;
 
@@ -86,7 +86,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
         <div>
           <a className="back" href={back}>← {forOther ? 'Panel de responsabilidades' : 'Inicio'}</a>
           <h1>{forOther ? 'Reportar incidente' : 'Necesito ayuda'}</h1>
-          <p>{forOther ? 'Para una persona que no puede pedir ayuda por sí misma.' : 'Llega a la brigada de tu zona.'}</p>
+          <p>{forOther ? 'Para una persona que no puede pedir ayuda por sí misma.' : 'La solicitud llega a la brigada de su zona.'}</p>
         </div>
       </header>
       <main className="ev-main" style={{ maxWidth: 760 }}>
@@ -116,7 +116,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
               </div>
             )}
             <fieldset className="ev-box">
-              <legend className="lbl">¿Dónde {forOther ? 'está' : 'estás'}? <span className="req">*</span></legend>
+              <legend className="lbl">¿Dónde {forOther ? 'está la persona' : 'se encuentra'}? <span className="req">*</span></legend>
               <div className="pills">
                 {event.scope.map((s) => (
                   <button key={s.id} type="button" className="pill" aria-pressed={ubicacion === s.id} onClick={() => { setUbicacion(s.id); setErrors((e) => ({ ...e, ubicacion: undefined })); }}>{scopeLabel(s.id)}</button>

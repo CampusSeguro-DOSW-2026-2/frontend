@@ -161,8 +161,8 @@ export default function ForgotPassword() {
       <main className="reg-main">
         <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
 
-        <h1>¿Olvidaste tu contraseña?</h1>
-        <p className="reg-sub">No te preocupes. Ingresa tu correo y te ayudaremos a recuperar tu acceso.</p>
+        <h1>¿Olvidó su contraseña?</h1>
+        <p className="reg-sub">Ingrese su correo institucional y le enviaremos un código para recuperar el acceso.</p>
 
         <form
           className="reg-form"
@@ -179,7 +179,7 @@ export default function ForgotPassword() {
             id="email"
             label="Correo institucional"
             type="email"
-            placeholder="Ingresa tu correo institucional"
+            placeholder="Ingrese su correo institucional"
             value={email}
             onChange={onEmail}
             error={emailErr}

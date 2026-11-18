@@ -56,7 +56,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
         <div>
           <span className="badge" style={{ background: 'var(--amber)', color: '#fff' }}>BRIGADISTA</span>
           <h1 style={{ marginTop: 10 }}>Panel de responsabilidades</h1>
-          <p>Tu disponibilidad, tu zona en el evento y los incidentes que te corresponden.</p>
+          <p>Consulte su disponibilidad, su zona en el evento y los incidentes que le corresponden.</p>
         </div>
         <div className="hbtns" role="group" aria-label="Mi disponibilidad">
           <button type="button" className="btn light" disabled={busy} aria-pressed={estado === 'ACTIVO'} onClick={() => cambiarEstado('ACTIVO')}>
@@ -74,8 +74,8 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
 
         {!loading && events.length === 0 && (
           <div className="ev-empty">
-            No hay un evento en ejecución. Cuando inicie uno, aquí verás tu zona y podrás reportar incidentes.
-            {' '}Si hay un evento programado, elige tu edificio en <a className="plink" href="#/brigadista/autoasignacion">Auto asignación</a>.
+            No hay un evento en ejecución. Cuando inicie uno, aquí verá su zona y podrá reportar incidentes.
+            {' '}Si hay un evento programado, elija su edificio en <a className="plink" href="#/brigadista/autoasignacion">Auto asignación</a>.
           </div>
         )}
 
@@ -97,7 +97,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
                   ? <b>{scopeLabel(zona.ubicacionId)}</b>
                   : <a className="plink" href={`#/brigadista/autoasignacion/${ev.id}`}>Elegir edificio →</a>}
               </div>
-              {zona && <span className="help">Para cambiar de edificio o quitar tu asignación, entra a <a className="plink" href={`#/brigadista/autoasignacion/${ev.id}`}>Auto asignación</a>.</span>}
+              {zona && <span className="help">Para cambiar de edificio o quitar su asignación, entre a <a className="plink" href={`#/brigadista/autoasignacion/${ev.id}`}>Auto asignación</a>.</span>}
             </section>
           );
         })}
@@ -105,7 +105,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
         {events.map((ev) => (
           <section key={`inc-${ev.id}`} className="ev-card">
             <h2>Mis incidentes · {ev.name}</h2>
-            <p className="help">Los que reportaste, los que tienes asignados y los de tu zona. Inicia la atención y márcalos como resueltos.</p>
+            <p className="help">Los que reportó, los que tiene asignados y los de su zona. Inicie la atención y márquelos como resueltos.</p>
             <IncidentesEvento session={session} eventoId={ev.id} modo="brigadista" />
           </section>
         ))}

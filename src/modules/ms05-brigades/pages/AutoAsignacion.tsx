@@ -44,7 +44,7 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
     try {
       await brigadesApi.cambiarEstado(session, 'ACTIVO');
       await cargar();
-      setNotice('Quedaste activo. Ahora elige en el mapa el edificio donde vas a apoyar.');
+      setNotice('Quedó activo. Ahora elija en el mapa el edificio donde va a apoyar.');
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -54,8 +54,8 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
 
   const elegir = (edificio: EdificioEvento) => {
     setNotice('');
-    if (!activo) { setNotice('Para asignarte a un edificio primero debes activarte.'); return; }
-    if (edificio.ubicacionId === actual?.ubicacionId) { setNotice(`Ya estás asignado a ${edificio.nombre}.`); return; }
+    if (!activo) { setNotice('Para asignarse a un edificio primero debe activarse.'); return; }
+    if (edificio.ubicacionId === actual?.ubicacionId) { setNotice(`Ya está asignado a ${edificio.nombre}.`); return; }
     setConfirmar(edificio);
   };
 
@@ -67,7 +67,7 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
       const res = await brigadesApi.elegirEdificio(session, actual.evento.eventoId, confirmar.ubicacionId);
       setConfirmar(null);
       await cargar();
-      setNotice(`Quedaste asignado a ${res.nombreUbicacion ?? confirmar.nombre}.`);
+      setNotice(`Quedó asignado a ${res.nombreUbicacion ?? confirmar.nombre}.`);
     } catch (err) {
       setConfirmar(null);
       setError(errorMessage(err));
@@ -78,13 +78,13 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
 
   const quitar = async () => {
     if (!actual?.ubicacionId) return;
-    if (!window.confirm(`¿Quitar tu asignación de ${actual.nombreUbicacion ?? 'tu edificio'}?`)) return;
+    if (!window.confirm(`¿Quitar su asignación de ${actual.nombreUbicacion ?? 'su edificio'}?`)) return;
     setBusy(true);
     setError('');
     try {
       await brigadesApi.quitarEdificio(session, actual.evento.eventoId);
       await cargar();
-      setNotice('Quitaste tu asignación. Puedes elegir otro edificio cuando quieras.');
+      setNotice('Quitó su asignación. Puede elegir otro edificio cuando quiera.');
     } catch (err) {
       setError(errorMessage(err));
     } finally {
@@ -98,7 +98,7 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
         <div>
           <a className="back" href="#/brigadista">← Panel de responsabilidades</a>
           <h1>Auto asignación</h1>
-          <p>¡Hola! Qué gusto que nos quieras ayudar. Elige en el mapa el edificio donde vas a apoyar durante el evento.</p>
+          <p>¡Hola! Qué gusto que nos quiera ayudar. Elija en el mapa el edificio donde va a apoyar durante el evento.</p>
         </div>
       </header>
       <main className="ev-main">
@@ -107,7 +107,7 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
         {notice && <p className="notice" role="status">{notice}</p>}
 
         {data && data.eventos.length === 0 && (
-          <div className="ev-empty">No hay eventos programados ni en ejecución. Cuando se programe uno, aquí podrás elegir tu edificio.</div>
+          <div className="ev-empty">No hay eventos programados ni en ejecución. Cuando se programe uno, aquí podrá elegir su edificio.</div>
         )}
 
         {data && data.eventos.length > 1 && (
@@ -152,14 +152,14 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
                     <b>{actual.nombreUbicacion ?? 'Sin asignar'}</b>
                   </div>
                 )}
-                {activo && !actual.ubicacionId && <p className="help">Toca un edificio en el mapa para asignarte.</p>}
+                {activo && !actual.ubicacionId && <p className="help">Toque un edificio en el mapa para asignarse.</p>}
                 {activo && actual.ubicacionId && (
                   <>
-                    <p className="help">Toca otro edificio en el mapa para cambiarte. Solo puedes estar en un edificio.</p>
+                    <p className="help">Toque otro edificio en el mapa para cambiarse. Solo puede estar en un edificio.</p>
                     <button type="button" className="btn white" disabled={busy} onClick={quitar}>Quitar mi asignación</button>
                   </>
                 )}
-                <p className="help">Un edificio del evento no puede quedar sin brigadistas: si eres el único en el tuyo, no podrás cambiarte ni retirarte hasta que llegue otro.</p>
+                <p className="help">Un edificio del evento no puede quedar sin brigadistas: si es el único en el suyo, no podrá cambiarse ni retirarse hasta que llegue otro.</p>
               </section>
             </aside>
           </div>
@@ -172,8 +172,8 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
             <h2 id="aa-confirmar">{actual.ubicacionId ? 'Cambiar de edificio' : 'Asignarme a este edificio'}</h2>
             <p>
               {actual.ubicacionId
-                ? <>Pasarás de <b>{actual.nombreUbicacion}</b> a <b>{confirmar.nombre}</b>.</>
-                : <>Quedarás asignado a <b>{confirmar.nombre}</b> en {actual.evento.nombre}.</>}
+                ? <>Pasará de <b>{actual.nombreUbicacion}</b> a <b>{confirmar.nombre}</b>.</>
+                : <>Quedará asignado a <b>{confirmar.nombre}</b> en {actual.evento.nombre}.</>}
             </p>
             <p className="help">{confirmar.brigadistasAsignados === 1 ? 'Hay 1 brigadista' : `Hay ${confirmar.brigadistasAsignados} brigadistas`} en este edificio.</p>
             <div className="row2">

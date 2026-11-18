@@ -48,7 +48,7 @@ const WARNINGS: Record<string, string> = {
   NO_BRIGADIERS: 'Todavía no hay brigadistas asignados.',
   NO_RECORDS: 'Todavía no hay check-ins, solicitudes de ayuda ni incidentes registrados.',
   SCOPE_PENDING: 'El catálogo del campus no respondió: el alcance quedó pendiente. Agrégalo después para programar el evento.',
-  PARTICIPANTS_PENDING: 'El servicio de usuarios no respondió: los participantes quedaron pendientes. Agrégalos después.',
+  PARTICIPANTS_PENDING: 'El servicio de usuarios no respondió: los participantes quedaron pendientes. Agréguelos después.',
   EVALUATION_FAILED: 'El evento finalizó, pero no se pudieron guardar sus métricas generales.',
   EVALUATION_INCOMPLETE: 'Algunas cifras todavía no llegan de check-in o de brigadistas; se completan solas.',
   BRIGADIERS_NOT_SYNCED: 'El evento finalizó, pero no se pudo actualizar la lista final de brigadistas. Se conservó la última.',

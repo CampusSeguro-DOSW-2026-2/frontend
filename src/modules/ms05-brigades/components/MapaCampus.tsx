@@ -83,7 +83,7 @@ export default function MapaCampus({ edificios, miUbicacionId, deshabilitado, on
           return (
             <g key={e.ubicacionId} className={clase(e)} transform={`translate(${p.x} ${p.y})`}
               role="button" tabIndex={0} aria-disabled={deshabilitado}
-              aria-label={`${e.nombre}: ${conteo(e.brigadistasAsignados)}${e.ubicacionId === miUbicacionId ? ', tu edificio' : ''}`}
+              aria-label={`${e.nombre}: ${conteo(e.brigadistasAsignados)}${e.ubicacionId === miUbicacionId ? ', su edificio' : ''}`}
               onClick={() => onElegir(e)}
               onKeyDown={(ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); onElegir(e); } }}>
               <title>{e.nombre} · {conteo(e.brigadistasAsignados)}</title>
@@ -97,7 +97,7 @@ export default function MapaCampus({ edificios, miUbicacionId, deshabilitado, on
 
       <div className="aa-legend" aria-hidden="true">
         <span><i />Edificio del evento</span>
-        <span><i className="l-mine" />Tu edificio</span>
+        <span><i className="l-mine" />Su edificio</span>
         <span><i className="l-empty" />Sin brigadistas</span>
       </div>
 

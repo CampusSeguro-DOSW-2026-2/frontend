@@ -1,4 +1,4 @@
-import { ApiError, request } from '../../../shared/services/http';
+import { ApiError, request, SERVICE_UNAVAILABLE } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import type { EventDetail, EventFinish, EventInput, EventStatus, EventSummary, EventType, Page } from '../types';
 
@@ -9,15 +9,15 @@ import type { EventDetail, EventFinish, EventInput, EventStatus, EventSummary, E
 const BASE = '/api/v1/eventos';
 
 const MESSAGES: Record<string, string> = {
-  VALIDACION: 'Revisa los campos marcados.',
-  PROHIBIDO: 'Tu rol no puede hacer esta acción: los simulacros los gestiona el organizador y los eventos reales el coordinador.',
+  VALIDACION: 'Revise los campos marcados.',
+  PROHIBIDO: 'Su rol no permite esta acción: los simulacros los gestiona el organizador y los eventos reales, el coordinador.',
   NO_ENCONTRADO: 'El evento no existe.',
   CONFLICTO: 'No se pudo guardar: choca con otro evento (solo puede haber uno en ejecución a la vez).',
-  MODIFICACION_CONCURRENTE: 'Otra persona cambió el evento. Recarga e inténtalo de nuevo.',
+  MODIFICACION_CONCURRENTE: 'Otra persona modificó el evento. Recargue la página e intente de nuevo.',
   TRANSICION_INVALIDA: 'El evento ya no admite esa acción en su estado actual.',
   EVENTO_NO_EDITABLE: 'Un evento Finalizado no se puede editar.',
   EVENTO_NO_ACTIVO: 'Solo se puede finalizar un evento en ejecución.',
-  SERVICIO_EXTERNO_NO_DISPONIBLE: 'Un servicio del campus no respondió. Inténtalo en unos minutos.',
+  SERVICIO_EXTERNO_NO_DISPONIBLE: SERVICE_UNAVAILABLE,
 };
 
 /** Campo del contrato → campo del formulario, para marcar los errores 400. */
@@ -81,7 +81,7 @@ export async function defaultTypeId(session: Session): Promise<string> {
   const types = await eventsApi.types(session);
   const found = types.find((t) => t.code === code && t.active);
   if (!found) {
-    throw new ApiError(0, 'No se encontró el tipo de evento en el catálogo. Intenta de nuevo más tarde.');
+    throw new ApiError(0, 'No se encontró el tipo de evento en el catálogo. Intente de nuevo más tarde.');
   }
   return found.id;
 }

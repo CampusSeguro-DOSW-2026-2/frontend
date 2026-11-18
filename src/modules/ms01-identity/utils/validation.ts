@@ -1,5 +1,5 @@
 /**
- * Reglas de entrada de MS01 (documento de formularios F-01 a F-06) con sus mensajes textuales.
+ * Reglas de entrada de MS01 (documento de formularios F-01 a F-14) con sus mensajes textuales.
  * El back sigue siendo quien decide: el front las repite para avisar antes de enviar y usa los mismos
  * mensajes que el back, de modo que el usuario ve lo mismo con o sin viaje al servidor.
  *
@@ -21,6 +21,13 @@ const EMAIL_FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const CODE_PATTERN = /^[0-9]{6}$/;
 
+// Nombre de un rol ya normalizado (RG-08): empieza con letra; luego letras sin tilde, dígitos o guion bajo
+const ROLE_NAME_PATTERN = /^[A-Z][A-Z0-9_]{1,29}$/;
+const RESERVED_ROLE_NAME = 'DETAILS';
+
+// RG-03: texto libre sin etiquetas HTML
+const HTML_CHARS = /[<>]/;
+
 const EMAIL_MAX_LENGTH = 100;
 const PASSWORD_MAX_LENGTH = 64;
 
@@ -36,15 +43,20 @@ export const MESSAGES = {
   mismatch: 'Las contraseñas no coinciden.',
   loginPassword: 'Ingrese su contraseña.',
   loginPasswordLength: 'La contraseña no puede superar los 64 caracteres.',
-  currentPassword: 'Ingrese su contraseña actual.',
+  currentPassword: 'La contraseña actual es incorrecta.',
   newPassword: 'La nueva contraseña no cumple la política o es igual a la actual.',
   code: 'Código incorrecto o vencido.',
   forgotSent: 'Si el correo está registrado, enviamos un código de recuperación.',
+  registerSent: 'Enviamos un código de verificación a su correo. Ingréselo para crear la cuenta.',
+  registerResent: 'Si hay un registro pendiente para este correo, enviamos un nuevo código de verificación.',
+  roleName: 'El nombre del rol debe tener de 2 a 30 caracteres: letras sin tilde, números y guion bajo, empezando con una letra.',
+  reservedRoleName: 'Ese nombre de rol está reservado.',
+  roleDescription: 'La descripción debe tener entre 3 y 200 caracteres.',
 } as const;
 
 export type NameField = 'firstName' | 'secondName' | 'firstLastName' | 'secondLastName';
 
-/** Nombres y apellidos (F-01 y F-03): 2 a 30 letras; el segundo nombre y el segundo apellido son opcionales. */
+/** Nombres y apellidos (F-01 y F-03): 2 a 30 letras, también el segundo nombre y el segundo apellido, que son opcionales. */
 export function nameError(field: NameField, value: string): string {
   const optional = field === 'secondName' || field === 'secondLastName';
   const name = value.trim();
@@ -113,10 +125,31 @@ export function currentPasswordError(value: string): string {
   return '';
 }
 
-/** Código de recuperación (F-05): 6 dígitos. El mensaje es genérico a propósito. */
+/** Código de recuperación (F-05) y de verificación del registro (F-14): 6 dígitos. El mensaje es genérico a propósito. */
 export function codeError(value: string): string {
   if (!CODE_PATTERN.test(value)) {
     return MESSAGES.code;
+  }
+  return '';
+}
+
+/** Nombre de un rol (F-10 y F-11): se recorta y se pasa a mayúsculas antes de validarlo (RG-08); `DETAILS` está reservado. */
+export function roleNameError(value: string): string {
+  const name = value.trim().toUpperCase();
+  if (!ROLE_NAME_PATTERN.test(name)) {
+    return MESSAGES.roleName;
+  }
+  if (name === RESERVED_ROLE_NAME) {
+    return MESSAGES.reservedRoleName;
+  }
+  return '';
+}
+
+/** Descripción de un rol (F-10 y F-11): 3 a 200 caracteres sin etiquetas HTML (RG-03). */
+export function roleDescriptionError(value: string): string {
+  const description = value.trim();
+  if (description.length < 3 || description.length > 200 || HTML_CHARS.test(description)) {
+    return MESSAGES.roleDescription;
   }
   return '';
 }

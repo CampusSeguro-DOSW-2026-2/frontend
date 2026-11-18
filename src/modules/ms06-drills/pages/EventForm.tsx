@@ -115,8 +115,8 @@ export default function EventForm({ session, editId }: { session: Session; editI
 
   const save = async () => {
     const local: FieldErrors = {};
-    if (!form.name.trim()) local.name = 'Escribe el nombre del evento.';
-    if (!typeIds.length && catalogTypes.length) local.typeIds = 'Selecciona al menos un tipo.';
+    if (!form.name.trim()) local.name = 'Escriba el nombre del evento.';
+    if (!typeIds.length && catalogTypes.length) local.typeIds = 'Seleccione al menos un tipo.';
     if (form.start && !inProgress && new Date(form.start).getTime() <= Date.now()) local.startDate = 'La fecha de inicio debe ser posterior a la actual.';
     setErrors(local);
     if (Object.keys(local).length) return;
@@ -192,7 +192,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
                 ? <span className="error" role="alert">{errors.startDate}</span>
                 : <span className="help">A esta hora inicia el evento y se avisa a los participantes.</span>}
             </div>
-            <PickerBox label="Tipo de evento" help={isDrill ? 'El simulacro siempre lleva su tipo; puedes sumar hasta 3 más.' : 'Elige hasta 4 tipos de emergencia.'}
+            <PickerBox label="Tipo de evento" help={isDrill ? 'El simulacro siempre lleva su tipo; puede sumar hasta 3 más.' : 'Elija hasta 4 tipos de emergencia.'}
               editLabel="Editar tipo" items={typeItems} selected={typeIds} onToggle={toggleType} error={errors.typeIds} loading={!typeItems.length && !typesError} />
           </div>
           {typesError && (
@@ -227,7 +227,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
             <div className="sum2-msg">
               <small>Nombre del evento</small>
               <strong>{form.name.trim() || 'Pendiente de completar'}</strong>
-              <p className="clamp">{form.description.trim() || 'Añade la descripción que verán los participantes.'}</p>
+              <p className="clamp">{form.description.trim() || 'Agregue la descripción que verán los participantes.'}</p>
             </div>
             <div className="sep" />
             <div className="sum2-row"><small>Tipo</small><span>{typeIds.length ? listEs(typeIds.map((t) => labelOf(typeItems, t))) : '—'}</span></div>

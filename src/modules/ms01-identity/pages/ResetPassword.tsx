@@ -131,8 +131,8 @@ export default function ResetPassword() {
       <main className="reg-main">
         <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
 
-        <h1>Cambia tu contraseña</h1>
-        <p className="reg-sub">Crea una nueva contraseña para proteger el acceso a tu cuenta.</p>
+        <h1>Cambie su contraseña</h1>
+        <p className="reg-sub">Cree una nueva contraseña para proteger el acceso a su cuenta.</p>
 
         <form
           className="reg-form"
@@ -147,7 +147,7 @@ export default function ResetPassword() {
             id="password"
             label="Nueva contraseña"
             type="password"
-            placeholder="Ingresa tu contraseña"
+            placeholder="Ingrese su contraseña"
             value={form.password}
             onChange={(v) => set('password', v)}
             error={errors.password}
@@ -157,9 +157,9 @@ export default function ResetPassword() {
 
           <TextField
             id="confirmPassword"
-            label="Vuelve a ingresar la contraseña"
+            label="Confirme la contraseña"
             type="password"
-            placeholder="Ingresa tu contraseña de nuevo"
+            placeholder="Ingrese de nuevo su contraseña"
             value={form.confirmPassword}
             onChange={(v) => set('confirmPassword', v)}
             error={errors.confirmPassword}

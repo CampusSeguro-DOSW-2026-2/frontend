@@ -108,7 +108,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
       <main className="ev-main">
         {eventos === null && <p className="notice" role="status">Cargando eventos…</p>}
         {eventos && eventos.length === 0 && !error && (
-          <div className="ev-empty">No hay {tipos} programados ni en ejecución. Cuando se programe uno, aquí podrás gestionar a sus brigadistas.</div>
+          <div className="ev-empty">No hay {tipos} programados ni en ejecución. Cuando se programe uno, aquí podrá gestionar a sus brigadistas.</div>
         )}
 
         {eventos && eventos.length > 1 && (
@@ -237,7 +237,7 @@ function CambiarAsignacion({ session, evento, brigadista, onClose, onDone }: {
 
   const aceptar = async () => {
     const edificio = evento.edificios.find((e) => e.ubicacionId === seleccion);
-    if (!edificio) { setError('Elige un edificio.'); return; }
+    if (!edificio) { setError('Elija un edificio.'); return; }
     if (edificio.ubicacionId === brigadista.ubicacionId) { setError('El brigadista ya está en ese edificio.'); return; }
     setSaving(true);
     setError('');

@@ -1,237 +1,187 @@
-import { useEffect, useState } from 'react';
-import type { FormEvent } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { RoleChip } from '../components/Chips';
-import { RoleCatalog } from '../components/RoleCatalog';
-import { Search } from '../../../shared/components/Icons';
-import { errorMessage, searchUsers } from '../services/users';
-import { ROLE_OPTIONS } from '../utils/labels';
+import { PermissionGroups } from '../components/Permissions';
+import { deleteRole, getRoleDetails } from '../services/roles';
+import { errorMessage } from '../services/users';
+import { hasPermission } from '../../../shared/services/session';
+import { PERMISSION } from '../utils/permissions';
+import type { RoleDetail } from '../types';
 import type { Session } from '../../../shared/types';
-import type { UserPage, UserSearch, UserSummary } from '../types';
 import '../styles/users.css';
-
-const PAGE_SIZE = 20;
-
-type View = 'assign' | 'catalog';
-
-const VIEWS: { value: View; label: string }[] = [
-  { value: 'assign', label: 'Asignar roles' },
-  { value: 'catalog', label: 'Catálogo de roles y permisos' },
-];
-
-// RG-03: la búsqueda no admite etiquetas HTML
-const HTML_CHARS = /[<>]/;
-
-// Resultado de la última búsqueda, junto con los criterios con los que se pidió
-interface Result { query: UserSearch; page?: UserPage; error?: string }
 
 interface Props {
   session: Session;
-  selected: UserSummary[];
-  onSelectedChange: (users: UserSummary[]) => void;
+  /** Guarda el rol que se va a editar (F-11 y F-12). */
+  onEditRole: (role: RoleDetail) => void;
+  /** Avisa que se borró un rol, para quitarlo de lo que lo mostraba (la selección de usuarios). */
+  onRoleDeleted: (role: string) => void;
 }
 
+// Aviso de F-13 antes de borrar un rol
+const DELETE_WARNING =
+  'Los usuarios que tengan solo este rol pasarán a ESTUDIANTE y a los demás se les retirará este rol. Se cerrará su sesión.';
+
 /**
- * Gestión de roles y permisos (RF-MS01-05, solo administrador): busca usuarios por correo o por rol,
- * selecciona uno o varios para agregarles o retirarles roles (F-09) y consulta el catálogo completo.
+ * Roles (RF-MS01-10): la definición de cada rol, es decir, su nombre, su descripción y sus permisos. Con
+ * ms01:role:read_all se consultan y con ms01:role:manage además se crean, editan y borran (F-10 a F-13). ESTUDIANTE y
+ * ADMIN son de sistema: no se borran. A quién se le da cada rol se decide en Usuarios (F-09).
  */
-export default function Roles({ session, selected, onSelectedChange }: Props) {
-  const [view, setView] = useState<View>('assign');
-  const [query, setQuery] = useState<UserSearch>({ email: '', state: '', role: '', page: 0, size: PAGE_SIZE });
-  const [draft, setDraft] = useState('');
-  const [draftError, setDraftError] = useState('');
-  const [result, setResult] = useState<Result | null>(null);
+export default function Roles({ session, onEditRole, onRoleDeleted }: Props) {
+  const canManage = hasPermission(session, PERMISSION.ROLE_MANAGE);
+  const [roles, setRoles] = useState<RoleDetail[] | null>(null);
+  const [error, setError] = useState('');
+  const [attempt, setAttempt] = useState(0);
+  const [expanded, setExpanded] = useState('');
+  // Borrado (F-13): rol por confirmar, si se está borrando, su error y el aviso del resultado
+  const [confirming, setConfirming] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
     let cancelled = false;
-    searchUsers(session, query)
-      .then((page) => {
-        if (!cancelled) setResult({ query, page });
+    getRoleDetails(session)
+      .then((items) => {
+        if (!cancelled) {
+          setError('');
+          setRoles(items);
+        }
       })
       .catch((err: unknown) => {
-        if (!cancelled) setResult({ query, error: errorMessage(err) });
+        if (!cancelled) setError(errorMessage(err));
       });
     return () => { cancelled = true; };
-  }, [session, query]);
+  }, [session, attempt]);
 
-  const loading = result?.query !== query;
-  const data = result?.page ?? null;
-  const error = result?.error ?? '';
-
-  const onSearch = (e: FormEvent) => {
-    e.preventDefault();
-    const value = draft.trim();
-    if (HTML_CHARS.test(value)) {
-      setDraftError('La búsqueda no puede contener etiquetas HTML.');
-      return;
-    }
-    if (value.length > 100) {
-      setDraftError('La búsqueda no puede superar los 100 caracteres.');
-      return;
-    }
-    setDraftError('');
-    setQuery((q) => ({ ...q, email: value, page: 0 }));
+  const askDelete = (role: string) => {
+    setConfirming(role);
+    setDeleteError('');
+    setNotice('');
   };
 
-  const setRoleFilter = (value: string) => setQuery((q) => ({ ...q, role: value, page: 0 }));
-  const goToPage = (page: number) => setQuery((q) => ({ ...q, page }));
-
-  // ---- Selección: se conserva al cambiar de página y de filtros ----
-  const rows = data?.items ?? [];
-  const selectedIds = new Set(selected.map((u) => u.id));
-  const allOnPageSelected = rows.length > 0 && rows.every((u) => selectedIds.has(u.id));
-
-  const toggleRow = (user: UserSummary) => {
-    if (selectedIds.has(user.id)) {
-      onSelectedChange(selected.filter((s) => s.id !== user.id));
-    } else {
-      onSelectedChange([...selected, user]);
+  const remove = async (role: string) => {
+    if (deleting) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      await deleteRole(session, role);
+      setConfirming('');
+      setNotice(`Se eliminó el rol ${role}.`);
+      setRoles((current) => current?.filter((item) => item.role !== role) ?? null);
+      setAttempt((n) => n + 1);
+      onRoleDeleted(role);
+    } catch (err) {
+      setDeleteError(errorMessage(err));
+    } finally {
+      setDeleting(false);
     }
   };
 
-  const togglePage = () => {
-    if (allOnPageSelected) {
-      onSelectedChange(selected.filter((s) => !rows.some((r) => r.id === s.id)));
-    } else {
-      onSelectedChange([...selected, ...rows.filter((r) => !selectedIds.has(r.id))]);
-    }
-  };
-
-  const total = data?.totalElements ?? 0;
+  const columns = canManage ? 4 : 3;
 
   return (
     <>
       <PageHeader
-        badge="ADMINISTRADOR"
-        title="Roles y permisos"
-        subtitle="Agrega o retira roles a la comunidad y consulta qué permite cada rol."
-        context={view === 'assign' && data ? `${total} ${total === 1 ? 'usuario' : 'usuarios'}` : undefined}
+        badge="ADMINISTRACIÓN"
+        title="Roles"
+        subtitle={canManage
+          ? 'Cree y edite los roles y los permisos que concede cada uno. Los roles se asignan desde Usuarios.'
+          : 'Consulte los roles y los permisos que concede cada uno.'}
+        context={roles ? `${roles.length} ${roles.length === 1 ? 'rol' : 'roles'}` : undefined}
       />
       <main className="content">
-        <div className="pills" role="group" aria-label="Vista">
-          {VIEWS.map((v) => (
-            <button type="button" key={v.value} className="pill" aria-pressed={view === v.value} onClick={() => setView(v.value)}>
-              {v.label}
-            </button>
-          ))}
-        </div>
+        {canManage && (
+          <div className="selbar">
+            <a className="btn red" href="#/roles/nuevo">Crear rol</a>
+            <span>Cambiar el nombre o los permisos de un rol cierra la sesión de sus usuarios.</span>
+          </div>
+        )}
 
-        {view === 'catalog' && <RoleCatalog session={session} />}
+        {notice && <p className="notice" role="status">{notice}</p>}
 
-        {view === 'assign' && (
-          <>
-            <form className="toolbar" role="search" noValidate onSubmit={onSearch}>
-              <div className="field">
-                <label htmlFor="q">Buscar por correo</label>
-                <div className={`input${draftError ? ' bad' : ''}`}>
-                  <Search />
-                  <input
-                    id="q"
-                    type="text"
-                    value={draft}
-                    onChange={(e) => { setDraft(e.target.value); setDraftError(''); }}
-                    placeholder="Ingresa el correo o parte del correo"
-                    maxLength={100}
-                    aria-invalid={!!draftError}
-                    aria-describedby={draftError ? 'q-msg' : undefined}
-                  />
-                </div>
-                {draftError && <span id="q-msg" className="error" role="alert">{draftError}</span>}
-              </div>
-              <button type="submit" className="btn red">Buscar</button>
-            </form>
+        {error && (
+          <div className="panel wide-panel">
+            <p className="notice err" role="alert">{error}</p>
+            <button type="button" className="btn white" onClick={() => setAttempt((n) => n + 1)}>Reintentar</button>
+          </div>
+        )}
 
-            <div className="filters">
-              <div className="field">
-                <label htmlFor="role">Rol</label>
-                <div className="input">
-                  <select id="role" value={query.role} onChange={(e) => setRoleFilter(e.target.value)}>
-                    <option value="">Todos</option>
-                    {ROLE_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div className="selbar">
-              <button
-                type="button"
-                className="btn navy"
-                disabled={selected.length === 0}
-                onClick={() => { window.location.hash = '#/roles/editar'; }}
-              >
-                Editar roles
-              </button>
-              <span role="status">
-                {selected.length === 0
-                  ? 'Selecciona usuarios para agregarles o retirarles roles.'
-                  : `${selected.length} ${selected.length === 1 ? 'usuario seleccionado' : 'usuarios seleccionados'}`}
-              </span>
-            </div>
-
-            {error && (
-              <div className="panel wide-panel">
-                <p className="notice err" role="alert">{error}</p>
-                <button type="button" className="btn white" onClick={() => setQuery((q) => ({ ...q }))}>Reintentar</button>
-              </div>
-            )}
-
-            {!error && (
-              <div className="tablewrap" aria-busy={loading}>
-                <table className="utable">
-                  <caption className="sr-only">Usuarios y sus roles</caption>
-                  <thead>
-                    <tr>
-                      <th className="check">
-                        <input
-                          type="checkbox"
-                          aria-label="Seleccionar todos los usuarios de esta página"
-                          checked={allOnPageSelected}
-                          onChange={togglePage}
-                          disabled={rows.length === 0}
-                        />
-                      </th>
-                      <th scope="col">Correo</th>
-                      <th scope="col">Roles</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((user) => (
-                      <tr key={user.id}>
-                        <td className="check">
-                          <input
-                            type="checkbox"
-                            aria-label={`Seleccionar a ${user.email}`}
-                            checked={selectedIds.has(user.id)}
-                            onChange={() => toggleRow(user)}
-                          />
+        {!error && (
+          <div className="tablewrap" aria-busy={!roles}>
+            <table className="utable roles-table">
+              <caption className="sr-only">Roles y sus permisos</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Rol</th>
+                  <th scope="col">Descripción</th>
+                  <th scope="col">Permisos</th>
+                  {canManage && <th scope="col"><span className="sr-only">Acciones</span></th>}
+                </tr>
+              </thead>
+              <tbody>
+                {(roles ?? []).map((item) => {
+                  const open = expanded === item.role;
+                  const total = item.permissions.length;
+                  return (
+                    <Fragment key={item.role}>
+                      <tr>
+                        <td>
+                          <div className="chips">
+                            <RoleChip role={item.role} />
+                            {item.system && <span className="chip">De sistema</span>}
+                          </div>
                         </td>
-                        <td className="mail">
-                          {user.email}
-                          {user.id === session.user.id && <span className="me"> (tú)</span>}
+                        <td className="desc">{item.description}</td>
+                        <td>
+                          <button type="button" className="linkbtn" aria-expanded={open}
+                            onClick={() => setExpanded(open ? '' : item.role)}>
+                            {total} {total === 1 ? 'permiso' : 'permisos'} · {open ? 'Ocultar' : 'Ver'}
+                          </button>
                         </td>
-                        <td><div className="chips">{user.roles.map((role) => <RoleChip key={role} role={role} />)}</div></td>
+                        {canManage && (
+                          <td className="right">
+                            <div className="row-actions">
+                              <a className="btn white" href="#/roles/editar" onClick={() => onEditRole(item)}>Editar</a>
+                              <button type="button" className="btn white" disabled={item.system || deleting}
+                                onClick={() => askDelete(item.role)}
+                                title={item.system ? 'Los roles de sistema no se pueden eliminar.' : undefined}>
+                                Eliminar
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {loading && rows.length === 0 && <p className="empty" role="status">Cargando usuarios…</p>}
-                {!loading && rows.length === 0 && <p className="empty">No se encontraron usuarios con esos criterios.</p>}
-              </div>
-            )}
-
-            {!error && data && data.totalPages > 0 && (
-              <nav className="pager" aria-label="Paginación">
-                <button type="button" className="btn white" disabled={loading || data.page <= 0} onClick={() => goToPage(data.page - 1)}>
-                  Anterior
-                </button>
-                <span>Página {data.page + 1} de {data.totalPages}</span>
-                <button type="button" className="btn white" disabled={loading || data.page + 1 >= data.totalPages} onClick={() => goToPage(data.page + 1)}>
-                  Siguiente
-                </button>
-              </nav>
-            )}
-          </>
+                      {confirming === item.role && (
+                        <tr className="row-detail">
+                          <td colSpan={columns}>
+                            <div className="role-confirm" role="alertdialog" aria-labelledby={`del-${item.role}`}>
+                              <p id={`del-${item.role}`} className="notice err">{DELETE_WARNING}</p>
+                              {deleteError && <p className="notice err" role="alert">{deleteError}</p>}
+                              <div className="btns">
+                                <button type="button" className="btn red" disabled={deleting} onClick={() => void remove(item.role)}>
+                                  {deleting ? 'Eliminando…' : `Eliminar ${item.role}`}
+                                </button>
+                                <button type="button" className="btn white" disabled={deleting} onClick={() => setConfirming('')}>
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {open && (
+                        <tr className="row-detail">
+                          <td colSpan={columns}><PermissionGroups codes={item.permissions} /></td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
+            {!roles && <p className="empty" role="status">Cargando los roles…</p>}
+          </div>
         )}
       </main>
     </>
