@@ -9,7 +9,8 @@ export interface Scope { type: 'CAMPUS' | 'BUILDING' | 'ZONE'; ids?: string[] }
 // USER lleva el UUID del usuario; ROLE, uno de los roles oficiales (ESTUDIANTE, PROFESOR, ...).
 export interface Recipient { type: 'USER' | 'ROLE'; id: string }
 export interface AlertSummary {
-  id: string; types: AlertType[]; title: string; scope: Scope; status: AlertStatus; origin: AlertOrigin; simulationId: string | null;
+  // MS03 devuelve scope en null cuando la alerta cubre más de un tipo de alcance; la lista completa va en scopes.
+  id: string; types: AlertType[]; title: string; scope: Scope | null; scopes: Scope[]; status: AlertStatus; origin: AlertOrigin; simulationId: string | null;
   createdAt: string; instructions: string; recipients: Recipient[];
 }
 export interface Alert extends AlertSummary {
@@ -17,7 +18,7 @@ export interface Alert extends AlertSummary {
 }
 // Alerta tal como la ve su destinatario en la bandeja (GET /alertas/mias)
 export interface InboxAlert {
-  id: string; types: AlertType[]; title: string; status: AlertStatus; origin: AlertOrigin; scope: Scope; instructions: string;
+  id: string; types: AlertType[]; title: string; status: AlertStatus; origin: AlertOrigin; scope: Scope | null; scopes: Scope[]; instructions: string;
   activatedAt: string | null; archivedAt: string | null; confirmedAt: string | null;
 }
 export type InboxStatus = 'ACTIVE' | 'ARCHIVED' | 'ALL';

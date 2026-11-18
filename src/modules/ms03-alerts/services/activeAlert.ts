@@ -3,7 +3,7 @@ import { ago, read, write } from '../../../shared/services/localStore';
 
 /** Alerta activa que ve el destinatario en su pantalla de inicio. */
 export interface ActiveAlert {
-  id: string; types: AlertType[]; title: string; instructions: string; scope: Scope; startedAt: string; confirmed: boolean;
+  id: string; types: AlertType[]; title: string; instructions: string; scope: Scope | null; scopes?: Scope[]; startedAt: string; confirmed: boolean;
 }
 
 interface ActiveAlertApi {
@@ -42,7 +42,7 @@ export const ms03Api: ActiveAlertApi = {
     const alert = page.content[0];
     if (!alert) return null;
     return {
-      id: alert.id, types: alert.types, title: alert.title, scope: alert.scope, instructions: alert.instructions,
+      id: alert.id, types: alert.types, title: alert.title, scope: alert.scope, scopes: alert.scopes, instructions: alert.instructions,
       startedAt: alert.activatedAt ?? new Date().toISOString(), confirmed: alert.confirmedAt !== null,
     };
   },

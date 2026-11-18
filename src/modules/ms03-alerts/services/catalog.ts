@@ -1,4 +1,4 @@
-import type { AlertType, Recipient } from './alerts';
+import type { AlertType, Recipient, Scope } from './alerts';
 
 export interface CatalogItem { id: string; label: string; group: string }
 
@@ -74,9 +74,16 @@ export const recipientsText = (recipients: Recipient[]) => {
   if (users) names.push(users === 1 ? '1 usuario' : `${users} usuarios`);
   return listEs(names);
 };
-/** Texto del alcance; si el catálogo de MS02 aún no llegó, muestra el id para no ocultar información. */
-export const scopeText = (s: { type: string; ids?: string[] }, catalog?: ScopeCatalog | null) => {
-  if (s.type === 'CAMPUS') return 'Todo el campus';
+/**
+ * Texto del alcance. MS03 manda `scope` en null cuando la alerta cubre más de un tipo de alcance, así que
+ * se prefiere la lista `scopes`. Si el catálogo de MS02 aún no llegó, muestra el id para no ocultar información.
+ */
+export const scopeText = (scope: Scope | null | undefined, catalog?: ScopeCatalog | null, scopes?: Scope[] | null) => {
+  const list = scopes?.length ? scopes : scope ? [scope] : [];
+  if (!list.length) return 'Sin alcance';
   const items = catalog ? [...catalog.buildings, ...catalog.zones] : [];
-  return scopeIdsOf(s).map((id) => labelOf(items, id)).join(', ');
+  return list
+    .map((s) => (s.type === 'CAMPUS' ? 'Todo el campus' : scopeIdsOf(s).map((id) => labelOf(items, id)).join(', ')))
+    .filter((text) => text !== '')
+    .join(' · ');
 };
