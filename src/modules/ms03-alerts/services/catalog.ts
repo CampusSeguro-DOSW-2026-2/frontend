@@ -29,22 +29,12 @@ export const SCOPE_ITEMS: CatalogItem[] = [
   { id: 'ZON-001', label: 'Plazoleta frente al Edificio F', group: 'Zonas' },
 ];
 
-// Roles oficiales de CampusSeguro que pueden recibir alertas (permiso ms03:alert:receive).
-// ADMIN y AUDITOR existen pero no reciben alertas, por eso no se ofrecen como destinatarios.
-export const ROLE_ITEMS: CatalogItem[] = [
-  { id: 'ESTUDIANTE', label: 'Estudiantes', group: 'Roles' },
-  { id: 'PROFESOR', label: 'Profesores', group: 'Roles' },
-  { id: 'ADMINISTRATIVO', label: 'Personal administrativo', group: 'Roles' },
-  { id: 'BRIGADISTA', label: 'Brigadistas', group: 'Roles' },
-  { id: 'COORDINADOR', label: 'Coordinadores', group: 'Roles' },
-  { id: 'ORGANIZADOR', label: 'Organizadores', group: 'Roles' },
-];
-// Etiquetas de los 8 roles oficiales, para mostrar alertas creadas fuera de esta pantalla (p. ej. por MS06).
-const ROLE_LABELS: Record<string, string> = {
-  ...Object.fromEntries(ROLE_ITEMS.map((r) => [r.id, r.label])),
-  ADMIN: 'Administradores',
-  AUDITOR: 'Auditores',
-};
+// Opción de destinatario para un rol de MS01: se muestra con su nombre original, el mismo que guarda MS01.
+export const roleItem = (rol: string): CatalogItem => ({ id: rol, label: rol, group: 'Roles' });
+// Roles que reciben alertas (permiso ms03:alert:receive) solo si MS01 no responde: la lista vigente sale de MS01
+// (`services/recipients.ts`), que incluye los roles que cree el administrador.
+export const ROLE_ITEMS: CatalogItem[] =
+  ['ADMINISTRATIVO', 'BRIGADISTA', 'COORDINADOR', 'ESTUDIANTE', 'ORGANIZADOR', 'PROFESOR'].map((rol) => roleItem(rol));
 
 // Tipos de alerta. OPERATIVA (logística o administrativa) es exclusiva: no se combina con los de emergencia.
 export const TYPE_ITEMS: CatalogItem[] = [
@@ -64,12 +54,13 @@ export const toggleType = (current: AlertType[], id: AlertType): AlertType[] => 
 export const labelOf = (items: CatalogItem[], id: string) => items.find((i) => i.id === id)?.label ?? id;
 export const scopeIdsOf = (s: { type: string; ids?: string[] }) => (s.type === 'CAMPUS' ? ['CAMPUS'] : s.ids ?? []);
 export const listEs = (xs: string[]) => {
-  const l = xs.map((x, i) => (i === 0 ? x : x.charAt(0).toLowerCase() + x.slice(1)));
+  // Los nombres en mayúsculas (los roles de MS01) se muestran tal cual
+  const l = xs.map((x, i) => (i === 0 || x === x.toUpperCase() ? x : x.charAt(0).toLowerCase() + x.slice(1)));
   return l.length > 1 ? `${l.slice(0, -1).join(', ')} y ${l[l.length - 1]}` : l[0] ?? '';
 };
 /** Destinatarios en texto: los roles por nombre y los usuarios individuales como un conteo. */
 export const recipientsText = (recipients: Recipient[]) => {
-  const names = recipients.filter((r) => r.type === 'ROLE').map((r) => ROLE_LABELS[r.id] ?? r.id);
+  const names = recipients.filter((r) => r.type === 'ROLE').map((r) => r.id);
   const users = recipients.filter((r) => r.type === 'USER').length;
   if (users) names.push(users === 1 ? '1 usuario' : `${users} usuarios`);
   return listEs(names);
