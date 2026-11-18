@@ -9,6 +9,9 @@ import type { Session } from '../types';
  */
 const STORAGE_KEY = 'campusseguro.session';
 
+/** Route of the home screen: where a login ends and where an authenticated user is sent from the root or the login */
+export const HOME_ROUTE = '#/simulacro';
+
 let memorySession: Session | null = null;
 
 type StorageName = 'localStorage' | 'sessionStorage';
@@ -79,6 +82,34 @@ export function clearSession(): void {
   } catch {
     // Sin almacenamiento disponible: no hay nada que borrar
   }
+}
+
+/**
+ * Aligns this tab with a change of the remembered session made in another tab (login or logout with "Recuérdame"),
+ * the browser only reports to a tab the localStorage changes made by the other tabs. If the session that this tab
+ * holds in memory is the one that was closed or replaced, it is discarded so that getSession reads the current state
+ * of the storage. A session kept only in sessionStorage belongs to its own tab and is never touched
+ *
+ * @param event storage event received by the tab
+ * @return true if the event concerns the remembered session and the screen must read the session again
+ */
+export function syncRememberedSession(event: StorageEvent): boolean {
+  if (event.key !== STORAGE_KEY) {
+    return false;
+  }
+
+  if (memorySession && event.oldValue) {
+    let previousToken = '';
+    try {
+      previousToken = (JSON.parse(event.oldValue) as Session).token;
+    } catch {
+      // Unreadable previous value: it cannot be the session of this tab
+    }
+    if (previousToken === memorySession.token) {
+      memorySession = null;
+    }
+  }
+  return true;
 }
 
 // Permisos de cada token ya leídos, para no decodificar el mismo token en cada render
