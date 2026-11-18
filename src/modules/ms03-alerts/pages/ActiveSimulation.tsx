@@ -55,7 +55,7 @@ export default function ActiveSimulation() {
   const operational = alert.types.length === 1 && alert.types[0] === 'OPERATIVA';
   return (
     <>
-      <PageHeader badge="EN PROGRESO" title={alert.title} subtitle={`Alcance: ${scopeText(alert.scope, catalog)}`} context={`Iniciado: ${timeOf(alert.startedAt)}`} />
+      <PageHeader badge="EN PROGRESO" title={alert.title} subtitle={`Alcance: ${scopeText(alert.scope, catalog, alert.scopes)}`} context={`Iniciado: ${timeOf(alert.startedAt)}`} />
       <main className="content">
         <h2 className="title">{operational ? 'Instrucciones' : 'Instrucciones de Emergencia'}</h2>
         <div className="steps">

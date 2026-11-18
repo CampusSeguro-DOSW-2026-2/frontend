@@ -109,7 +109,7 @@ export default function AlertList() {
           {empty && <><EmptyLogo /><h2>El campus está seguro. No hay alertas</h2></>}
           {shown.map((a, i) => {
             const s = ST[a.status];
-            const scope = scopeText(a.scope, catalog);
+            const scope = scopeText(a.scope, catalog, a.scopes);
             const rec = recipientsText(a.recipients);
             const manage = access.canManage(a.origin);
             return (

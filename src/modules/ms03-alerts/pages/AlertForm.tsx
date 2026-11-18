@@ -49,6 +49,8 @@ export default function AlertForm({ editId }: { editId?: string }) {
     id === 'CAMPUS' ? 'CAMPUS' : catalog?.buildings.some((building) => building.id === id) ? 'BUILDING' : 'ZONE';
   const [scopeIds, setScopeIds] = useState<string[]>([]);
   const [scopeType, setScopeType] = useState<Scope['type'] | null>(null);
+  // Tipos de alcance distintos que trae la alerta: el formulario y el PUT solo manejan uno a la vez.
+  const [scopeKinds, setScopeKinds] = useState(0);
   const [roles, setRoles] = useState<string[]>([]);
   const [types, setTypes] = useState<AlertType[]>(DEFAULT_TYPES);
   // Destinatarios individuales (USER) que pudo fijar otro servicio: se conservan al editar.
@@ -63,7 +65,12 @@ export default function AlertForm({ editId }: { editId?: string }) {
     if (!editId) return;
     alertsApi.get(editId).then((a) => {
       setAlert(a); setTitle(a.title); setInstructions(a.instructions);
-      setScopeType(a.scope.type); setScopeIds(scopeIdsOf(a.scope));
+      // MS03 manda scope en null cuando la alerta cubre varios tipos de alcance; la lista completa va en scopes.
+      const scopes = a.scopes?.length ? a.scopes : a.scope ? [a.scope] : [];
+      const first = scopes[0] ?? null;
+      setScopeKinds(new Set(scopes.map((s) => s.type)).size);
+      setScopeType(first ? first.type : null);
+      setScopeIds(first ? scopeIdsOf(first) : []);
       setRoles(a.recipients.filter((r) => r.type === 'ROLE').map((r) => r.id));
       setUsers(a.recipients.filter((r) => r.type === 'USER')); setTypes(a.types);
       if (a.activationAt) setStart(toLocalInput(a.activationAt));
@@ -139,6 +146,8 @@ export default function AlertForm({ editId }: { editId?: string }) {
 
   if (loading) return <main className="page"><p className="notice">Cargando alerta…</p></main>;
   if (forbidden) return <main className="page"><p className="notice" role="alert">No cuentas con permisos para {editId ? 'editar esta alerta' : 'crear alertas'}. <a href="#/alertas">Volver al listado</a></p></main>;
+  // PUT /alertas/{id} solo acepta un scope: editar aquí borraría los demás alcances de la alerta.
+  if (scopeKinds > 1) return <main className="page"><p className="notice" role="alert">Esta alerta cubre edificios y zonas a la vez y este formulario solo edita un tipo de alcance. <a href="#/alertas">Volver al listado</a></p></main>;
   if (blocked) return <main className="page"><p className="notice" role="alert">Esta alerta ya no se puede editar. <a href="#/alertas">Volver al listado</a></p></main>;
 
   return (
