@@ -2,7 +2,7 @@
 
 **Alcance:** Contenidos de aprendizaje preventivo, evaluaciones y asistente (Tutor AI).
 
-**Estado:** contenidos, categorías y evaluaciones conectados a MS07 (`/api/v1/training/...`). Progreso y tutor, pendientes.
+**Estado:** contenidos, categorías, evaluaciones y progreso conectados a MS07 (`/api/v1/training/...`). Tutor, pendiente.
 
 ## Pantallas
 
@@ -13,6 +13,7 @@
 | `#/admin/aprendizaje` | `pages/AdminContenidos.tsx` | `ms07:content:manage` | Crear, modificar, inactivar y reactivar contenidos y categorías (editores en `components/EditorContenido.tsx` y `components/EditorCategoria.tsx`) |
 | `#/evaluaciones` | `pages/Evaluaciones.tsx` | `ms07:quiz:take` | Evaluaciones activas, con filtro por categoría |
 | `#/evaluaciones/{id}` | `pages/PresentarEvaluacion.tsx` | `ms07:quiz:take` | Presentar la evaluación y ver el puntaje con la corrección; se puede repetir |
+| `#/mi-progreso` | `pages/MiProgreso.tsx` | `ms07:quiz:take` | Avance por categoría (contenidos vistos y promedio de los mejores puntajes), mejor resultado de cada evaluación y contenidos consultados; lo inactivado después sale como «No disponible» |
 | `#/admin/evaluaciones` | `pages/AdminEvaluaciones.tsx` | `ms07:content:manage` | Crear, modificar, inactivar y reactivar evaluaciones (editor en `components/EditorEvaluacion.tsx`) |
 
 Las pantallas y el menú se muestran por permiso del token, nunca por nombre de rol. Nada se borra: lo inactivo solo

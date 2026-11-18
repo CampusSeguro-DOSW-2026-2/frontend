@@ -2,7 +2,7 @@ import { request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import type {
   Categoria, CategoriaRequest, Contenido, ContenidoRequest, ContenidoResumen, Evaluacion, EvaluacionRequest,
-  EvaluacionResumen, Intento, Pagina, Respuesta,
+  EvaluacionResumen, Intento, Pagina, Progreso, Respuesta,
 } from '../types';
 
 /**
@@ -131,5 +131,20 @@ export const trainingApi = {
     return (await request(`${BASE}/evaluations/${enc(id)}/attempts`, {
       method: 'POST', body: { answers }, session,
     })) as Intento;
+  },
+
+  /** Progreso propio: contenidos consultados y mejor resultado de cada evaluación (RF-13). */
+  async progreso(session: Session): Promise<Progreso> {
+    return (await request(`${BASE}/progress/me`, { session })) as Progreso;
+  },
+
+  /** Todos los contenidos activos (recorre las páginas): sirven para calcular el avance por categoría. */
+  async todosLosContenidos(session: Session): Promise<ContenidoResumen[]> {
+    const todos: ContenidoResumen[] = [];
+    for (let page = 0; ; page++) {
+      const pagina = await this.contenidos(session, { page, size: 100 });
+      todos.push(...pagina.contenido);
+      if (page + 1 >= pagina.total_paginas) return todos;
+    }
   },
 };

@@ -6,6 +6,7 @@ import AdminEvaluaciones from './pages/AdminEvaluaciones';
 import Aprendizaje from './pages/Aprendizaje';
 import ContenidoDetalle from './pages/ContenidoDetalle';
 import Evaluaciones from './pages/Evaluaciones';
+import MiProgreso from './pages/MiProgreso';
 import PresentarEvaluacion from './pages/PresentarEvaluacion';
 
 /** Permisos de MS07 (Matriz Rol‐Permiso): la interfaz decide qué mostrar por permiso, nunca por rol. */
@@ -38,6 +39,9 @@ export function trainingRoutes(route: string, session: Session | null): ReactNod
     return hasPermission(session, PERMISOS_MS07.leer, PERMISOS_MS07.administrar)
       ? <ContenidoDetalle key={id} session={session} id={id} />
       : SIN_ACCESO;
+  }
+  if (route === '/mi-progreso') {
+    return hasPermission(session, PERMISOS_MS07.presentar) ? <MiProgreso session={session} /> : SIN_ACCESO;
   }
   if (route === '/evaluaciones') {
     return hasPermission(session, PERMISOS_MS07.presentar) ? <Evaluaciones session={session} /> : SIN_ACCESO;
