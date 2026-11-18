@@ -87,6 +87,8 @@ function menuFor(roles: string[], permissions: string[]): MenuSection[] {
   }
   campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
   // Evaluaciones de MS07 (RF-14): por permiso, porque los roles los define el administrador
+  // Centro de aprendizaje de MS07 (RF-12): contenidos preventivos, por permiso
+  if (can('ms07:content:read')) campusItems.push({ href: '#/aprendizaje', icon: <LifeBuoy />, label: 'Aprendizaje' });
   if (can('ms07:quiz:take')) campusItems.push({ href: '#/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
 
   sections.push({
@@ -100,6 +102,7 @@ function menuFor(roles: string[], permissions: string[]): MenuSection[] {
     adminItems.push({ href: '#/roles', icon: <ShieldCheck />, label: 'Roles' });
   }
   if (can('ms07:content:manage')) adminItems.push({ href: '#/admin/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
+  if (can('ms07:content:manage')) adminItems.push({ href: '#/admin/aprendizaje', icon: <LifeBuoy />, label: 'Contenidos' });
   if (adminItems.length > 0) {
     sections.push({ title: 'Administración', items: adminItems });
   }
