@@ -5,6 +5,7 @@ import { ApiError, errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { trainingApi } from '../services/training';
 import type { FuenteTutor } from '../types';
+import { respuestaLocal } from '../utils/tutorLocal';
 import '../styles/tutor.css';
 
 /** Largo máximo de una pregunta (RF-15): lo valida también MS07. */
@@ -63,6 +64,9 @@ function mensajeDeError(err: unknown): string {
 /** El modelo a veces marca negritas con asteriscos: se muestran como texto normal. */
 const sinMarcas = (texto: string) => texto.replace(/\*\*(.+?)\*\*/g, '$1').replace(/^#{1,6}\s+/gm, '');
 
+/** Pausa corta antes de una respuesta local, para que se lea como una conversación y no como un salto. */
+const pausa = (ms: number) => new Promise((resolver) => { setTimeout(resolver, ms); });
+
 const prefiereSinMovimiento = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
 const IconoTutor = () => (
@@ -88,7 +92,7 @@ const IconoNuevo = () => (
 
 /**
  * RF-15 Tutor CampusSeguro: chat con el asistente de IA, que responde solo con los contenidos de capacitación
- * activos. Cada respuesta enlaza los contenidos usados como fuente. Si no hay información, el tutor remite al
+ * activos. Los saludos y agradecimientos se responden en el navegador (utils/tutorLocal.ts). Cada respuesta enlaza los contenidos usados como fuente. Si no hay información, el tutor remite al
  * protocolo oficial; si la IA no responde, se puede reintentar la misma pregunta.
  */
 export default function Tutor({ session }: { session: Session }) {
@@ -134,6 +138,14 @@ export default function Tutor({ session }: { session: Session }) {
       : [...actuales, { id: nuevoId(), de: 'usuario', texto: limpia }]));
     if (!reintentoDe) setTexto('');
     try {
+      // Fase 1 (Two-Phase): saludos y agradecimientos se responden aquí, sin llamar a MS07 ni a la IA
+      const local = respuestaLocal(limpia);
+      if (local) {
+        await pausa(prefiereSinMovimiento() ? 0 : 450);
+        if (!vivo.current) return;
+        setMensajes((actuales) => [...actuales, { id: nuevoId(), de: 'tutor', texto: local, suficiente: true, fuentes: [] }]);
+        return;
+      }
       const respuesta = await trainingApi.preguntarTutor(session, limpia);
       if (!vivo.current) return;
       setMensajes((actuales) => [...actuales, {

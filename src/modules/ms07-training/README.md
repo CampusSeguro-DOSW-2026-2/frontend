@@ -24,6 +24,9 @@ que inactivarla y crear otra. El cuerpo de un contenido es texto plano.
 **Tutor:** Enter envía y Shift + Enter hace un salto de línea; la pregunta tiene máximo 500 caracteres. La conversación
 se guarda solo en el `sessionStorage` de la pestaña (para no perderla al abrir una fuente y volver) y se borra con
 «Nueva conversación» o al cerrar la pestaña; MS07 nunca guarda el texto de las preguntas ni de las respuestas.
+Los saludos, agradecimientos y preguntas sobre el propio tutor («hola», «gracias», «¿qué puedes hacer?») se responden
+en el navegador sin llamar a MS07 (`utils/tutorLocal.ts`, fase 1 del patrón Two-Phase Predictions del repositorio
+aaintegration); todo lo demás lo responde el tutor con los contenidos oficiales.
 
 | Carpeta | Contenido |
 |---|---|
