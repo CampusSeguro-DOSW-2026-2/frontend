@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search } from '../../../shared/components/Icons';
+import { PERMISSION } from '../../../shared/permissions';
 import { errorMessage } from '../../../shared/services/http';
+import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
 import IncidentesEvento from '../components/IncidentesEvento';
 import { brigadesApi } from '../services/brigades';
@@ -88,11 +90,18 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
 
   const evento = panel?.evento;
 
-  // Misma regla que MS05 y MS06: el coordinador gestiona eventos reales y el organizador simulacros
-  const roles = session.user.roles;
-  const coordina = roles.includes('COORDINADOR');
-  const organiza = roles.includes('ORGANIZADOR');
-  const tipos = coordina && organiza ? 'eventos ni simulacros' : organiza ? 'simulacros' : 'eventos reales';
+  // Same rule as MS05 and MS06: real events and drills are managed with their own permission
+  const managesReal = hasPermission(session, PERMISSION.MS05_BRIGADIER_ASSIGN_TO_REAL);
+  const managesDrills = hasPermission(session, PERMISSION.MS05_BRIGADIER_ASSIGN_TO_DRILL);
+  let eventKinds = 'eventos reales';
+  let eventKindsTitle = 'Eventos reales';
+  if (managesReal && managesDrills) {
+    eventKinds = 'eventos ni simulacros';
+    eventKindsTitle = 'Eventos reales y simulacros';
+  } else if (managesDrills) {
+    eventKinds = 'simulacros';
+    eventKindsTitle = 'Simulacros';
+  }
 
   return (
     <>
@@ -100,7 +109,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
         <div>
           <h1>Gestión de brigadistas</h1>
           <p>
-            {coordina && organiza ? 'Eventos reales y simulacros' : organiza ? 'Simulacros' : 'Eventos reales'}: primero los brigadistas activos, por edificio; después los inactivos.
+            {eventKindsTitle}: primero los brigadistas activos, por edificio; después los inactivos.
             {' '}Despliega a cada uno para ver sus incidentes y cambiar su edificio.
           </p>
         </div>
@@ -108,7 +117,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
       <main className="ev-main">
         {eventos === null && <p className="notice" role="status">Cargando eventos…</p>}
         {eventos && eventos.length === 0 && !error && (
-          <div className="ev-empty">No hay {tipos} programados ni en ejecución. Cuando se programe uno, aquí podrá gestionar a sus brigadistas.</div>
+          <div className="ev-empty">No hay {eventKinds} programados ni en ejecución. Cuando se programe uno, aquí podrá gestionar a sus brigadistas.</div>
         )}
 
         {eventos && eventos.length > 1 && (

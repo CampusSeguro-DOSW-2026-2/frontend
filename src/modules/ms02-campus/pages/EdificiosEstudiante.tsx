@@ -1,30 +1,19 @@
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import GaleriaImagenes from '../components/GaleriaImagenes';
-import { campus, rolesDeSesion } from '../services/campus';
+import { PERMISSION } from '../../../shared/permissions';
+import { campus, currentPermissions } from '../services/campus';
 import type { Edificio, Espacio, Piso } from '../types';
 import { TIPOS } from '../types';
 import '../styles/campus.css';
 import '../styles/estudiante.css';
-
-const ROLES_CONSULTA = [
-  'ESTUDIANTE',
-  'PROFESOR',
-  'ADMINISTRATIVO',
-  'BRIGADISTA',
-  'COORDINADOR',
-  'ORGANIZADOR',
-  'ADMIN',
-  'AUDITOR',
-];
 
 interface Props {
   edificioId?: string;
 }
 
 export default function EdificiosEstudiante({ edificioId }: Props) {
-  const roles = rolesDeSesion();
-  const puedeConsultar = roles !== null && roles.some((rol) => ROLES_CONSULTA.includes(rol));
+  const puedeConsultar = currentPermissions().includes(PERMISSION.MS02_CAMPUS_READ);
 
   const [edificios, setEdificios] = useState<Edificio[]>([]);
   const [edificio, setEdificio] = useState<Edificio | null>(null);

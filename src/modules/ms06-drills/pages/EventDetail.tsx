@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
-import { canManageEvent, eventsApi } from '../services/events';
+import { canExecuteEvent, canManageEvent, eventsApi } from '../services/events';
 import type { EventDetail as Detail, Evaluation, EventWarning, Monitoring } from '../types';
 import { CHECKIN_LABEL, ROLE_LABEL, STATUS_LABEL, formatDate, formatDuration, scopeLabelIn, warningText } from '../utils/labels';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
@@ -80,7 +80,7 @@ function Results({ e }: { e: Evaluation }) {
 }
 
 /** RF-EVE-03 y RF-EVE-04: detalle del evento, monitoreo en vivo, finalizar y resultados. */
-export default function EventDetail({ session, id, canManage }: { session: Session; id: string; canManage: boolean }) {
+export default function EventDetail({ session, id }: { session: Session; id: string }) {
   const [data, setData] = useState<Detail | null>(null);
   const { catalog } = useScopeCatalog();
   const [error, setError] = useState('');
@@ -124,8 +124,8 @@ export default function EventDetail({ session, id, canManage }: { session: Sessi
     return <main className="ev-main">{error ? <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p> : <p className="notice" role="status">Cargando evento…</p>}</main>;
   }
   const ev = data.event;
-  const manage = canManage && canManageEvent(session, ev.simulacro);
-  const editable = manage && ev.status !== 'FINISHED';
+  const editable = canManageEvent(session, ev.simulacro) && ev.status !== 'FINISHED';
+  const canFinish = canExecuteEvent(session, ev.simulacro);
 
   return (
     <>
@@ -141,7 +141,7 @@ export default function EventDetail({ session, id, canManage }: { session: Sessi
         </div>
         <div className="hbtns">
           {editable && <a className="btn ghost" href={`#/eventos/${ev.id}/editar`}>Editar</a>}
-          {manage && live && <button type="button" className="btn light" onClick={() => setConfirm(true)}>Finalizar evento</button>}
+          {canFinish && live && <button type="button" className="btn light" onClick={() => setConfirm(true)}>Finalizar evento</button>}
         </div>
       </header>
       <main className="ev-main">

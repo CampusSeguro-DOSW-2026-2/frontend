@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
+import { PERMISSION } from '../../../shared/permissions';
 import {
   campus,
   CampusApiError,
   comoCampusError,
-  rolesDeSesion,
+  currentPermissions,
 } from '../services/campus';
 import type {
   DisponibilidadEscalera,
@@ -48,10 +49,9 @@ export default function EscalerasEdificio({
   const [prioridadEditarId, setPrioridadEditarId] = useState<string | null>(null);
   const [prioridadEditar, setPrioridadEditar] = useState('');
 
-  const roles = rolesDeSesion() ?? [];
-  const esAdmin = roles.includes('ADMIN');
-  const puedeCambiarDisponibilidad =
-    esAdmin || roles.includes('COORDINADOR');
+  const permissions = currentPermissions();
+  const puedeGestionar = permissions.includes(PERMISSION.MS02_BUILDING_WRITE);
+  const puedeCambiarDisponibilidad = permissions.includes(PERMISSION.MS02_ROUTE_STATUS_WRITE);
   const pisosActivos = pisos.filter((piso) => piso.estado === 'ACTIVO');
 
   const cargar = useCallback(async () => {
@@ -210,7 +210,7 @@ export default function EscalerasEdificio({
             y la guía de evacuación nombra las demás como alternas.
           </p>
         </div>
-        {esAdmin && (
+        {puedeGestionar && (
           <div className="cs-acciones">
             <button
               type="button"
@@ -226,7 +226,7 @@ export default function EscalerasEdificio({
       {error && <p className="cs-alert error" role="alert">{error}</p>}
       {mensaje && <p className="cs-alert info" role="status">{mensaje}</p>}
 
-      {mostrarFormulario && esAdmin && (
+      {mostrarFormulario && puedeGestionar && (
         <form className="cs-editor" onSubmit={crear}>
           <h3>Nueva escalera</h3>
           <label className="cs-campo">
@@ -336,7 +336,7 @@ export default function EscalerasEdificio({
                   </button>
                 )}
 
-                {esAdmin && escalera.estado === 'ACTIVO' && (
+                {puedeGestionar && escalera.estado === 'ACTIVO' && (
                   <button
                     type="button"
                     onClick={() => {
@@ -349,7 +349,7 @@ export default function EscalerasEdificio({
                   </button>
                 )}
 
-                {esAdmin && (
+                {puedeGestionar && (
                   <button
                     type="button"
                     disabled={guardando}

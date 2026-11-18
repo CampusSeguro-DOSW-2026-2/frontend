@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { PERMISSION } from '../../../shared/permissions';
 import { errorMessage } from '../../../shared/services/http';
+import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
 import { eventsApi } from '../../ms06-drills/services/events';
 import type { EventSummary } from '../../ms06-drills/types';
@@ -21,6 +23,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const canRegisterAssistance = hasPermission(session, PERMISSION.MS05_ASSISTANCE_REGISTER);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -89,7 +92,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
                   <h2 style={{ marginTop: 8 }}>{ev.name}</h2>
                   <span className="help">Inició {formatDate(ev.startedAt)}</span>
                 </div>
-                <a className="btn red" href={`#/brigadista/reportar/${ev.id}`}>Reportar incidente</a>
+                {canRegisterAssistance && <a className="btn red" href={`#/brigadista/reportar/${ev.id}`}>Reportar incidente</a>}
               </div>
               <div className="ev-zone">
                 <span>Mi zona</span>

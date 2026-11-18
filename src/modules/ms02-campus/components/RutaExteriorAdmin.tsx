@@ -49,7 +49,7 @@ const seCortoLaEspera = (e: CampusApiError) => e.status === 504 || e.codigo === 
 
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`;
 
-/** Genera de una vez las rutas de todas las salidas del campus hacia sus zonas seguras más cercanas. Solo ADMIN. */
+/** Genera de una vez las rutas de todas las salidas del campus hacia sus zonas seguras más cercanas. Requiere ms02:route:write. */
 function GeneradorRutas() {
   const [enCurso, setEnCurso] = useState<'faltantes' | 'todas' | null>(null);
   const [resumen, setResumen] = useState<ResumenGeneracionRutas | null>(null);
@@ -110,7 +110,7 @@ function GeneradorRutas() {
 
 /**
  * Muestra las rutas exteriores guardadas de cada salida y permite generarlas o recalcularlas.
- * Generar y calcular son solo de ADMIN; consultar lo que ya está guardado también lo puede hacer COORDINADOR.
+ * Generar y calcular requieren ms02:route:write; consultar lo que ya está guardado no lo requiere.
  */
 export function RutaExteriorAdmin({ edificios, zonas, puedeCalcular }: {
   edificios: Edificio[]; zonas: ZonaSegura[]; puedeCalcular: boolean;

@@ -6,7 +6,7 @@ import { PickerBox } from '../../ms03-alerts/components/PickerBox';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { labelOf, listEs, type CatalogItem } from '../../ms03-alerts/services/catalog';
 import type { Session } from '../../../shared/types';
-import { defaultTypeId, eventsApi, isOrganizer } from '../services/events';
+import { canManageDrills, defaultTypeId, eventsApi } from '../services/events';
 import type { EventStatus, EventType, ParticipantRole, ScopeItem } from '../types';
 import { PARTICIPANT_ROLE_ITEMS, STATUS_LABEL, fromLocalInput, scopeLabel, toLocalInput } from '../utils/labels';
 import '../styles/events.css';
@@ -27,7 +27,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
   // Event types of the MS06 catalog. A drill (type SIMULACRO) and a real event cannot turn into each other.
   const [catalogTypes, setCatalogTypes] = useState<EventType[]>([]);
   const [knownTypes, setKnownTypes] = useState<EventType[]>([]);
-  const [isDrill, setIsDrill] = useState(isOrganizer(session));
+  const [isDrill, setIsDrill] = useState(canManageDrills(session));
   const [typesError, setTypesError] = useState('');
   const [typesAttempt, setTypesAttempt] = useState(0);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -165,7 +165,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
           <h1>{editId ? 'Editar evento' : 'Crear evento'}</h1>
           <p>{inProgress
             ? 'El evento está en ejecución: al guardar se reenvían las alertas a brigadistas y participantes.'
-            : `${editId ? '' : isOrganizer(session) ? 'Se creará como simulacro. ' : 'Se creará como evento real. '}Con fecha, alcance y participantes completos queda Programado; si falta alguno, se guarda como Borrador.`}</p>
+            : `${editId ? '' : canManageDrills(session) ? 'Se creará como simulacro. ' : 'Se creará como evento real. '}Con fecha, alcance y participantes completos queda Programado; si falta alguno, se guarda como Borrador.`}</p>
         </div>
       </header>
       <main className="ev-form">

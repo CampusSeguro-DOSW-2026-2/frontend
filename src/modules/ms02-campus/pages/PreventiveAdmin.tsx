@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } from '../services/campus';
+import { PERMISSION } from '../../../shared/permissions';
+import { campus, CampusApiError, comoCampusError as comoError, currentPermissions } from '../services/campus';
 import type { AmbitoRecomendacion, Edificio, RecomendacionPreventiva, RecomendacionPreventivaRequest, TipoEspacio } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
 import { TIPOS } from '../types';
@@ -88,8 +89,8 @@ export default function PreventiveAdmin() {
   const [aviso, setAviso] = useState<CampusApiError | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
 
-  const roles = rolesDeSesion();
-  const puedeGestionar = roles === null || roles.includes('ADMIN');
+  const permissions = currentPermissions();
+  const puedeGestionar = permissions.includes(PERMISSION.MS02_BUILDING_WRITE);
 
   const aplicar = useCallback(([r, e]: Awaited<ReturnType<typeof leer>>) => {
     setRecomendaciones(r);
