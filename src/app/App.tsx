@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ErrorBoundary } from '../shared/components/ErrorBoundary';
 import { Navbar } from '../shared/components/Layout';
-import { getSession, setSessionNotice } from '../shared/services/session';
+import { getSession, HOME_ROUTE, setSessionNotice, syncRememberedSession } from '../shared/services/session';
 import { logoutUser } from '../modules/ms01-identity/services/identity';
 import { PUBLIC_ROUTES, useIdentityRoutes } from '../modules/ms01-identity/routes';
 import { useSessionGuard } from '../modules/ms01-identity/hooks/useSessionGuard';
@@ -32,6 +32,26 @@ export default function App() {
     window.addEventListener('hashchange', onChange);
     return () => window.removeEventListener('hashchange', onChange);
   }, []);
+
+  // Another tab started or closed the remembered session: this tab follows it
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (syncRememberedSession(event)) {
+        setSession(getSession());
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
+
+  // With a valid session the login screen makes no sense: the root and the login route lead to the home screen
+  useEffect(() => {
+    if (session && (route === '/' || route === '/login')) {
+      window.location.hash = HOME_ROUTE;
+    }
+  }, [session, route]);
 
   // Cerrar sesión desde el menú (RF-MS01-04).
   const logout = async () => {
