@@ -7,8 +7,9 @@ import { alertsApi, type Alert, type AlertInput, type AlertType, type Recipient,
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { getSession, sessionPermissions } from '../../../shared/services/session';
 import { alertAccess } from '../permissions';
+import { useRecipientRoles } from '../hooks/useRecipientRoles';
 import { useScopeCatalog } from '../hooks/useScopeCatalog';
-import { CAMPUS_ITEM, DEFAULT_TYPES, ROLE_ITEMS, TYPE_ITEMS, labelOf, listEs, scopeIdsOf, toggleType } from '../services/catalog';
+import { CAMPUS_ITEM, DEFAULT_TYPES, TYPE_ITEMS, labelOf, listEs, scopeIdsOf, toggleType } from '../services/catalog';
 
 const toLocalInput = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 const msg = errorMessage;
@@ -41,6 +42,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const [start, setStart] = useState('');
   // El alcance sale de MS02: MS03 valida esos mismos ids por UUID al crear la alerta.
   const { catalog, loading: scopeLoading, error: scopeError, retry: retryScope } = useScopeCatalog();
+  const { items: roleItems, loading: rolesLoading, notice: rolesNotice, retry: retryRoles } = useRecipientRoles();
   const scopeItems = useMemo(
     () => [CAMPUS_ITEM, ...(catalog ? [...catalog.buildings, ...catalog.zones] : [])],
     [catalog],
@@ -140,7 +142,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
   };
 
   const scopeText = scopeIds.map((i) => labelOf(scopeItems, i)).join(' · ');
-  const rolesText = listEs(roles.map((r) => labelOf(ROLE_ITEMS, r)));
+  const rolesText = listEs(roles.map((r) => labelOf(roleItems, r)));
   const badge = !alert ? 'BORRADOR' : scheduled ? 'PROGRAMADA' : alert.status === 'DRAFT' ? 'BORRADOR' : alert.status;
   const star = (on: boolean) => on && <span className="req"> *</span>;
 
@@ -178,11 +180,16 @@ export default function AlertForm({ editId }: { editId?: string }) {
             <span className="flabel">Alcance y destinatarios{star(!editId)}</span>
             <div className="two">
               <PickerBox label="Edificios y zonas" required={!editId} help="La alerta se dirigirá a los lugares seleccionados." editLabel="Editar edificios y zonas" items={scopeItems} selected={scopeIds} onToggle={toggleScope} error={errors.scope} loading={scopeLoading} />
-              <PickerBox label="Destinatarios" required={!editId} help="Grupos que recibirán el aviso en este alcance." editLabel="Editar destinatarios" items={ROLE_ITEMS} selected={roles} onToggle={toggleRole} error={errors.roles} />
+              <PickerBox label="Destinatarios" required={!editId} help="Grupos que recibirán el aviso en este alcance." editLabel="Editar destinatarios" items={roleItems} selected={roles} onToggle={toggleRole} error={errors.roles} loading={rolesLoading} />
             </div>
             {scopeError && (
               <p className="notice err" role="alert">
                 {scopeError} <button type="button" className="plink" onClick={retryScope}>Reintentar</button>
+              </p>
+            )}
+            {rolesNotice && (
+              <p className="notice" role="status">
+                {rolesNotice} <button type="button" className="plink" onClick={retryRoles}>Reintentar</button>
               </p>
             )}
           </div>
