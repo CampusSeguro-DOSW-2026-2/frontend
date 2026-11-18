@@ -5,7 +5,7 @@ import { DateTimeField } from '../../../shared/components/DateTimeField';
 import { FilePen, Info, Send } from '../../../shared/components/Icons';
 import { alertsApi, type Alert, type AlertInput, type AlertType, type Recipient, type Scope } from '../services/alerts';
 import { ApiError, errorMessage } from '../../../shared/services/http';
-import { getSession } from '../../../shared/services/session';
+import { getSession, sessionPermissions } from '../../../shared/services/session';
 import { alertAccess } from '../permissions';
 import { useScopeCatalog } from '../hooks/useScopeCatalog';
 import { CAMPUS_ITEM, DEFAULT_TYPES, ROLE_ITEMS, TYPE_ITEMS, labelOf, listEs, scopeIdsOf, toggleType } from '../services/catalog';
@@ -77,7 +77,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
     }).catch((e) => setApiError(msg(e))).finally(() => setLoading(false));
   }, [editId]);
 
-  const access = alertAccess(getSession()?.user.roles ?? []);
+  const access = alertAccess(sessionPermissions(getSession()));
   const status = alert?.status;
   const scheduled = status === 'SCHEDULED';
   const blocked = !!alert && status !== 'DRAFT' && !scheduled;

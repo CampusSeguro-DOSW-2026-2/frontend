@@ -1,7 +1,8 @@
 import GaleriaImagenes from '../components/GaleriaImagenes';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } from '../services/campus';
+import { PERMISSION } from '../../../shared/permissions';
+import { campus, CampusApiError, comoCampusError as comoError, currentPermissions } from '../services/campus';
 import type { ZonaAbierta, ZonaSegura, ZonaSeguraRequest } from '../types';
 import { TIPOS_ZONA_ABIERTA } from '../types';
 import { enlaceOsm, leerCoordenada, textoCoordenadas } from '../utils/coordenadas';
@@ -126,8 +127,10 @@ export default function ZonesAdmin() {
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [zonasAbiertas, setZonasAbiertas] = useState<ZonaAbierta[]>([]);
 
-  const roles = rolesDeSesion();
-  const puedeGestionar = roles === null || roles.includes('ADMIN');
+  const permissions = currentPermissions();
+  const puedeGestionar = permissions.includes(PERMISSION.MS02_SAFE_ZONE_WRITE);
+  // Images of any element are uploaded and deleted with the building permission
+  const puedeEditarImagenes = puedeGestionar && permissions.includes(PERMISSION.MS02_BUILDING_WRITE);
 
   const aplicar = useCallback((lista: ZonaSegura[]) => { setZonas(lista); setErrorCarga(null); }, []);
 
@@ -310,7 +313,7 @@ export default function ZonesAdmin() {
                     <tr>
                       <td colSpan={7}>
                         <GaleriaImagenes tipoElemento="ZONA_SEGURA" elementoId={zona.id}
-                          editable={activa && puedeGestionar} />
+                          editable={activa && puedeEditarImagenes} />
                       </td>
                     </tr>
                     </Fragment>

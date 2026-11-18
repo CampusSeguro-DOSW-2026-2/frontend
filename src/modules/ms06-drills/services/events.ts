@@ -1,4 +1,6 @@
+import { PERMISSION } from '../../../shared/permissions';
 import { ApiError, request, SERVICE_UNAVAILABLE } from '../../../shared/services/http';
+import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
 import type { EventDetail, EventFinish, EventInput, EventStatus, EventSummary, EventType, Page } from '../types';
 
@@ -67,17 +69,37 @@ export const eventsApi = {
   types: (session: Session) => call<EventType[]>('/api/v1/tipos-evento', session),
 };
 
-/** MS06 (RN-4 y RN-5): el organizador solo gestiona simulacros y el coordinador solo eventos reales. */
-export const isOrganizer = (session: Session) => session.user.roles.includes('ORGANIZADOR');
-export const canManageEvent = (session: Session, simulacro: boolean) =>
-  session.user.roles.includes(simulacro ? 'ORGANIZADOR' : 'COORDINADOR');
+/** Indicates whether the session can create and edit drills (ms06:drill:manage) */
+export function canManageDrills(session: Session): boolean {
+  return hasPermission(session, PERMISSION.MS06_DRILL_MANAGE);
+}
+
+/** MS06 (RN-4 and RN-5): drills and real events are managed with their own permission */
+export function canManageEvent(session: Session, simulacro: boolean): boolean {
+  if (simulacro) {
+    return hasPermission(session, PERMISSION.MS06_DRILL_MANAGE);
+  }
+  return hasPermission(session, PERMISSION.MS06_REAL_EVENT_MANAGE);
+}
+
+/** Indicates whether the session can start and finish an event of that kind (drill or real event) */
+export function canExecuteEvent(session: Session, simulacro: boolean): boolean {
+  if (simulacro) {
+    return hasPermission(session, PERMISSION.MS06_DRILL_EXECUTE);
+  }
+  return hasPermission(session, PERMISSION.MS06_REAL_EVENT_EXECUTE);
+}
 
 /**
- * Por decisión del equipo el formulario no muestra tipos de evento, pero MS06 exige al menos uno.
- * Se elige según el rol: el organizador crea simulacros ("Simulacro") y el coordinador eventos reales ("Otro").
+ * By decision of the team the form does not show event types, but MS06 requires at least one.
+ * It is chosen by permission: who manages drills creates drills ("Simulacro") and who only manages real events
+ * creates real events ("Otro").
  */
 export async function defaultTypeId(session: Session): Promise<string> {
-  const code = isOrganizer(session) ? 'SIMULACRO' : 'OTRO';
+  let code = 'OTRO';
+  if (canManageDrills(session)) {
+    code = 'SIMULACRO';
+  }
   const types = await eventsApi.types(session);
   const found = types.find((t) => t.code === code && t.active);
   if (!found) {
