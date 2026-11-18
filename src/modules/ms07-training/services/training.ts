@@ -2,7 +2,7 @@ import { request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import type {
   Categoria, CategoriaRequest, Contenido, ContenidoRequest, ContenidoResumen, Evaluacion, EvaluacionRequest,
-  EvaluacionResumen, Intento, Pagina, Progreso, Respuesta,
+  EvaluacionResumen, Intento, Pagina, Progreso, Respuesta, RespuestaTutor,
 } from '../types';
 
 /**
@@ -10,6 +10,7 @@ import type {
  * ErrorResponse de los Estándares y los mensajes ya en español, así que se muestran tal cual.
  */
 const BASE = '/api/v1/training';
+const TUTOR = '/api/v1/tutor';
 const enc = encodeURIComponent;
 
 /** Campo del contrato → campo del formulario, para marcar los errores 400 por campo del editor. */
@@ -124,6 +125,14 @@ export const trainingApi = {
 
   async reactivar(session: Session, id: string): Promise<Evaluacion> {
     return (await request(`${BASE}/evaluations/${enc(id)}/reactivate`, { method: 'PATCH', session })) as Evaluacion;
+  },
+
+  /**
+   * Pregunta al Tutor CampusSeguro (RF-15). Responde solo con los contenidos activos; si no tiene información,
+   * `sufficient` llega en false. Si la IA no responde a tiempo, MS07 contesta 503 con el mensaje ya en español.
+   */
+  async preguntarTutor(session: Session, question: string): Promise<RespuestaTutor> {
+    return (await request(`${TUTOR}/questions`, { method: 'POST', body: { question }, session })) as RespuestaTutor;
   },
 
   /** Presenta la evaluación: una opción por pregunta. Responde el puntaje y la corrección. */
