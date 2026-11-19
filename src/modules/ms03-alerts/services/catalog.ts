@@ -29,12 +29,10 @@ export const SCOPE_ITEMS: CatalogItem[] = [
   { id: 'ZON-001', label: 'Plazoleta frente al Edificio F', group: 'Zonas' },
 ];
 
-// Opción de destinatario para un rol de MS01: se muestra con su nombre original, el mismo que guarda MS01.
+// Opción de destinatario para un rol de MS01: se muestra con su nombre original, el mismo que guarda MS01. La lista de
+// roles que reciben alertas no se declara aquí: sale de MS01 (`services/recipients.ts`), que incluye los roles que cree
+// o edite el administrador.
 export const roleItem = (rol: string): CatalogItem => ({ id: rol, label: rol, group: 'Roles' });
-// Roles que reciben alertas (permiso ms03:alert:receive) solo si MS01 no responde: la lista vigente sale de MS01
-// (`services/recipients.ts`), que incluye los roles que cree el administrador.
-export const ROLE_ITEMS: CatalogItem[] =
-  ['ADMINISTRATIVO', 'BRIGADISTA', 'COORDINADOR', 'ESTUDIANTE', 'ORGANIZADOR', 'PROFESOR'].map((rol) => roleItem(rol));
 
 // Tipos de alerta. OPERATIVA (logística o administrativa) es exclusiva: no se combina con los de emergencia.
 export const TYPE_ITEMS: CatalogItem[] = [

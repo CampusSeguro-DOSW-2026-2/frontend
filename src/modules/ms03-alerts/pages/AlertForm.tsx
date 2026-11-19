@@ -9,7 +9,7 @@ import { getSession, sessionPermissions } from '../../../shared/services/session
 import { alertAccess } from '../permissions';
 import { useRecipientRoles } from '../hooks/useRecipientRoles';
 import { useScopeCatalog } from '../hooks/useScopeCatalog';
-import { CAMPUS_ITEM, DEFAULT_TYPES, TYPE_ITEMS, labelOf, listEs, scopeIdsOf, toggleType } from '../services/catalog';
+import { CAMPUS_ITEM, DEFAULT_TYPES, TYPE_ITEMS, labelOf, listEs, roleItem, scopeIdsOf, toggleType } from '../services/catalog';
 
 const toLocalInput = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 const msg = errorMessage;
@@ -42,7 +42,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const [start, setStart] = useState('');
   // El alcance sale de MS02: MS03 valida esos mismos ids por UUID al crear la alerta.
   const { catalog, loading: scopeLoading, error: scopeError, retry: retryScope } = useScopeCatalog();
-  const { items: roleItems, loading: rolesLoading, notice: rolesNotice, retry: retryRoles } = useRecipientRoles();
+  const { items: loadedRoles, loading: rolesLoading, error: rolesError, notice: rolesNotice, retry: retryRoles } = useRecipientRoles();
   const scopeItems = useMemo(
     () => [CAMPUS_ITEM, ...(catalog ? [...catalog.buildings, ...catalog.zones] : [])],
     [catalog],
@@ -62,6 +62,12 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const [apiError, setApiError] = useState('');
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(!!editId);
+  // Las opciones de destinatario salen de MS01. Un rol que la alerta ya tiene guardado se muestra aunque MS01 deje de
+  // devolverlo (renombrado o sin ms03:alert:receive), para que se vea y se pueda quitar.
+  const roleItems = useMemo(
+    () => [...loadedRoles, ...roles.filter((role) => !loadedRoles.some((item) => item.id === role)).map(roleItem)],
+    [loadedRoles, roles],
+  );
 
   useEffect(() => {
     if (!editId) return;
@@ -190,6 +196,11 @@ export default function AlertForm({ editId }: { editId?: string }) {
             {rolesNotice && (
               <p className="notice" role="status">
                 {rolesNotice} <button type="button" className="plink" onClick={retryRoles}>Reintentar</button>
+              </p>
+            )}
+            {rolesError && (
+              <p className="notice err" role="alert">
+                {rolesError} <button type="button" className="plink" onClick={retryRoles}>Reintentar</button>
               </p>
             )}
           </div>
