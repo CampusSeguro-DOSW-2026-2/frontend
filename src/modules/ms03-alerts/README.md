@@ -6,6 +6,8 @@
 
 **Alcance:** el selector de edificios y zonas se carga de MS02 (`GET /api/v1/buildings` y `GET /api/v1/safe-zones`, ver `services/scope.ts`), porque MS03 valida esos ids por UUID al crear la alerta. `CAMPUS` es el único alcance que no consulta catálogo.
 
+**Tipos de alerta:** se cargan de MS03 (`GET /api/v1/alertas/tipos`, ver `services/alertTypes.ts`); MS06 es el dueño del catálogo y MS03 agrega `OPERATIVA`. La última lista se guarda en el navegador para seguir mostrando tipos si MS03 no responde.
+
 | Carpeta | Contenido |
 |---|---|
 | `pages/` | Pantallas (una por ruta) |
