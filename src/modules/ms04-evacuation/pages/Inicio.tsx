@@ -6,6 +6,7 @@ import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
 import { USE_MS03, activeAlertApi, type ActiveAlert } from '../../ms03-alerts/services/activeAlert';
 import { AccionesEvento } from '../components/AccionesEvento';
+import { OtrosEventos } from '../components/OtrosEventos';
 import { checkinApi } from '../services/checkin';
 import type { Evento } from '../types';
 import { fechaHora, textoEstadoEvento, tipoEvento } from '../utils/labels';
@@ -27,12 +28,14 @@ const fechaDe = (e: Evento) => (e.fecha_inicio ? new Date(e.fecha_inicio).getTim
 /**
  * Pantalla de inicio: muestra lo que está ocurriendo en este momento y se actualiza sola cada 10 s (y al volver a la
  * pestaña). Con un evento en ejecución es el Centro del evento (nombre, accesos rápidos y check-in); si hay varios,
- * el más reciente, con enlaces a los demás. Sin evento, la alerta activa de MS03 con los accesos. Sin nada, el aviso
+ * muestra el más reciente y una tarjeta con los demás para cambiar a cualquiera de ellos sin salir de Inicio (si el
+ * elegido termina, vuelve al más reciente). Sin evento, la alerta activa de MS03 con los accesos. Sin nada, el aviso
  * de que el campus está seguro y los accesos. Cada fuente se consulta solo con su permiso.
  */
 export default function Inicio({ session }: { session: Session }) {
   const [enCurso, setEnCurso] = useState<EnCurso | null>(null);
   const [error, setError] = useState('');
+  const [elegidoId, setElegidoId] = useState<string | null>(null);
 
   const puedeVerEventos = hasPermission(session, PERMISSION.MS04_CHECKIN_READ_OWN);
   const puedeReportar = hasPermission(session, PERMISSION.MS04_CHECKIN_WRITE);
@@ -71,23 +74,19 @@ export default function Inicio({ session }: { session: Session }) {
     return <main className="content"><p className="notice" role="status">Consultando si hay un evento o una alerta en curso…</p></main>;
   }
 
-  const [evento, ...otros] = enCurso.eventos;
+  // El evento elegido mientras siga en curso; si no, el más reciente
+  const evento = enCurso.eventos.find((e) => e.evento_id === elegidoId) ?? enCurso.eventos[0];
   if (evento) {
-    const otrosEventos = otros.length > 0 && (
-      <p className="chk-sub" role="status">
-        También {otros.length === 1 ? 'está' : 'están'} en curso:{' '}
-        {otros.map((e, i) => (
-          <span key={e.evento_id}>
-            {i > 0 && ', '}
-            {puedeReportar ? <a href={`#/checkin/${encodeURIComponent(e.evento_id)}`}>{e.nombre}</a> : e.nombre}
-          </span>
-        ))}
-      </p>
-    );
+    const otros = enCurso.eventos.filter((e) => e.evento_id !== evento.evento_id);
+    const elegir = (id: string) => {
+      setElegidoId(id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const avisos = <>{aviso}<OtrosEventos eventos={otros} onElegir={elegir} /></>;
     if (puedeReportar) {
       return (
         <CentroEvento key={evento.evento_id} session={session} eventoId={evento.evento_id} eventoActual={evento}
-          aviso={<>{aviso}{otrosEventos}</>} />
+          aviso={avisos} />
       );
     }
     return (
@@ -98,7 +97,7 @@ export default function Inicio({ session }: { session: Session }) {
           subtitle="Evacuación del campus en curso"
           context={evento.fecha_inicio ? `Iniciado: ${fechaHora(evento.fecha_inicio)}` : undefined}
         />
-        <main className="content">{aviso}{otrosEventos}<AccionesEvento session={session} /></main>
+        <main className="content">{avisos}<AccionesEvento session={session} /></main>
       </>
     );
   }
