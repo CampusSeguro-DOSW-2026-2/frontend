@@ -19,6 +19,7 @@ export const PERMISSION = {
   MS03_ALERT_READ_HISTORY: 'ms03:alert:read_history',
 
   MS04_CHECKIN_WRITE: 'ms04:checkin:write',
+  MS04_CHECKIN_READ_OWN: 'ms04:checkin:read_own',
   MS04_DASHBOARD_READ: 'ms04:dashboard:read',
   MS04_HISTORY_READ: 'ms04:history:read',
 

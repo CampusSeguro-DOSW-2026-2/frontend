@@ -6,11 +6,14 @@ import EventosActivos from './pages/EventosActivos';
 import ListaEventos from './pages/ListaEventos';
 import CentroEvento from './pages/CentroEvento';
 import PanelEvento from './pages/PanelEvento';
+import Inicio from './pages/Inicio';
 
 const SIN_ACCESO = <main className="page"><p className="notice err" role="alert">No tienes permisos para ver esta sección.</p></main>;
 
 /** Rutas de MS04. Devuelve undefined si la ruta no es de este módulo. */
 export function evacuationRoutes(route: string, session: Session | null): ReactNode | undefined {
+  // Pantalla de inicio: el evento o la alerta en curso, con los accesos rápidos y el check-in
+  if (route === '/simulacro') return session ? <Inicio session={session} /> : undefined;
   if (route === '/evacuacion/eventos') {
     if (!session) return undefined;
     // Events in any status (RF-MS04-13)
