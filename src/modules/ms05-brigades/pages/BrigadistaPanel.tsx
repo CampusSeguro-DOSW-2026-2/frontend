@@ -5,10 +5,12 @@ import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
 import { eventsApi } from '../../ms06-drills/services/events';
 import type { EventSummary } from '../../ms06-drills/types';
-import { formatDate, scopeLabel } from '../../ms06-drills/utils/labels';
+import { formatDate } from '../../ms06-drills/utils/labels';
+import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import IncidentesEvento from '../components/IncidentesEvento';
 import { brigadesApi } from '../services/brigades';
 import type { Asignacion, EstadoBrigadista } from '../types';
+import { nombreUbicacion } from '../utils/ubicaciones';
 import '../../ms06-drills/styles/events.css';
 
 /**
@@ -23,6 +25,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
   const [notice, setNotice] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const { catalog } = useScopeCatalog();
   const canRegisterAssistance = hasPermission(session, PERMISSION.MS05_ASSISTANCE_REGISTER);
 
   const load = useCallback(async () => {
@@ -97,7 +100,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
               <div className="ev-zone">
                 <span>Mi zona</span>
                 {zona
-                  ? <b>{scopeLabel(zona.ubicacionId)}</b>
+                  ? <b>{nombreUbicacion(zona.ubicacionId, null, catalog)}</b>
                   : <a className="plink" href={`#/brigadista/autoasignacion/${ev.id}`}>Elegir edificio →</a>}
               </div>
               {zona && <span className="help">Para cambiar de edificio o quitar su asignación, entre a <a className="plink" href={`#/brigadista/autoasignacion/${ev.id}`}>Auto asignación</a>.</span>}
