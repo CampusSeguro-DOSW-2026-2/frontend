@@ -1,5 +1,5 @@
 import { SCOPE_ITEMS, type ScopeCatalog } from '../../ms03-alerts/services/catalog';
-import type { EventStatus, ParticipantRole, ScopeItem } from '../types';
+import type { EventStatus, ScopeItem } from '../types';
 
 export const STATUS_LABEL: Record<EventStatus, string> = {
   DRAFT: 'Borrador',
@@ -8,13 +8,12 @@ export const STATUS_LABEL: Record<EventStatus, string> = {
   FINISHED: 'Finalizado',
 };
 
-export const ROLE_LABEL: Record<ParticipantRole, string> = {
+export const ROLE_LABEL: Record<string, string> = {
   ESTUDIANTE: 'Estudiantes',
   PROFESOR: 'Profesores',
   ADMINISTRATIVO: 'Personal administrativo',
   BRIGADISTA: 'Brigadistas',
 };
-export const PARTICIPANT_ROLES = Object.keys(ROLE_LABEL) as ParticipantRole[];
 
 /** Edificios y zonas del catálogo de prueba (mismos ids que usa MS03). */
 export const SCOPE_OPTIONS: ScopeItem[] = SCOPE_ITEMS
@@ -32,8 +31,6 @@ export const scopeLabelIn = (id: string, catalog?: ScopeCatalog | null) => {
   return live?.label ?? scopeLabel(id);
 };
 
-/** Roles that MS06 accepts as participants, with the same labels the alert form uses. */
-export const PARTICIPANT_ROLE_ITEMS = PARTICIPANT_ROLES.map((r) => ({ id: r, label: ROLE_LABEL[r], group: 'Roles' }));
 
 export const CHECKIN_LABEL: Record<string, string> = {
   SAFE: 'En punto de encuentro',
