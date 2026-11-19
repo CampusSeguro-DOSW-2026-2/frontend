@@ -83,7 +83,7 @@
 .chk-total{display:flex;flex-direction:column;gap:4px;border-radius:14px;padding:16px 18px;border:1px solid var(--line);background:var(--bg)}
 .chk-total b{font:700 30px/34px 'Outfit',sans-serif}
 .chk-total span{font-size:13px;color:var(--mut)}
-.chk-total.TOTAL{background:var(--ink);border-color:var(--ink)}
+.chk-total.TOTAL{background:var(--red);border-color:var(--red)}
 .chk-total.TOTAL b,.chk-total.TOTAL span{color:#fff}
 .chk-total.SAFE b{color:#15803D}
 .chk-total.EVACUATING b{color:var(--amber)}
