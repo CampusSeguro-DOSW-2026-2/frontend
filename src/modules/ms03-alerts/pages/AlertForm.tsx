@@ -42,7 +42,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const [start, setStart] = useState('');
   // El alcance sale de MS02: MS03 valida esos mismos ids por UUID al crear la alerta.
   const { catalog, loading: scopeLoading, error: scopeError, retry: retryScope } = useScopeCatalog();
-  const { items: loadedRoles, loading: rolesLoading, error: rolesError, retry: retryRoles } = useRecipientRoles();
+  const { items: loadedRoles, loading: rolesLoading, error: rolesError, notice: rolesNotice, retry: retryRoles } = useRecipientRoles();
   const scopeItems = useMemo(
     () => [CAMPUS_ITEM, ...(catalog ? [...catalog.buildings, ...catalog.zones] : [])],
     [catalog],
@@ -191,6 +191,11 @@ export default function AlertForm({ editId }: { editId?: string }) {
             {scopeError && (
               <p className="notice err" role="alert">
                 {scopeError} <button type="button" className="plink" onClick={retryScope}>Reintentar</button>
+              </p>
+            )}
+            {rolesNotice && (
+              <p className="notice" role="status">
+                {rolesNotice} <button type="button" className="plink" onClick={retryRoles}>Reintentar</button>
               </p>
             )}
             {rolesError && (
