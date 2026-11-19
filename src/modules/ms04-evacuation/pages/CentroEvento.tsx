@@ -67,15 +67,17 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
 
   const actual = vigente.estado === 'listo' ? vigente.checkin : null;
 
+  // Cada vez que se elige la opción se piden de nuevo a MS02 para ver los cambios; mientras tanto se deja la lista que
+  // ya estaba, si la había
   const cargarPuntos = () => {
-    setPuntos({ estado: 'cargando' });
+    setPuntos((previa) => (previa.estado === 'listo' ? previa : { estado: 'cargando' }));
     campusApi.puntosEncuentro(session)
       .then((items) => setPuntos({ estado: 'listo', items }))
       .catch((err: unknown) => setPuntos({ estado: 'error', mensaje: errorMessage(err) }));
   };
 
   const cargarEdificios = () => {
-    setEdificios({ estado: 'cargando' });
+    setEdificios((previa) => (previa.estado === 'listo' ? previa : { estado: 'cargando' }));
     campusApi.edificios(session)
       .then((items) => setEdificios({ estado: 'listo', items }))
       .catch((err: unknown) => setEdificios({ estado: 'error', mensaje: errorMessage(err) }));
@@ -135,8 +137,8 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
 
   const elegirTipoUbicacion = (tipo: TipoUbicacion) => {
     setTipoUbicacion(tipo);
-    if (tipo === 'EDIFICIO' && (edificios.estado === 'sin-cargar' || edificios.estado === 'error')) cargarEdificios();
-    if (tipo === 'PUNTO_ENCUENTRO' && (puntos.estado === 'sin-cargar' || puntos.estado === 'error')) cargarPuntos();
+    if (tipo === 'EDIFICIO') cargarEdificios();
+    if (tipo === 'PUNTO_ENCUENTRO') cargarPuntos();
   };
 
   const elegir = (estado: EstadoCheckin) => {
@@ -144,7 +146,7 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
     if (estado === 'SAFE' || estado === 'NEEDS_ASSISTANCE') {
       setError('');
       setConfirmado(false);
-      if (estado === 'SAFE' && (puntos.estado === 'sin-cargar' || puntos.estado === 'error')) cargarPuntos();
+      if (estado === 'SAFE') cargarPuntos();
       if (estado === 'NEEDS_ASSISTANCE') elegirTipoUbicacion(tipoUbicacion);
       return;
     }
