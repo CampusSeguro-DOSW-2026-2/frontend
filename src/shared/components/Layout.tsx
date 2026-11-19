@@ -16,6 +16,12 @@ const ROLE_LABEL: Record<string, string> = {
   COORDINADOR: 'Coordinador de emergencias', ORGANIZADOR: 'Organizador de simulacros', ADMIN: 'Administrador', AUDITOR: 'Auditor',
 };
 
+/** Nombre visible de un rol: los iniciales con su nombre; los creados por el administrador, sin mayúsculas ni guion bajo. */
+const roleName = (role: string) => {
+  const text = role.replace(/_+/g, ' ').trim().toLowerCase();
+  return ROLE_LABEL[role] ?? text.charAt(0).toUpperCase() + text.slice(1);
+};
+
 /**
  * Main menu built from the permissions of the token (design "Menú hamburguesa": community, brigade and administrative
  * options). Only the options that the permissions allow are shown, nothing appears disabled. Roles are never checked:
@@ -163,7 +169,7 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
     return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onClick); };
   }, [userOpen]);
 
-  const role = roles.map((r) => ROLE_LABEL[r] ?? r).join(' · ');
+  const role = roles.map(roleName).join(' · ');
   const initials = (session?.user.email ?? '?').slice(0, 2).toUpperCase();
 
   return (

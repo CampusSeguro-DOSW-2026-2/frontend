@@ -17,6 +17,17 @@ export const ROLE_LABEL: Record<string, string> = {
 
 export const ROLE_OPTIONS = Object.entries(ROLE_LABEL).map(([value, label]) => ({ value, label }));
 
+/**
+ * Nombre visible de un rol: el de los roles iniciales y, para los que crea el administrador (que MS01 guarda en
+ * MAYÚSCULAS con guion bajo), el mismo nombre en minúsculas con la primera letra en mayúscula, p. ej.
+ * MONITOR_EVACUACION → Monitor evacuacion. El código del rol no cambia: solo cómo se muestra.
+ */
+export function roleLabel(role: string): string {
+  if (ROLE_LABEL[role]) return ROLE_LABEL[role];
+  const text = role.replace(/_+/g, ' ').trim().toLowerCase();
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 // Módulo al que pertenece cada permiso (primer segmento del código ms:recurso:acción)
 export const MODULE_LABEL: Record<string, string> = {
   ms01: 'Identidad y acceso',
