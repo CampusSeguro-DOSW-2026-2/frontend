@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Info, LifeBuoy, MapLine, ShieldCheck } from '../../../shared/components/Icons';
+import { ClipboardCheck, Info, LifeBuoy, LogOut, MapLine, ShieldCheck } from '../../../shared/components/Icons';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
 import { ApiError, errorMessage } from '../../../shared/services/http';
@@ -8,9 +8,9 @@ import type { Session } from '../../../shared/types';
 import { campusApi } from '../services/campus';
 import { checkinApi } from '../services/checkin';
 import type {
-  Checkin, CheckinRequest, Edificio, EstadoCheckin, Evento, PuntoEncuentro, TipoUbicacion,
+  Checkin, CheckinRequest, Edificio, EstadoCheckin, Evento, PuntoEncuentro,
 } from '../types';
-import { ESTADOS, fechaHora, textoEstado, textoEstadoEvento, tipoEvento } from '../utils/labels';
+import { fechaHora, textoEstado, textoEstadoEvento, tipoEvento } from '../utils/labels';
 import '../styles/checkin.css';
 
 /** Mensaje de éxito del reporte (F-01). */
@@ -23,10 +23,13 @@ const ASISTENCIA_REGISTRADA: Record<string, string> = {
   RECHAZADA: 'Su estado quedó registrado, pero la solicitud de asistencia no pudo crearse. Un coordinador la revisará.',
 };
 
-/** Lugares donde se puede pedir asistencia que ofrece esta pantalla (RN-MS04-09). */
-const TIPOS_UBICACION: { codigo: TipoUbicacion; texto: string }[] = [
-  { codigo: 'EDIFICIO', texto: 'Edificio' },
-  { codigo: 'PUNTO_ENCUENTRO', texto: 'Punto de encuentro' },
+/**
+ * Opciones del check-in en el centro del evento (mockup): Evacuando y Seguro. Pedir ayuda no es parte del check-in, se
+ * hace desde «Solicitar ayuda» (MS05).
+ */
+const OPCIONES_CHECKIN: { codigo: EstadoCheckin; texto: string }[] = [
+  { codigo: 'EVACUATING', texto: 'Evacuando' },
+  { codigo: 'SAFE', texto: 'Seguro' },
 ];
 
 type Lista<T> =
@@ -47,13 +50,17 @@ interface Accion {
 
 const ACCIONES: Accion[] = [
   {
-    titulo: 'Rutas', texto: 'Consulte las rutas de evacuación y las salidas indicadas para su zona.',
+    titulo: 'Rutas', texto: 'Consulta las rutas de evacuación y las salidas indicadas para tu zona.',
     href: '#/rutas', boton: 'Consultar rutas', permiso: PERMISSION.MS02_ROUTE_READ, icono: <MapLine />,
   },
   {
-    titulo: 'Reportar un incidente', texto: 'Informe una situación y su prioridad para que la brigada la atienda.',
-    href: '#/ayuda', boton: 'Reportar incidente', permiso: PERMISSION.MS05_INCIDENT_REPORT, icono: <LifeBuoy />,
+    titulo: 'Solicitar ayuda', texto: 'Reporta una situación y selecciona la prioridad para solicitar atención.',
+    href: '#/ayuda', boton: 'Solicitar ayuda', permiso: PERMISSION.MS05_INCIDENT_REPORT, icono: <LifeBuoy />,
     destacada: true,
+  },
+  {
+    titulo: 'Mis incidentes', texto: 'Revisa tus solicitudes de ayuda y el estado de su atención.',
+    href: '#/mis-incidentes', boton: 'Ver mis incidentes', permiso: PERMISSION.MS05_INCIDENT_MANAGE_OWN, icono: <ClipboardCheck />,
   },
 ];
 
@@ -71,7 +78,6 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
   const [elegido, setElegido] = useState<EstadoCheckin | null>(null);
   const [puntos, setPuntos] = useState<Lista<PuntoEncuentro>>({ estado: 'sin-cargar' });
   const [edificios, setEdificios] = useState<Lista<Edificio>>({ estado: 'sin-cargar' });
-  const [tipoUbicacion, setTipoUbicacion] = useState<TipoUbicacion>('EDIFICIO');
   const [enviando, setEnviando] = useState(false);
   const [confirmado, setConfirmado] = useState(false);
   const [error, setError] = useState('');
@@ -85,13 +91,6 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
     campusApi.puntosEncuentro(session)
       .then((items) => setPuntos({ estado: 'listo', items }))
       .catch((err: unknown) => setPuntos({ estado: 'error', mensaje: errorMessage(err) }));
-  };
-
-  const cargarEdificios = () => {
-    setEdificios({ estado: 'cargando' });
-    campusApi.edificios(session)
-      .then((items) => setEdificios({ estado: 'listo', items }))
-      .catch((err: unknown) => setEdificios({ estado: 'error', mensaje: errorMessage(err) }));
   };
 
   // El encabezado sale de los eventos activos del usuario; si no está ahí, MS04 dirá por qué al reportar
@@ -145,19 +144,12 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
     }
   };
 
-  const elegirTipoUbicacion = (tipo: TipoUbicacion) => {
-    setTipoUbicacion(tipo);
-    if (tipo === 'EDIFICIO' && (edificios.estado === 'sin-cargar' || edificios.estado === 'error')) cargarEdificios();
-    if (tipo === 'PUNTO_ENCUENTRO' && (puntos.estado === 'sin-cargar' || puntos.estado === 'error')) cargarPuntos();
-  };
-
   const elegir = (estado: EstadoCheckin) => {
     setElegido(estado);
-    if (estado === 'SAFE' || estado === 'NEEDS_ASSISTANCE') {
+    if (estado === 'SAFE') {
       setError('');
       setConfirmado(false);
-      if (estado === 'SAFE' && (puntos.estado === 'sin-cargar' || puntos.estado === 'error')) cargarPuntos();
-      if (estado === 'NEEDS_ASSISTANCE') elegirTipoUbicacion(tipoUbicacion);
+      if (puntos.estado === 'sin-cargar' || puntos.estado === 'error') cargarPuntos();
       return;
     }
     void enviar({ estado });
@@ -183,8 +175,6 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
 
   // La opción marcada es la que el usuario acaba de elegir o, si no ha elegido, su estado vigente
   const marcado = elegido ?? actual?.estado ?? null;
-  const lugares = tipoUbicacion === 'EDIFICIO' ? edificios : puntos;
-  const recargarLugares = tipoUbicacion === 'EDIFICIO' ? cargarEdificios : cargarPuntos;
 
   return (
     <>
@@ -198,8 +188,8 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
         {acciones.length > 0 && (
           <section className="chk-bloque" aria-labelledby="chk-acciones-titulo">
             <div>
-              <h2 id="chk-acciones-titulo" className="title">¿Qué necesita hacer?</h2>
-              <p className="chk-sub">Siga las indicaciones de la brigada y elija la acción que necesita.</p>
+              <h2 id="chk-acciones-titulo" className="title">¿Qué necesitas hacer?</h2>
+              <p className="chk-sub">Sigue las indicaciones de la brigada y elige la acción que necesitas.</p>
             </div>
             <ul className="chk-acciones" aria-label="Acciones durante el evento">
               {acciones.map((a) => (
@@ -217,32 +207,34 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
         <section className="chk-checkin" aria-labelledby="chk-estado-titulo">
           <div className="chk-checkin-cab">
             <div>
-              <h2 id="chk-estado-titulo" className="title sm22">Check-in · ¿Cómo se encuentra?</h2>
-              {vigente.estado === 'cargando' && <p className="chk-sub" role="status">Consultando su estado actual…</p>}
+              <h2 id="chk-estado-titulo" className="title sm22">Check-in · ¿Cómo te encuentras?</h2>
+              {vigente.estado === 'cargando' && <p className="chk-sub" role="status">Consultando tu estado actual…</p>}
               {vigente.estado === 'listo' && (
                 <p className="chk-sub" role="status">
                   {actual
-                    ? <>Su estado actual: <b>{describir(actual)}</b>{actual.fecha_hora && ` · ${fechaHora(actual.fecha_hora)}`}. Puede cambiarlo.</>
-                    : 'Seleccione su estado actual. Aún no ha registrado su check-in en este evento.'}
+                    ? <>Tu estado actual: <b>{describir(actual)}</b>{actual.fecha_hora && ` · ${fechaHora(actual.fecha_hora)}`}. Puedes cambiarlo.</>
+                    : 'Selecciona tu estado actual. Aún no has registrado tu check-in para este evento.'}
                 </p>
               )}
             </div>
-            <div className="chk-estados" role="group" aria-label="Estado">
-              {ESTADOS.map(({ codigo, texto }) => (
-                <button key={codigo} type="button" className="chk-estado" aria-pressed={marcado === codigo}
-                  disabled={enviando} onClick={() => elegir(codigo)}>
-                  {codigo === 'SAFE' && <ShieldCheck />}
-                  {codigo === 'NEEDS_ASSISTANCE' && <LifeBuoy />}
-                  {texto}
-                </button>
-              ))}
+            <div className="chk-estados-col">
+              <div className="chk-estados" role="group" aria-label="Estado">
+                {OPCIONES_CHECKIN.map(({ codigo, texto }) => (
+                  <button key={codigo} type="button" className="chk-estado" aria-pressed={marcado === codigo}
+                    disabled={enviando} onClick={() => elegir(codigo)}>
+                    {codigo === 'SAFE' ? <ShieldCheck /> : <LogOut />}
+                    {texto}
+                  </button>
+                ))}
+              </div>
+              <small className="chk-nota">Elige «Seguro» solo cuando estés fuera de peligro.</small>
             </div>
           </div>
           {vigente.estado === 'error' && <p className="notice err" role="alert">{vigente.mensaje}</p>}
 
           {elegido === 'SAFE' && (
             <div className="chk-puntos" role="region" aria-labelledby="chk-punto-titulo">
-              <h3 id="chk-punto-titulo" className="chk-paso">¿En qué punto de encuentro está?</h3>
+              <h3 id="chk-punto-titulo" className="chk-paso">¿En qué punto de encuentro estás?</h3>
               {puntos.estado === 'cargando' && <p className="notice" role="status">Consultando los puntos de encuentro…</p>}
               {puntos.estado === 'error' && (
                 <>
@@ -271,51 +263,12 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
             </div>
           )}
 
-          {elegido === 'NEEDS_ASSISTANCE' && (
-            <div className="chk-puntos" role="region" aria-labelledby="chk-lugar-titulo">
-              <h3 id="chk-lugar-titulo" className="chk-paso">¿Dónde necesita la asistencia?</h3>
-              <div className="chk-tabs" role="group" aria-label="Tipo de lugar">
-                {TIPOS_UBICACION.map(({ codigo, texto }) => (
-                  <button key={codigo} type="button" className="chk-tab" aria-pressed={tipoUbicacion === codigo}
-                    disabled={enviando} onClick={() => elegirTipoUbicacion(codigo)}>
-                    {texto}
-                  </button>
-                ))}
-              </div>
-              {lugares.estado === 'cargando' && <p className="notice" role="status">Consultando los lugares…</p>}
-              {lugares.estado === 'error' && (
-                <>
-                  <p className="notice err" role="alert">{lugares.mensaje}</p>
-                  <button type="button" className="btn white chk-retry" onClick={recargarLugares}>Intentar de nuevo</button>
-                </>
-              )}
-              {lugares.estado === 'listo' && lugares.items.length === 0 && (
-                <p className="notice" role="status">No hay lugares disponibles.</p>
-              )}
-              {lugares.estado === 'listo' && lugares.items.length > 0 && (
-                <ul aria-label="Lugares">
-                  {lugares.items.map((l) => (
-                    <li key={l.id}>
-                      <button type="button" className="chk-punto" disabled={enviando}
-                        aria-pressed={actual?.estado === 'NEEDS_ASSISTANCE' && actual.ubicacion?.tipo === tipoUbicacion
-                          && actual.ubicacion.id === l.id}
-                        onClick={() => void enviar({ estado: 'NEEDS_ASSISTANCE', ubicacion: { tipo: tipoUbicacion, id: l.id } })}>
-                        {l.nombre}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {errorCampo && <p className="error" role="alert">{errorCampo}</p>}
-            </div>
-          )}
-
-          {enviando && <p className="notice" role="status">Enviando su estado…</p>}
+          {enviando && <p className="notice" role="status">Enviando tu estado…</p>}
           {error && !errorCampo && <p className="notice err" role="alert">{error}</p>}
           {confirmado && actual && <p className="notice chk-ok" role="status">{mensajeExito(actual)}</p>}
         </section>
 
-        <p className="chk-info"><Info /> El check-in informa su estado a la brigada. «Requiero asistencia» además envía una solicitud de ayuda con el lugar donde está; para reportar otra situación use «Reportar un incidente».</p>
+        <p className="chk-info"><Info /> El check-in informa tu estado; no envía una solicitud de ayuda. Si necesitas atención, utiliza «Solicitar ayuda».</p>
       </main>
     </>
   );

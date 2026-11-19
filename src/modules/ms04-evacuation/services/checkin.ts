@@ -7,7 +7,8 @@ import type {
 
 /**
  * Cliente de MS04 (Evacuación y check-in). Todo pasa por el API Gateway con el JWT de la sesión: el Gateway agrega
- * X-User-Id y X-User-Role, y MS04 identifica al usuario solo por ellos (RN-MS04-06). MS04 responde los errores
+ * X-User-Id, X-User-Role y X-User-Permission; MS04 identifica al usuario por X-User-Id (RN-MS04-06) y autoriza con
+ * X-User-Permission. MS04 responde los errores
  * con el ErrorResponse de los Estándares y los mensajes ya en español, así que se muestran tal cual.
  */
 const BASE = '/api/v1/chi/eventos';

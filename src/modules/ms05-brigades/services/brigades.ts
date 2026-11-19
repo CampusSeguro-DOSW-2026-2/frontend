@@ -2,12 +2,12 @@ import { API_URL, ApiError, NETWORK_ERROR, request } from '../../../shared/servi
 import type { Session } from '../../../shared/types';
 import type {
   ActivacionResponse, Asignacion, Autoasignacion, AutoasignacionEvento, BrigadistaGestion, BusquedaBrigadistas, EstadoBrigadista,
-  EventoOperacion, Evidencia, GestionBrigadistasEvento, Incidente, IncidenteResumen, NuevoIncidente, Pagina, TipoUbicacion,
+  EventoOperacion, Evidencia, GestionBrigadistasEvento, Incidente, IncidenteDetalle, IncidenteResumen, NuevoIncidente, Pagina, TipoUbicacion,
 } from '../types';
 
 /**
- * Cliente de MS05 (Brigadistas e incidentes). Pasa por el API Gateway: el Gateway agrega X-User-Id y
- * X-User-Role a partir del JWT; el navegador solo envía el token.
+ * Cliente de MS05 (Brigadistas e incidentes). Pasa por el API Gateway: el Gateway agrega X-User-Id,
+ * X-User-Role y X-User-Permission a partir del JWT (MS05 autoriza con X-User-Permission); el navegador solo envía el token.
  */
 const enc = encodeURIComponent;
 
@@ -84,6 +84,14 @@ export const brigadesApi = {
   incidentes: (session: Session, eventoId: string, page = 0, size = 20) =>
     request(`/api/v1/incidentes/eventos/${enc(eventoId)}/consulta?page=${page}&size=${size}`, { session }) as Promise<Pagina<IncidenteResumen>>,
 
+  /** Incidentes que reportó el usuario en el evento ("Mis incidentes", ms05:incident:manage_own). */
+  misIncidentes: (session: Session, eventoId: string, page = 0, size = 20) =>
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}/consulta?soloPropios=true&page=${page}&size=${size}`, { session }) as Promise<Pagina<IncidenteResumen>>,
+
+  /** Detalle de un incidente con su descripción, la persona afectada y las evidencias (ms05:incident:read). */
+  detalle: (session: Session, eventoId: string, incidenteId: string) =>
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}`, { session }) as Promise<IncidenteDetalle>,
+
   /** El brigadista responsable inicia la atención de un incidente ASIGNADO. */
   iniciarAtencion: (session: Session, eventoId: string, incidenteId: string) =>
     request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/iniciar-atencion`, { method: 'POST', session }),
@@ -91,7 +99,7 @@ export const brigadesApi = {
   /** El brigadista responsable marca como resuelto un incidente EN_ATENCION. */
   resolver: (session: Session, eventoId: string, incidenteId: string, observaciones: string) =>
     request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/resolver`, {
-      method: 'POST', session, body: { observaciones },
+      method: 'POST', session, body: { observaciones }, fields: { observaciones: 'observaciones' },
     }),
 
   /** Sube una evidencia (multipart). Se hace fuera de request() porque ese cliente solo envía JSON. */
