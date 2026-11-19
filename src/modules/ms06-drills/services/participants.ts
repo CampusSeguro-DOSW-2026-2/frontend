@@ -4,9 +4,10 @@ import { read, write } from '../../../shared/services/localStore';
 
 /**
  * Participantes en vivo (MS01): los roles que pueden recibir las alertas de un evento, incluidos los que crea o
- * edita el administrador. `GET /api/v1/roles/event-participants` se autoriza con `ms06:drill:manage` o
- * `ms06:real_event:manage`, los mismos permisos que abren el formulario de evento, y solo devuelve nombre y
- * descripción.
+ * edita el administrador. Se reutiliza `GET /api/v1/roles/alert-recipients`, el mismo endpoint que ya usa el selector
+ * de destinatarios de MS03: devuelve solo nombre y descripción de los roles con `ms03:alert:receive`, que son los que
+ * MS06 puede convocar. Lo autorizan `ms03:alert:manage` o `ms03:alert:manage_drill`, que ya tienen los roles que
+ * crean eventos (ORGANIZADOR y COORDINADOR en la matriz de MS01).
  *
  * La última lista que entregó MS01 se guarda en el navegador y se reemplaza en cada consulta exitosa. Si MS01 no
  * responde, el formulario usa esa copia para seguir listando participantes; nunca inventa roles que MS01 no haya
@@ -61,7 +62,7 @@ export function cachedParticipantRoles(): ParticipantItem[] | null {
 }
 
 export async function loadParticipantRoles(): Promise<ParticipantItem[]> {
-  const data = await request('/api/v1/roles/event-participants', { session: getSession() ?? undefined });
+  const data = await request('/api/v1/roles/alert-recipients', { session: getSession() ?? undefined });
   const roles = [...new Set(((data ?? []) as ParticipantRoleResponse[]).map((role) => role?.rol).filter(isRole))];
   saveRoles(roles);
   return roles.map((role) => participantItem(role));

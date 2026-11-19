@@ -6,9 +6,9 @@ const LOAD_ERROR = 'No se pudieron cargar los participantes desde MS01.';
 const STALE_NOTICE = 'MS01 no respondió: se muestran los participantes guardados en este navegador. Se actualizan cuando responda.';
 
 /**
- * Roles que MS06 acepta como participantes (`GET /api/v1/roles/event-participants`), los que reciben las alertas del
- * evento. Se consulta cada vez que se abre el formulario, así un rol recién creado aparece sin recargar la página, y
- * cada respuesta reemplaza la copia guardada en el navegador.
+ * Roles que MS06 acepta como participantes (`GET /api/v1/roles/alert-recipients` de MS01, el mismo que usa MS03), los
+ * que reciben las alertas del evento. Se consulta cada vez que se abre el formulario, así un rol recién creado
+ * aparece sin recargar la página, y cada respuesta reemplaza la copia guardada en el navegador.
  *
  * Si MS01 no responde se usa esa copia (`notice`) para seguir listando; solo si este navegador nunca recibió la lista
  * se muestra `error` sin opciones. `retry` vuelve a consultar, `loading` está activo mientras no hay datos ni error.
