@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Info, Send } from '../../../shared/components/Icons';
 import { PageHeader } from '../../../shared/components/Layout';
 import { ApiError, errorMessage, type FieldErrors } from '../../../shared/services/http';
+import { hasPermission } from '../../../shared/services/session';
+import { PERMISSION } from '../../../shared/permissions';
 import type { Session } from '../../../shared/types';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { eventsApi } from '../../ms06-drills/services/events';
@@ -127,7 +129,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
               : ESTADO_TEXTO[done.incidente.estado] ?? `Estado: ${done.incidente.estado}.`}</p>
             {done.fallidas.length > 0 && <p className="error">No se pudieron subir: {done.fallidas.join(', ')}.</p>}
             <div className="rs-detail-acts" style={{ justifyContent: 'flex-start' }}>
-              {!forOther && <a className="btn red rs-btn rs-report" href="#/mis-incidentes">Ver mis incidentes</a>}
+              {!forOther && hasPermission(session, PERMISSION.MS05_INCIDENT_MANAGE_OWN) && <a className="btn red rs-btn rs-report" href="#/mis-incidentes">Ver mis incidentes</a>}
               <a className="btn white rs-btn rs-report" href={back}>Volver</a>
             </div>
           </section>
