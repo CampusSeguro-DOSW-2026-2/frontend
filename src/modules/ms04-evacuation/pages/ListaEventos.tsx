@@ -87,6 +87,9 @@ export default function ListaEventos({ session }: { session: Session }) {
                 <span className={`chk-habilitado${evento.checkin_habilitado ? ' si' : ''}`}>
                   {evento.checkin_habilitado ? 'Check-in habilitado' : 'Check-in deshabilitado'}
                 </span>
+                <a className="btn white chk-ir" href={`#/evacuacion/eventos/${encodeURIComponent(evento.evento_id)}`}>
+                  Abrir panel
+                </a>
               </li>
             ))}
           </ul>

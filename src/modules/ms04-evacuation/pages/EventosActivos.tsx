@@ -77,7 +77,7 @@ export default function EventosActivos({ session }: { session: Session }) {
                   {evento.escenario.zonas.length > 0 && <span>Zonas: <b>{evento.escenario.zonas.join(', ')}</b></span>}
                 </div>
                 <a className="btn red chk-ir" href={`#/checkin/${encodeURIComponent(evento.evento_id)}`}>
-                  Reportar mi estado
+                  Abrir evento
                 </a>
               </li>
             ))}

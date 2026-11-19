@@ -90,3 +90,92 @@ export interface PuntoEncuentro {
   ubicacion?: string;
   estado: 'ACTIVO' | 'INACTIVO';
 }
+
+/** Edificio de MS02 (GET /api/v1/buildings), solo lo que usa la ubicación de Requiero asistencia. */
+export interface Edificio {
+  id: string;
+  nombre: string;
+}
+
+/** Página de los listados del panel (Estándares): `page` desde 0. */
+export interface Pagina<T> {
+  contenido: T[];
+  page: number;
+  size: number;
+  total_elementos: number;
+  total_paginas: number;
+}
+
+/** Personas por estado vigente, con las cuatro claves siempre presentes (RF-MS04-06). */
+export type TotalesPorEstado = Record<EstadoCheckin, number>;
+
+export interface TotalPorPunto {
+  punto_encuentro_id: string;
+  total: number;
+}
+
+/** Consolidado del evento (GET /consolidado, RF-MS04-06). */
+export interface Consolidado {
+  evento_id: string;
+  estado_evento: EstadoEvento;
+  total_reportados: number;
+  totales_por_estado: TotalesPorEstado;
+  por_punto_encuentro: TotalPorPunto[];
+  calculado_en: string;
+}
+
+/** Estado vigente de una persona (GET /personas); `nombre` y `correo` son null si MS01 no respondió. */
+export interface CheckinResumen {
+  usuario_id: string;
+  nombre: string | null;
+  correo: string | null;
+  estado: EstadoCheckin;
+  punto_encuentro_id: string | null;
+  fecha_hora: string;
+}
+
+/** Persona convocada que todavía no reporta (GET /pendientes, RF-MS04-07). */
+export interface Pendiente {
+  usuario_id: string;
+  nombre: string | null;
+  correo: string | null;
+}
+
+/** Persona que requiere asistencia (GET /asistencia, RF-MS04-08). */
+export interface PersonaAsistencia {
+  usuario_id: string;
+  nombre: string | null;
+  correo: string | null;
+  ubicacion: Ubicacion;
+  fecha_reporte: string;
+  solicitud_asistencia: SolicitudAsistencia;
+}
+
+/** Cambio de estado del histórico (GET /historial, RF-MS04-10). */
+export interface RegistroHistorial {
+  checkin_id: string;
+  usuario_id: string;
+  nombre: string | null;
+  correo: string | null;
+  estado: EstadoCheckin;
+  punto_encuentro_id: string | null;
+  ubicacion: Ubicacion | null;
+  registrado_en: string;
+}
+
+/** Resultados del evento (GET /resultados, RF-MS04-12); `finales` es false mientras no esté FINALIZADO. */
+export interface Resultados {
+  evento_id: string;
+  simulacro: boolean;
+  estado_evento: EstadoEvento;
+  fecha_inicio: string | null;
+  fecha_cierre: string | null;
+  finales: boolean;
+  poblacion_objetivo: number | null;
+  total_reportados: number;
+  total_pendientes: number | null;
+  totales_por_estado: TotalesPorEstado;
+  por_punto_encuentro: TotalPorPunto[];
+  solicitudes_asistencia: { usuario_id: string; solicitud_asistencia: SolicitudAsistencia }[];
+  primeros_checkins: { usuario_id: string; primer_checkin_en: string }[];
+}

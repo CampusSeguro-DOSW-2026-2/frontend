@@ -12,13 +12,8 @@ export const ESTADOS_EVENTO: { codigo: EstadoEvento | ''; texto: string }[] = [
 export const textoEstadoEvento = (codigo: EstadoEvento): string =>
   ESTADOS_EVENTO.find((e) => e.codigo === codigo)?.texto ?? codigo;
 
-const ROLES: Record<string, string> = {
-  ESTUDIANTE: 'Estudiantes', PROFESOR: 'Profesores', ADMINISTRATIVO: 'Personal administrativo',
-  BRIGADISTA: 'Brigadistas', COORDINADOR: 'Coordinadores', ORGANIZADOR: 'Organizadores',
-};
-
-/** Rol convocado en plural, como se lista en el evento. */
-export const textoRol = (rol: string): string => ROLES[rol] ?? rol;
+/** Rol convocado con su nombre original de MS01: los roles son dinámicos y no se traducen en el front. */
+export const textoRol = (rol: string): string => rol;
 
 /** Texto que ve el usuario para cada estado, en el orden en que se muestran (F-01, RN-MS04-03). */
 export const ESTADOS: { codigo: EstadoCheckin; texto: string }[] = [
