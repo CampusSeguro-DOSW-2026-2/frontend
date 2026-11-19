@@ -2,7 +2,8 @@
 
 export type EventStatus = 'DRAFT' | 'SCHEDULED' | 'IN_PROGRESS' | 'FINISHED';
 export type ScopeType = 'BUILDING' | 'ZONE';
-export type ParticipantRole = 'ESTUDIANTE' | 'PROFESOR' | 'ADMINISTRATIVO' | 'BRIGADISTA';
+/** Name of a role as MS01 stores it: the administrator can create and rename roles. */
+export type ParticipantRole = string;
 
 export interface ScopeItem { type: ScopeType; id: string }
 export interface EventWarning { code: string; message: string }
