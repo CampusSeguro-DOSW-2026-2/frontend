@@ -289,7 +289,7 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
           {confirmado && actual && <p className="notice chk-ok" role="status">{mensajeExito(actual)}</p>}
         </section>
 
-        <p className="chk-info"><Info /> El check-in informa su estado a la brigada. «Requiero asistencia» además envía una solicitud de ayuda con el lugar donde está; para reportar otra situación use «Reportar un incidente».</p>
+        <p className="chk-info"><Info /> El check-in informa su estado a la brigada. «Requiero asistencia» envía una solicitud de ayuda con el lugar donde está.</p>
       </main>
     </>
   );

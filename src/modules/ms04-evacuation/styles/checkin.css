@@ -112,3 +112,11 @@
 .chk-pill.NEEDS_ASSISTANCE,.chk-envio.RECHAZADA{background:#FEE2E2;color:var(--red)}
 .chk-envio.ENVIADA{background:#DCFCE7;color:#166534}
 .chk-envio.PENDIENTE_ENVIO{background:var(--pale);color:#92400E}
+
+/* Pantalla de inicio: accesos a lo ancho */
+.chk-acciones.fila{grid-template-columns:1fr}
+.chk-accion.fila{flex-direction:row;align-items:center;gap:20px}
+.chk-accion.fila .chk-accion-txt{flex:1;display:flex;flex-direction:column;gap:6px}
+.chk-accion.fila h3{margin-top:0}
+.chk-accion.fila .btn{margin-top:0;flex:none;min-width:220px}
+@media(max-width:900px){.chk-accion.fila{flex-direction:column;align-items:stretch}.chk-accion.fila .btn{min-width:0}}
