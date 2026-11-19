@@ -7,18 +7,12 @@ import { roleItem, type CatalogItem } from './catalog';
  * edita el administrador. `GET /roles/alert-recipients` se autoriza con `ms03:alert:manage` o
  * `ms03:alert:manage_drill`, los mismos permisos que abren este formulario, y solo devuelve nombre y descripción.
  *
- * Se consulta cada vez que se abre el formulario, así un rol recién creado aparece sin recargar la página. La última
- * lista que MS01 entregó queda en memoria de la pestaña: si después MS01 no responde, es el respaldo.
+ * No hay lista de respaldo en el código: si MS01 no responde el formulario avisa y permite reintentar, nunca ofrece
+ * roles que MS01 no haya confirmado.
  */
 interface AlertRecipientRole { rol: string; descripcion: string }
 
-let lastLoaded: CatalogItem[] | null = null;
-
 export async function loadRecipientRoles(): Promise<CatalogItem[]> {
   const data = await request('/api/v1/roles/alert-recipients', { session: getSession() ?? undefined });
-  lastLoaded = ((data ?? []) as AlertRecipientRole[]).map((role) => roleItem(role.rol));
-  return lastLoaded;
+  return ((data ?? []) as AlertRecipientRole[]).map((role) => roleItem(role.rol));
 }
-
-/** Última lista que entregó MS01 en esta pestaña, o null si aún no respondió ninguna vez. */
-export const lastRecipientRoles = (): CatalogItem[] | null => lastLoaded;
