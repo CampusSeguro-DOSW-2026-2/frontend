@@ -42,7 +42,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const [start, setStart] = useState('');
   // El alcance sale de MS02: MS03 valida esos mismos ids por UUID al crear la alerta.
   const { catalog, loading: scopeLoading, error: scopeError, retry: retryScope } = useScopeCatalog();
-  const { items: loadedRoles, loading: rolesLoading, error: rolesError, notice: rolesNotice, retry: retryRoles } = useRecipientRoles();
+  const { items: loadedRoles, loading: rolesLoading, error: rolesError, errorStatus: rolesErrorStatus, notice: rolesNotice, retry: retryRoles } = useRecipientRoles();
   const scopeItems = useMemo(
     () => [CAMPUS_ITEM, ...(catalog ? [...catalog.buildings, ...catalog.zones] : [])],
     [catalog],
@@ -90,6 +90,8 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const scheduled = status === 'SCHEDULED';
   const blocked = !!alert && status !== 'DRAFT' && !scheduled;
   const forbidden = editId ? !!alert && !access.canManage(alert.origin) : !access.canCreate;
+  // MS01 respondió y no trajo destinatarios: ningún rol tiene ms03:alert:receive todavía.
+  const rolesEmpty = !rolesLoading && !rolesError && !rolesNotice && loadedRoles.length === 0;
 
   // Una alerta admite un solo tipo de alcance: cambiar de edificio a zona (o a campus) reinicia la selección.
   const toggleScope = (id: string) => {
@@ -186,11 +188,16 @@ export default function AlertForm({ editId }: { editId?: string }) {
             <span className="flabel">Alcance y destinatarios{star(!editId)}</span>
             <div className="two">
               <PickerBox label="Edificios y zonas" required={!editId} help="La alerta se dirigirá a los lugares seleccionados." editLabel="Editar edificios y zonas" items={scopeItems} selected={scopeIds} onToggle={toggleScope} error={errors.scope} loading={scopeLoading} />
-              <PickerBox label="Destinatarios" required={!editId} help="Grupos que recibirán el aviso en este alcance." editLabel="Editar destinatarios" items={roleItems} selected={roles} onToggle={toggleRole} error={errors.roles} loading={rolesLoading} />
+              <PickerBox label="Destinatarios" required={!editId} help="Roles de MS01 con el permiso ms03:alert:receive." editLabel="Editar destinatarios" items={roleItems} selected={roles} onToggle={toggleRole} error={errors.roles} loading={rolesLoading} onRefresh={retryRoles} />
             </div>
             {scopeError && (
               <p className="notice err" role="alert">
                 {scopeError} <button type="button" className="plink" onClick={retryScope}>Reintentar</button>
+              </p>
+            )}
+            {rolesEmpty && (
+              <p className="notice" role="status">
+                MS01 no devolvió destinatarios: ningún rol tiene el permiso ms03:alert:receive. Asígnelo al rol en Roles y use Actualizar.
               </p>
             )}
             {rolesNotice && (
@@ -200,7 +207,9 @@ export default function AlertForm({ editId }: { editId?: string }) {
             )}
             {rolesError && (
               <p className="notice err" role="alert">
-                {rolesError} <button type="button" className="plink" onClick={retryRoles}>Reintentar</button>
+                {rolesError}
+                {rolesErrorStatus === 404 && ' Revise que el MS01 desplegado incluya la consulta de destinatarios.'}{' '}
+                <button type="button" className="plink" onClick={retryRoles}>Reintentar</button>
               </p>
             )}
           </div>

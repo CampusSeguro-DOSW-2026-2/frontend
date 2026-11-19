@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { ApiError } from '../../../shared/services/http';
 import type { CatalogItem } from '../services/catalog';
 import { cachedRecipientRoles, loadRecipientRoles } from '../services/recipients';
 
@@ -16,6 +17,7 @@ const STALE_NOTICE = 'MS01 no respondió: se muestran los destinatarios guardado
 export function useRecipientRoles() {
   const [items, setItems] = useState<CatalogItem[] | null>(null);
   const [error, setError] = useState('');
+  const [errorStatus, setErrorStatus] = useState(0);
   const [notice, setNotice] = useState('');
   const [attempt, setAttempt] = useState(0);
 
@@ -26,10 +28,12 @@ export function useRecipientRoles() {
         if (ignore) return;
         setItems(data);
         setError('');
+        setErrorStatus(0);
         setNotice('');
       })
       .catch((e: unknown) => {
         if (ignore) return;
+        setErrorStatus(e instanceof ApiError ? e.status : 0);
         const cached = cachedRecipientRoles();
         if (cached) {
           setItems(cached);
@@ -43,9 +47,10 @@ export function useRecipientRoles() {
 
   const retry = useCallback(() => {
     setError('');
+    setErrorStatus(0);
     setNotice('');
     setAttempt((n) => n + 1);
   }, []);
 
-  return { items: items ?? [], loading: items === null && error === '', error, notice, retry };
+  return { items: items ?? [], loading: items === null && error === '', error, errorStatus, notice, retry };
 }

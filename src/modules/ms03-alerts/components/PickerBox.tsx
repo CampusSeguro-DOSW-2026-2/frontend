@@ -7,9 +7,11 @@ interface Props {
   selected: string[]; onToggle: (id: string) => void; error?: string; disabled?: boolean;
   /** El catálogo remoto aún no llegó: se oculta la selección hasta tener opciones reales. */
   loading?: boolean;
+  /** Vuelve a consultar el catálogo remoto sin recargar la página. */
+  onRefresh?: () => void;
 }
 
-export function PickerBox({ label, required, help, editLabel, items, selected, onToggle, error, disabled, loading }: Props) {
+export function PickerBox({ label, required, help, editLabel, items, selected, onToggle, error, disabled, loading, onRefresh }: Props) {
   const [open, setOpen] = useState(false);
   const groups = [...new Set(items.map((i) => i.group))];
   return (
@@ -27,6 +29,7 @@ export function PickerBox({ label, required, help, editLabel, items, selected, o
               ))}
             </div>
             {!disabled && <button type="button" className="plink" aria-expanded={open} onClick={() => setOpen(!open)}><Plus />{open ? 'Cerrar selección' : editLabel}</button>}
+            {!disabled && onRefresh && <button type="button" className="plink" onClick={onRefresh}>Actualizar</button>}
             {open && groups.map((g) => (
               <div key={g} className="opts"><small>{g}</small>
                 <div className="pills">{items.filter((i) => i.group === g).map((i) => (
