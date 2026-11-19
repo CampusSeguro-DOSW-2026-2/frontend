@@ -56,8 +56,8 @@ export const PERMISSION = {
   MS07_TUTOR_USE: 'ms07:tutor:use',
   MS07_CONTENT_MANAGE: 'ms07:content:manage',
 
-  MS08_AUDIT_DRILL_READ: 'ms08:audit:drill:read',
-  MS08_AUDIT_REAL_EVENT_READ: 'ms08:audit:real_event:read',
-  MS08_INDICATORS_DRILL_READ: 'ms08:indicators:drill:read',
-  MS08_INDICATORS_REAL_EVENT_READ: 'ms08:indicators:real_event:read',
+  MS08_AUDIT_DRILL_READ: 'ms08:audit_drill:read',
+  MS08_AUDIT_REAL_EVENT_READ: 'ms08:audit_real_event:read',
+  MS08_INDICATORS_DRILL_READ: 'ms08:indicators_drill:read',
+  MS08_INDICATORS_REAL_EVENT_READ: 'ms08:indicators_real_event:read',
 } as const;
