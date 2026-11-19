@@ -20,6 +20,7 @@ export const PERMISSION = {
 
   MS04_CHECKIN_WRITE: 'ms04:checkin:write',
   MS04_DASHBOARD_READ: 'ms04:dashboard:read',
+  MS04_HISTORY_READ: 'ms04:history:read',
 
   MS05_BRIGADIER_ASSIGN_TO_DRILL: 'ms05:brigadier:assign_to_drill',
   MS05_BRIGADIER_ASSIGN_TO_REAL: 'ms05:brigadier:assign_to_real',

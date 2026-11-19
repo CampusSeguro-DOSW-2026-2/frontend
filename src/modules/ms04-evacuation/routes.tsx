@@ -4,7 +4,8 @@ import { PERMISSION } from '../../shared/permissions';
 import { hasPermission } from '../../shared/services/session';
 import EventosActivos from './pages/EventosActivos';
 import ListaEventos from './pages/ListaEventos';
-import ReporteEstado from './pages/ReporteEstado';
+import CentroEvento from './pages/CentroEvento';
+import PanelEvento from './pages/PanelEvento';
 
 const SIN_ACCESO = <main className="page"><p className="notice err" role="alert">No tienes permisos para ver esta sección.</p></main>;
 
@@ -18,6 +19,16 @@ export function evacuationRoutes(route: string, session: Session | null): ReactN
     }
     return <ListaEventos session={session} />;
   }
+  const panel = route.match(/^\/evacuacion\/eventos\/([^/]+)$/);
+  if (panel) {
+    if (!session) return undefined;
+    // Panel del evento para el personal (RF-MS04-06 a RF-MS04-12)
+    if (!hasPermission(session, PERMISSION.MS04_DASHBOARD_READ)) {
+      return SIN_ACCESO;
+    }
+    const eventoId = decodeURIComponent(panel[1]);
+    return <PanelEvento key={eventoId} session={session} eventoId={eventoId} />;
+  }
   const reporte = route.match(/^\/checkin\/([^/]+)$/);
   if ((route !== '/checkin' && !reporte) || !session) return undefined;
   // Report the own status
@@ -26,7 +37,7 @@ export function evacuationRoutes(route: string, session: Session | null): ReactN
   }
   if (reporte) {
     const eventoId = decodeURIComponent(reporte[1]);
-    return <ReporteEstado key={eventoId} session={session} eventoId={eventoId} />;
+    return <CentroEvento key={eventoId} session={session} eventoId={eventoId} />;
   }
   return <EventosActivos session={session} />;
 }
