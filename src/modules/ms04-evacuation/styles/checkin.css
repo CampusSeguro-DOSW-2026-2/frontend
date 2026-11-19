@@ -112,3 +112,6 @@
 .chk-pill.NEEDS_ASSISTANCE,.chk-envio.RECHAZADA{background:#FEE2E2;color:var(--red)}
 .chk-envio.ENVIADA{background:#DCFCE7;color:#166534}
 .chk-envio.PENDIENTE_ENVIO{background:var(--pale);color:#92400E}
+.chk-estados-col{flex:1 1 420px;display:flex;flex-direction:column;gap:8px}
+.chk-estados-col .chk-estados{flex:none}
+.chk-estados-col .chk-nota{margin-top:0;font-size:12px}

@@ -11,17 +11,39 @@ import RouteQuery from './pages/RouteQuery';
 import RoutesAdmin from './pages/RoutesAdmin';
 import ZonesAdmin from './pages/ZonesAdmin';
 import { NavegacionAdmin } from './components/NavegacionAdmin';
+import type { Session } from '../../shared/types';
+import { PERMISSION } from '../../shared/permissions';
+import { hasPermission } from '../../shared/services/session';
+
+const SIN_ACCESO = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
+
+/** Permisos que abren la administración del campus: cualquiera de escritura de MS02 (Matriz Rol–Permiso). */
+const PERMISOS_ADMIN = [
+  PERMISSION.MS02_BUILDING_WRITE, PERMISSION.MS02_SPACE_WRITE, PERMISSION.MS02_SAFE_ZONE_WRITE,
+  PERMISSION.MS02_ROUTE_WRITE, PERMISSION.MS02_ROUTE_STATUS_WRITE, PERMISSION.MS02_QR_MANAGE,
+];
 
 const RUTA_QR = /^\/qr\/(espacios|salidas|zonas)\/([^/]+)$/;
 
 /** Pantallas que abren los códigos QR: se ven sin sesión. */
 export const esRutaPublicaCampus = (route: string) => RUTA_QR.test(route);
 
-/** Rutas de MS02. Devuelve undefined si la ruta no es de este módulo. */
-export function campusRoutes(route: string): ReactNode | undefined {
+/**
+ * Rutas de MS02. Devuelve undefined si la ruta no es de este módulo. Cada pantalla se abre según los permisos del
+ * token (nunca por el nombre del rol); las de QR público no exigen sesión.
+ */
+export function campusRoutes(route: string, session: Session | null): ReactNode | undefined {
   const pagina = paginaCampus(route);
+  if (pagina === undefined || esRutaPublicaCampus(route)) return pagina;
+  if (!session) return undefined;
+  const permitido = route.startsWith('/admin/')
+    ? hasPermission(session, ...PERMISOS_ADMIN)
+    : route === '/rutas'
+      ? hasPermission(session, PERMISSION.MS02_ROUTE_READ)
+      : hasPermission(session, PERMISSION.MS02_CAMPUS_READ);
+  if (!permitido) return SIN_ACCESO;
   // Las pantallas de administración llevan las pestañas; las hojas de QR (para imprimir) no.
-  if (pagina === undefined || !route.startsWith('/admin/') || route.endsWith('/qr')) return pagina;
+  if (!route.startsWith('/admin/') || route.endsWith('/qr')) return pagina;
   return <><NavegacionAdmin ruta={route} />{pagina}</>;
 }
 

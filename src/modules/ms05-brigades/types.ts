@@ -104,3 +104,26 @@ export interface GestionBrigadistasEvento { evento: EventoOperacion; brigadistas
 
 export interface AutoasignacionEvento { evento: EventoOperacion; idAsignacion: string | null; ubicacionId: string | null; nombreUbicacion: string | null }
 export interface Autoasignacion { brigadistaId: string; estado: EstadoBrigadista; eventos: AutoasignacionEvento[] }
+
+/** Evidencia dentro del detalle de un incidente. */
+export interface EvidenciaDetalle { id?: string; nombreArchivo: string; tipoContenido?: string; referenciaArchivo?: string; fechaCarga?: string }
+
+/** Detalle de un incidente (GET /api/v1/incidentes/eventos/{eventoId}/{incidenteId}). */
+export interface IncidenteDetalle {
+  idIncidente: string;
+  eventoId: string;
+  nombreAfectado: string | null;
+  ubicacionId: string;
+  tipoUbicacion: TipoUbicacion;
+  descripcion: string | null;
+  prioridad: string;
+  estado: EstadoIncidente | string;
+  reportanteId: string;
+  brigadistaResponsableId: string | null;
+  fechaReporte: string;
+  fechaPrimeraAtencion: string | null;
+  fechaResolucion: string | null;
+  observacionesResolucion: string | null;
+  fechaCierre: string | null;
+  evidencias: EvidenciaDetalle[];
+}
