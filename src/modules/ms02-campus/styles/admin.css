@@ -5,3 +5,8 @@
 .cs-pildora[aria-pressed='true']{background:var(--red);border-color:var(--red);color:#fff}
 a.cs-mini{display:inline-flex;align-items:center;text-decoration:none}
 .cs-descripcion{max-width:360px;overflow-wrap:anywhere}
+.cs-descripcion-corta{display:block;max-width:360px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mut);font-size:13px}
+.cs-datos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 24px;margin:0}
+.cs-datos dt{font:700 12px/16px 'Outfit',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+.cs-datos dd{margin:2px 0 0;overflow-wrap:anywhere;white-space:pre-line}
+.cs-estado-suelto{align-self:flex-start}

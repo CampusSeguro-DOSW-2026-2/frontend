@@ -134,10 +134,168 @@
   border-radius: 8px;
 }
 
-.cs-galeria-foto a {
+.cs-galeria-foto a,
+.cs-galeria-ampliar {
   display: block;
+  width: 100%;
   height: 105px;
+  padding: 0;
+  border: 0;
   background: #f2f3f5;
+  cursor: zoom-in;
+}
+
+.cs-galeria-mas {
+  display: grid;
+  place-items: center;
+  width: 150px;
+  min-height: 105px;
+  border: 1px dashed var(--border, #d9dce3);
+  border-radius: 8px;
+  color: var(--text-muted, #697386);
+  font: 600 13px/1 'Geist', sans-serif;
+  text-decoration: none;
+}
+
+a.cs-galeria-mas:hover {
+  color: var(--red);
+  border-color: var(--red);
+}
+
+/* Vista previa en una celda de tabla: miniaturas sin cabecera ni marco */
+.cs-galeria-compacta {
+  margin-top: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.cs-galeria-compacta .cs-galeria-lista {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+
+.cs-galeria-compacta .cs-galeria-foto,
+.cs-galeria-compacta .cs-galeria-mas {
+  width: 72px;
+}
+
+.cs-galeria-compacta .cs-galeria-ampliar,
+.cs-galeria-compacta .cs-galeria-mas {
+  height: 54px;
+  min-height: 54px;
+}
+
+.cs-galeria-compacta .cs-galeria-foto figcaption {
+  display: none;
+}
+
+/* Paginación de listas */
+.cs-paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--mut);
+  font-size: 14px;
+}
+
+.cs-paginacion div {
+  display: flex;
+  gap: 8px;
+}
+
+/* Foto ampliada sobre la página */
+.cs-visor {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 56px max(64px, env(safe-area-inset-right, 0px)) 32px max(64px, env(safe-area-inset-left, 0px));
+  background: rgba(15, 23, 42, .85);
+}
+
+.cs-visor-foto {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0;
+}
+
+.cs-visor-foto img {
+  max-width: min(1100px, 100%);
+  max-height: calc(100vh - 140px);
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.cs-visor-foto figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #fff;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.cs-visor-contador {
+  flex: none;
+  opacity: .8;
+}
+
+.cs-visor-cerrar,
+.cs-visor-nav {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .15);
+  color: #fff;
+  font: 400 30px/1 'Geist', sans-serif;
+  cursor: pointer;
+}
+
+.cs-visor-cerrar:hover,
+.cs-visor-nav:hover {
+  background: rgba(255, 255, 255, .3);
+}
+
+.cs-visor-cerrar {
+  top: 12px;
+  right: max(12px, env(safe-area-inset-right, 0px));
+}
+
+.cs-visor-nav {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.cs-visor-nav.anterior {
+  left: max(12px, env(safe-area-inset-left, 0px));
+}
+
+.cs-visor-nav.siguiente {
+  right: max(12px, env(safe-area-inset-right, 0px));
+}
+
+@media (max-width: 600px) {
+  .cs-visor {
+    padding: 56px 12px 72px;
+  }
+
+  .cs-visor-nav {
+    top: auto;
+    bottom: 12px;
+    transform: none;
+  }
 }
 
 .cs-galeria-foto img {
