@@ -1,7 +1,8 @@
 import { ApiError, request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import type {
-  AuditFilters, AuditRecord, Bucket, EventIndicators, EventKind, IndicatorsResult, Page, SlowLocation, TimeStat,
+  AuditFilters, AuditRecord, Bucket, ComparisonChange, ComparisonRow, EventIndicators, EventKind, IndicatorsResult, LocationRow, Page,
+  SlowLocation, TimeStat,
 } from '../types';
 import { endOfDayUtc, startOfDayUtc } from '../utils/format';
 
@@ -12,6 +13,8 @@ import { endOfDayUtc, startOfDayUtc } from '../utils/format';
  */
 const AUDIT_PATH = '/api/v1/audit/events';
 const indicatorsPath = (eventoId: string) => `/api/v1/analytics/events/${encodeURIComponent(eventoId)}`;
+const COMPARISONS_PATH = '/api/v1/analytics/comparisons';
+const LOCATIONS_PATH = '/api/v1/analytics/locations';
 
 /** Filtro de la pantalla → parámetro de consulta de MS08. */
 const AUDIT_PARAMS: Record<keyof AuditFilters, string> = {
@@ -98,6 +101,65 @@ function toIndicators(eventoId: string, raw: unknown): EventIndicators {
   };
 }
 
+const toChange = (v: unknown): ComparisonChange | null => {
+  if (!isObject(v)) return null;
+  return {
+    porcentajeParticipacion: numOrNull(v.porcentaje_participacion),
+    porcentajeConfirmacion: numOrNull(v.porcentaje_confirmacion),
+    hastaCheckinSegundos: numOrNull(v.hasta_checkin_segundos),
+    evacuacionSegundos: numOrNull(v.evacuacion_segundos),
+    hastaPrimeraAtencionSegundos: numOrNull(v.hasta_primera_atencion_segundos),
+  };
+};
+
+const toComparisonRow = (r: Raw): ComparisonRow => ({
+  eventoId: str(r.evento_id) ?? '',
+  tipoEvento: kind(r.tipo_evento),
+  inicioEvento: str(r.inicio_evento),
+  participantes: num(r.participantes),
+  porcentajeParticipacion: numOrNull(r.porcentaje_participacion),
+  porcentajeConfirmacion: numOrNull(r.porcentaje_confirmacion),
+  porcentajeAsistencia: numOrNull(r.porcentaje_asistencia),
+  incidentes: num(r.incidentes),
+  hastaCheckinSegundos: numOrNull(r.hasta_checkin_segundos),
+  evacuacionSegundos: numOrNull(r.evacuacion_segundos),
+  hastaPrimeraAtencionSegundos: numOrNull(r.hasta_primera_atencion_segundos),
+  cambio: toChange(r.cambio_vs_anterior),
+});
+
+const toLocationRow = (l: Raw): LocationRow => ({
+  ubicacionTipo: str(l.ubicacion_tipo) ?? '',
+  ubicacionId: str(l.ubicacion_id) ?? '',
+  incidentes: num(l.incidentes),
+  solicitudesAsistencia: num(l.solicitudes_asistencia),
+  hastaPrimeraAtencion: toTime(l.hasta_primera_atencion),
+  porEvento: list(l.por_evento, (e) => ({
+    eventoId: str(e.evento_id) ?? '', incidentes: num(e.incidentes), solicitudesAsistencia: num(e.solicitudes_asistencia),
+    promedioSegundos: numOrNull(e.promedio_segundos), muestras: num(e.muestras),
+  })),
+});
+
+/** Mensajes propios para las consultas de varios eventos, según la respuesta de MS08. */
+const MULTI_MESSAGES: Record<number, string> = {
+  400: 'Seleccione eventos distintos y del mismo tipo: todos simulacros o todos eventos reales.',
+  403: 'No tiene permiso para ver los indicadores de alguno de los eventos seleccionados.',
+  404: 'Alguno de los eventos seleccionados todavía no tiene datos en MS08 (pendiente de cálculo). Quítelo de la selección e intente de nuevo.',
+};
+
+/** Consulta de varios eventos: MS08 recibe `evento_id` repetido (?evento_id=a&evento_id=b). */
+async function multiEvent(path: string, session: Session, eventoIds: string[]): Promise<unknown> {
+  const q = new URLSearchParams();
+  eventoIds.forEach((id) => q.append('evento_id', id.trim().toLowerCase()));
+  try {
+    return await request(`${path}?${q}`, { session });
+  } catch (err) {
+    if (err instanceof ApiError && MULTI_MESSAGES[err.status]) {
+      throw new ApiError(err.status, MULTI_MESSAGES[err.status], {}, err.code, err.details, err.correlationId);
+    }
+    throw err;
+  }
+}
+
 export const analyticsApi = {
   /** Registros de auditoría con filtros y paginación del servidor (más recientes primero). */
   async audit(session: Session, filters: AuditFilters, page: number, size = PAGE_SIZE): Promise<Page<AuditRecord>> {
@@ -129,5 +191,15 @@ export const analyticsApi = {
       }
       throw err;
     }
+  },
+
+  /** Comparación de 2 a 10 eventos del mismo tipo, del inicio más antiguo al más reciente. */
+  async compare(session: Session, eventoIds: string[]): Promise<ComparisonRow[]> {
+    return list(obj(await multiEvent(COMPARISONS_PATH, session, eventoIds)).eventos, toComparisonRow);
+  },
+
+  /** Incidentes, solicitudes de asistencia y tiempo de atención por edificio o zona, para 1 a 10 eventos. */
+  async locations(session: Session, eventoIds: string[]): Promise<LocationRow[]> {
+    return list(obj(await multiEvent(LOCATIONS_PATH, session, eventoIds)).ubicaciones, toLocationRow);
   },
 };

@@ -6,8 +6,10 @@ import { eventsApi } from '../../ms06-drills/services/events';
 import type { EventData, EventStatus, EventSummary, Page } from '../../ms06-drills/types';
 import { STATUS_LABEL, scopeLabelIn } from '../../ms06-drills/utils/labels';
 import ErrorNotice from '../components/ErrorNotice';
+import { multiEventHref } from '../hooks/useEventNames';
 import { analyticsApi, PAGE_SIZE } from '../services/analytics';
 import type { Bucket, EventIndicators, IndicatorsResult, TimeStat } from '../types';
+import { MAX_EVENTS, MIN_COMPARE } from '../types';
 import { KIND_LABEL, bucketLabel, formatBogota, formatCount, formatPercent, formatSeconds, isUuid } from '../utils/format';
 import '../../ms06-drills/styles/events.css';
 import '../styles/analytics.css';
@@ -130,6 +132,7 @@ function EventIndicatorsView({ session, eventoId }: { session: Session; eventoId
               .filter(Boolean).join(' · ') || <span className="an-mono">{eventoId}</span>}
           </p>
         </div>
+        {data && <a className="btn white" href={multiEventHref('ubicaciones', [eventoId])}>Ver por ubicación</a>}
       </header>
       <main className="ev-main">
         {loading && <p className="notice" role="status">Cargando indicadores…</p>}
@@ -140,6 +143,8 @@ function EventIndicatorsView({ session, eventoId }: { session: Session; eventoId
     </>
   );
 }
+
+interface Selected { id: string; simulacro: boolean }
 
 const TABS: { status: EventStatus | ''; label: string }[] = [
   { status: 'FINISHED', label: 'Finalizados' },
@@ -155,6 +160,8 @@ function EventPicker({ session }: { session: Session }) {
   const [loading, setLoading] = useState(true);
   const [manualId, setManualId] = useState('');
   const [manualError, setManualError] = useState('');
+  // Eventos elegidos para comparar o ver por ubicación; se conservan al cambiar de página
+  const [selected, setSelected] = useState<Selected[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -175,6 +182,16 @@ function EventPicker({ session }: { session: Session }) {
     if (!isUuid(manualId)) { setManualError('Escriba un id de evento válido (UUID).'); return; }
     window.location.hash = `#/indicadores/${manualId.trim().toLowerCase()}`;
   };
+
+  const toggle = (e: EventSummary) => setSelected((list) => (list.some((x) => x.id === e.id)
+    ? list.filter((x) => x.id !== e.id)
+    : [...list, { id: e.id, simulacro: e.simulacro }]));
+  const isSelected = (id: string) => selected.some((x) => x.id === id);
+  // MS08 solo acepta eventos del mismo tipo y hasta 10
+  const selectedKind = selected[0]?.simulacro;
+  const canSelect = (e: EventSummary) => isSelected(e.id)
+    || (selected.length < MAX_EVENTS && (selectedKind === undefined || selectedKind === e.simulacro));
+  const ids = selected.map((x) => x.id);
 
   const items = data?.content ?? [];
   // Sin permiso de lectura en Eventos la lista no se puede mostrar, pero el resumen sí se puede consultar por id
@@ -204,6 +221,21 @@ function EventPicker({ session }: { session: Session }) {
         </div>
         {manualError && <p className="notice err" role="alert">{manualError}</p>}
 
+        <div className="an-sel" role="region" aria-label="Eventos seleccionados">
+          <span>{selected.length === 0
+            ? `Seleccione eventos finalizados del mismo tipo (hasta ${MAX_EVENTS}) para compararlos o verlos por ubicación.`
+            : `${selected.length} ${selected.length === 1 ? 'evento seleccionado' : 'eventos seleccionados'} · ${selectedKind ? 'simulacros' : 'eventos reales'}`}</span>
+          {selected.length > 0 && (
+            <div>
+              <button type="button" className="plink" onClick={() => setSelected([])}>Quitar selección</button>
+              <a className="btn white" href={multiEventHref('ubicaciones', ids)}>Ver por ubicación</a>
+              {selected.length >= MIN_COMPARE
+                ? <a className="btn deep" href={multiEventHref('comparar', ids)}>Comparar ({selected.length})</a>
+                : <span className="help">Elija al menos {MIN_COMPARE} para comparar</span>}
+            </div>
+          )}
+        </div>
+
         {forbidden && <p className="notice" role="status">No tiene permiso para listar eventos. Consulte el resumen escribiendo el id del evento.</p>}
         {error !== null && !forbidden && <ErrorNotice error={error} onRetry={load} />}
         {loading && <p className="notice" role="status">Cargando eventos…</p>}
@@ -213,10 +245,17 @@ function EventPicker({ session }: { session: Session }) {
 
         {items.length > 0 && (
           <table className="ev-table">
-            <thead><tr><th>Evento</th><th>Estado</th><th>Finalizó</th><th>Indicadores</th><th style={{ textAlign: 'right' }}>Acciones</th></tr></thead>
+            <thead><tr><th aria-label="Seleccionar" /><th>Evento</th><th>Estado</th><th>Finalizó</th><th>Indicadores</th><th style={{ textAlign: 'right' }}>Acciones</th></tr></thead>
             <tbody>
               {items.map((e) => (
                 <tr key={e.id}>
+                  <td>
+                    {e.status === 'FINISHED' && (
+                      <input type="checkbox" aria-label={`Seleccionar ${e.name}`} checked={isSelected(e.id)} disabled={!canSelect(e)}
+                        title={canSelect(e) ? undefined : selected.length >= MAX_EVENTS ? `Máximo ${MAX_EVENTS} eventos` : 'Solo eventos del mismo tipo'}
+                        onChange={() => toggle(e)} />
+                    )}
+                  </td>
                   <td><div className="t">{e.name}</div><div className="s">{e.simulacro ? 'Simulacro' : 'Evento real'}</div></td>
                   <td><span className={`st ${e.status}`}>{STATUS_LABEL[e.status]}</span></td>
                   <td>{e.endedAt ? formatBogota(e.endedAt) : '—'}</td>

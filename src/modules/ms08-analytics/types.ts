@@ -65,3 +65,46 @@ export interface EventIndicators {
 
 /** Resultado de pedir los indicadores: el resumen, o pendiente de cálculo si MS08 aún no tiene datos del evento. */
 export type IndicatorsResult = { pendiente: true } | { pendiente: false; data: EventIndicators };
+
+/** Cambio frente al evento anterior de la comparación (actual − anterior); null si falta alguno de los dos valores. */
+export interface ComparisonChange {
+  porcentajeParticipacion: number | null;
+  porcentajeConfirmacion: number | null;
+  hastaCheckinSegundos: number | null;
+  evacuacionSegundos: number | null;
+  hastaPrimeraAtencionSegundos: number | null;
+}
+
+/** Una fila de la comparación (GET /api/v1/analytics/comparisons), del inicio más antiguo al más reciente. */
+export interface ComparisonRow {
+  eventoId: string;
+  tipoEvento: EventKind | null;
+  inicioEvento: string | null;
+  participantes: number;
+  porcentajeParticipacion: number | null;
+  porcentajeConfirmacion: number | null;
+  porcentajeAsistencia: number | null;
+  incidentes: number;
+  hastaCheckinSegundos: number | null;
+  evacuacionSegundos: number | null;
+  hastaPrimeraAtencionSegundos: number | null;
+  /** null en el primer evento. */
+  cambio: ComparisonChange | null;
+}
+
+/** Cifras de una ubicación en un evento. */
+export interface LocationByEvent { eventoId: string; incidentes: number; solicitudesAsistencia: number; promedioSegundos: number | null; muestras: number }
+
+/** Edificio o zona con el total de los eventos pedidos (GET /api/v1/analytics/locations), los más lentos primero. */
+export interface LocationRow {
+  ubicacionTipo: string;
+  ubicacionId: string;
+  incidentes: number;
+  solicitudesAsistencia: number;
+  hastaPrimeraAtencion: TimeStat;
+  porEvento: LocationByEvent[];
+}
+
+/** Límites de MS08 para las consultas de varios eventos (todos del mismo tipo). */
+export const MAX_EVENTS = 10;
+export const MIN_COMPARE = 2;

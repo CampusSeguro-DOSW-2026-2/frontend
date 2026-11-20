@@ -3,7 +3,11 @@ import { PERMISSION } from '../../shared/permissions';
 import { hasPermission } from '../../shared/services/session';
 import type { Session } from '../../shared/types';
 import Auditoria from './pages/Auditoria';
+import Comparacion from './pages/Comparacion';
 import Indicadores from './pages/Indicadores';
+import Ubicaciones from './pages/Ubicaciones';
+import { MAX_EVENTS, MIN_COMPARE } from './types';
+import { isUuid } from './utils/format';
 
 const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
 
@@ -24,6 +28,16 @@ export function analyticsRoutes(route: string, session: Session | null): ReactNo
 
   if (route === '/indicadores' || route.startsWith('/indicadores/')) {
     if (!hasPermission(session, ...INDICATORS_PERMISSIONS)) return NO_ACCESS;
+    const multi = route.match(/^\/indicadores\/(comparar|ubicaciones)\/([^/]+)$/);
+    if (multi) {
+      // Ids distintos y con formato UUID, hasta 10 (MS08 valida lo mismo)
+      const ids = [...new Set(decodeURIComponent(multi[2]).split(',').map((id) => id.trim().toLowerCase()).filter(isUuid))].slice(0, MAX_EVENTS);
+      const min = multi[1] === 'comparar' ? MIN_COMPARE : 1;
+      if (ids.length < min) return <main className="page"><p className="notice err" role="alert">Seleccione {min === 1 ? 'al menos un evento' : `al menos ${min} eventos`} en <a href="#/indicadores">Indicadores</a>.</p></main>;
+      return multi[1] === 'comparar'
+        ? <Comparacion key={ids.join(',')} session={session} ids={ids} />
+        : <Ubicaciones key={ids.join(',')} session={session} ids={ids} />;
+    }
     const detail = route.match(/^\/indicadores\/([^/]+)$/);
     if (detail) return <Indicadores key={detail[1]} session={session} eventoId={decodeURIComponent(detail[1])} />;
     return route === '/indicadores' ? <Indicadores session={session} /> : undefined;
