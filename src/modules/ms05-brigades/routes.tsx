@@ -6,12 +6,14 @@ import BrigadistaPanel from './pages/BrigadistaPanel';
 import AutoAsignacion from './pages/AutoAsignacion';
 import GestionBrigadistas from './pages/GestionBrigadistas';
 import ReportarIncidente from './pages/ReportarIncidente';
+import MisIncidentes from './pages/MisIncidentes';
+import AtenderIncidente from './pages/AtenderIncidente';
 
 const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
 
 /** Rutas de MS05 (Brigadistas e incidentes). Devuelve undefined si la ruta no es de este módulo. */
 export function brigadesRoutes(route: string, session: Session | null): ReactNode | undefined {
-  const ours = route === '/ayuda' || route === '/brigadistas' || route === '/brigadista' || route.startsWith('/brigadista/');
+  const ours = route === '/ayuda' || route === '/mis-incidentes' || route === '/brigadistas' || route === '/brigadista' || route.startsWith('/brigadista/');
   if (!session || !ours) return undefined;
 
   // Ask for help: report an incident that affects the own user (RF-BEI-04)
@@ -20,6 +22,14 @@ export function brigadesRoutes(route: string, session: Session | null): ReactNod
       return NO_ACCESS;
     }
     return <ReportarIncidente session={session} />;
+  }
+
+  // My incidents: the requests the user reported (ms05:incident:manage_own)
+  if (route === '/mis-incidentes') {
+    if (!hasPermission(session, PERMISSION.MS05_INCIDENT_MANAGE_OWN)) {
+      return NO_ACCESS;
+    }
+    return <MisIncidentes session={session} />;
   }
 
   // Brigade management of events: real events and drills have their own permission
@@ -43,6 +53,13 @@ export function brigadesRoutes(route: string, session: Session | null): ReactNod
     return NO_ACCESS;
   }
   if (route === '/brigadista') return <BrigadistaPanel session={session} />;
+  // Old "Panel de incidentes": its incidents now live inside the responsibilities panel
+  if (route === '/brigadista/incidentes') return <BrigadistaPanel session={session} />;
+  const atender = route.match(/^\/brigadista\/incidentes\/([^/]+)\/([^/]+)$/);
+  if (atender) {
+    const [eventoId, incidenteId] = [decodeURIComponent(atender[1]), decodeURIComponent(atender[2])];
+    return <AtenderIncidente key={incidenteId} session={session} eventoId={eventoId} incidenteId={incidenteId} />;
+  }
   // Auto asignación (RF-BEI-01, opción 2): desde el menú o desde el enlace del aviso del evento
   if (route === '/brigadista/autoasignacion') return <AutoAsignacion session={session} />;
   const auto = route.match(/^\/brigadista\/(?:autoasignacion|zona)\/([^/]+)$/);

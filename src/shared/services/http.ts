@@ -5,8 +5,9 @@ import { clearSession, getSession, setSessionNotice } from './session';
  * Cliente HTTP único de CampusSeguro. Todo el tráfico del frontend entra por el API Gateway
  * (Estándares de Integración §2): el frontend nunca llama a un microservicio directamente.
  *
- * - Las rutas protegidas llevan solo `Authorization: Bearer <JWT>`. La identidad (`X-User-Id`,
- *   `X-User-Role`) la inyecta el Gateway a partir del token y el navegador nunca la envía.
+ * - Las rutas protegidas llevan solo `Authorization: Bearer <JWT>`. La identidad (`X-User-Id`, `X-User-Role`,
+ *   `X-User-Permission`) la inyecta el Gateway a partir del token y el navegador nunca la envía. Cada MS autoriza
+ *   con `X-User-Permission`, nunca por el nombre del rol.
  * - Las rutas públicas (registro, login, recuperación de contraseña) no llevan `Authorization`.
  * - Cada petición lleva un `X-Correlation-ID` (UUID v4) para poder rastrearla de extremo a extremo.
  * - Todo error llega como `ErrorResponse` { status, codigo, mensaje, errores, correlation_id } y se

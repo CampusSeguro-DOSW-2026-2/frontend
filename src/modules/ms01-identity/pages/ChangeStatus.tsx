@@ -98,7 +98,7 @@ export default function ChangeStatus({ session, selected, onSelectedChange }: Pr
             <a className="btn white" href="#/usuarios">Volver al listado</a>
           </section>
         ) : (
-          <section className="panel" aria-busy={submitting}>
+          <section className="panel wide-edit" aria-busy={submitting}>
             {done ? (
               <>
                 <p className="notice" role="status">

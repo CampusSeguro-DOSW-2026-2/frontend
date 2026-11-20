@@ -34,19 +34,25 @@ export const SCOPE_ITEMS: CatalogItem[] = [
 // o edite el administrador.
 export const roleItem = (rol: string): CatalogItem => ({ id: rol, label: rol, group: 'Roles' });
 
-// Tipos de alerta. OPERATIVA (logística o administrativa) es exclusiva: no se combina con los de emergencia.
-export const TYPE_ITEMS: CatalogItem[] = [
-  { id: 'EARTHQUAKE', label: 'Sismo', group: 'Emergencia' },
-  { id: 'FIRE', label: 'Incendio', group: 'Emergencia' },
-  { id: 'OTHER', label: 'Otra emergencia', group: 'Emergencia' },
-  { id: 'OPERATIVA', label: 'Operativa (logística o administrativa)', group: 'Operativa' },
-];
-export const DEFAULT_TYPES: AlertType[] = ['OTHER'];
+// OPERATIVA (logística o administrativa) es el único tipo local de MS03: el resto sale del catálogo de MS06.
+// Es exclusiva: no se combina con los de emergencia.
+export const OPERATIONAL_TYPE = 'OPERATIVA';
+
+/**
+ * Tipo por defecto del formulario, deducido del catálogo de MS03: prefiere `OTRO`; si no está, el primer tipo
+ * distinto de OPERATIVA; si el catálogo solo trae OPERATIVA (o está vacío), el primero o cadena vacía.
+ */
+export const defaultAlertType = (items: CatalogItem[]): string => {
+  if (items.some((item) => item.id === 'OTRO')) return 'OTRO';
+  const emergency = items.find((item) => item.id !== OPERATIONAL_TYPE);
+  return emergency?.id ?? items[0]?.id ?? '';
+};
+
 /** Aplica la regla de MS03: OPERATIVA va sola; los tipos de emergencia se pueden combinar. */
 export const toggleType = (current: AlertType[], id: AlertType): AlertType[] => {
   if (current.includes(id)) return current.filter((t) => t !== id);
-  if (id === 'OPERATIVA') return ['OPERATIVA'];
-  return [...current.filter((t) => t !== 'OPERATIVA'), id];
+  if (id === OPERATIONAL_TYPE) return [OPERATIONAL_TYPE];
+  return [...current.filter((t) => t !== OPERATIONAL_TYPE), id];
 };
 
 export const labelOf = (items: CatalogItem[], id: string) => items.find((i) => i.id === id)?.label ?? id;

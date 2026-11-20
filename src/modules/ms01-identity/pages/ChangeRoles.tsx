@@ -67,6 +67,8 @@ export default function ChangeRoles({ session, selected, onSelectedChange }: Pro
   const [error, setError] = useState('');
   const [fields, setFields] = useState<Partial<Record<RoleField, string>>>({});
   const [done, setDone] = useState<Done | null>(null);
+  // Bloque de roles para todos: abierto al entrar; plegado, deja ver la tabla sin bajar
+  const [generalOpen, setGeneralOpen] = useState(true);
 
   const isMe = (user: UserSummary) => user.id === session.user.id;
   const others = selected.filter((u) => !isMe(u));
@@ -180,7 +182,7 @@ export default function ChangeRoles({ session, selected, onSelectedChange }: Pro
             <a className="btn white" href="#/usuarios">Volver al listado</a>
           </section>
         ) : (
-          <section className="panel" aria-busy={submitting}>
+          <section className="panel wide-edit" aria-busy={submitting}>
             {done ? (
               <>
                 <p className="notice" role="status">
@@ -191,17 +193,33 @@ export default function ChangeRoles({ session, selected, onSelectedChange }: Pro
                 <button type="button" className="btn red" onClick={backToList}>Volver al listado</button>
               </>
             ) : (
-              <>
-                <h2>Para todos los seleccionados</h2>
-                <RoleChecklist
-                  options={roleOptions}
-                  users={others}
-                  value={draft}
-                  onChange={editAll}
-                  error={fields.add ?? fields.remove}
-                  disabled={submitting}
-                />
-              </>
+              <div className="general-block">
+                <div className="general-head">
+                  <h2>Para todos los seleccionados</h2>
+                  <span className="general-summary" role="status">
+                    {draft.add.length === 0 && draft.remove.length === 0
+                      ? 'Sin cambios para todos'
+                      : [
+                        draft.add.length > 0 && `+${draft.add.length} ${draft.add.length === 1 ? 'rol' : 'roles'}`,
+                        draft.remove.length > 0 && `−${draft.remove.length} ${draft.remove.length === 1 ? 'rol' : 'roles'}`,
+                      ].filter(Boolean).join(' · ')}
+                  </span>
+                  <button type="button" className="linkbtn" aria-expanded={generalOpen} aria-controls="roles"
+                    onClick={() => setGeneralOpen((open) => !open)}>
+                    {generalOpen ? 'Ocultar' : 'Mostrar'}
+                  </button>
+                </div>
+                {generalOpen && (
+                  <RoleChecklist
+                    options={roleOptions}
+                    users={others}
+                    value={draft}
+                    onChange={editAll}
+                    error={fields.add ?? fields.remove}
+                    disabled={submitting}
+                  />
+                )}
+              </div>
             )}
 
             {error && <p className="notice err" role="alert">{error}</p>}

@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { hasPermission } from '../../../shared/services/session';
 import { getRoles } from '../services/roles';
 import { PERMISSION } from '../utils/permissions';
-import { ROLE_LABEL, ROLE_OPTIONS } from '../utils/labels';
+import { ROLE_OPTIONS, roleLabel } from '../utils/labels';
 import type { Session } from '../../../shared/types';
 
 export interface RoleOption { value: string; label: string }
 
-const toOption = (role: string): RoleOption => ({ value: role, label: ROLE_LABEL[role] ?? role });
+const toOption = (role: string): RoleOption => ({ value: role, label: roleLabel(role) });
 
 /**
  * Roles para los filtros y selectores. Con ms01:role:read_all salen del back (GET /roles devuelve el catálogo

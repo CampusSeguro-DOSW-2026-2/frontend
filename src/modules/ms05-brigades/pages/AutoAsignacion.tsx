@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
-import MapaCampus from '../components/MapaCampus';
+import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
+import SelectorZonaEvento from '../components/SelectorZonaEvento';
 import { brigadesApi } from '../services/brigades';
-import type { Autoasignacion, AutoasignacionEvento, EdificioEvento } from '../types';
+import type { Autoasignacion, AutoasignacionEvento } from '../types';
+import { nombreUbicacion } from '../utils/ubicaciones';
 import '../../ms06-drills/styles/events.css';
 import '../styles/brigadas.css';
 
@@ -20,7 +22,6 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [busy, setBusy] = useState(false);
-  const [confirmar, setConfirmar] = useState<EdificioEvento | null>(null);
 
   const cargar = useCallback(async () => {
     try {
@@ -37,6 +38,17 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
 
   const actual: AutoasignacionEvento | undefined = data?.eventos.find((e) => e.evento.eventoId === eventoId);
   const activo = data?.estado === 'ACTIVO';
+  const { catalog } = useScopeCatalog();
+
+  // MS05 guarda solo el id de cada edificio del evento; el nombre sale del catálogo vivo de MS02.
+  const edificios = useMemo(
+    () => (actual?.evento.edificios ?? []).map((e) => ({
+      ...e,
+      nombre: nombreUbicacion(e.ubicacionId, e.nombre, catalog),
+    })),
+    [actual, catalog],
+  );
+  const miEdificio = nombreUbicacion(actual?.ubicacionId, actual?.nombreUbicacion, catalog);
 
   const activarse = async () => {
     setBusy(true);
@@ -52,33 +64,9 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
     }
   };
 
-  const elegir = (edificio: EdificioEvento) => {
-    setNotice('');
-    if (!activo) { setNotice('Para asignarse a un edificio primero debe activarse.'); return; }
-    if (edificio.ubicacionId === actual?.ubicacionId) { setNotice(`Ya está asignado a ${edificio.nombre}.`); return; }
-    setConfirmar(edificio);
-  };
-
-  const asignarse = async () => {
-    if (!confirmar || !actual) return;
-    setBusy(true);
-    setError('');
-    try {
-      const res = await brigadesApi.elegirEdificio(session, actual.evento.eventoId, confirmar.ubicacionId);
-      setConfirmar(null);
-      await cargar();
-      setNotice(`Quedó asignado a ${res.nombreUbicacion ?? confirmar.nombre}.`);
-    } catch (err) {
-      setConfirmar(null);
-      setError(errorMessage(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const quitar = async () => {
     if (!actual?.ubicacionId) return;
-    if (!window.confirm(`¿Quitar su asignación de ${actual.nombreUbicacion ?? 'su edificio'}?`)) return;
+    if (!window.confirm(`¿Quitar su asignación de ${miEdificio || 'su edificio'}?`)) return;
     setBusy(true);
     setError('');
     try {
@@ -124,9 +112,14 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
         {data && actual && (
           <div className="aa-layout">
             <section aria-label="Mapa del campus">
-              {actual.evento.edificios.length === 0
-                ? <div className="ev-empty">El evento todavía no tiene edificios registrados.</div>
-                : <MapaCampus edificios={actual.evento.edificios} miUbicacionId={actual.ubicacionId} deshabilitado={!activo || busy} onElegir={elegir} />}
+              <SelectorZonaEvento
+                session={session}
+                eventoId={actual.evento.eventoId}
+                edificios={edificios}
+                miUbicacionId={actual.ubicacionId}
+                activo={!!activo}
+                onAsignado={async (nombre) => { await cargar(); setNotice(`Quedó asignado a ${nombre}.`); }}
+              />
             </section>
 
             <aside className="aa-side">
@@ -149,7 +142,7 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
                 {activo && (
                   <div className="ev-zone">
                     <span>Mi edificio</span>
-                    <b>{actual.nombreUbicacion ?? 'Sin asignar'}</b>
+                    <b>{miEdificio || 'Sin asignar'}</b>
                   </div>
                 )}
                 {activo && !actual.ubicacionId && <p className="help">Toque un edificio en el mapa para asignarse.</p>}
@@ -166,23 +159,6 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
         )}
       </main>
 
-      {confirmar && actual && (
-        <div className="ev-modal-bg" role="presentation" onClick={() => setConfirmar(null)}>
-          <div className="ev-modal" role="dialog" aria-modal="true" aria-labelledby="aa-confirmar" onClick={(e) => e.stopPropagation()}>
-            <h2 id="aa-confirmar">{actual.ubicacionId ? 'Cambiar de edificio' : 'Asignarme a este edificio'}</h2>
-            <p>
-              {actual.ubicacionId
-                ? <>Pasará de <b>{actual.nombreUbicacion}</b> a <b>{confirmar.nombre}</b>.</>
-                : <>Quedará asignado a <b>{confirmar.nombre}</b> en {actual.evento.nombre}.</>}
-            </p>
-            <p className="help">{confirmar.brigadistasAsignados === 1 ? 'Hay 1 brigadista' : `Hay ${confirmar.brigadistasAsignados} brigadistas`} en este edificio.</p>
-            <div className="row2">
-              <button type="button" className="btn white" onClick={() => setConfirmar(null)} disabled={busy}>Cancelar</button>
-              <button type="button" className="btn red" onClick={asignarse} disabled={busy}>{busy ? 'Guardando…' : 'Aceptar'}</button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
