@@ -17,6 +17,17 @@ export const ROLE_LABEL: Record<string, string> = {
 
 export const ROLE_OPTIONS = Object.entries(ROLE_LABEL).map(([value, label]) => ({ value, label }));
 
+/**
+ * Nombre visible de un rol: el de los roles iniciales y, para los que crea el administrador (que MS01 guarda en
+ * MAYÚSCULAS con guion bajo), el mismo nombre en minúsculas con la primera letra en mayúscula, p. ej.
+ * MONITOR_EVACUACION → Monitor evacuacion. El código del rol no cambia: solo cómo se muestra.
+ */
+export function roleLabel(role: string): string {
+  if (ROLE_LABEL[role]) return ROLE_LABEL[role];
+  const text = role.replace(/_+/g, ' ').trim().toLowerCase();
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 // Módulo al que pertenece cada permiso (primer segmento del código ms:recurso:acción)
 export const MODULE_LABEL: Record<string, string> = {
   ms01: 'Identidad y acceso',
@@ -24,7 +35,7 @@ export const MODULE_LABEL: Record<string, string> = {
   ms03: 'Alertas y emergencias',
   ms04: 'Evacuación y check-in',
   ms05: 'Brigadistas e incidentes',
-  ms06: 'Simulacros',
+  ms06: 'Eventos',
   ms07: 'Formación y asistente IA',
   ms08: 'Analítica y auditoría',
 };
@@ -32,51 +43,62 @@ export const MODULE_LABEL: Record<string, string> = {
 // Descripción de cada permiso según la matriz rol-permiso de MS01; si llega un código que no está
 // aquí, la pantalla muestra el código tal cual
 export const PERMISSION_LABEL: Record<string, string> = {
+  'ms01:password:change': 'Cambiar la propia contraseña',
   'ms01:profile:read': 'Consultar el propio perfil',
   'ms01:profile:write': 'Actualizar el propio perfil (nombres y apellidos)',
-  'ms01:password:change': 'Cambiar la propia contraseña',
-  'ms01:session:logout': 'Cerrar sesión',
+  'ms01:role:manage': 'Crear, renombrar, actualizar y borrar roles y asignarles permisos',
+  'ms01:role:read_all': 'Consultar el catálogo completo de roles, el detalle de cada rol y el catálogo de permisos',
   'ms01:role:read_own': 'Consultar los propios roles y sus permisos',
-  'ms01:role:read_all': 'Consultar el catálogo completo de roles y permisos',
+  'ms01:session:logout': 'Cerrar sesión',
   'ms01:user:read': 'Listar, buscar y consultar usuarios',
-  'ms01:user:status': 'Activar o inactivar usuarios',
   'ms01:user:roles': 'Agregar o retirar roles a usuarios',
-  'ms02:campus:read': 'Consultar edificios, pisos, espacios y zonas seguras (puntos de encuentro)',
-  'ms02:route:read': 'Consultar la ruta de evacuación recomendada y listar o ver las rutas de evacuación',
+  'ms01:user:status': 'Activar o inactivar usuarios',
+  'ms02:building:write': 'Crear, modificar e inactivar campus, zonas abiertas, edificios, pisos, salidas, escaleras (sin su disponibilidad), imágenes y recomendaciones preventivas',
+  'ms02:campus:read': 'Consultar campus, zonas abiertas, edificios, pisos, espacios, salidas, escaleras, zonas seguras (puntos de encuentro) e imágenes',
   'ms02:preventive_info:read': 'Consultar información preventiva por edificio o espacio',
-  'ms02:building:write': 'Crear, modificar e inactivar edificios y pisos',
-  'ms02:space:write': 'Gestionar espacios',
-  'ms02:safe_zone:write': 'Gestionar zonas seguras y puntos de encuentro (un mismo recurso)',
+  'ms02:qr:manage': 'Generar el código QR de espacios, salidas y zonas seguras',
+  'ms02:route:read': 'Consultar la ruta de evacuación recomendada y listar o ver las rutas de evacuación',
   'ms02:route:write': 'Asociar espacios con rutas de evacuación y modificar su descripción o destino',
-  'ms02:route_status:write': 'Cambiar el estado de una ruta (disponible, bloqueada, restringida)',
-  'ms02:qr:manage': 'Asociar códigos QR a zonas o edificios (opcional)',
-  'ms03:alert:receive': 'Recibir alertas y confirmar su recepción',
+  'ms02:route_status:write': 'Cambiar el estado de una ruta (disponible, bloqueada, restringida) y la disponibilidad de una escalera (bloquearla o habilitarla)',
+  'ms02:safe_zone:write': 'Gestionar zonas seguras y puntos de encuentro (un mismo recurso)',
+  'ms02:space:write': 'Gestionar espacios',
   'ms03:alert:manage': 'Crear, programar, activar, segmentar, modificar y finalizar alertas de cualquier tipo',
   'ms03:alert:manage_drill': 'Igual que el anterior, solo para alertas de tipo SIMULACRO (originadas desde MS06)',
   'ms03:alert:read_history': 'Consultar el historial de alertas',
-  'ms04:checkin:write': 'Reportar y actualizar el propio estado y punto de encuentro',
-  'ms04:checkin:read_own': 'Consultar el propio estado vigente',
+  'ms03:alert:receive': 'Recibir alertas y confirmar su recepción',
   'ms04:assistance:request': 'Solicitar asistencia desde el check-in',
+  'ms04:checkin:read_own': 'Consultar el propio estado vigente',
+  'ms04:checkin:write': 'Reportar y actualizar el propio estado y punto de encuentro',
   'ms04:dashboard:read': 'Ver consolidación por punto de encuentro, personas pendientes y dashboard',
   'ms04:history:read': 'Consultar el histórico de check-ins de un evento',
-  'ms05:brigadier:assign': 'Asignar brigadistas a edificios, zonas o puntos de encuentro',
-  'ms05:panel:read_own': 'Consultar las propias zonas y tareas asignadas',
+  'ms05:assistance:assign_to_drill': 'Asignar una solicitud a un brigadista y cerrarla para un simulacro',
+  'ms05:assistance:assign_to_real': 'Asignar una solicitud a un brigadista y cerrarla para un evento real',
   'ms05:assistance:read': 'Consultar solicitudes de asistencia',
-  'ms05:assistance:register': 'Registrar una solicitud de asistencia',
-  'ms05:assistance:assign': 'Asignar una solicitud a un brigadista y cerrarla',
+  'ms05:assistance:register': 'Registrar una solicitud de asistencia para alguien diferente a si mismo',
   'ms05:assistance:update_status': 'Cambiar el estado de atención (en atención, resuelta)',
-  'ms05:incident:report': 'Registrar un incidente con descripción y evidencia',
+  'ms05:brigadier:assign_to_drill': 'Asignar brigadistas a edificios, zonas o puntos de encuentro para simulacros',
+  'ms05:brigadier:assign_to_real': 'Asignar brigadistas a edificios, zonas o puntos de encuentro para eventos reales',
+  'ms05:incident:manage_own': 'Consultar, editar y eliminar incidentes propios',
   'ms05:incident:read': 'Consultar y dar seguimiento a incidentes',
+  'ms05:incident:report': 'Registrar un incidente propio con descripción y evidencia',
   'ms05:incident:update': 'Actualizar un incidente',
-  'ms06:drill:manage': 'Crear y editar simulacros, escenario y participantes',
-  'ms06:drill:execute': 'Iniciar y terminar un simulacro',
-  'ms06:drill:evaluate': 'Evaluar un simulacro',
-  'ms06:drill:read': 'Consultar simulacros y su seguimiento',
-  'ms06:drill:compare_report': 'Comparar simulacros y consultar el informe final',
+  'ms05:panel:read_own': 'Consultar las propias zonas y tareas asignadas',
+  'ms06:drill:compare_report': 'Comparar eventos con tipo SIMULACRO y consultar el informe final',
+  'ms06:drill:evaluate': 'Evaluar un evento con tipo SIMULACRO',
+  'ms06:drill:execute': 'Iniciar y terminar un evento con tipo SIMULACRO',
+  'ms06:drill:manage': 'Crear y editar evento con tipo SIMULACRO, escenario y participantes',
+  'ms06:drill:read': 'Consultar eventos con tipo SIMULACRO y su seguimiento',
+  'ms06:real_event:compare_report': 'Comparar eventos reales (sin tipo SIMULACRO) y consultar el informe final',
+  'ms06:real_event:evaluate': 'Evaluar un evento real (sin tipo SIMULACRO)',
+  'ms06:real_event:execute': 'Iniciar y terminar un evento real (sin tipo SIMULACRO)',
+  'ms06:real_event:manage': 'Crear y editar evento real (sin tipo SIMULACRO), escenario y participantes',
+  'ms06:real_event:read': 'Consultar eventos reales (sin tipo SIMULACRO) y su seguimiento',
+  'ms07:content:manage': 'Gestionar contenidos y la información que alimenta al tutor',
   'ms07:content:read': 'Consultar contenidos del centro de aprendizaje',
   'ms07:quiz:take': 'Realizar evaluaciones y consultar el propio progreso',
   'ms07:tutor:use': 'Usar el tutor CampusSeguro',
-  'ms07:content:manage': 'Gestionar contenidos y la información que alimenta al tutor',
-  'ms08:indicators:read': 'Consultar indicadores operativos e históricos',
-  'ms08:audit:read': 'Consultar la auditoría',
+  'ms08:audit_drill:read': 'Consultar auditoría de simulacros',
+  'ms08:audit_real_event:read': 'Consultar auditoría de eventos reales (con o sin evento_id)',
+  'ms08:indicators_drill:read': 'Ver indicadores y comparaciones de simulacros',
+  'ms08:indicators_real_event:read': 'Ver indicadores de eventos reales',
 };

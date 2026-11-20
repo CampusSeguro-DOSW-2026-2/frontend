@@ -69,7 +69,7 @@ export default function App() {
 
   const page = blocked ? null
     : identityRoutes(route)
-      ?? campusRoutes(route)
+      ?? campusRoutes(route, session)
       ?? alertRoutes(route, session)
       ?? evacuationRoutes(route, session)
       ?? brigadesRoutes(route, session)

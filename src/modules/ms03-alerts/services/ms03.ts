@@ -5,7 +5,7 @@ import { getSession } from '../../../shared/services/session';
  * Cliente de MS03 (Alertas) a través del API Gateway.
  *
  * MS03 ya no valida JWT ni expone CORS: el Gateway verifica el token de MS01 e inyecta la identidad
- * (X-User-Id, X-User-Role). Por eso aquí solo se firma con la sesión del usuario y se reutiliza el
+ * (X-User-Id, X-User-Role, X-User-Permission) y MS03 autoriza con X-User-Permission. Por eso aquí solo se firma con la sesión del usuario y se reutiliza el
  * cliente compartido (`shared/services/http.ts`), que ya entiende el ErrorResponse estándar
  * { status, codigo, mensaje, errores[{ campo, mensaje }], correlation_id }.
  */

@@ -16,11 +16,14 @@ interface Props {
   placeholder?: string;
   autoComplete?: string;
   maxLength?: number;
+  /** Texto largo: varias líneas que crecen con el contenido (solo para type="text"). */
+  multiline?: boolean;
 }
 
 /** Campo de texto con la identidad visual: etiqueta, error y ayuda accesibles, y ojo para contraseñas. */
 export function TextField({
   id, label, value, onChange, error, optional = false, type = 'text', icon, hint, placeholder, autoComplete, maxLength,
+  multiline = false,
 }: Props) {
   const [visible, setVisible] = useState(false);
   const isPassword = type === 'password';
@@ -32,9 +35,21 @@ export function TextField({
         {label}
         {optional && <span className="hint"> (opcional)</span>}
       </label>
-      <div className={`input${error ? ' bad' : ''}`}>
+      <div className={`input${multiline ? ' area' : ''}${error ? ' bad' : ''}`}>
         {icon}
-        <input
+        {multiline ? (
+          <textarea
+            id={id}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            maxLength={maxLength}
+            rows={3}
+            aria-required={!optional}
+            aria-invalid={!!error}
+            aria-describedby={error || hint ? msgId : undefined}
+          />
+        ) : <input
           id={id}
           type={isPassword && visible ? 'text' : type}
           value={value}
@@ -45,7 +60,7 @@ export function TextField({
           aria-required={!optional}
           aria-invalid={!!error}
           aria-describedby={error || hint ? msgId : undefined}
-        />
+        />}
         {isPassword && (
           <button
             type="button"
