@@ -103,6 +103,22 @@ export interface Intento {
   answers: { questionId: string; optionId: string; correct: boolean; correctOptionId: string }[];
 }
 
+/** Contenido que el tutor usó para responder: se enlaza a su detalle en el centro de aprendizaje. */
+export interface FuenteTutor {
+  id: string;
+  title: string;
+}
+
+/**
+ * Respuesta del tutor (POST /api/v1/tutor/questions). Con `sufficient` en false el tutor no tuvo información y
+ * `answer` remite al protocolo oficial de emergencias; entonces no hay fuentes.
+ */
+export interface RespuestaTutor {
+  answer: string;
+  sufficient: boolean;
+  sources: FuenteTutor[];
+}
+
 /** Progreso del usuario (GET /api/v1/training/progress/me). `available` es false si se inactivó después. */
 export interface Progreso {
   contents: {

@@ -8,11 +8,13 @@ import ContenidoDetalle from './pages/ContenidoDetalle';
 import Evaluaciones from './pages/Evaluaciones';
 import MiProgreso from './pages/MiProgreso';
 import PresentarEvaluacion from './pages/PresentarEvaluacion';
+import Tutor from './pages/Tutor';
 
 /** Permisos de MS07 (Matriz Rol‐Permiso): la interfaz decide qué mostrar por permiso, nunca por rol. */
 export const PERMISOS_MS07 = {
   leer: 'ms07:content:read',
   presentar: 'ms07:quiz:take',
+  tutor: 'ms07:tutor:use',
   administrar: 'ms07:content:manage',
 } as const;
 
@@ -39,6 +41,10 @@ export function trainingRoutes(route: string, session: Session | null): ReactNod
     return hasPermission(session, PERMISOS_MS07.leer, PERMISOS_MS07.administrar)
       ? <ContenidoDetalle key={id} session={session} id={id} />
       : SIN_ACCESO;
+  }
+  // Tutor CampusSeguro (RF-15): solo la comunidad; el ADMIN gestiona contenidos pero no usa el tutor
+  if (route === '/tutor') {
+    return hasPermission(session, PERMISOS_MS07.tutor) ? <Tutor session={session} /> : SIN_ACCESO;
   }
   if (route === '/mi-progreso') {
     return hasPermission(session, PERMISOS_MS07.presentar) ? <MiProgreso session={session} /> : SIN_ACCESO;
