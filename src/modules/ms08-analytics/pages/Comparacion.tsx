@@ -73,7 +73,7 @@ export default function Comparacion({ session, ids }: { session: Session; ids: s
       <main className="ev-main">
         {loading && <p className="notice" role="status">Calculando la comparación…</p>}
         {!loading && error !== null && <ErrorNotice error={error} onRetry={load} />}
-        {!loading && error === null && rows && rows.length === 0 && <div className="ev-empty">MS08 no devolvió eventos para comparar.</div>}
+        {!loading && error === null && rows && rows.length === 0 && <div className="ev-empty">No hay datos para comparar estos eventos.</div>}
         {!loading && error === null && rows && rows.length > 0 && (
           <>
             <table className="ev-table an-table">

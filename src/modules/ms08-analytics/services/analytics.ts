@@ -143,7 +143,7 @@ const toLocationRow = (l: Raw): LocationRow => ({
 const MULTI_MESSAGES: Record<number, string> = {
   400: 'Seleccione eventos distintos y del mismo tipo: todos simulacros o todos eventos reales.',
   403: 'No tiene permiso para ver los indicadores de alguno de los eventos seleccionados.',
-  404: 'Alguno de los eventos seleccionados todavía no tiene datos en MS08 (pendiente de cálculo). Quítelo de la selección e intente de nuevo.',
+  404: 'Los datos de alguno de los eventos seleccionados aún no han sido recopilados. Quítelo de la selección e intente de nuevo.',
 };
 
 /** Consulta de varios eventos: MS08 recibe `evento_id` repetido (?evento_id=a&evento_id=b). */

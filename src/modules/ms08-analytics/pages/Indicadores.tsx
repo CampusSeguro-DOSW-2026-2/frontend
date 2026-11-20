@@ -21,7 +21,7 @@ function Pending({ finished }: { finished: boolean }) {
     <div className="an-pending" role="status">
       <b>{PENDING_TEXT}</b>
       <span>{finished
-        ? 'MS08 todavía no recibió los datos de este evento. El resumen aparece cuando lleguen.'
+        ? 'Los datos de este evento aún no han sido recopilados. El resumen aparecerá cuando estén disponibles.'
         : 'El resumen se calcula cuando el evento finaliza.'}</span>
     </div>
   );
