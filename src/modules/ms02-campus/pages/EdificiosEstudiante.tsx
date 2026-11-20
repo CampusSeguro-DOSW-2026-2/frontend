@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import GaleriaImagenes from '../components/GaleriaImagenes';
+import { Paginacion } from '../components/Paginacion';
+import { paginar } from '../utils/paginacion';
 import { PERMISSION } from '../../../shared/permissions';
 import { campus, currentPermissions } from '../services/campus';
 import type { Edificio, Espacio, Piso } from '../types';
@@ -12,6 +14,9 @@ interface Props {
   edificioId?: string;
 }
 
+const POR_PAGINA = 6;
+const FOTOS_EN_VISTA_PREVIA = 2;
+
 export default function EdificiosEstudiante({ edificioId }: Props) {
   const puedeConsultar = currentPermissions().includes(PERMISSION.MS02_CAMPUS_READ);
 
@@ -21,6 +26,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
   const [espacios, setEspacios] = useState<Espacio[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+  const [pagina, setPagina] = useState(0);
 
   useEffect(() => {
     let vigente = true;
@@ -115,6 +121,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
   }
 
   if (!edificioId) {
+    const vista = paginar(edificios, pagina, POR_PAGINA);
     return (
       <>
         <PageHeader
@@ -127,8 +134,9 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
           {edificios.length === 0 ? (
             <p className="cs-alert info">Todavía no hay edificios activos para consultar.</p>
           ) : (
+            <>
             <div className="cs-estudiante-edificios">
-              {edificios.map((item) => (
+              {vista.items.map((item) => (
                 <article className="cs-estudiante-edificio" key={item.id}>
                   <div className="cs-estudiante-edificio-info">
                     <h2>{item.nombre}</h2>
@@ -142,10 +150,15 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
                     tipoElemento="EDIFICIO"
                     elementoId={item.id}
                     editable={false}
+                    maximo={FOTOS_EN_VISTA_PREVIA}
+                    verTodasHref={`#/edificios/${item.id}`}
                   />
                 </article>
               ))}
             </div>
+            <Paginacion actual={vista.actual} paginas={vista.paginas} total={edificios.length} nombre="edificios"
+              onCambiar={(p) => { setPagina(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+            </>
           )}
         </main>
       </>

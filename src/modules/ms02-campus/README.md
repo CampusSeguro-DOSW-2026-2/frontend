@@ -6,11 +6,11 @@
 
 | Ruta | Pantalla | Rol |
 |---|---|---|
-| `#/edificios` | Consultar edificios y fotografías | Todos |
-| `#/edificios/{id}` | Consultar pisos, espacios y fotografías | Todos |
+| `#/edificios` | Consultar edificios, paginados de a 6, con máximo 2 fotos por edificio | Todos |
+| `#/edificios/{id}` | Consultar pisos, espacios y todas las fotografías | Todos |
 | `#/rutas` | Consultar ruta de evacuación | Todos |
-| `#/admin/edificios` | Edificios | ADMIN; COORDINADOR consulta |
-| `#/admin/edificios/{id}` | Detalle de edificio: pisos, espacios y salidas, con el QR de cada uno | ADMIN |
+| `#/admin/edificios` | Edificios: tabla paginada de a 10, con máximo 2 fotos y un solo botón «Modificar» por edificio | ADMIN; COORDINADOR consulta |
+| `#/admin/edificios/{id}` | Modificar el edificio: datos, inactivar o reactivar, todas las fotos, pisos, espacios, escaleras y salidas, con el QR de cada uno | ADMIN |
 | `#/admin/edificios/{id}/qr` | Hoja imprimible con los QR de las salidas y espacios del edificio | ADMIN |
 | `#/admin/zonas` | Zonas seguras, con el QR de cada una | ADMIN |
 | `#/admin/campus` | Campus y zonas abiertas | ADMIN |
@@ -32,3 +32,7 @@ Todas las llamadas pasan por `services/campus.ts`, que usa `request` de `shared/
 | `routes.tsx` | Rutas del módulo, encadenadas en `src/app/App.tsx` |
 
 Lo que también usen otros módulos va en `src/shared/` (ver `docs/ESTRUCTURA.md`).
+
+## Fotografías
+
+Al hacer clic en una foto se abre ampliada en una ventana sobre la página (Esc o el fondo la cierran; las flechas pasan de foto). Las vistas previas solo descargan las fotos que muestran.

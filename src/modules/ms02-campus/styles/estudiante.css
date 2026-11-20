@@ -111,7 +111,8 @@
   width: 100%;
 }
 
-.cs-galeria-grande .cs-galeria-foto a {
+.cs-galeria-grande .cs-galeria-foto a,
+.cs-galeria-grande .cs-galeria-ampliar {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -143,7 +144,8 @@
     margin-top: 0;
   }
 
-  .cs-galeria-grande .cs-galeria-foto a {
+  .cs-galeria-grande .cs-galeria-foto a,
+  .cs-galeria-grande .cs-galeria-ampliar {
     min-height: 420px;
   }
 

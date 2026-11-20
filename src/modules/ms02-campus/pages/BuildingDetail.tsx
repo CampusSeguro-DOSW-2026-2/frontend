@@ -1,15 +1,18 @@
 import GaleriaImagenes from '../components/GaleriaImagenes';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { campus, CampusApiError, comoCampusError as comoError } from '../services/campus';
-import type { Edificio, Espacio, EspacioRequest, Piso, PisoRequest, TipoEspacio } from '../types';
+import { PERMISSION } from '../../../shared/permissions';
+import { campus, CampusApiError, comoCampusError as comoError, currentPermissions } from '../services/campus';
+import type { Campus, Edificio, EdificioRequest, Espacio, EspacioRequest, Piso, PisoRequest, TipoEspacio } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
 import { TIPOS } from '../types';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import SalidasEdificio from '../components/SalidasEdificio';
 import EscalerasEdificio from '../components/EscalerasEdificio';
 import { BotonQr } from '../components/BotonQr';
+import EdificioForm from '../components/EdificioForm';
 import '../styles/campus.css';
+import '../styles/admin.css';
 
 type Edicion =
   | { tipo: 'nuevo-piso' }
@@ -113,6 +116,11 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
   const [edicion, setEdicion] = useState<Edicion>(null);
   const [aviso, setAviso] = useState<{ pisoId: string; error: CampusApiError } | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  const [campuses, setCampuses] = useState<Campus[] | null>(null);
+  const [editandoDatos, setEditandoDatos] = useState(false);
+  const [avisoEdificio, setAvisoEdificio] = useState<CampusApiError | null>(null);
+
+  const puedeGestionar = currentPermissions().includes(PERMISSION.MS02_BUILDING_WRITE);
 
   const aplicar = useCallback(([e, p, s]: Datos) => {
     setEdificio(e);
@@ -129,6 +137,14 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
     return () => { vigente = false; };
   }, [edificioId, aplicar]);
 
+  useEffect(() => {
+    let vigente = true;
+    campus.campuses.listar(true)
+      .then((lista) => { if (vigente) setCampuses(lista); })
+      .catch((e) => { if (vigente) setAvisoEdificio(comoError(e)); });
+    return () => { vigente = false; };
+  }, []);
+
   const cargar = async () => {
     try {
       aplicar(await leer(edificioId));
@@ -138,6 +154,26 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
   };
 
   const editar = (e: Edicion) => { setEdicion(e); setAviso(null); };
+
+  const guardarDatos = async (datos: EdificioRequest) => {
+    await campus.edificios.modificar(edificioId, datos);
+    await cargar();
+    setEditandoDatos(false);
+  };
+
+  // El backend responde 422 con las rutas que impiden inactivar: se muestra tal cual.
+  const cambiarEstadoEdificio = async (activo: boolean) => {
+    setOcupado('edificio');
+    setAvisoEdificio(null);
+    try {
+      await (activo ? campus.edificios.inactivar(edificioId) : campus.edificios.reactivar(edificioId));
+      await cargar();
+    } catch (e) {
+      setAvisoEdificio(comoError(e));
+    } finally {
+      setOcupado(null);
+    }
+  };
 
   const guardar = async (accion: () => Promise<unknown>) => {
     await accion();
@@ -182,12 +218,41 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
         context={<a className="cs-volver" href="#/admin/edificios">← Edificios</a>} />
       <main className="content">
         {edificio.estado === 'INACTIVO' && (
-          <p className="cs-alert warn">Este edificio está inactivo, así que sus pisos y espacios no están disponibles para rutas. Reactívalo desde Edificios para poder modificarlos.</p>
+          <p className="cs-alert warn">Este edificio está inactivo, así que sus pisos y espacios no están disponibles para rutas. Reactívalo aquí abajo para poder modificarlos.</p>
         )}
         {errorCarga && <Falla error={errorCarga} />}
 
+        <section className="cs-piso" aria-labelledby="datos-edificio">
+          <div className="cs-barra">
+            <div className="cs-barra-titulo">
+              <h2 id="datos-edificio" className="title sm22">Datos del edificio</h2>
+              <span className={`cs-estado cs-estado-suelto ${edificio.estado === 'ACTIVO' ? 'ok' : 'info'}`}>{edificio.estado}</span>
+            </div>
+            {puedeGestionar && !editandoDatos && (
+              <div className="cs-acciones">
+                {edificio.estado === 'ACTIVO' && campuses && (
+                  <button type="button" className="cs-mini" onClick={() => { setEditandoDatos(true); setAvisoEdificio(null); }}>Modificar datos</button>
+                )}
+                <button type="button" className={`cs-mini${edificio.estado === 'ACTIVO' ? ' peligro' : ''}`} disabled={ocupado === 'edificio'}
+                  onClick={() => cambiarEstadoEdificio(edificio.estado === 'ACTIVO')}>
+                  {ocupado === 'edificio' ? 'Guardando…' : edificio.estado === 'ACTIVO' ? 'Inactivar edificio' : 'Reactivar edificio'}
+                </button>
+              </div>
+            )}
+          </div>
+          {avisoEdificio && <Falla error={avisoEdificio} />}
+          {editandoDatos && campuses ? (
+            <EdificioForm inicial={edificio} campuses={campuses} onCancelar={() => setEditandoDatos(false)} onGuardar={guardarDatos} />
+          ) : (
+            <dl className="cs-datos">
+              <div><dt>Campus</dt><dd>{campuses?.find((c) => c.id === edificio.campusId)?.nombre ?? '—'}</dd></div>
+              <div><dt>Descripción</dt><dd>{edificio.descripcion || 'Sin descripción.'}</dd></div>
+            </dl>
+          )}
+        </section>
+
         <GaleriaImagenes tipoElemento="EDIFICIO" elementoId={edificio.id}
-          editable={edificio.estado === 'ACTIVO'} />
+          editable={edificio.estado === 'ACTIVO' && puedeGestionar} />
 
         <div className="cs-barra">
           <div className="cs-barra-titulo">
