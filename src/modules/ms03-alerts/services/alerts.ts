@@ -1,7 +1,8 @@
 import { ms03 } from './ms03';
 
-// Ciclo de vida de MS03: DRAFT → SCHEDULED → ACTIVE → ARCHIVED (se puede pasar de DRAFT a ACTIVE y archivar desde cualquier estado).
-export type AlertStatus = 'DRAFT' | 'SCHEDULED' | 'ACTIVE' | 'ARCHIVED';
+// Ciclo de vida de MS03: DRAFT → SCHEDULED → ACTIVE → ARCHIVED (se puede pasar de DRAFT a ACTIVE y archivar desde
+// cualquier estado). El catálogo vive en MS03 (`alert_status`), así que el tipo acepta códigos nuevos sin recompilar.
+export type AlertStatus = string;
 // Los códigos salen del catálogo de MS03 (`GET /api/v1/alertas/tipos`); MS06 es el dueño del catálogo y MS03
 // agrega OPERATIVA, que es exclusiva: no se combina con otros tipos ni se usa en simulacros.
 export type AlertType = string;
@@ -38,11 +39,19 @@ export interface AlertCreateInput extends AlertInput { activationAt?: string; ac
 
 const A = '/api/v1/alertas';
 export const alertsApi = {
-  // `types` se repite en la consulta y se evalúa con OR: alertas con al menos uno de los tipos.
-  list: (p: { status?: AlertStatus; types?: AlertType[]; page?: number; size?: number }) => {
+  // `filters` viene del catálogo de MS03 (`/filtros`): un valor por clave se envía una vez y varios se repiten,
+  // que MS03 evalúa con OR dentro de la misma clave (por ejemplo, varios `type`).
+  list: (p: { filters?: Record<string, string[]>; page?: number; size?: number }) => {
     const q = new URLSearchParams();
-    if (p.status) q.set('status', p.status);
-    p.types?.forEach((t) => q.append('type', t));
+    Object.entries(p.filters ?? {}).forEach(([key, values]) => {
+      const present = values.filter((value) => value !== '');
+      if (!present.length) return;
+      if (present.length === 1) {
+        q.set(key, present[0]);
+      } else {
+        present.forEach((value) => q.append(key, value));
+      }
+    });
     q.set('page', String(p.page ?? 0)); q.set('size', String(p.size ?? 10));
     return ms03<PageDto<AlertSummary>>('GET', `${A}?${q}`).then(toPage);
   },
