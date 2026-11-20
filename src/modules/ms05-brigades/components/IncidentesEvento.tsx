@@ -32,9 +32,7 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
   const [data, setData] = useState<Pagina<IncidenteResumen> | null>(null);
   const [page, setPage] = useState(0);
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  const [busy, setBusy] = useState('');
-  // Cambia para volver a pedir la página (Reintentar o después de una acción).
+  // Cambia para volver a pedir la página (Reintentar).
   const [version, setVersion] = useState(0);
   const { catalog } = useScopeCatalog();
   const load = () => setVersion((v) => v + 1);
@@ -47,33 +45,12 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
     return () => { ignore = true; };
   }, [session, eventoId, page, version]);
 
-  const actuar = async (incidente: IncidenteResumen, accion: 'iniciar' | 'resolver') => {
-    let observaciones = '';
-    if (accion === 'resolver') {
-      observaciones = window.prompt('¿Cómo se resolvió el incidente? (obligatorio)')?.trim() ?? '';
-      if (!observaciones) return;
-    }
-    setBusy(incidente.incidenteId);
-    setNotice('');
-    try {
-      if (accion === 'iniciar') await brigadesApi.iniciarAtencion(session, eventoId, incidente.incidenteId);
-      else await brigadesApi.resolver(session, eventoId, incidente.incidenteId, observaciones);
-      setNotice(accion === 'iniciar' ? 'Atención iniciada.' : 'Incidente marcado como resuelto.');
-      load();
-    } catch (err) {
-      setNotice(errorMessage(err));
-    } finally {
-      setBusy('');
-    }
-  };
-
   const propio = (i: IncidenteResumen) => i.brigadistaResponsableId === session.user.id;
   // contenido llega con la paginación estándar de MS05; sin ella (versión anterior del servicio) la lista queda vacía.
   const incidentes = data?.contenido ?? [];
 
   return (
     <>
-      {notice && <p className="notice" role="status">{notice}</p>}
       {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
       {!error && data === null && <p className="notice" role="status">Cargando incidentes…</p>}
       {data && incidentes.length === 0 && (
@@ -100,11 +77,10 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
                   {modo === 'brigadista' && (
                     <td>
                       <div className="ev-acts">
-                        {propio(i) && i.estado === 'ASIGNADO' && (
-                          <button type="button" className="btn white" disabled={busy === i.incidenteId} onClick={() => actuar(i, 'iniciar')}>Iniciar atención</button>
-                        )}
-                        {propio(i) && i.estado === 'EN_ATENCION' && (
-                          <button type="button" className="btn white" disabled={busy === i.incidenteId} onClick={() => actuar(i, 'resolver')}>Marcar como resuelto</button>
+                        {propio(i) && (i.estado === 'ASIGNADO' || i.estado === 'EN_ATENCION') && (
+                          <a className="btn white" href={`#/brigadista/incidentes/${encodeURIComponent(eventoId)}/${encodeURIComponent(i.incidenteId)}`}>
+                            {i.estado === 'ASIGNADO' ? 'Atender' : 'Continuar atención'}
+                          </a>
                         )}
                       </div>
                     </td>
