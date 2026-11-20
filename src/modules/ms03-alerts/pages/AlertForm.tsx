@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PickerBox } from '../components/PickerBox';
 import { DateTimeField } from '../../../shared/components/DateTimeField';
@@ -7,9 +7,10 @@ import { alertsApi, type Alert, type AlertInput, type AlertType, type Recipient,
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { getSession, sessionPermissions } from '../../../shared/services/session';
 import { alertAccess } from '../permissions';
+import { useAlertTypes } from '../hooks/useAlertTypes';
 import { useRecipientRoles } from '../hooks/useRecipientRoles';
 import { useScopeCatalog } from '../hooks/useScopeCatalog';
-import { CAMPUS_ITEM, DEFAULT_TYPES, TYPE_ITEMS, labelOf, listEs, roleItem, scopeIdsOf, toggleType } from '../services/catalog';
+import { CAMPUS_ITEM, defaultAlertType, labelOf, listEs, roleItem, scopeIdsOf, toggleType } from '../services/catalog';
 
 const toLocalInput = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 const msg = errorMessage;
@@ -43,6 +44,8 @@ export default function AlertForm({ editId }: { editId?: string }) {
   // El alcance sale de MS02: MS03 valida esos mismos ids por UUID al crear la alerta.
   const { catalog, loading: scopeLoading, error: scopeError, retry: retryScope } = useScopeCatalog();
   const { items: loadedRoles, loading: rolesLoading, error: rolesError, notice: rolesNotice, retry: retryRoles } = useRecipientRoles();
+  // Los tipos de alerta salen de MS03: MS06 es el dueño del catálogo y MS03 agrega OPERATIVA.
+  const { items: typeItems, loading: typesLoading, error: typesError, notice: typesNotice, retry: retryTypes } = useAlertTypes();
   const scopeItems = useMemo(
     () => [CAMPUS_ITEM, ...(catalog ? [...catalog.buildings, ...catalog.zones] : [])],
     [catalog],
@@ -54,7 +57,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
   // Tipos de alcance distintos que trae la alerta: el formulario y el PUT solo manejan uno a la vez.
   const [scopeKinds, setScopeKinds] = useState(0);
   const [roles, setRoles] = useState<string[]>([]);
-  const [types, setTypes] = useState<AlertType[]>(DEFAULT_TYPES);
+  const [types, setTypes] = useState<AlertType[]>([]);
   // Destinatarios individuales (USER) que pudo fijar otro servicio: se conservan al editar.
   const [users, setUsers] = useState<Recipient[]>([]);
   const [alert, setAlert] = useState<Alert | null>(null);
@@ -84,6 +87,15 @@ export default function AlertForm({ editId }: { editId?: string }) {
       if (a.activationAt) setStart(toLocalInput(a.activationAt));
     }).catch((e) => setApiError(msg(e))).finally(() => setLoading(false));
   }, [editId]);
+
+  // Al crear, el tipo por defecto se deduce del catálogo de MS03 (prefiere OTRO) una sola vez, cuando llega.
+  // No se vuelve a aplicar si el usuario vacía la selección a propósito.
+  const defaulted = useRef(false);
+  useEffect(() => {
+    if (defaulted.current || editId || !typeItems.length) return;
+    defaulted.current = true;
+    setTypes((current) => (current.length ? current : [defaultAlertType(typeItems)]));
+  }, [editId, typeItems]);
 
   const access = alertAccess(sessionPermissions(getSession()));
   const status = alert?.status;
@@ -180,7 +192,17 @@ export default function AlertForm({ editId }: { editId?: string }) {
             {errors.start && <span className="error" role="alert">{errors.start}</span>}
           </div>
           <div className="fgroup half">
-            <PickerBox label="Tipo de alerta" required={!editId} help="Elija uno o varios tipos de emergencia, u Operativa (se usa sola)." editLabel="Editar tipo" items={TYPE_ITEMS} selected={types} onToggle={(id) => setTypes((c) => toggleType(c, id as AlertType))} error={errors.types} />
+            <PickerBox label="Tipo de alerta" required={!editId} help="Elija uno o varios tipos de emergencia, u Operativa (se usa sola)." editLabel="Editar tipo" items={typeItems} selected={types} onToggle={(id) => setTypes((c) => toggleType(c, id))} error={errors.types} loading={typesLoading} />
+            {typesNotice && (
+              <p className="notice" role="status">
+                {typesNotice} <button type="button" className="plink" onClick={retryTypes}>Reintentar</button>
+              </p>
+            )}
+            {typesError && (
+              <p className="notice err" role="alert">
+                {typesError} <button type="button" className="plink" onClick={retryTypes}>Reintentar</button>
+              </p>
+            )}
           </div>
           <div className="fgroup">
             <span className="flabel">Alcance y destinatarios{star(!editId)}</span>
@@ -211,7 +233,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
             <div className="sum2-msg"><small>Título del mensaje</small><strong>{title.trim() || 'Pendiente de completar'}</strong>
               <p className="clamp">{instructions.trim() || 'Añada la descripción que recibirá la comunidad.'}</p></div>
             <div className="sep" />
-            <div className="sum2-row"><small>Tipo</small><span>{listEs(types.map((t) => labelOf(TYPE_ITEMS, t))) || '—'}</span></div>
+            <div className="sum2-row"><small>Tipo</small><span>{listEs(types.map((t) => labelOf(typeItems, t))) || '—'}</span></div>
             <div className="sum2-row"><small>Edificios y zonas</small><span>{scopeText || '—'}</span></div>
             <div className="sum2-row"><small>Destinatarios</small><span>{rolesText || '—'}</span></div>
           </div>

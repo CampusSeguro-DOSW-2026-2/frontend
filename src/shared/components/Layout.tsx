@@ -36,8 +36,6 @@ function menuFor(permissions: string[]): MenuSection[] {
       title: 'Brigada',
       items: [
         { href: '#/brigadista', icon: <ClipboardCheck />, label: 'Panel de responsabilidades' },
-        // Official response panel: incidents of the running events and "Atender"
-        { href: '#/brigadista/incidentes', icon: <BellIcon />, label: 'Panel de incidentes' },
         // Self-assignment (RF-BEI-01, option 2): pick a building on the map for scheduled or running events
         { href: '#/brigadista/autoasignacion', icon: <MapLine />, label: 'Auto asignación' },
       ],
