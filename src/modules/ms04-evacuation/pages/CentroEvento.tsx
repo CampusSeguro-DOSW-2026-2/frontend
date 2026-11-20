@@ -1,10 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { ClipboardCheck, Info, LifeBuoy, LogOut, MapLine, ShieldCheck } from '../../../shared/components/Icons';
-import { PageHeader } from '../../../shared/components/Layout';
-import { PERMISSION } from '../../../shared/permissions';
+import { Info, LogOut, ShieldCheck } from '../../../shared/components/Icons';import { PageHeader } from '../../../shared/components/Layout';
 import { ApiError, errorMessage } from '../../../shared/services/http';
-import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
+import { AccionesEvento } from '../components/AccionesEvento';
 import { campusApi } from '../services/campus';
 import { checkinApi } from '../services/checkin';
 import type {
@@ -43,27 +41,6 @@ type Vigente =
   | { estado: 'listo'; checkin: Checkin | null }
   | { estado: 'error'; mensaje: string };
 
-/** Acceso a otra sección durante el evento; solo se muestra con el permiso que exige esa sección. */
-interface Accion {
-  titulo: string; texto: string; href: string; boton: string; permiso: string; icono: ReactNode; destacada?: boolean;
-}
-
-const ACCIONES: Accion[] = [
-  {
-    titulo: 'Rutas', texto: 'Consulta las rutas de evacuación y las salidas indicadas para tu zona.',
-    href: '#/rutas', boton: 'Consultar rutas', permiso: PERMISSION.MS02_ROUTE_READ, icono: <MapLine />,
-  },
-  {
-    titulo: 'Solicitar ayuda', texto: 'Reporta una situación y selecciona la prioridad para solicitar atención.',
-    href: '#/ayuda', boton: 'Solicitar ayuda', permiso: PERMISSION.MS05_INCIDENT_REPORT, icono: <LifeBuoy />,
-    destacada: true,
-  },
-  {
-    titulo: 'Mis incidentes', texto: 'Revisa tus solicitudes de ayuda y el estado de su atención.',
-    href: '#/mis-incidentes', boton: 'Ver mis incidentes', permiso: PERMISSION.MS05_INCIDENT_MANAGE_OWN, icono: <ClipboardCheck />,
-  },
-];
-
 /**
  * Centro del evento en curso (RF-MS04-01 a RF-MS04-05, F-01): reúne lo que la persona necesita mientras el evento está
  * en ejecución. El check-in es de MS04; las rutas (MS02) y los incidentes (MS05) son accesos a sus propias pantallas,
@@ -71,9 +48,15 @@ const ACCIONES: Accion[] = [
  * opciones siempre visibles. Elegir Me estoy evacuando o No estoy en el campus envía el reporte; Estoy a salvo pide el
  * punto de encuentro y Requiero asistencia, el lugar (edificio o punto de encuentro de MS02), y elegirlo lo envía. Así
  * el reporte se completa en máximo 3 interacciones desde el menú (RNF-MS04-07).
+ *
+ * La pantalla de inicio la usa con el evento que ya consultó (`eventoActual`), así no lo vuelve a pedir, y con un
+ * aviso (`aviso`) que se muestra antes de los accesos.
  */
-export default function CentroEvento({ session, eventoId }: { session: Session; eventoId: string }) {
-  const [evento, setEvento] = useState<Evento | null>(null);
+export default function CentroEvento({ session, eventoId, eventoActual, aviso }: {
+  session: Session; eventoId: string; eventoActual?: Evento; aviso?: ReactNode;
+}) {
+  const [eventoConsultado, setEventoConsultado] = useState<Evento | null>(null);
+  const evento = eventoActual ?? eventoConsultado;
   const [vigente, setVigente] = useState<Vigente>({ estado: 'cargando' });
   const [elegido, setElegido] = useState<EstadoCheckin | null>(null);
   const [puntos, setPuntos] = useState<Lista<PuntoEncuentro>>({ estado: 'sin-cargar' });
@@ -84,10 +67,11 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
   const [errorCampo, setErrorCampo] = useState('');
 
   const actual = vigente.estado === 'listo' ? vigente.checkin : null;
-  const acciones = ACCIONES.filter((a) => hasPermission(session, a.permiso));
 
+  // Cada vez que se elige la opción se piden de nuevo a MS02 para ver los cambios; mientras tanto se deja la lista que
+  // ya estaba, si la había
   const cargarPuntos = () => {
-    setPuntos({ estado: 'cargando' });
+    setPuntos((previa) => (previa.estado === 'listo' ? previa : { estado: 'cargando' }));
     campusApi.puntosEncuentro(session)
       .then((items) => setPuntos({ estado: 'listo', items }))
       .catch((err: unknown) => setPuntos({ estado: 'error', mensaje: errorMessage(err) }));
@@ -95,12 +79,13 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
 
   // El encabezado sale de los eventos activos del usuario; si no está ahí, MS04 dirá por qué al reportar
   useEffect(() => {
+    if (eventoActual) return undefined;
     let activo = true;
     checkinApi.eventosActivos(session)
-      .then((eventos) => { if (activo) setEvento(eventos.find((e) => e.evento_id === eventoId) ?? null); })
+      .then((eventos) => { if (activo) setEventoConsultado(eventos.find((e) => e.evento_id === eventoId) ?? null); })
       .catch(() => { /* el encabezado queda genérico */ });
     return () => { activo = false; };
-  }, [session, eventoId]);
+  }, [session, eventoId, eventoActual]);
 
   // Estado vigente (RF-MS04-05): si ya reportó, se muestra y se puede cambiar (RF-MS04-03)
   useEffect(() => {
@@ -149,7 +134,7 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
     if (estado === 'SAFE') {
       setError('');
       setConfirmado(false);
-      if (puntos.estado === 'sin-cargar' || puntos.estado === 'error') cargarPuntos();
+      cargarPuntos();
       return;
     }
     void enviar({ estado });
@@ -185,24 +170,8 @@ export default function CentroEvento({ session, eventoId }: { session: Session; 
         context={evento?.fecha_inicio ? `Iniciado: ${fechaHora(evento.fecha_inicio)}` : undefined}
       />
       <main className="content">
-        {acciones.length > 0 && (
-          <section className="chk-bloque" aria-labelledby="chk-acciones-titulo">
-            <div>
-              <h2 id="chk-acciones-titulo" className="title">¿Qué necesitas hacer?</h2>
-              <p className="chk-sub">Sigue las indicaciones de la brigada y elige la acción que necesitas.</p>
-            </div>
-            <ul className="chk-acciones" aria-label="Acciones durante el evento">
-              {acciones.map((a) => (
-                <li key={a.href} className={`chk-accion${a.destacada ? ' destacada' : ''}`}>
-                  <span className="chk-accion-ico" aria-hidden="true">{a.icono}</span>
-                  <h3>{a.titulo}</h3>
-                  <p>{a.texto}</p>
-                  <a className={`btn ${a.destacada ? 'red' : 'white'}`} href={a.href}>{a.boton} →</a>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+        {aviso}
+        <AccionesEvento session={session} />
 
         <section className="chk-checkin" aria-labelledby="chk-estado-titulo">
           <div className="chk-checkin-cab">
