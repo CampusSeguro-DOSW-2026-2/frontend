@@ -41,7 +41,9 @@ GET /api/v1/analytics/events/{eventoId}
     tiempos:       { hasta_checkin, evacuacion, hasta_primera_atencion, ubicaciones_mas_lentas[] } }
 ```
 
-Los porcentajes van de 0 a 100 y los tiempos en segundos; ambos son `null` cuando no hay con qué calcular, y la pantalla muestra "—". ```
+Los porcentajes van de 0 a 100 y los tiempos en segundos; ambos son `null` cuando no hay con qué calcular, y la pantalla muestra "—".
+
+```
 GET /api/v1/analytics/comparisons?evento_id=a&evento_id=b   (2 a 10, del mismo tipo)
 → { eventos: [{ evento_id, tipo_evento, inicio_evento, participantes, porcentaje_participacion,
                 porcentaje_confirmacion, porcentaje_asistencia, incidentes, hasta_checkin_segundos,
