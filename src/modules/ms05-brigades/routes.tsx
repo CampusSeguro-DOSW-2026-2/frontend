@@ -7,7 +7,6 @@ import AutoAsignacion from './pages/AutoAsignacion';
 import GestionBrigadistas from './pages/GestionBrigadistas';
 import ReportarIncidente from './pages/ReportarIncidente';
 import MisIncidentes from './pages/MisIncidentes';
-import PanelRespuesta from './pages/PanelRespuesta';
 import AtenderIncidente from './pages/AtenderIncidente';
 
 const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
@@ -54,8 +53,8 @@ export function brigadesRoutes(route: string, session: Session | null): ReactNod
     return NO_ACCESS;
   }
   if (route === '/brigadista') return <BrigadistaPanel session={session} />;
-  // Official response panel: incidents of the running events, one drop-down per event
-  if (route === '/brigadista/incidentes') return <PanelRespuesta session={session} />;
+  // Old "Panel de incidentes": its incidents now live inside the responsibilities panel
+  if (route === '/brigadista/incidentes') return <BrigadistaPanel session={session} />;
   const atender = route.match(/^\/brigadista\/incidentes\/([^/]+)\/([^/]+)$/);
   if (atender) {
     const [eventoId, incidenteId] = [decodeURIComponent(atender[1]), decodeURIComponent(atender[2])];
