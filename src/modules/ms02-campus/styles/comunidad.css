@@ -1,0 +1,64 @@
+.cs-zonas-comunidad {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  align-items: start;
+}
+
+.cs-zona-comunidad {
+  min-width: 0;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cs-zona-comunidad h2 {
+  font: 700 20px/26px 'Outfit', sans-serif;
+  overflow-wrap: anywhere;
+}
+
+.cs-zona-comunidad p {
+  font-size: 14px;
+  line-height: 150%;
+  color: var(--mut);
+}
+
+.cs-zona-etiquetas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-zona-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.cs-zona-datos span {
+  color: var(--mut);
+}
+
+.cs-zona-datos a {
+  font-weight: 600;
+}
+
+.cs-zona-comunidad .cs-galeria {
+  margin-top: 8px;
+}
+
+@media (max-width: 700px) {
+  .cs-zonas-comunidad {
+    grid-template-columns: 1fr;
+  }
+
+  .cs-zona-comunidad {
+    padding: 16px;
+  }
+}
