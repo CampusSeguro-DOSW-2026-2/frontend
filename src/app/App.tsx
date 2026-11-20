@@ -75,7 +75,7 @@ export default function App() {
       ?? brigadesRoutes(route, session)
       ?? drillsRoutes(route, session)
       ?? trainingRoutes(route)
-      ?? analyticsRoutes(route)
+      ?? analyticsRoutes(route, session)
       ?? NOT_IMPLEMENTED;
 
   return (
