@@ -1,120 +1,131 @@
 import { ApiError, request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
-import type { AuditFilters, AuditRecord, EventIndicators, IndicatorValue, Page } from '../types';
+import type {
+  AuditFilters, AuditRecord, Bucket, EventIndicators, EventKind, IndicatorsResult, Page, SlowLocation, TimeStat,
+} from '../types';
 import { endOfDayUtc, startOfDayUtc } from '../utils/format';
 
 /**
- * Cliente de MS08 (Analítica y auditoría). Todo pasa por el API Gateway, que enruta /api/v1/auditoria/** y
- * /api/v1/analitica/** a MS08. El front no filtra datos: muestra lo que MS08 devuelve, y MS08 decide qué ve
- * cada permiso (eventos reales, simulacros o todo).
- *
- * CONTRATO PROVISIONAL: MS08 aún no publica su OpenAPI. Las rutas y los nombres de los parámetros están en las
- * constantes de abajo y las respuestas se leen tanto en snake_case como en camelCase, para ajustarlas en un solo
- * lugar cuando se publique el contrato.
+ * Cliente de MS08 (Analítica y auditoría). Todo pasa por el API Gateway, que enruta /api/v1/audit/** y
+ * /api/v1/analytics/** a MS08. El front no filtra datos: MS08 devuelve solo lo que cada permiso permite
+ * (simulacros, eventos reales o ambos) y responde 403 si se pide un evento de otro tipo.
  */
-const AUDIT_PATH = '/api/v1/auditoria';
-const indicatorsPath = (eventoId: string) => `/api/v1/analitica/eventos/${encodeURIComponent(eventoId)}/indicadores`;
+const AUDIT_PATH = '/api/v1/audit/events';
+const indicatorsPath = (eventoId: string) => `/api/v1/analytics/events/${encodeURIComponent(eventoId)}`;
 
 /** Filtro de la pantalla → parámetro de consulta de MS08. */
-const AUDIT_PARAMS = {
+const AUDIT_PARAMS: Record<keyof AuditFilters, string> = {
   desde: 'desde', hasta: 'hasta', modulo: 'modulo', accion: 'accion', usuarioId: 'usuario_id', eventoId: 'evento_id',
-} as const;
+  tipoEvento: 'tipo_evento', correlationId: 'correlation_id',
+};
+
+/** Campo de un error 400 de MS08 → filtro de la pantalla, para marcarlo. */
+const AUDIT_FIELDS: Record<string, string> = Object.fromEntries(Object.entries(AUDIT_PARAMS).map(([field, param]) => [param, field]));
 
 export const PAGE_SIZE = 20;
 
 type Raw = Record<string, unknown>;
 const isObject = (v: unknown): v is Raw => typeof v === 'object' && v !== null && !Array.isArray(v);
-/** Primer valor presente entre varias claves (snake_case o camelCase). */
-const pick = (raw: Raw, ...keys: string[]): unknown => keys.map((k) => raw[k]).find((v) => v !== undefined && v !== null);
-const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v : typeof v === 'number' ? String(v) : null);
-const num = (v: unknown, fallback = 0): number => (typeof v === 'number' && Number.isFinite(v) ? v : fallback);
+const obj = (v: unknown): Raw => (isObject(v) ? v : {});
+const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() ? v : null);
+const num = (v: unknown): number => (typeof v === 'number' && Number.isFinite(v) ? v : 0);
+const numOrNull = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+const list = <T>(v: unknown, map: (item: Raw) => T): T[] => (Array.isArray(v) ? v.filter(isObject).map(map) : []);
+const kind = (v: unknown): EventKind | null => (v === 'SIMULACRO' || v === 'REAL' ? v : null);
 
 /** Página estándar (Estándares §9): { contenido, page, size, total_elementos, total_paginas }. */
 function toPage<T>(raw: unknown, map: (item: Raw) => T): Page<T> {
-  const data = isObject(raw) ? raw : {};
-  const items = pick(data, 'contenido', 'content');
+  const data = obj(raw);
   return {
-    content: Array.isArray(items) ? items.filter(isObject).map(map) : [],
-    page: num(pick(data, 'page', 'number')),
-    size: num(pick(data, 'size'), PAGE_SIZE),
-    totalElements: num(pick(data, 'total_elementos', 'totalElements')),
-    totalPages: num(pick(data, 'total_paginas', 'totalPages')),
+    content: list(data.contenido, map),
+    page: num(data.page),
+    size: num(data.size) || PAGE_SIZE,
+    totalElements: num(data.total_elementos),
+    totalPages: num(data.total_paginas),
   };
 }
 
 const toAuditRecord = (r: Raw): AuditRecord => ({
-  id: str(pick(r, 'id', '_id')) ?? '',
-  usuarioId: str(pick(r, 'usuario_id', 'usuarioId')),
-  modulo: str(pick(r, 'modulo')) ?? '—',
-  accion: str(pick(r, 'accion')) ?? '—',
-  recursoAfectado: str(pick(r, 'recurso_afectado', 'recursoAfectado')),
-  resultado: str(pick(r, 'resultado')) ?? '—',
-  fechaHora: str(pick(r, 'fecha_hora', 'fechaHora')) ?? '',
-  correlationId: str(pick(r, 'correlation_id', 'correlationId')) ?? '',
-  detalle: str(pick(r, 'detalle')),
-  eventoId: str(pick(r, 'evento_id', 'eventoId')),
+  id: str(r.id) ?? '',
+  usuarioId: str(r.usuario_id),
+  modulo: str(r.modulo) ?? '—',
+  accion: str(r.accion) ?? '—',
+  recursoAfectado: str(r.recurso_afectado),
+  resultado: str(r.resultado) ?? '—',
+  fechaHora: str(r.fecha_hora) ?? '',
+  correlationId: str(r.correlation_id) ?? '',
+  detalle: str(r.detalle),
+  eventoId: str(r.evento_id),
+  tipoEvento: kind(r.tipo_evento),
 });
 
-function toIndicatorValue(v: unknown): IndicatorValue | undefined {
-  if (v === null || typeof v === 'number' || typeof v === 'string' || typeof v === 'boolean') return v;
-  if (isObject(v) && Object.values(v).every((x) => typeof x === 'number')) return v as Record<string, number>;
-  return undefined;
-}
-
-/** Claves del resumen que no son indicadores. */
-const META_KEYS = new Set([
-  'evento_id', 'eventoId', 'estado', 'calculado', 'pendiente', 'calculado_en', 'calculadoEn', 'fecha_calculo', 'fechaCalculo',
-  'tipo_evento', 'tipoEvento', 'simulacro', 'indicadores', 'id', '_id', 'nombre_evento', 'nombreEvento',
-]);
+const toBucket = (b: Raw): Bucket => ({ clave: str(b.clave) ?? '—', cantidad: num(b.cantidad), porcentaje: numOrNull(b.porcentaje) });
+const toTime = (v: unknown): TimeStat => { const t = obj(v); return { promedioSegundos: numOrNull(t.promedio_segundos), muestras: num(t.muestras) }; };
+const toSlow = (s: Raw): SlowLocation => ({
+  ubicacionTipo: str(s.ubicacion_tipo) ?? '', ubicacionId: str(s.ubicacion_id) ?? '', promedioSegundos: num(s.promedio_segundos), muestras: num(s.muestras),
+});
 
 function toIndicators(eventoId: string, raw: unknown): EventIndicators {
-  const data = isObject(raw) ? raw : {};
-  // Los indicadores pueden venir agrupados en "indicadores" o sueltos en la raíz
-  const source = isObject(data.indicadores) ? data.indicadores : data;
-  const indicadores: Record<string, IndicatorValue> = {};
-  for (const [key, value] of Object.entries(source)) {
-    const parsed = toIndicatorValue(value);
-    if (!META_KEYS.has(key) && parsed !== undefined) indicadores[key] = parsed;
-  }
-  const estado = str(pick(data, 'estado'))?.toUpperCase() ?? '';
-  const pendiente = data.pendiente === true || data.calculado === false
-    || ['PENDIENTE', 'PENDIENTE_CALCULO', 'EN_CALCULO', 'SIN_DATOS'].includes(estado)
-    || Object.keys(indicadores).length === 0;
-  const simulacro = pick(data, 'simulacro');
+  const d = obj(raw);
+  const n = obj(d.notificacion);
+  const p = obj(d.participacion);
+  const i = obj(d.incidentes);
+  const t = obj(d.tiempos);
   return {
-    eventoId: str(pick(data, 'evento_id', 'eventoId')) ?? eventoId,
-    pendiente,
-    calculadoEn: str(pick(data, 'calculado_en', 'calculadoEn', 'fecha_calculo', 'fechaCalculo')),
-    tipoEvento: str(pick(data, 'tipo_evento', 'tipoEvento')) ?? (typeof simulacro === 'boolean' ? (simulacro ? 'SIMULACRO' : 'REAL') : null),
-    indicadores,
+    eventoId: str(d.evento_id) ?? eventoId,
+    tipoEvento: kind(d.tipo_evento),
+    calculadoEn: str(d.calculado_en),
+    inicioEvento: str(d.inicio_evento),
+    notificacion: {
+      destinatarios: num(n.destinatarios), enviados: num(n.enviados), fallidos: num(n.fallidos), confirmados: num(n.confirmados),
+      porcentajeConfirmacion: numOrNull(n.porcentaje_confirmacion),
+    },
+    participacion: {
+      participantes: num(p.participantes),
+      porcentajeParticipacion: numOrNull(p.porcentaje_participacion),
+      porEstado: list(p.por_estado, toBucket),
+      puntosEncuentro: list(p.puntos_encuentro, toBucket),
+      solicitaronAsistencia: num(p.solicitaron_asistencia),
+      porcentajeAsistencia: numOrNull(p.porcentaje_asistencia),
+    },
+    incidentes: { total: num(i.total), porCategoria: list(i.por_categoria, toBucket) },
+    tiempos: {
+      hastaCheckin: toTime(t.hasta_checkin),
+      evacuacion: toTime(t.evacuacion),
+      hastaPrimeraAtencion: toTime(t.hasta_primera_atencion),
+      ubicacionesMasLentas: list(t.ubicaciones_mas_lentas, toSlow),
+    },
   };
 }
 
 export const analyticsApi = {
-  /** Registros de auditoría con filtros y paginación del servidor. */
+  /** Registros de auditoría con filtros y paginación del servidor (más recientes primero). */
   async audit(session: Session, filters: AuditFilters, page: number, size = PAGE_SIZE): Promise<Page<AuditRecord>> {
     const q = new URLSearchParams();
     if (filters.desde) q.set(AUDIT_PARAMS.desde, startOfDayUtc(filters.desde));
     if (filters.hasta) q.set(AUDIT_PARAMS.hasta, endOfDayUtc(filters.hasta));
     if (filters.modulo) q.set(AUDIT_PARAMS.modulo, filters.modulo);
+    if (filters.tipoEvento) q.set(AUDIT_PARAMS.tipoEvento, filters.tipoEvento);
     if (filters.accion.trim()) q.set(AUDIT_PARAMS.accion, filters.accion.trim().toUpperCase());
     if (filters.usuarioId.trim()) q.set(AUDIT_PARAMS.usuarioId, filters.usuarioId.trim().toLowerCase());
     if (filters.eventoId.trim()) q.set(AUDIT_PARAMS.eventoId, filters.eventoId.trim().toLowerCase());
+    if (filters.correlationId.trim()) q.set(AUDIT_PARAMS.correlationId, filters.correlationId.trim().toLowerCase());
     q.set('page', String(page));
     q.set('size', String(size));
-    return toPage(await request(`${AUDIT_PATH}?${q}`, { session }), toAuditRecord);
+    return toPage(await request(`${AUDIT_PATH}?${q}`, { session, fields: AUDIT_FIELDS }), toAuditRecord);
   },
 
   /**
-   * Resumen de indicadores de un evento. Un 404 significa que MS08 todavía no recibió los datos del evento:
-   * se devuelve como pendiente de cálculo en lugar de error.
+   * Indicadores de un evento. MS08 los calcula en cada consulta; un 404 significa que todavía no recibió hechos
+   * del evento y se muestra como pendiente de cálculo en lugar de error.
    */
-  async indicators(session: Session, eventoId: string): Promise<EventIndicators> {
+  async indicators(session: Session, eventoId: string): Promise<IndicatorsResult> {
     try {
-      return toIndicators(eventoId, await request(indicatorsPath(eventoId), { session }));
+      return { pendiente: false, data: toIndicators(eventoId, await request(indicatorsPath(eventoId), { session })) };
     } catch (err) {
-      if (err instanceof ApiError && err.status === 404) {
-        return { eventoId, pendiente: true, calculadoEn: null, tipoEvento: null, indicadores: {} };
+      if (err instanceof ApiError && err.status === 404) return { pendiente: true };
+      if (err instanceof ApiError && err.status === 403) {
+        throw new ApiError(403, 'No tiene permiso para ver los indicadores de este tipo de evento.', {}, err.code, err.details, err.correlationId);
       }
       throw err;
     }

@@ -1,14 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
+import { ApiError } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import ErrorNotice from '../components/ErrorNotice';
 import { analyticsApi, PAGE_SIZE } from '../services/analytics';
-import type { AuditFilters, AuditRecord, Page } from '../types';
-import { MODULES, RESULT_LABEL, formatBogota, isUuid, todayInBogota } from '../utils/format';
+import type { AuditFilters, AuditRecord, EventKind, Page } from '../types';
+import { KIND_LABEL, MODULES, RESULT_LABEL, formatBogota, isUuid, todayInBogota } from '../utils/format';
 import '../../ms06-drills/styles/events.css';
 import '../styles/analytics.css';
 
-const EMPTY: AuditFilters = { desde: '', hasta: '', modulo: '', accion: '', usuarioId: '', eventoId: '' };
+const EMPTY: AuditFilters = { desde: '', hasta: '', modulo: '', accion: '', usuarioId: '', eventoId: '', tipoEvento: '', correlationId: '' };
 type FilterErrors = Partial<Record<keyof AuditFilters, string>>;
 
 function validate(f: AuditFilters): FilterErrors {
@@ -16,6 +17,7 @@ function validate(f: AuditFilters): FilterErrors {
   if (f.desde && f.hasta && f.desde > f.hasta) errors.hasta = 'Debe ser igual o posterior a la fecha inicial.';
   if (f.usuarioId.trim() && !isUuid(f.usuarioId)) errors.usuarioId = 'Escriba un id válido (UUID).';
   if (f.eventoId.trim() && !isUuid(f.eventoId)) errors.eventoId = 'Escriba un id válido (UUID).';
+  if (f.correlationId.trim() && !isUuid(f.correlationId)) errors.correlationId = 'Escriba un id válido (UUID).';
   if (f.accion.trim() && !/^[A-Za-z_]+$/.test(f.accion.trim())) errors.accion = 'Solo letras y guion bajo, p. ej. INICIO_SESION.';
   return errors;
 }
@@ -43,6 +45,8 @@ export default function Auditoria({ session }: { session: Session }) {
       setData(await analyticsApi.audit(session, applied, page, PAGE_SIZE));
     } catch (err) {
       setError(err);
+      // MS08 marca el filtro que rechazó (400 VALIDACION): se muestra junto al campo
+      if (err instanceof ApiError && Object.keys(err.fields).length > 0) setFieldErrors(err.fields as FilterErrors);
     } finally {
       setLoading(false);
     }
@@ -101,9 +105,18 @@ export default function Auditoria({ session }: { session: Session }) {
               {MODULES.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
             </select>
           </div>
+          <div className="field">
+            <label htmlFor="aud-tipoEvento">Tipo de evento</label>
+            <select id="aud-tipoEvento" value={draft.tipoEvento} onChange={(e) => set('tipoEvento', e.target.value as EventKind | '')}>
+              <option value="">Todos los que puede ver</option>
+              <option value="SIMULACRO">Simulacros</option>
+              <option value="REAL">Eventos reales</option>
+            </select>
+          </div>
           {input('accion', 'Tipo de acción', { placeholder: 'p. ej. INICIO_SESION', autoComplete: 'off' })}
           {input('usuarioId', 'Usuario (id)', { placeholder: 'UUID del usuario', autoComplete: 'off', spellCheck: 'false' })}
           {input('eventoId', 'Evento (id)', { placeholder: 'UUID del evento', autoComplete: 'off', spellCheck: 'false' })}
+          {input('correlationId', 'Correlation ID', { placeholder: 'UUID de la petición', autoComplete: 'off', spellCheck: 'false' })}
           <div className="an-actions">
             {(isFiltered(draft) || isFiltered(applied)) && <button type="button" className="btn white" onClick={clear}>Limpiar filtros</button>}
             <button type="submit" className="btn deep">Aplicar filtros</button>
@@ -128,7 +141,11 @@ export default function Auditoria({ session }: { session: Session }) {
                 <tr key={r.id || `${r.correlationId}-${i}`}>
                   <td>{formatBogota(r.fechaHora)}</td>
                   <td>{r.modulo}</td>
-                  <td><div className="t">{r.accion}</div>{r.eventoId && <div className="s an-mono">Evento {r.eventoId}</div>}</td>
+                  <td>
+                    <div className="t">{r.accion}</div>
+                    <div className="s">{r.tipoEvento ? KIND_LABEL[r.tipoEvento] : 'Administrativo'}</div>
+                    {r.eventoId && <div className="s an-mono">Evento {r.eventoId}</div>}
+                  </td>
                   <td><span className={`st ${r.resultado}`}>{RESULT_LABEL[r.resultado] ?? r.resultado}</span></td>
                   <td className="an-mono">{r.usuarioId ?? 'Anónimo'}</td>
                   <td className="an-mono">{r.recursoAfectado ?? '—'}</td>

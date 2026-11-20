@@ -1,36 +1,44 @@
 # MS08 · Analítica y auditoría
 
-**Alcance:** auditoría (solo lectura) e indicadores que MS08 calcula al finalizar un evento.
+**Alcance:** auditoría (solo lectura) e indicadores de cada evento, calculados por MS08 a partir de los hechos auditados.
 
-**Estado:** pantallas listas con **contrato provisional**. MS08 aún no publica su OpenAPI; las rutas, los parámetros y la lectura de las respuestas están en `services/analytics.ts` para ajustarlos en un solo lugar.
+**Estado:** conectado al backend de MS08 (rama `feat/service-implementation` del repositorio `ms08-analytics-and-audit`) por las rutas del Gateway `/api/v1/audit/**` y `/api/v1/analytics/**`.
 
-| Ruta | Pantalla | Permiso (claim `permissions` del JWT) |
+| Ruta | Pantalla | Permisos (claim `permissions` del JWT; basta uno) |
 |---|---|---|
-| `#/auditoria` | Tabla de registros con filtros y paginación del servidor | `ms08:audit:read` |
-| `#/indicadores` | Lista de eventos (de MS06) para elegir el resumen | `ms08:indicators:read` |
-| `#/indicadores/{eventoId}` | Resumen de indicadores del evento | `ms08:indicators:read` |
+| `#/auditoria` | Tabla de registros con filtros y paginación del servidor | `ms08:audit_drill:read`, `ms08:audit_real_event:read` |
+| `#/indicadores` | Lista de eventos (de MS06) para elegir el resumen | `ms08:indicators_drill:read`, `ms08:indicators_real_event:read` |
+| `#/indicadores/{eventoId}` | Resumen de indicadores del evento | Los mismos de `#/indicadores` |
+
+Permisos iniciales (siembra de MS01): el coordinador tiene los de eventos reales; el organizador, los de simulacros; el administrador y el auditor, los cuatro.
 
 ## Reglas
 
-- **Visibilidad por permisos, no por rol.** Los permisos que abren cada pantalla están en `routes.tsx` (`AUDIT_PERMISSIONS`, `INDICATORS_PERMISSIONS`); el menú usa los mismos códigos.
-- **El front no filtra datos.** Lo que cada usuario ve (coordinador: eventos reales; organizador: simulacros; auditor y administrador: todo) lo decide MS08 y la pantalla muestra lo que llega.
+- **Visibilidad por permisos, no por rol.** Los permisos de cada pantalla están en `routes.tsx` (`AUDIT_PERMISSIONS`, `INDICATORS_PERMISSIONS`) y el menú usa los mismos.
+- **El front no filtra datos.** MS08 devuelve solo los registros del tipo que permite cada permiso. Los registros administrativos (sin evento, como un inicio de sesión) requieren los dos permisos de auditoría. Pedir los indicadores de un evento de otro tipo responde 403.
 - **Auditoría de solo lectura.** La colección es append-only: no hay acciones de editar ni borrar.
-- **Fechas.** El servicio trabaja en UTC; la pantalla muestra la hora de Bogotá. Los filtros "Desde" y "Hasta" son días de Bogotá y se envían como instantes UTC (inicio y fin del día).
-- **Errores.** Formato estándar 7.1; siempre se muestra el `correlation_id` para soporte.
-- **Pendiente de cálculo.** Si el evento no ha finalizado, MS08 responde 404 o el resumen viene sin indicadores o con estado pendiente.
+- **Fechas.** El servicio trabaja en UTC y la pantalla muestra la hora de Bogotá. "Desde" y "Hasta" son días de Bogotá y se envían como el inicio y el fin del día en UTC; MS08 incluye los dos extremos.
+- **Errores.** Formato estándar 7.1 con el `correlation_id` siempre visible para soporte. Un 400 de MS08 marca el filtro que rechazó.
+- **Pendiente de cálculo.** Si el evento no ha finalizado, no se consulta a MS08. Si MS08 responde 404 (aún no recibió hechos del evento), también se muestra como pendiente. MS08 calcula en cada consulta, así que los hechos que llegan tarde se incluyen solos.
 
-## Contrato provisional
+## Contrato (MS08)
 
 ```
-GET /api/v1/auditoria?desde&hasta&modulo&accion&usuario_id&evento_id&page&size
-→ { contenido: [AuditRecord], page, size, total_elementos, total_paginas }
-AuditRecord = campos del evento de auditoría (Estándares §12) + id y evento_id opcional
+GET /api/v1/audit/events?desde&hasta&modulo&accion&usuario_id&evento_id&tipo_evento&correlation_id&page&size
+→ { contenido: [registro], page, size, total_elementos, total_paginas }   (más recientes primero; size ≤ 100)
+registro = id, usuario_id, modulo, accion, recurso_afectado, resultado, fecha_hora, recibido_en,
+           correlation_id, detalle, evento_id, tipo_evento (SIMULACRO | REAL | null), atributos
 
-GET /api/v1/analitica/eventos/{eventoId}/indicadores
-→ { evento_id, estado: CALCULADO | PENDIENTE, calculado_en, tipo_evento, indicadores: { clave: número | desglose } }
+GET /api/v1/analytics/events/{eventoId}
+→ { evento_id, tipo_evento, calculado_en, inicio_evento,
+    notificacion:  { destinatarios, enviados, fallidos, confirmados, porcentaje_confirmacion },
+    participacion: { participantes, porcentaje_participacion, por_estado[], puntos_encuentro[],
+                     solicitaron_asistencia, porcentaje_asistencia },
+    incidentes:    { total, por_categoria[] },
+    tiempos:       { hasta_checkin, evacuacion, hasta_primera_atencion, ubicaciones_mas_lentas[] } }
 ```
 
-Las respuestas se leen en snake_case o camelCase. Los indicadores con nombre conocido se muestran con su etiqueta (`utils/format.ts`); el resto con su clave legible. Las claves que empiezan por `porcentaje` se muestran como porcentaje y las que terminan en `_segundos`, como duración.
+Los porcentajes van de 0 a 100 y los tiempos en segundos; ambos son `null` cuando no hay con qué calcular, y la pantalla muestra "—". MS08 también ofrece `GET /api/v1/analytics/comparisons` y `GET /api/v1/analytics/locations`, que esta versión de la pantalla aún no usa.
 
 | Carpeta | Contenido |
 |---|---|

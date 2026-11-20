@@ -98,12 +98,12 @@ function menuFor(permissions: string[]): MenuSection[] {
     sections.push({ title: 'Campus', items: campusItems });
   }
 
-  // MS08: indicators and audit (what each permission sees is decided by MS08)
+  // MS08: indicators and audit, of drills or real events (MS08 returns only the kind each permission allows)
   const analyticsItems: MenuItem[] = [];
-  if (can(PERMISSION.MS08_INDICATORS_READ)) {
+  if (can(PERMISSION.MS08_INDICATORS_DRILL_READ, PERMISSION.MS08_INDICATORS_REAL_EVENT_READ)) {
     analyticsItems.push({ href: '#/indicadores', icon: <ClipboardCheck />, label: 'Indicadores' });
   }
-  if (can(PERMISSION.MS08_AUDIT_READ)) {
+  if (can(PERMISSION.MS08_AUDIT_DRILL_READ, PERMISSION.MS08_AUDIT_REAL_EVENT_READ)) {
     analyticsItems.push({ href: '#/auditoria', icon: <FilePen />, label: 'Auditoría' });
   }
   if (analyticsItems.length > 0) {

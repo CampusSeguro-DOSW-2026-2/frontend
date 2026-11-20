@@ -51,53 +51,29 @@ export const MODULES: { id: string; label: string }[] = [
 ];
 
 export const RESULT_LABEL: Record<string, string> = { EXITO: 'Éxito', FALLO: 'Fallo' };
+export const KIND_LABEL: Record<string, string> = { SIMULACRO: 'Simulacro', REAL: 'Evento real' };
 
-/** Nombres de los indicadores conocidos; los que no estén aquí se muestran con su clave legible. */
-const INDICATOR_LABEL: Record<string, string> = {
-  participantes_esperados: 'Participantes esperados',
-  poblacion_objetivo: 'Población objetivo',
-  total_checkins: 'Check-ins registrados',
-  porcentaje_participacion: 'Participación en check-in',
-  checkins_por_estado: 'Check-ins por estado',
-  personas_a_salvo: 'Personas a salvo',
-  personas_sin_reportar: 'Personas sin reportar',
-  tiempo_promedio_evacuacion_segundos: 'Tiempo medio de evacuación',
-  tiempo_total_segundos: 'Duración del evento',
-  duracion_segundos: 'Duración del evento',
-  total_incidentes: 'Incidentes',
-  incidentes_atendidos: 'Incidentes atendidos',
-  incidentes_resueltos: 'Incidentes resueltos',
-  incidentes_pendientes: 'Incidentes pendientes',
-  tiempo_promedio_atencion_segundos: 'Tiempo medio de atención',
-  brigadistas_activos: 'Brigadistas activos',
-  alertas_enviadas: 'Alertas enviadas',
-  alertas_entregadas: 'Alertas entregadas',
-  porcentaje_entrega_alertas: 'Entrega de alertas',
+/** Claves de los desgloses de MS08 (estado de check-in, prioridad, sin dato) en español. */
+const BUCKET_LABEL: Record<string, string> = {
+  SAFE: 'A salvo', A_SALVO: 'A salvo', NEEDS_ASSISTANCE: 'Necesita asistencia', NECESITA_AYUDA: 'Necesita ayuda',
+  OFF_CAMPUS: 'Fuera del campus', NOT_ON_CAMPUS: 'Fuera del campus', NEEDS_HELP: 'Necesita ayuda', EVACUATING: 'Evacuando',
+  SIN_ESTADO: 'Sin estado', SIN_PUNTO: 'Sin punto de encuentro', SIN_PRIORIDAD: 'Sin prioridad',
+  ALTA: 'Alta', MEDIA: 'Media', BAJA: 'Baja', CRITICA: 'Crítica',
 };
 
-const STATE_LABEL: Record<string, string> = {
-  A_SALVO: 'A salvo', SAFE: 'A salvo', EN_RIESGO: 'En riesgo', AT_RISK: 'En riesgo', NECESITA_AYUDA: 'Necesita ayuda',
-  NEEDS_HELP: 'Necesita ayuda', SIN_REPORTE: 'Sin reporte', NO_REPORT: 'Sin reporte',
-};
-
-/** "porcentajeParticipacion" o "porcentaje_participacion" → clave en snake_case. */
-export const snakeCase = (key: string): string => key.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase();
-
-export function indicatorLabel(key: string): string {
-  const snake = snakeCase(key);
-  if (INDICATOR_LABEL[snake]) return INDICATOR_LABEL[snake];
-  const text = snake.replace(/_segundos$/, '').replace(/_/g, ' ');
+export function bucketLabel(key: string): string {
+  if (BUCKET_LABEL[key.toUpperCase()]) return BUCKET_LABEL[key.toUpperCase()];
+  // Solo los códigos (MAYÚSCULAS_CON_GUION_BAJO) se vuelven legibles; los nombres (un punto de encuentro) quedan igual
+  if (!/^[A-Z0-9_]+$/.test(key)) return key;
+  const text = key.replace(/_/g, ' ').toLowerCase();
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-export const stateLabel = (key: string): string => STATE_LABEL[key.toUpperCase()] ?? key.replace(/_/g, ' ').toLowerCase();
+export const formatCount = (value: number): string => value.toLocaleString('es-CO');
 
-/** Valor de un indicador numérico según su clave: porcentaje, duración o cantidad. */
-export function formatIndicator(key: string, value: number): string {
-  const snake = snakeCase(key);
-  if (snake.startsWith('porcentaje') || snake.endsWith('_pct') || snake.endsWith('_porcentaje')) {
-    return `${value.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`;
-  }
-  if (snake.endsWith('_segundos') || snake.endsWith('_seconds')) return formatDuration(value);
-  return value.toLocaleString('es-CO', { maximumFractionDigits: 2 });
-}
+/** Porcentaje de 0 a 100 con un decimal; "—" si MS08 no tuvo con qué calcularlo. */
+export const formatPercent = (value: number | null): string =>
+  (value == null ? '—' : `${value.toLocaleString('es-CO', { maximumFractionDigits: 1 })} %`);
+
+/** Tiempo promedio en segundos; "—" si no hay muestras. */
+export const formatSeconds = (value: number | null): string => (value == null ? '—' : formatDuration(value));

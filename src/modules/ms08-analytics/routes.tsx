@@ -8,12 +8,11 @@ import Indicadores from './pages/Indicadores';
 const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
 
 /**
- * Permisos de MS08 que dan acceso a cada pantalla. Se leen del claim `permissions` del JWT, nunca del rol.
- * Cuando MS08 separe simulacros y eventos reales con permisos propios, se agregan aquí: la pantalla no filtra,
- * MS08 devuelve solo lo que el permiso permite.
+ * Permisos de MS08 que dan acceso a cada pantalla, leídos del claim `permissions` del JWT (nunca del rol). Basta uno
+ * de los dos: MS08 devuelve solo los simulacros o los eventos reales que cada permiso permite ver.
  */
-export const AUDIT_PERMISSIONS = [PERMISSION.MS08_AUDIT_READ];
-export const INDICATORS_PERMISSIONS = [PERMISSION.MS08_INDICATORS_READ];
+export const AUDIT_PERMISSIONS = [PERMISSION.MS08_AUDIT_DRILL_READ, PERMISSION.MS08_AUDIT_REAL_EVENT_READ];
+export const INDICATORS_PERMISSIONS = [PERMISSION.MS08_INDICATORS_DRILL_READ, PERMISSION.MS08_INDICATORS_REAL_EVENT_READ];
 
 /** Rutas de MS08 (Analítica y auditoría). Devuelve undefined si la ruta no es de este módulo. */
 export function analyticsRoutes(route: string, session: Session | null): ReactNode | undefined {

@@ -16,3 +16,5 @@
 .an-pick{display:flex;gap:10px;flex-wrap:wrap}.an-pick input{flex:1;min-width:220px;font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line)}
 @media(max-width:900px){.an-filters{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.an-filters{grid-template-columns:1fr}}
+.an-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start}
+@media(max-width:900px){.an-cols{grid-template-columns:1fr}}
