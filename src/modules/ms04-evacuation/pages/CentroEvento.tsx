@@ -1,14 +1,15 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Info, LogOut, ShieldCheck } from '../../../shared/components/Icons';import { PageHeader } from '../../../shared/components/Layout';
+import { Home, Info, LifeBuoy, LogOut, ShieldCheck } from '../../../shared/components/Icons';
+import { PageHeader } from '../../../shared/components/Layout';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { AccionesEvento } from '../components/AccionesEvento';
 import { campusApi } from '../services/campus';
 import { checkinApi } from '../services/checkin';
 import type {
-  Checkin, CheckinRequest, Edificio, EstadoCheckin, Evento, PuntoEncuentro,
+  Checkin, CheckinRequest, Edificio, EstadoCheckin, Evento, PuntoEncuentro, TipoUbicacion,
 } from '../types';
-import { fechaHora, textoEstado, textoEstadoEvento, tipoEvento } from '../utils/labels';
+import { ESTADOS, fechaHora, textoEstado, textoEstadoEvento, tipoEvento } from '../utils/labels';
 import '../styles/checkin.css';
 
 /** Mensaje de éxito del reporte (F-01). */
@@ -21,14 +22,19 @@ const ASISTENCIA_REGISTRADA: Record<string, string> = {
   RECHAZADA: 'Su estado quedó registrado, pero la solicitud de asistencia no pudo crearse. Un coordinador la revisará.',
 };
 
-/**
- * Opciones del check-in en el centro del evento (mockup): Evacuando y Seguro. Pedir ayuda no es parte del check-in, se
- * hace desde «Solicitar ayuda» (MS05).
- */
-const OPCIONES_CHECKIN: { codigo: EstadoCheckin; texto: string }[] = [
-  { codigo: 'EVACUATING', texto: 'Evacuando' },
-  { codigo: 'SAFE', texto: 'Seguro' },
+/** Lugares donde se puede pedir asistencia que ofrece esta pantalla (RN-MS04-09). */
+const TIPOS_UBICACION: { codigo: TipoUbicacion; texto: string }[] = [
+  { codigo: 'EDIFICIO', texto: 'Edificio' },
+  { codigo: 'PUNTO_ENCUENTRO', texto: 'Punto de encuentro' },
 ];
+
+/** Ícono de cada estado del check-in. */
+const ICONO_ESTADO: Record<EstadoCheckin, ReactNode> = {
+  SAFE: <ShieldCheck />,
+  EVACUATING: <LogOut />,
+  NEEDS_ASSISTANCE: <LifeBuoy />,
+  OFF_CAMPUS: <Home />,
+};
 
 type Lista<T> =
   | { estado: 'sin-cargar' }
@@ -61,6 +67,7 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
   const [elegido, setElegido] = useState<EstadoCheckin | null>(null);
   const [puntos, setPuntos] = useState<Lista<PuntoEncuentro>>({ estado: 'sin-cargar' });
   const [edificios, setEdificios] = useState<Lista<Edificio>>({ estado: 'sin-cargar' });
+  const [tipoUbicacion, setTipoUbicacion] = useState<TipoUbicacion>('EDIFICIO');
   const [enviando, setEnviando] = useState(false);
   const [confirmado, setConfirmado] = useState(false);
   const [error, setError] = useState('');
@@ -75,6 +82,13 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
     campusApi.puntosEncuentro(session)
       .then((items) => setPuntos({ estado: 'listo', items }))
       .catch((err: unknown) => setPuntos({ estado: 'error', mensaje: errorMessage(err) }));
+  };
+
+  const cargarEdificios = () => {
+    setEdificios((previa) => (previa.estado === 'listo' ? previa : { estado: 'cargando' }));
+    campusApi.edificios(session)
+      .then((items) => setEdificios({ estado: 'listo', items }))
+      .catch((err: unknown) => setEdificios({ estado: 'error', mensaje: errorMessage(err) }));
   };
 
   // El encabezado sale de los eventos activos del usuario; si no está ahí, MS04 dirá por qué al reportar
@@ -129,12 +143,19 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
     }
   };
 
+  const elegirTipoUbicacion = (tipo: TipoUbicacion) => {
+    setTipoUbicacion(tipo);
+    if (tipo === 'EDIFICIO') cargarEdificios();
+    if (tipo === 'PUNTO_ENCUENTRO') cargarPuntos();
+  };
+
   const elegir = (estado: EstadoCheckin) => {
     setElegido(estado);
-    if (estado === 'SAFE') {
+    if (estado === 'SAFE' || estado === 'NEEDS_ASSISTANCE') {
       setError('');
       setConfirmado(false);
-      cargarPuntos();
+      if (estado === 'SAFE') cargarPuntos();
+      if (estado === 'NEEDS_ASSISTANCE') elegirTipoUbicacion(tipoUbicacion);
       return;
     }
     void enviar({ estado });
@@ -160,6 +181,8 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
 
   // La opción marcada es la que el usuario acaba de elegir o, si no ha elegido, su estado vigente
   const marcado = elegido ?? actual?.estado ?? null;
+  const lugares = tipoUbicacion === 'EDIFICIO' ? edificios : puntos;
+  const recargarLugares = tipoUbicacion === 'EDIFICIO' ? cargarEdificios : cargarPuntos;
 
   return (
     <>
@@ -188,15 +211,15 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
             </div>
             <div className="chk-estados-col">
               <div className="chk-estados" role="group" aria-label="Estado">
-                {OPCIONES_CHECKIN.map(({ codigo, texto }) => (
+                {ESTADOS.map(({ codigo, texto }) => (
                   <button key={codigo} type="button" className="chk-estado" aria-pressed={marcado === codigo}
                     disabled={enviando} onClick={() => elegir(codigo)}>
-                    {codigo === 'SAFE' ? <ShieldCheck /> : <LogOut />}
+                    {ICONO_ESTADO[codigo]}
                     {texto}
                   </button>
                 ))}
               </div>
-              <small className="chk-nota">Elige «Seguro» solo cuando estés fuera de peligro.</small>
+              <small className="chk-nota">Elige «Estoy a salvo» solo cuando estés fuera de peligro.</small>
             </div>
           </div>
           {vigente.estado === 'error' && <p className="notice err" role="alert">{vigente.mensaje}</p>}
@@ -232,12 +255,51 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
             </div>
           )}
 
+          {elegido === 'NEEDS_ASSISTANCE' && (
+            <div className="chk-puntos" role="region" aria-labelledby="chk-lugar-titulo">
+              <h3 id="chk-lugar-titulo" className="chk-paso">¿Dónde necesitas la asistencia?</h3>
+              <div className="chk-tabs" role="group" aria-label="Tipo de lugar">
+                {TIPOS_UBICACION.map(({ codigo, texto }) => (
+                  <button key={codigo} type="button" className="chk-tab" aria-pressed={tipoUbicacion === codigo}
+                    disabled={enviando} onClick={() => elegirTipoUbicacion(codigo)}>
+                    {texto}
+                  </button>
+                ))}
+              </div>
+              {lugares.estado === 'cargando' && <p className="notice" role="status">Consultando los lugares…</p>}
+              {lugares.estado === 'error' && (
+                <>
+                  <p className="notice err" role="alert">{lugares.mensaje}</p>
+                  <button type="button" className="btn white chk-retry" onClick={recargarLugares}>Intentar de nuevo</button>
+                </>
+              )}
+              {lugares.estado === 'listo' && lugares.items.length === 0 && (
+                <p className="notice" role="status">No hay lugares disponibles.</p>
+              )}
+              {lugares.estado === 'listo' && lugares.items.length > 0 && (
+                <ul aria-label="Lugares">
+                  {lugares.items.map((l) => (
+                    <li key={l.id}>
+                      <button type="button" className="chk-punto" disabled={enviando}
+                        aria-pressed={actual?.estado === 'NEEDS_ASSISTANCE' && actual.ubicacion?.tipo === tipoUbicacion
+                          && actual.ubicacion.id === l.id}
+                        onClick={() => void enviar({ estado: 'NEEDS_ASSISTANCE', ubicacion: { tipo: tipoUbicacion, id: l.id } })}>
+                        {l.nombre}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {errorCampo && <p className="error" role="alert">{errorCampo}</p>}
+            </div>
+          )}
+
           {enviando && <p className="notice" role="status">Enviando tu estado…</p>}
           {error && !errorCampo && <p className="notice err" role="alert">{error}</p>}
           {confirmado && actual && <p className="notice chk-ok" role="status">{mensajeExito(actual)}</p>}
         </section>
 
-        <p className="chk-info"><Info /> El check-in informa tu estado; no envía una solicitud de ayuda. Si necesitas atención, utiliza «Solicitar ayuda».</p>
+        <p className="chk-info"><Info /> El check-in informa tu estado a la brigada. «Requiero asistencia» además envía una solicitud de ayuda con el lugar donde estás; para reportar otra situación utiliza «Solicitar ayuda».</p>
       </main>
     </>
   );
