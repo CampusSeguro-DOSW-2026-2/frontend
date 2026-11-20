@@ -6,9 +6,11 @@ import EdificiosEstudiante from './pages/EdificiosEstudiante';
 import HojaQr from './pages/HojaQr';
 import HojaQrZonas from './pages/HojaQrZonas';
 import PreventiveAdmin from './pages/PreventiveAdmin';
+import PreventivaEstudiante from './pages/PreventivaEstudiante';
 import QrPublico, { type TipoQr } from './pages/QrPublico';
 import RouteQuery from './pages/RouteQuery';
 import RoutesAdmin from './pages/RoutesAdmin';
+import ZonasSegurasEstudiante from './pages/ZonasSegurasEstudiante';
 import ZonesAdmin from './pages/ZonesAdmin';
 import { NavegacionAdmin } from './components/NavegacionAdmin';
 import type { Session } from '../../shared/types';
@@ -40,7 +42,9 @@ export function campusRoutes(route: string, session: Session | null): ReactNode 
     ? hasPermission(session, ...PERMISOS_ADMIN)
     : route === '/rutas'
       ? hasPermission(session, PERMISSION.MS02_ROUTE_READ)
-      : hasPermission(session, PERMISSION.MS02_CAMPUS_READ);
+      : route === '/preventiva'
+        ? hasPermission(session, PERMISSION.MS02_PREVENTIVE_INFO_READ)
+        : hasPermission(session, PERMISSION.MS02_CAMPUS_READ);
   if (!permitido) return SIN_ACCESO;
   // Las pantallas de administración llevan las pestañas; las hojas de QR (para imprimir) no.
   if (!route.startsWith('/admin/') || route.endsWith('/qr')) return pagina;
@@ -50,6 +54,8 @@ export function campusRoutes(route: string, session: Session | null): ReactNode 
 function paginaCampus(route: string): ReactNode | undefined {
   switch (route) {
     case '/edificios': return <EdificiosEstudiante />;
+    case '/zonas-seguras': return <ZonasSegurasEstudiante />;
+    case '/preventiva': return <PreventivaEstudiante />;
     case '/rutas': return <RouteQuery />;
     case '/admin/edificios': return <BuildingsAdmin />;
     case '/admin/zonas': return <ZonesAdmin />;

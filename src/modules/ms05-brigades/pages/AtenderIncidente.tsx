@@ -101,7 +101,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
     <>
       <PageHeader badge="BRIGADISTA" title="Atender incidente" subtitle="Revisa la información del caso y registra el resultado de la atención." context="Respuesta oficial" />
       <main className="rs-main">
-        <a className="rs-back" href="#/brigadista/incidentes">← Volver al panel brigadista</a>
+        <a className="rs-back" href="#/brigadista">← Volver al panel brigadista</a>
         {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
         {!inc && !error && <p className="notice" role="status">Cargando incidente…</p>}
 

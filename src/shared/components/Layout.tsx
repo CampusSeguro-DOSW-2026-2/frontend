@@ -36,8 +36,6 @@ function menuFor(permissions: string[]): MenuSection[] {
       title: 'Brigada',
       items: [
         { href: '#/brigadista', icon: <ClipboardCheck />, label: 'Panel de responsabilidades' },
-        // Official response panel: incidents of the running events and "Atender"
-        { href: '#/brigadista/incidentes', icon: <BellIcon />, label: 'Panel de incidentes' },
         // Self-assignment (RF-BEI-01, option 2): pick a building on the map for scheduled or running events
         { href: '#/brigadista/autoasignacion', icon: <MapLine />, label: 'Auto asignación' },
       ],
@@ -89,9 +87,14 @@ function menuFor(permissions: string[]): MenuSection[] {
   const campusItems: MenuItem[] = [];
   if (can(PERMISSION.MS02_CAMPUS_READ)) {
     campusItems.push({ href: '#/edificios', icon: <HomeIcon />, label: 'Edificios y espacios' });
+    // Safe zones and meeting points are read with the same permission as the rest of the campus
+    campusItems.push({ href: '#/zonas-seguras', icon: <ShieldCheck />, label: 'Zonas seguras' });
   }
   if (can(PERMISSION.MS02_ROUTE_READ)) {
     campusItems.push({ href: '#/rutas', icon: <MapLine />, label: 'Rutas de evacuación' });
+  }
+  if (can(PERMISSION.MS02_PREVENTIVE_INFO_READ)) {
+    campusItems.push({ href: '#/preventiva', icon: <ClipboardCheck />, label: 'Información preventiva' });
   }
   if (can(PERMISSION.MS07_TUTOR_USE)) {
     campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
