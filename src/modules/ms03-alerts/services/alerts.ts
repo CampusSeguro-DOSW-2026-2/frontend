@@ -2,8 +2,9 @@ import { ms03 } from './ms03';
 
 // Ciclo de vida de MS03: DRAFT → SCHEDULED → ACTIVE → ARCHIVED (se puede pasar de DRAFT a ACTIVE y archivar desde cualquier estado).
 export type AlertStatus = 'DRAFT' | 'SCHEDULED' | 'ACTIVE' | 'ARCHIVED';
-// OPERATIVA es exclusiva: no se combina con otros tipos ni se usa en simulacros.
-export type AlertType = 'EARTHQUAKE' | 'FIRE' | 'OTHER' | 'OPERATIVA';
+// Los códigos salen del catálogo de MS03 (`GET /api/v1/alertas/tipos`); MS06 es el dueño del catálogo y MS03
+// agrega OPERATIVA, que es exclusiva: no se combina con otros tipos ni se usa en simulacros.
+export type AlertType = string;
 export type AlertOrigin = 'MANUAL' | 'SIMULATION';
 export interface Scope { type: 'CAMPUS' | 'BUILDING' | 'ZONE'; ids?: string[] }
 // USER lleva el UUID del usuario; ROLE, uno de los roles oficiales (ESTUDIANTE, PROFESOR, ...).
