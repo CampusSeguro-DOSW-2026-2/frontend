@@ -22,6 +22,21 @@ const SUGERENCIAS = [
   '¿Cómo me preparo antes de un sismo?',
 ];
 
+/**
+ * Cuando el tutor no tiene información (pregunta de otro tema o que los contenidos no cubren) no es un error: se
+ * explica con amabilidad para qué sirve, se remite al protocolo oficial (RF-15) y se proponen preguntas que sí responde.
+ */
+const FUERA_DE_ALCANCE =
+  'Lo siento, eso no lo puedo responder. Solo le ayudo con la prevención y la actuación ante sismos y otras '
+  + 'emergencias en el campus, con base en los contenidos oficiales. Si su duda es sobre una emergencia, consulte el '
+  + 'protocolo oficial de emergencias de la ECI o a los brigadistas de su edificio.';
+
+/** Dos preguntas de ejemplo, alternando entre respuestas para no repetir siempre las mismas. */
+const ejemplos = (posicion: number) => {
+  const inicio = (posicion % 2) * 2;
+  return SUGERENCIAS.slice(inicio, inicio + 2);
+};
+
 type Mensaje =
   | { id: string; de: 'usuario'; texto: string }
   | { id: string; de: 'tutor'; texto: string; suficiente: boolean; fuentes: FuenteTutor[] }
@@ -82,9 +97,6 @@ const IconoLibro = () => (
   <svg className="i" viewBox="0 0 24 24" aria-hidden="true">
     <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
   </svg>
-);
-const IconoAviso = () => (
-  <svg className="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" /></svg>
 );
 const IconoNuevo = () => (
   <svg className="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
@@ -225,16 +237,15 @@ export default function Tutor({ session }: { session: Session }) {
               </div>
             ) : (
               <ol className="tu-mensajes">
-                {mensajes.map((m) => (
+                {mensajes.map((m, posicion) => (
                   <li key={m.id} className={`tu-fila ${m.de === 'usuario' ? 'propia' : ''}`}>
                     {m.de === 'usuario' && <div className="tu-burbuja usuario">{m.texto}</div>}
 
                     {m.de === 'tutor' && (
                       <>
                         <span className="tu-avatar" aria-hidden="true"><IconoTutor /></span>
-                        <div className={`tu-burbuja tutor ${m.suficiente ? '' : 'aviso'}`}>
-                          {!m.suficiente && <span className="tu-etiqueta"><IconoAviso />Sin información suficiente</span>}
-                          <p className="tu-texto">{m.texto}</p>
+                        <div className="tu-burbuja tutor">
+                          <p className="tu-texto">{m.suficiente ? m.texto : FUERA_DE_ALCANCE}</p>
                           {m.suficiente && m.fuentes.length > 0 && (
                             <div className="tu-fuentes">
                               <span>Basado en</span>
@@ -248,7 +259,16 @@ export default function Tutor({ session }: { session: Session }) {
                             </div>
                           )}
                           {!m.suficiente && (
-                            <a className="tu-enlace" href="#/aprendizaje">Ver el centro de aprendizaje →</a>
+                            <div className="tu-ejemplos">
+                              <span>Puede preguntarme, por ejemplo</span>
+                              <ul>
+                                {ejemplos(posicion).map((s) => (
+                                  <li key={s}>
+                                    <button type="button" onClick={() => void preguntar(s)} disabled={enviando}>{s}</button>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                           )}
                         </div>
                       </>
