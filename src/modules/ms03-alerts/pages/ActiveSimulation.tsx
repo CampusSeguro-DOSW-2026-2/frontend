@@ -3,7 +3,7 @@ import { PageHeader } from '../../../shared/components/Layout';
 import { Check, EmptyLogo, MapIcon } from '../../../shared/components/Icons';
 import { errorMessage } from '../../../shared/services/http';
 import { USE_MS03, activeAlertApi, type ActiveAlert } from '../services/activeAlert';
-import { scopeText } from '../services/catalog';
+import { OPERATIONAL_TYPE, scopeText } from '../services/catalog';
 import { useScopeCatalog } from '../hooks/useScopeCatalog';
 
 const REFRESH_MS = 15000;
@@ -52,7 +52,7 @@ export default function ActiveSimulation() {
   }
 
   const steps = stepsOf(alert.instructions);
-  const operational = alert.types.length === 1 && alert.types[0] === 'OPERATIVA';
+  const operational = alert.types.length === 1 && alert.types[0] === OPERATIONAL_TYPE;
   return (
     <>
       <PageHeader badge="EN PROGRESO" title={alert.title} subtitle={`Alcance: ${scopeText(alert.scope, catalog, alert.scopes)}`} context={`Iniciado: ${timeOf(alert.startedAt)}`} />

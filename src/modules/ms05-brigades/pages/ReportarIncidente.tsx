@@ -103,7 +103,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
     }
   };
 
-  const back = forOther ? '#/brigadista/incidentes' : '#/checkin';
+  const back = forOther ? '#/brigadista' : '#/checkin';
   const enZona = paso === 'zona' && prioridad !== null;
   const header = enZona
     ? { badge: 'ZONA Y DETALLES', title: forOther ? '¿Dónde está la persona?' : '¿Dónde necesitas ayuda?', subtitle: forOther ? 'Selecciona la zona donde está la persona afectada.' : 'Selecciona tu zona. Puedes enviar la solicitud sin descripción ni evidencia.' }
