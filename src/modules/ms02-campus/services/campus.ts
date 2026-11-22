@@ -1,5 +1,5 @@
 import type {
-  CampusRequest, ZonaAbiertaRequest, CalcularRutaExteriorRequest, ResumenGeneracionRutas, RutaExterior, Campus, ZonaAbierta, ActualizarRutaRequest, CambiarEstadoRequest, CrearRutaRequest, Edificio, EdificioRequest, Espacio,
+  CampusRequest, ZonaAbiertaRequest, ResumenGeneracionRutas, RutaExterior, Campus, ZonaAbierta, CambiarEstadoRequest, Edificio, EdificioRequest, Espacio,
   EspacioRequest, ModificarEdificioRequest, ModificarEspacioRequest, ModificarSalidaRequest, ModificarZonaSeguraRequest,
   Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, RutaListada, Salida,
   SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest, EspacioPublico, SalidaPublica, ZonaSeguraPublica, Escalera, EscaleraRequest, CambiarDisponibilidadEscaleraRequest,
@@ -124,7 +124,6 @@ export const campus = {
     reactivar: (id: string) => pedir<Salida>('PATCH', `/exits/${id}/reactivate`),
   },
   rutasExteriores: {
-    calcular: (datos: CalcularRutaExteriorRequest) => pedir<RutaExterior>('POST', '/evacuation-routes/exterior', datos),
     porSalida: (salidaId: string) => pedir<RutaExterior[]>('GET', `/exits/${salidaId}/evacuation-route`),
     /** Genera las rutas de todas las salidas hacia sus zonas más cercanas. Por defecto solo las que faltan. */
     generar: (recalcular = false) =>
@@ -159,8 +158,6 @@ export const campus = {
   rutas: {
     listar: () => pedir<RutaListada[]>('GET', '/evacuation-routes'),
     obtener: (id: string) => pedir<Ruta>('GET', `/evacuation-routes/${id}`),
-    crear: (datos: CrearRutaRequest) => pedir<Ruta>('POST', '/evacuation-routes', datos),
-    actualizar: (id: string, datos: ActualizarRutaRequest) => pedir<Ruta>('PUT', `/evacuation-routes/${id}`, datos),
     cambiarEstado: (id: string, datos: CambiarEstadoRequest) =>
       pedir<Ruta>('PATCH', `/evacuation-routes/${id}/status`, datos),
   },

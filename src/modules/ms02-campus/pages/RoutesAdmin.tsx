@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
 import { campus, CampusApiError, comoCampusError as comoError, currentPermissions } from '../services/campus';
-import type { CrearRutaRequest, Edificio, Espacio, EstadoRuta, Ruta, ZonaSegura } from '../types';
+import type { Edificio, Espacio, EstadoRuta, Ruta } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
 import { RutaExteriorAdmin } from '../components/RutaExteriorAdmin';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
@@ -14,7 +14,7 @@ const ESTADOS: Record<EstadoRuta, { texto: string; tono: string }> = {
   BLOQUEADA: { texto: 'BLOQUEADA', tono: 'stop' },
 };
 
-type Edicion = { tipo: 'nueva' } | { tipo: 'modificar'; id: string } | { tipo: 'estado'; id: string } | null;
+type Edicion = { tipo: 'estado'; id: string } | null;
 
 const leer = async () => {
   const [todas, edificios, zonas] = await Promise.all([
@@ -58,113 +58,6 @@ function CamposEstado({ id, estado, motivo, errores, onEstado, onMotivo }: {
         </Campo>
       )}
     </>
-  );
-}
-
-function NuevaRuta({ datos, onGuardar, onCancelar }: {
-  datos: Datos; onGuardar: (r: CrearRutaRequest) => Promise<void>; onCancelar: () => void;
-}) {
-  const [edificioId, setEdificioId] = useState('');
-  const [espacioId, setEspacioId] = useState('');
-  const [zonaId, setZonaId] = useState('');
-  const [descripcion, setDescripcion] = useState('');
-  const [estado, setEstado] = useState<EstadoRuta | ''>('DISPONIBLE');
-  const [motivo, setMotivo] = useState('');
-  const { errores, general, guardando, enviar } = useEnvio(onGuardar);
-
-  const conRuta = new Set(datos.rutas.map((r) => r.espacioOrigenId));
-  const delEdificio = datos.espacios.filter((s) => s.edificioId === edificioId);
-  const disponibles = delEdificio.filter((s) => s.disponible);
-  const espaciosLibres = disponibles.filter((s) => !conRuta.has(s.id));
-  const zonasActivas = datos.zonas.filter((z) => z.estado === 'ACTIVO');
-
-  const sinEspacios = () => {
-    if (!edificioId) return 'Selecciona primero un edificio';
-    if (delEdificio.length === 0) return 'Este edificio no tiene espacios registrados';
-    if (disponibles.length === 0) return 'Ningún espacio del edificio está disponible';
-    if (espaciosLibres.length === 0) return 'Todos los espacios ya tienen ruta';
-    return 'Selecciona un espacio';
-  };
-
-  const validar = () => {
-    const e: Errores = {};
-    if (!espacioId) e.espacioOrigenId = 'Selecciona el espacio de origen.';
-    if (!zonaId) e.zonaSeguraDestinoId = 'Selecciona la zona segura de destino.';
-    if (!descripcion.trim()) e.descripcion = 'Describe el recorrido.';
-    else if (descripcion.trim().length > 1000) e.descripcion = 'El recorrido no puede superar 1000 caracteres.';
-    validarMotivo(estado, motivo, e);
-    return e;
-  };
-
-  return (
-    <form className="cs-editor" noValidate onSubmit={(e) => {
-      e.preventDefault();
-      enviar(validar(), {
-        espacioOrigenId: espacioId, zonaSeguraDestinoId: zonaId, descripcion: descripcion.trim(),
-        estado: estado as EstadoRuta, motivo: estado === 'DISPONIBLE' ? undefined : motivo.trim(),
-      });
-    }}>
-      <div className="cs-campos">
-        <Campo id="ruta-edificio-nueva" etiqueta="Edificio">
-          <select id="ruta-edificio-nueva" value={edificioId} onChange={(e) => { setEdificioId(e.target.value); setEspacioId(''); }}>
-            <option value="">Selecciona un edificio</option>
-            {datos.edificios.filter((e) => e.estado === 'ACTIVO').map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
-          </select>
-        </Campo>
-        <Campo id="ruta-espacio-nueva" etiqueta="Espacio de origen" error={errores.espacioOrigenId}>
-          <select id="ruta-espacio-nueva" value={espacioId} disabled={!edificioId || espaciosLibres.length === 0} onChange={(e) => setEspacioId(e.target.value)}>
-            <option value="">{sinEspacios()}</option>
-            {espaciosLibres.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
-          </select>
-        </Campo>
-        <Campo id="ruta-zona-nueva" etiqueta="Zona segura de destino" error={errores.zonaSeguraDestinoId}>
-          <select id="ruta-zona-nueva" value={zonaId} onChange={(e) => setZonaId(e.target.value)}>
-            <option value="">Selecciona una zona</option>
-            {zonasActivas.map((z) => <option key={z.id} value={z.id}>{z.codigo} · {z.nombre}</option>)}
-          </select>
-        </Campo>
-      </div>
-      <Campo id="ruta-descripcion-nueva" etiqueta="Recorrido" error={errores.descripcion}>
-        <textarea id="ruta-descripcion-nueva" rows={3} value={descripcion} placeholder="Sal por la puerta principal, gira a la derecha y baja por la escalera norte." onChange={(e) => setDescripcion(e.target.value)} />
-      </Campo>
-      <div className="cs-campos">
-        <CamposEstado id="nueva" estado={estado} motivo={motivo} errores={errores} onEstado={setEstado} onMotivo={setMotivo} />
-      </div>
-      {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
-    </form>
-  );
-}
-
-function ModificarRuta({ ruta, zonas, onGuardar, onCancelar }: {
-  ruta: Ruta; zonas: ZonaSegura[]; onGuardar: (zonaId: string, descripcion: string) => Promise<void>; onCancelar: () => void;
-}) {
-  const [zonaId, setZonaId] = useState(ruta.zonaSeguraDestinoId);
-  const [descripcion, setDescripcion] = useState(ruta.descripcion);
-  const { errores, general, guardando, enviar } = useEnvio((d: { zona: string; descripcion: string }) => onGuardar(d.zona, d.descripcion));
-  const opciones = zonas.filter((z) => z.estado === 'ACTIVO' || z.id === ruta.zonaSeguraDestinoId);
-
-  const validar = () => {
-    const e: Errores = {};
-    if (!zonaId) e.zonaSeguraDestinoId = 'Selecciona la zona segura de destino.';
-    if (!descripcion.trim()) e.descripcion = 'Describe el recorrido.';
-    else if (descripcion.trim().length > 1000) e.descripcion = 'El recorrido no puede superar 1000 caracteres.';
-    return e;
-  };
-
-  return (
-    <form className="cs-editor" noValidate onSubmit={(e) => { e.preventDefault(); enviar(validar(), { zona: zonaId, descripcion: descripcion.trim() }); }}>
-      <Campo id={`ruta-zona-${ruta.id}`} etiqueta="Zona segura de destino" error={errores.zonaSeguraDestinoId}>
-        <select id={`ruta-zona-${ruta.id}`} value={zonaId} onChange={(e) => setZonaId(e.target.value)}>
-          {opciones.map((z) => <option key={z.id} value={z.id}>{z.codigo} · {z.nombre}{z.estado === 'INACTIVO' ? ' (inactiva)' : ''}</option>)}
-        </select>
-      </Campo>
-      <Campo id={`ruta-descripcion-${ruta.id}`} etiqueta="Recorrido" error={errores.descripcion}>
-        <textarea id={`ruta-descripcion-${ruta.id}`} rows={3} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
-      </Campo>
-      {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
-    </form>
   );
 }
 
@@ -278,17 +171,7 @@ export default function RoutesAdmin() {
               {datos.rutas.length} {datos.rutas.length === 1 ? 'ruta' : 'rutas'} · {contar('DISPONIBLE', 'disponible', 'disponibles')} · {contar('RESTRINGIDA', 'restringida', 'restringidas')} · {contar('BLOQUEADA', 'bloqueada', 'bloqueadas')}
             </span>
           </div>
-          {puedeGestionar && (
-            <button type="button" className="btn red cs-agregar" onClick={() => setEdicion({ tipo: 'nueva' })}>Nueva ruta</button>
-          )}
         </div>
-
-        {edicion?.tipo === 'nueva' && (
-          <section className="cs-piso">
-            <h3 className="cs-piso-titulo">Nueva ruta</h3>
-            <NuevaRuta datos={datos} onCancelar={() => setEdicion(null)} onGuardar={(r) => guardar(() => campus.rutas.crear(r))} />
-          </section>
-        )}
 
         <div className="cs-filtros">
           <Campo id="filtro-edificio" etiqueta="Edificio">
@@ -315,18 +198,13 @@ export default function RoutesAdmin() {
               <thead><tr><th>Espacio de origen</th><th>Zona segura</th><th>Estado</th><th>Motivo</th><th>Actualizada</th><th><span className="cs-oculto">Acciones</span></th></tr></thead>
               <tbody>
                 {visibles.map((r) => {
-                  if (edicion && edicion.tipo !== 'nueva' && edicion.id === r.id) {
+                  if (edicion && edicion.id === r.id) {
                     return (
                       <tr key={r.id}><td colSpan={6}>
                         <div className="cs-subeditor">
-                          <h4>{edicion.tipo === 'modificar' ? 'Modificar ruta' : 'Cambiar estado'} de {espacio.get(r.espacioOrigenId)?.nombre ?? 'la ruta'}</h4>
-                          {edicion.tipo === 'modificar' ? (
-                            <ModificarRuta ruta={r} zonas={datos.zonas} onCancelar={() => setEdicion(null)}
-                              onGuardar={(zonaId, descripcion) => guardar(() => campus.rutas.actualizar(r.id, { zonaSeguraDestinoId: zonaId, descripcion }))} />
-                          ) : (
-                            <CambiarEstado ruta={r} onCancelar={() => setEdicion(null)}
-                              onGuardar={(estado, motivo) => guardar(() => campus.rutas.cambiarEstado(r.id, { estado, motivo }))} />
-                          )}
+                          <h4>Cambiar estado de {espacio.get(r.espacioOrigenId)?.nombre ?? 'la ruta'}</h4>
+                          <CambiarEstado ruta={r} onCancelar={() => setEdicion(null)}
+                            onGuardar={(estado, motivo) => guardar(() => campus.rutas.cambiarEstado(r.id, { estado, motivo }))} />
                         </div>
                       </td></tr>
                     );
@@ -341,7 +219,6 @@ export default function RoutesAdmin() {
                       <td className="cs-fecha">{fecha(r.actualizadaEn)}</td>
                       <td>
                         <div className="cs-acciones">
-                          {puedeGestionar && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: r.id })}>Modificar</button>}
                           {puedeCambiarEstado && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'estado', id: r.id })}>Cambiar estado</button>}
                         </div>
                       </td>

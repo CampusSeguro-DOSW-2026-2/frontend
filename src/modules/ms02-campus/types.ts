@@ -155,19 +155,6 @@ export interface RutaListada extends Omit<Ruta, 'espacioOrigenId'> {
   salidaOrigenId?: string | null;
 }
 
-export interface CrearRutaRequest {
-  espacioOrigenId: string;
-  zonaSeguraDestinoId: string;
-  descripcion: string;
-  estado: EstadoRuta;
-  motivo?: string;
-}
-
-export interface ActualizarRutaRequest {
-  zonaSeguraDestinoId: string;
-  descripcion: string;
-}
-
 export interface CambiarEstadoRequest {
   estado: EstadoRuta;
   motivo?: string;
@@ -202,11 +189,6 @@ export interface ResumenGeneracionRutas {
   generadas: number;
   omitidas: number;
   interrumpida: boolean;
-}
-
-export interface CalcularRutaExteriorRequest {
-  salidaId: string;
-  zonaSeguraId: string;
 }
 
 export interface EscaleraGuia {
