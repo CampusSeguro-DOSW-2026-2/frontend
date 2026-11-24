@@ -1,3 +1,4 @@
+import type { ScopeCatalog } from '../../ms03-alerts/services/catalog';
 import type { EstadoCheckin, EstadoEvento } from '../types';
 
 /** Estados del evento en el orden del filtro (F-07); '' es Todos. */
@@ -36,4 +37,14 @@ export function fechaHora(iso: string | null | undefined): string {
   if (!iso) return '';
   const fecha = new Date(iso);
   return Number.isNaN(fecha.getTime()) ? '' : FECHA_HORA.format(fecha);
+}
+
+/**
+ * Edificios o zonas del escenario en texto. MS06 debe enviar los nombres de MS02 (RN-MS04-24), pero los eventos que
+ * MS04 ya guardó con los ids de MS02 se traducen con el catálogo de MS02. Un texto que no es un id del catálogo (un
+ * nombre) o que no se puede traducir porque MS02 no respondió se muestra tal cual.
+ */
+export function textoEscenario(valores: string[], catalog: ScopeCatalog | null): string {
+  const items = catalog ? [...catalog.buildings, ...catalog.zones] : [];
+  return valores.map((v) => items.find((i) => i.id === v)?.label ?? v).join(', ');
 }
