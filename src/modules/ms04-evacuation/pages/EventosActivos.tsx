@@ -4,7 +4,8 @@ import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { checkinApi } from '../services/checkin';
 import type { Evento } from '../types';
-import { fechaHora, tipoEvento } from '../utils/labels';
+import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
+import { fechaHora, textoEscenario, tipoEvento } from '../utils/labels';
 import '../styles/checkin.css';
 
 /** Mensaje de la pantalla inicial cuando no hay evento activo que le aplique al usuario (RNF-MS04-07). */
@@ -23,6 +24,8 @@ type Carga =
 export default function EventosActivos({ session }: { session: Session }) {
   const [carga, setCarga] = useState<Carga>({ estado: 'cargando' });
   const [intento, setIntento] = useState(0);
+  // Nombres de MS02 para los eventos guardados con ids; si MS02 no responde, se muestra el texto de MS04
+  const { catalog } = useScopeCatalog();
 
   useEffect(() => {
     let vigente = true;
@@ -72,9 +75,9 @@ export default function EventosActivos({ session }: { session: Session }) {
                 <div className="chk-meta">
                   {evento.fecha_inicio && <span>Iniciado: <b>{fechaHora(evento.fecha_inicio)}</b></span>}
                   {evento.escenario.edificios.length > 0 && (
-                    <span>Edificios: <b>{evento.escenario.edificios.join(', ')}</b></span>
+                    <span>Edificios: <b>{textoEscenario(evento.escenario.edificios, catalog)}</b></span>
                   )}
-                  {evento.escenario.zonas.length > 0 && <span>Zonas: <b>{evento.escenario.zonas.join(', ')}</b></span>}
+                  {evento.escenario.zonas.length > 0 && <span>Zonas: <b>{textoEscenario(evento.escenario.zonas, catalog)}</b></span>}
                 </div>
                 <a className="btn red chk-ir" href={`#/checkin/${encodeURIComponent(evento.evento_id)}`}>
                   Abrir evento
