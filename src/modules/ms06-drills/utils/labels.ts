@@ -1,4 +1,5 @@
-import { SCOPE_ITEMS, type ScopeCatalog } from '../../ms03-alerts/services/catalog';
+import { SCOPE_ITEMS, UNKNOWN_PLACE, type ScopeCatalog } from '../../ms03-alerts/services/catalog';
+import { isTechnicalId } from '../../../shared/utils/text';
 import type { EventStatus, ScopeItem } from '../types';
 
 export const STATUS_LABEL: Record<EventStatus, string> = {
@@ -20,16 +21,19 @@ export const SCOPE_OPTIONS: ScopeItem[] = SCOPE_ITEMS
   .filter((i) => i.id !== 'CAMPUS')
   .map((i) => ({ type: i.id.startsWith('ZON') ? 'ZONE' : 'BUILDING', id: i.id }));
 
-export const scopeLabel = (id: string) => SCOPE_ITEMS.find((i) => i.id === id)?.label ?? id;
+export const scopeLabel = (id: string) => SCOPE_ITEMS.find((i) => i.id === id)?.label ?? (isTechnicalId(id) ? UNKNOWN_PLACE : id);
 
 /**
- * Name of a building or zone from the live MS02 catalog. While the catalog has not arrived (or the id
- * is not in it) it falls back to the demo catalog and then to the raw id, so nothing is hidden.
+ * Name of a building or zone from the live MS02 catalog (active ones first, then the inactive ones). Without a name
+ * it falls back to the demo catalog and then to a generic text: a technical id is never shown.
  */
 export const scopeLabelIn = (id: string, catalog?: ScopeCatalog | null) => {
   const live = catalog ? [...catalog.buildings, ...catalog.zones].find((i) => i.id === id) : undefined;
-  return live?.label ?? scopeLabel(id);
+  return live?.label ?? catalog?.names?.[id] ?? scopeLabel(id);
 };
+
+/** true if MS02 knows the name of the place (scopeLabelIn would not return the generic text). */
+export const hasPlaceName = (id: string, catalog?: ScopeCatalog | null) => scopeLabelIn(id, catalog) !== UNKNOWN_PLACE;
 
 
 export const CHECKIN_LABEL: Record<string, string> = {
@@ -44,7 +48,7 @@ const WARNINGS: Record<string, string> = {
   NO_INCIDENTS: 'Todavía no se han registrado incidentes.',
   NO_BRIGADIERS: 'Todavía no hay brigadistas asignados.',
   NO_RECORDS: 'Todavía no hay check-ins, solicitudes de ayuda ni incidentes registrados.',
-  SCOPE_PENDING: 'El catálogo del campus no respondió: el alcance quedó pendiente. Agrégalo después para programar el evento.',
+  SCOPE_PENDING: 'El catálogo del campus no respondió: el alcance quedó pendiente. Agréguelo después para programar el evento.',
   PARTICIPANTS_PENDING: 'El servicio de usuarios no respondió: los participantes quedaron pendientes. Agréguelos después.',
   EVALUATION_FAILED: 'El evento finalizó, pero no se pudieron guardar sus métricas generales.',
   EVALUATION_INCOMPLETE: 'Algunas cifras todavía no llegan de check-in o de brigadistas; se completan solas.',

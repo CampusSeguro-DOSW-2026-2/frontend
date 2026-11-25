@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh';
 import { Edit, Plus, Search } from '../../../shared/components/Icons';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
@@ -36,7 +37,9 @@ export default function EventList({ session, canManage }: { session: Session; ca
     }
   }, [session, query, status, page]);
 
-  useEffect(() => { load(); }, [load]);
+  // Los cambios de estado (Programado → En ejecución → Finalizado) aparecen sin recargar
+  const tick = useAutoRefresh();
+  useEffect(() => { load(); }, [load, tick]);
 
   const items = data?.content ?? [];
   const scopeText = (e: EventSummary) => (e.scope.length ? e.scope.map((s) => scopeLabelIn(s.id, catalog)).join(', ') : 'Sin alcance');
@@ -48,7 +51,7 @@ export default function EventList({ session, canManage }: { session: Session; ca
           <h1>Eventos</h1>
           <p>Simulacros y emergencias. Solo puede haber un evento en ejecución a la vez.</p>
         </div>
-        {canManage && <a className="btn light" href="#/eventos/nuevo"><Plus />Crear evento</a>}
+        {canManage && <a className="btn light cta" href="#/eventos/nuevo"><Plus />Crear evento</a>}
       </header>
       <main className="ev-main">
         <div className="ev-tools">
@@ -109,7 +112,7 @@ export default function EventList({ session, canManage }: { session: Session; ca
             </div>
           </div>
         )}
-        {canManage && <p className="help">Se puede editar en Borrador, Programado y En ejecución. Si editas un evento en ejecución, se reenvían las alertas con la información nueva.</p>}
+        {canManage && <p className="help">Se puede editar en Borrador, Programado y En ejecución. Si edita un evento en ejecución, se reenvían las alertas con la información nueva.</p>}
       </main>
     </>
   );

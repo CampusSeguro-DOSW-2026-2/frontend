@@ -79,7 +79,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
   if (!puedeConsultar) {
     return (
       <>
-        <PageHeader badge="CAMPUS" title="Edificios" subtitle="Consulta los edificios y sus espacios." />
+        <PageHeader badge="CAMPUS" title="Edificios" subtitle="Consulte los edificios y sus espacios." />
         <main className="content">
           <p className="cs-alert stop">Tu rol no tiene permiso para consultar el campus.</p>
         </main>
@@ -90,7 +90,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
   if (cargando) {
     return (
       <>
-        <PageHeader badge="CAMPUS" title="Edificios" subtitle="Consulta los edificios y sus espacios." />
+        <PageHeader badge="CAMPUS" title="Edificios" subtitle="Consulte los edificios y sus espacios." />
         <main className="content">
           <p className="cs-resumen">Cargando información…</p>
         </main>
@@ -104,7 +104,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
         <PageHeader
           badge="CAMPUS"
           title={edificio?.nombre ?? 'Edificios'}
-          subtitle="Consulta la información del campus."
+          subtitle="Consulte la información del campus."
           context={edificioId ? <a className="cs-volver" href="#/edificios">← Edificios</a> : undefined}
         />
         <main className="content">

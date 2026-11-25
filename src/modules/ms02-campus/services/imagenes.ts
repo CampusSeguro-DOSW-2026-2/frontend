@@ -1,4 +1,4 @@
-import { API_URL, NETWORK_ERROR } from '../../../shared/services/http';
+import { API_URL, NETWORK_ERROR, userText } from '../../../shared/services/http';
 import { getSession } from '../../../shared/services/session';
 
 const BASE = '/api/v1/images';
@@ -45,9 +45,9 @@ async function comprobarRespuesta(respuesta: Response): Promise<void> {
     throw new Error('Tu sesión ha expirado. Inicia sesión nuevamente.');
   }
   if (respuesta.status === 403) {
-    throw new Error('No tienes permisos para gestionar las imágenes de este elemento.');
+    throw new Error('No tiene permisos para gestionar las imágenes de este elemento.');
   }
-  throw new Error(cuerpo.mensaje || cuerpo.message || `Error al gestionar imágenes (${respuesta.status}).`);
+  throw new Error(userText(cuerpo.mensaje || cuerpo.message || '') || 'No se pudo completar la operación con las imágenes. Intente de nuevo.');
 }
 
 export const imagenesApi = {

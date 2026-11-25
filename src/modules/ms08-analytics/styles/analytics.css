@@ -23,3 +23,10 @@
 .an-sel div{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .an-table details summary{cursor:pointer;font-size:13px}
 .ev-table input[type=checkbox]{width:18px;height:18px;cursor:pointer}
+.an-search{position:relative}
+.an-input{position:relative}
+.an-options{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:5;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(15,23,42,.12);padding:6px;max-height:300px;overflow:auto}
+.an-options button{display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:0;background:none;text-align:left;padding:8px 10px;border-radius:8px;cursor:pointer;font:inherit;color:var(--ink)}
+.an-options button:hover,.an-options button:focus-visible{background:var(--bg)}
+.an-options small{color:var(--mut);font-size:12px}
+.an-options .help{padding:8px 10px}

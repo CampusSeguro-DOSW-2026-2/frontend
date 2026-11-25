@@ -13,15 +13,18 @@ const NO_ACCESS = <main className="page"><p className="notice err" role="alert">
 
 /** Rutas de MS05 (Brigadistas e incidentes). Devuelve undefined si la ruta no es de este módulo. */
 export function brigadesRoutes(route: string, session: Session | null): ReactNode | undefined {
-  const ours = route === '/ayuda' || route === '/mis-incidentes' || route === '/brigadistas' || route === '/brigadista' || route.startsWith('/brigadista/');
+  const ours = route === '/ayuda' || route.startsWith('/ayuda/') || route === '/mis-incidentes' || route === '/brigadistas' || route === '/brigadista' || route.startsWith('/brigadista/');
   if (!session || !ours) return undefined;
 
-  // Ask for help: report an incident that affects the own user (RF-BEI-04)
-  if (route === '/ayuda') {
+  // Ask for help: report an incident that affects the own user (RF-BEI-04). From the check-in «Requiero asistencia»
+  // it arrives with the event: /ayuda/{eventoId}
+  const ayuda = route.match(/^\/ayuda(?:\/([^/]+))?$/);
+  if (ayuda) {
     if (!hasPermission(session, PERMISSION.MS05_INCIDENT_REPORT)) {
       return NO_ACCESS;
     }
-    return <ReportarIncidente session={session} />;
+    const eventoId = ayuda[1] ? decodeURIComponent(ayuda[1]) : undefined;
+    return <ReportarIncidente key={eventoId ?? 'activo'} session={session} eventId={eventoId} />;
   }
 
   // My incidents: the requests the user reported (ms05:incident:manage_own)

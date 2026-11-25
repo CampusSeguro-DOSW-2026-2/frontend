@@ -6,7 +6,12 @@ export interface CatalogItem { id: string; label: string; group: string }
 export interface ScopeCatalog {
   buildings: CatalogItem[];
   zones: CatalogItem[];
+  /** Nombre de cada edificio y zona, también los inactivos (solo para mostrar). */
+  names?: Record<string, string>;
 }
+
+/** Texto para un lugar cuyo nombre no se pudo obtener de MS02: nunca se muestra su id. */
+export const UNKNOWN_PLACE = 'Lugar sin nombre disponible';
 
 /** Único alcance que no depende del catálogo remoto. */
 export const CAMPUS_ITEM: CatalogItem = { id: 'CAMPUS', label: 'Todo el campus', group: 'Campus' };
@@ -71,14 +76,15 @@ export const recipientsText = (recipients: Recipient[]) => {
 };
 /**
  * Texto del alcance. MS03 manda `scope` en null cuando la alerta cubre más de un tipo de alcance, así que
- * se prefiere la lista `scopes`. Si el catálogo de MS02 aún no llegó, muestra el id para no ocultar información.
+ * se prefiere la lista `scopes`. Si MS02 no tiene el nombre de un lugar, muestra un texto genérico (nunca el id).
  */
 export const scopeText = (scope: Scope | null | undefined, catalog?: ScopeCatalog | null, scopes?: Scope[] | null) => {
   const list = scopes?.length ? scopes : scope ? [scope] : [];
   if (!list.length) return 'Sin alcance';
   const items = catalog ? [...catalog.buildings, ...catalog.zones] : [];
   return list
-    .map((s) => (s.type === 'CAMPUS' ? 'Todo el campus' : scopeIdsOf(s).map((id) => labelOf(items, id)).join(', ')))
+    .map((s) => (s.type === 'CAMPUS' ? 'Todo el campus' : scopeIdsOf(s)
+      .map((id) => items.find((i) => i.id === id)?.label ?? catalog?.names?.[id] ?? UNKNOWN_PLACE).join(', ')))
     .filter((text) => text !== '')
     .join(' · ');
 };

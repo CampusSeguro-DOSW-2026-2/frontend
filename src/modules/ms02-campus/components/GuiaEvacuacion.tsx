@@ -51,7 +51,7 @@ function GuiaDetalle({ guia }: { guia: Guia }) {
       <dl className="cs-guia-datos">
         <div>
           <dt>Escalera</dt>
-          <dd>{guia.requiereEscalera ? escalera : 'No necesitas escalera: la salida está en tu piso'}</dd>
+          <dd>{guia.requiereEscalera ? escalera : 'No necesita escalera: la salida está en su piso'}</dd>
         </div>
         <div>
           <dt>Salida</dt>

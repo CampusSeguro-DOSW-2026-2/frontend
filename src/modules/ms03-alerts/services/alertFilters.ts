@@ -12,8 +12,8 @@ import { getSession } from '../../../shared/services/session';
 export interface AlertFilterOption { value: string; label: string; finalState?: boolean }
 export interface AlertFilterGroup { key: string; label: string; multiple: boolean; options: AlertFilterOption[] }
 
-const INVALID = 'MS03 devolvió un catálogo de filtros de alerta inválido.';
-const EMPTY = 'MS03 no devolvió filtros para el listado de alertas.';
+const INVALID = 'No se pudieron leer los filtros de alertas. Intente de nuevo más tarde.';
+const EMPTY = 'Todavía no hay filtros disponibles para las alertas.';
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null;

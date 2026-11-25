@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { loadAlertFilters, type AlertFilterGroup } from '../services/alertFilters';
 
-const LOAD_ERROR = 'No se pudieron cargar los filtros de alertas desde MS03.';
+const LOAD_ERROR = 'No se pudieron cargar los filtros de alertas.';
 
 /**
  * Grupos de filtros de MS03 (`GET /api/v1/alertas/filtros`) que el listado renderiza como botones. Se consulta al

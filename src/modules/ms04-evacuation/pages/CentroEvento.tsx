@@ -1,7 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Home, Info, LifeBuoy, LogOut, ShieldCheck } from '../../../shared/components/Icons';
 import { PageHeader } from '../../../shared/components/Layout';
+import { PERMISSION } from '../../../shared/permissions';
 import { ApiError, errorMessage } from '../../../shared/services/http';
+import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
 import { AccionesEvento } from '../components/AccionesEvento';
 import { campusApi } from '../services/campus';
@@ -54,6 +56,10 @@ type Vigente =
  * opciones siempre visibles. Elegir Me estoy evacuando o No estoy en el campus envía el reporte; Estoy a salvo pide el
  * punto de encuentro y Requiero asistencia, el lugar (edificio o punto de encuentro de MS02), y elegirlo lo envía. Así
  * el reporte se completa en máximo 3 interacciones desde el menú (RNF-MS04-07).
+ *
+ * «Requiero asistencia» se vincula con «Necesito ayuda» de MS05 (una sola solicitud): con ms05:incident:report abre ese
+ * formulario, que registra aquí el estado y deja en MS05 la prioridad, la descripción y la evidencia. Sin ese permiso
+ * se pide solo el lugar, como antes.
  *
  * La pantalla de inicio la usa con el evento que ya consultó (`eventoActual`), así no lo vuelve a pedir, y con un
  * aviso (`aviso`) que se muestra antes de los accesos.
@@ -149,7 +155,14 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
     if (tipo === 'PUNTO_ENCUENTRO') cargarPuntos();
   };
 
+  // La solicitud de ayuda la gestiona MS05: su formulario registra también el estado del check-in
+  const ayudaEnMs05 = hasPermission(session, PERMISSION.MS05_INCIDENT_REPORT);
+
   const elegir = (estado: EstadoCheckin) => {
+    if (estado === 'NEEDS_ASSISTANCE' && ayudaEnMs05) {
+      window.location.hash = `#/ayuda/${encodeURIComponent(eventoId)}`;
+      return;
+    }
     setElegido(estado);
     if (estado === 'SAFE' || estado === 'NEEDS_ASSISTANCE') {
       setError('');
@@ -199,13 +212,13 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
         <section className="chk-checkin" aria-labelledby="chk-estado-titulo">
           <div className="chk-checkin-cab">
             <div>
-              <h2 id="chk-estado-titulo" className="title sm22">Check-in · ¿Cómo te encuentras?</h2>
-              {vigente.estado === 'cargando' && <p className="chk-sub" role="status">Consultando tu estado actual…</p>}
+              <h2 id="chk-estado-titulo" className="title sm22">Check-in · ¿Cómo se encuentra?</h2>
+              {vigente.estado === 'cargando' && <p className="chk-sub" role="status">Consultando su estado actual…</p>}
               {vigente.estado === 'listo' && (
                 <p className="chk-sub" role="status">
                   {actual
-                    ? <>Tu estado actual: <b>{describir(actual)}</b>{actual.fecha_hora && ` · ${fechaHora(actual.fecha_hora)}`}. Puedes cambiarlo.</>
-                    : 'Selecciona tu estado actual. Aún no has registrado tu check-in para este evento.'}
+                    ? <>Su estado actual: <b>{describir(actual)}</b>{actual.fecha_hora && ` · ${fechaHora(actual.fecha_hora)}`}. Puede cambiarlo.</>
+                    : 'Seleccione su estado actual. Aún no ha registrado su check-in en este evento.'}
                 </p>
               )}
             </div>
@@ -219,14 +232,14 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
                   </button>
                 ))}
               </div>
-              <small className="chk-nota">Elige «Estoy a salvo» solo cuando estés fuera de peligro.</small>
+              <small className="chk-nota">Elija «Estoy a salvo» solo cuando esté fuera de peligro.</small>
             </div>
           </div>
           {vigente.estado === 'error' && <p className="notice err" role="alert">{vigente.mensaje}</p>}
 
           {elegido === 'SAFE' && (
             <div className="chk-puntos" role="region" aria-labelledby="chk-punto-titulo">
-              <h3 id="chk-punto-titulo" className="chk-paso">¿En qué punto de encuentro estás?</h3>
+              <h3 id="chk-punto-titulo" className="chk-paso">¿En qué punto de encuentro está?</h3>
               {puntos.estado === 'cargando' && <p className="notice" role="status">Consultando los puntos de encuentro…</p>}
               {puntos.estado === 'error' && (
                 <>
@@ -257,7 +270,7 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
 
           {elegido === 'NEEDS_ASSISTANCE' && (
             <div className="chk-puntos" role="region" aria-labelledby="chk-lugar-titulo">
-              <h3 id="chk-lugar-titulo" className="chk-paso">¿Dónde necesitas la asistencia?</h3>
+              <h3 id="chk-lugar-titulo" className="chk-paso">¿Dónde necesita la asistencia?</h3>
               <div className="chk-tabs" role="group" aria-label="Tipo de lugar">
                 {TIPOS_UBICACION.map(({ codigo, texto }) => (
                   <button key={codigo} type="button" className="chk-tab" aria-pressed={tipoUbicacion === codigo}
@@ -294,12 +307,12 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
             </div>
           )}
 
-          {enviando && <p className="notice" role="status">Enviando tu estado…</p>}
+          {enviando && <p className="notice" role="status">Enviando su estado…</p>}
           {error && !errorCampo && <p className="notice err" role="alert">{error}</p>}
           {confirmado && actual && <p className="notice chk-ok" role="status">{mensajeExito(actual)}</p>}
         </section>
 
-        <p className="chk-info"><Info /> El check-in informa tu estado a la brigada. «Requiero asistencia» además envía una solicitud de ayuda con el lugar donde estás; para reportar otra situación utiliza «Solicitar ayuda».</p>
+        <p className="chk-info"><Info /> El check-in informa su estado a la brigada. «Requiero asistencia» abre la solicitud de ayuda: elija la urgencia y la zona, y la brigada la recibe con su estado.</p>
       </main>
     </>
   );

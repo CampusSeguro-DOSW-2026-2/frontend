@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Search } from '../../../shared/components/Icons';
 import { ApiError } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
@@ -10,7 +11,7 @@ import { multiEventHref } from '../hooks/useEventNames';
 import { analyticsApi, PAGE_SIZE } from '../services/analytics';
 import type { Bucket, EventIndicators, IndicatorsResult, TimeStat } from '../types';
 import { MAX_EVENTS, MIN_COMPARE } from '../types';
-import { KIND_LABEL, bucketLabel, formatBogota, formatCount, formatPercent, formatSeconds, isUuid } from '../utils/format';
+import { KIND_LABEL, bucketLabel, formatBogota, formatCount, formatPercent, formatSeconds } from '../utils/format';
 import '../../ms06-drills/styles/events.css';
 import '../styles/analytics.css';
 
@@ -129,7 +130,7 @@ function EventIndicatorsView({ session, eventoId }: { session: Session; eventoId
           <p>
             {[kindKey ? KIND_LABEL[kindKey] : null, event ? STATUS_LABEL[event.status] : null,
               started ? `Inició ${formatBogota(started)}` : null, event?.endedAt ? `Finalizó ${formatBogota(event.endedAt)}` : null]
-              .filter(Boolean).join(' · ') || <span className="an-mono">{eventoId}</span>}
+              .filter(Boolean).join(' · ') || 'Resumen calculado por analítica'}
           </p>
         </div>
         {data && <a className="btn white" href={multiEventHref('ubicaciones', [eventoId])}>Ver por ubicación</a>}
@@ -158,8 +159,9 @@ function EventPicker({ session }: { session: Session }) {
   const [data, setData] = useState<Page<EventSummary> | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
-  const [manualId, setManualId] = useState('');
-  const [manualError, setManualError] = useState('');
+  // Búsqueda por nombre del evento (MS06 filtra por título)
+  const [title, setTitle] = useState('');
+  const [query, setQuery] = useState('');
   // Eventos elegidos para comparar o ver por ubicación; se conservan al cambiar de página
   const [selected, setSelected] = useState<Selected[]>([]);
 
@@ -167,21 +169,16 @@ function EventPicker({ session }: { session: Session }) {
     setLoading(true);
     setError(null);
     try {
-      setData(await eventsApi.search(session, { status, page, size: PAGE_SIZE }));
+      setData(await eventsApi.search(session, { title: query, status, page, size: PAGE_SIZE }));
     } catch (err) {
       setError(err);
       setData(null);
     } finally {
       setLoading(false);
     }
-  }, [session, status, page]);
+  }, [session, query, status, page]);
 
   useEffect(() => { load(); }, [load]);
-
-  const open = () => {
-    if (!isUuid(manualId)) { setManualError('Escriba un id de evento válido (UUID).'); return; }
-    window.location.hash = `#/indicadores/${manualId.trim().toLowerCase()}`;
-  };
 
   const toggle = (e: EventSummary) => setSelected((list) => (list.some((x) => x.id === e.id)
     ? list.filter((x) => x.id !== e.id)
@@ -194,7 +191,7 @@ function EventPicker({ session }: { session: Session }) {
   const ids = selected.map((x) => x.id);
 
   const items = data?.content ?? [];
-  // Sin permiso de lectura en Eventos la lista no se puede mostrar, pero el resumen sí se puede consultar por id
+  // Sin permiso de lectura en Eventos la lista no se puede mostrar
   const forbidden = error instanceof ApiError && error.status === 403;
 
   return (
@@ -213,13 +210,11 @@ function EventPicker({ session }: { session: Session }) {
                 onClick={() => { setStatus(t.status); setPage(0); }}>{t.label}</button>
             ))}
           </div>
-          <form className="an-pick" onSubmit={(e) => { e.preventDefault(); open(); }}>
-            <input aria-label="Id del evento" placeholder="Consultar por id de evento" value={manualId}
-              aria-invalid={manualError ? true : undefined} onChange={(e) => { setManualId(e.target.value); setManualError(''); }} />
-            <button type="submit" className="btn white">Ver</button>
+          <form className="searchbar" role="search" onSubmit={(e) => { e.preventDefault(); setQuery(title); setPage(0); }}>
+            <input aria-label="Buscar evento por nombre" placeholder="Buscar evento por nombre" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <button type="submit" aria-label="Buscar"><Search /></button>
           </form>
         </div>
-        {manualError && <p className="notice err" role="alert">{manualError}</p>}
 
         <div className="an-sel" role="region" aria-label="Eventos seleccionados">
           <span>{selected.length === 0
@@ -236,11 +231,11 @@ function EventPicker({ session }: { session: Session }) {
           )}
         </div>
 
-        {forbidden && <p className="notice" role="status">No tiene permiso para listar eventos. Consulte el resumen escribiendo el id del evento.</p>}
+        {forbidden && <p className="notice" role="status">No tiene permiso para consultar la lista de eventos. Pida acceso a la coordinación.</p>}
         {error !== null && !forbidden && <ErrorNotice error={error} onRetry={load} />}
         {loading && <p className="notice" role="status">Cargando eventos…</p>}
         {!loading && data && items.length === 0 && (
-          <div className="ev-empty">{status === 'FINISHED' ? 'Todavía no hay eventos finalizados.' : 'Todavía no hay eventos.'}</div>
+          <div className="ev-empty">{query ? 'No hay eventos con ese nombre.' : status === 'FINISHED' ? 'Todavía no hay eventos finalizados.' : 'Todavía no hay eventos.'}</div>
         )}
 
         {items.length > 0 && (

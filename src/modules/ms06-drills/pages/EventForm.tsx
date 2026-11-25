@@ -7,9 +7,9 @@ import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { useParticipantRoles } from '../hooks/useParticipantRoles';
 import { labelOf, listEs, type CatalogItem } from '../../ms03-alerts/services/catalog';
 import type { Session } from '../../../shared/types';
-import { canManageDrills, defaultTypeId, eventsApi } from '../services/events';
+import { canManageDrills, canManageRealEvents, defaultTypeId, eventsApi } from '../services/events';
 import type { EventStatus, EventType, ParticipantRole, ScopeItem } from '../types';
-import { STATUS_LABEL, fromLocalInput, scopeLabel, toLocalInput } from '../utils/labels';
+import { STATUS_LABEL, fromLocalInput, scopeLabelIn, toLocalInput } from '../utils/labels';
 import '../styles/events.css';
 
 interface Form { name: string; description: string; start: string; scope: ScopeItem[]; roles: ParticipantRole[] }
@@ -19,7 +19,8 @@ const EMPTY: Form = { name: '', description: '', start: '', scope: [], roles: []
  * RF-EVE-01 y RF-EVE-02: crear y editar evento en un solo formulario (igual al de crear alerta).
  * Sin fecha, alcance o participantes el evento queda en Borrador; completo queda Programado.
  * El tipo se elige junto al inicio, como en alertas: el organizador crea simulacros (el tipo Simulacro queda fijo)
- * y el coordinador eventos reales (sin Simulacro). Un evento de un tipo no pasa al otro al editarlo.
+ * y el coordinador eventos reales (sin Simulacro). Quien tiene los dos permisos elige si crea un simulacro o un
+ * evento real. Un evento de un tipo no pasa al otro al editarlo (MS06 lo rechaza).
  */
 export default function EventForm({ session, editId }: { session: Session; editId?: string }) {
   const [form, setForm] = useState<Form>(EMPTY);
@@ -29,6 +30,8 @@ export default function EventForm({ session, editId }: { session: Session; editI
   const [catalogTypes, setCatalogTypes] = useState<EventType[]>([]);
   const [knownTypes, setKnownTypes] = useState<EventType[]>([]);
   const [isDrill, setIsDrill] = useState(canManageDrills(session));
+  // Organizer and coordinator at the same time: a new event can be a drill or a real event.
+  const canChooseKind = !editId && canManageDrills(session) && canManageRealEvents(session);
   const [typesError, setTypesError] = useState('');
   const [typesAttempt, setTypesAttempt] = useState(0);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -49,7 +52,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
     // Ids already in the event that MS02 no longer lists (inactive or old demo ids) stay visible so they can be removed.
     const extra = form.scope
       .filter((s) => !live.some((i) => i.id === s.id))
-      .map((s) => ({ id: s.id, label: scopeLabel(s.id), group: 'Fuera del catálogo' }));
+      .map((s) => ({ id: s.id, label: scopeLabelIn(s.id, catalog), group: 'Fuera del catálogo' }));
     return [...live, ...extra];
   }, [catalog, form.scope]);
 
@@ -62,7 +65,8 @@ export default function EventForm({ session, editId }: { session: Session; editI
           scope: event.scope, roles: event.participantRoles,
         });
         setStatus(event.status);
-        setTypeIds(event.types.map((t) => t.id));
+        // The kind (drill or real) is shown apart: the list keeps only the emergency types
+        setTypeIds(event.types.filter((t) => t.code !== 'SIMULACRO').map((t) => t.id));
         setKnownTypes(event.types);
         setIsDrill(event.simulacro);
       })
@@ -78,26 +82,36 @@ export default function EventForm({ session, editId }: { session: Session; editI
     return () => { ignore = true; };
   }, [session, typesAttempt]);
 
-  // A drill always carries SIMULACRO and a real event never offers it.
+  // The picker offers only the emergency types. SIMULACRO is not a type to pick: it is the kind of event, chosen with
+  // «Clase de evento» (or given by the permission) and added when the event is saved.
   const typeItems = useMemo<CatalogItem[]>(() => {
     const byId = new Map<string, EventType>();
     [...catalogTypes, ...knownTypes].forEach((t) => byId.set(t.id, t));
     return [...byId.values()]
-      .filter((t) => (isDrill ? true : t.code !== 'SIMULACRO'))
-      .map((t) => ({ id: t.id, label: t.name, group: t.code === 'SIMULACRO' ? 'Simulacro' : 'Emergencia' }));
-  }, [catalogTypes, knownTypes, isDrill]);
+      .filter((t) => t.code !== 'SIMULACRO')
+      .map((t) => ({ id: t.id, label: t.name, group: 'Emergencia' }));
+  }, [catalogTypes, knownTypes]);
   const drillTypeId = catalogTypes.concat(knownTypes).find((t) => t.code === 'SIMULACRO')?.id;
+  // MS06 accepts up to 4 types; a drill uses one of them for SIMULACRO
+  const maxTypes = isDrill ? 3 : 4;
 
-  // New event: start with the type that matches the role (Simulacro for the organizer, Otro for the coordinator).
+  // New real event: start with «Otro», as before. A new drill starts with only its kind.
   useEffect(() => {
-    if (editId || typeIds.length || !catalogTypes.length) return;
-    const first = catalogTypes.find((t) => t.code === (isDrill ? 'SIMULACRO' : 'OTRO'));
-    if (first) setTypeIds([first.id]);
+    if (editId || isDrill || typeIds.length || !catalogTypes.length) return;
+    const other = catalogTypes.find((t) => t.code === 'OTRO');
+    if (other) setTypeIds([other.id]);
   }, [editId, typeIds.length, catalogTypes, isDrill]);
 
+  // Switching the kind keeps the chosen emergency types (at most 3 for a drill).
+  const chooseKind = (drill: boolean) => {
+    if (drill === isDrill) return;
+    setIsDrill(drill);
+    setTypeIds((cur) => (drill ? cur.slice(0, 3) : cur));
+    setErrors((e) => ({ ...e, typeIds: undefined }));
+  };
+
   const toggleType = (id: string) => {
-    if (id === drillTypeId && isDrill) return; // SIMULACRO is what makes it a drill: it stays selected
-    setTypeIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= 4 ? cur : [...cur, id]));
+    setTypeIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : cur.length >= maxTypes ? cur : [...cur, id]));
     setErrors((e) => ({ ...e, typeIds: undefined }));
   };
 
@@ -122,7 +136,6 @@ export default function EventForm({ session, editId }: { session: Session; editI
   const save = async () => {
     const local: FieldErrors = {};
     if (!form.name.trim()) local.name = 'Escriba el nombre del evento.';
-    if (!typeIds.length && catalogTypes.length) local.typeIds = 'Seleccione al menos un tipo.';
     if (form.start && !inProgress && new Date(form.start).getTime() <= Date.now()) local.startDate = 'La fecha de inicio debe ser posterior a la actual.';
     setErrors(local);
     if (Object.keys(local).length) return;
@@ -130,7 +143,8 @@ export default function EventForm({ session, editId }: { session: Session; editI
     setSaving(true);
     setMessage('');
     try {
-      const ids = typeIds.length ? typeIds : [await defaultTypeId(session)];
+      const kindId = isDrill ? drillTypeId ?? await defaultTypeId(session, true) : null;
+      const ids = kindId ? [kindId, ...typeIds] : typeIds.length ? typeIds : [await defaultTypeId(session, false)];
       const body = {
         name: form.name.trim(), description: form.description.trim() || null, typeIds: ids,
         startDate: fromLocalInput(form.start), scope: form.scope, participantRoles: form.roles,
@@ -171,14 +185,14 @@ export default function EventForm({ session, editId }: { session: Session; editI
           <h1>{editId ? 'Editar evento' : 'Crear evento'}</h1>
           <p>{inProgress
             ? 'El evento está en ejecución: al guardar se reenvían las alertas a brigadistas y participantes.'
-            : `${editId ? '' : canManageDrills(session) ? 'Se creará como simulacro. ' : 'Se creará como evento real. '}Con fecha, alcance y participantes completos queda Programado; si falta alguno, se guarda como Borrador.`}</p>
+            : `${editId ? '' : isDrill ? 'Se creará como simulacro. ' : 'Se creará como evento real. '}Con fecha, alcance y participantes completos queda Programado; si falta alguno, se guarda como Borrador.`}</p>
         </div>
       </header>
       <main className="ev-form">
         <form className="ev-fields" noValidate onSubmit={(e) => { e.preventDefault(); save(); }}>
           {finished && <p className="notice err" role="alert">Un evento Finalizado no se puede editar.</p>}
           {inProgress && (
-            <div className="ev-warn" role="note"><b>El evento está en ejecución.</b> Si cambias el alcance, los brigadistas deberán confirmar su zona y se avisará a los participantes nuevos.</div>
+            <div className="ev-warn" role="note"><b>El evento está en ejecución.</b> Si cambia el alcance, los brigadistas deberán confirmar su zona y se avisará a los participantes nuevos.</div>
           )}
           <div className="field">
             <label htmlFor="ev-name">Nombre del evento <span className="req">*</span></label>
@@ -190,6 +204,20 @@ export default function EventForm({ session, editId }: { session: Session; editI
             <div className={`input area${errors.description ? ' bad' : ''}`}><textarea id="ev-desc" rows={3} maxLength={1000} value={form.description} onChange={(e) => set('description', e.target.value)} /></div>
             <span className="help">{form.description.length}/1000 · opcional</span>
           </div>
+          <div className="field">
+            <span className="flabel" id="ev-kind">Clase de evento</span>
+            {canChooseKind ? (
+              <div className="ev-tabs" role="group" aria-labelledby="ev-kind">
+                <button type="button" className="ev-tab" aria-pressed={isDrill} onClick={() => chooseKind(true)}>Simulacro</button>
+                <button type="button" className="ev-tab" aria-pressed={!isDrill} onClick={() => chooseKind(false)}>Evento real</button>
+              </div>
+            ) : <span className="st DRAFT" style={{ alignSelf: 'flex-start' }}>{isDrill ? 'Simulacro' : 'Evento real'}</span>}
+            <span className="help">{editId
+              ? 'Un evento guardado no cambia de clase.'
+              : canChooseKind
+                ? 'Elija si es un simulacro o un evento real. No se puede cambiar después de guardar.'
+                : isDrill ? 'Su rol crea simulacros.' : 'Su rol crea eventos reales.'}</span>
+          </div>
           <div className="two">
             <div className="field">
               <label htmlFor="ev-start">Inicio</label>
@@ -198,7 +226,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
                 ? <span className="error" role="alert">{errors.startDate}</span>
                 : <span className="help">A esta hora inicia el evento y se avisa a los participantes.</span>}
             </div>
-            <PickerBox label="Tipo de evento" help={isDrill ? 'El simulacro siempre lleva su tipo; puede sumar hasta 3 más.' : 'Elija hasta 4 tipos de emergencia.'}
+            <PickerBox label="Tipo de emergencia" help={isDrill ? 'Opcional: la emergencia que se simula (hasta 3).' : 'Elija hasta 4 tipos de emergencia; sin tipo queda «Otro».'}
               editLabel="Editar tipo" items={typeItems} selected={typeIds} onToggle={toggleType} error={errors.typeIds} loading={!typeItems.length && !typesError} />
           </div>
           {typesError && (
@@ -246,7 +274,8 @@ export default function EventForm({ session, editId }: { session: Session; editI
               <p className="clamp">{form.description.trim() || 'Agregue la descripción que verán los participantes.'}</p>
             </div>
             <div className="sep" />
-            <div className="sum2-row"><small>Tipo</small><span>{typeIds.length ? listEs(typeIds.map((t) => labelOf(typeItems, t))) : '—'}</span></div>
+            <div className="sum2-row"><small>Clase</small><span>{isDrill ? 'Simulacro' : 'Evento real'}</span></div>
+            <div className="sum2-row"><small>Tipo de emergencia</small><span>{typeIds.length ? listEs(typeIds.map((t) => labelOf(typeItems, t))) : isDrill ? '—' : 'Otro'}</span></div>
             <div className="sum2-row"><small>Inicio</small><span>{form.start ? new Date(form.start).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</span></div>
             <div className="sum2-row"><small>Edificios y zonas</small><span>{form.scope.length ? form.scope.map((s) => labelOf(scopeItems, s.id)).join(' · ') : '—'}</span></div>
             <div className="sum2-row"><small>Participantes</small><span>{form.roles.length ? listEs(form.roles.map((r) => labelOf(participantItems, r))) : '—'}</span></div>

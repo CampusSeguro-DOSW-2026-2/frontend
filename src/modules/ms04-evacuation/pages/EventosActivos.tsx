@@ -51,7 +51,7 @@ export default function EventosActivos({ session }: { session: Session }) {
 
   return (
     <>
-      <PageHeader badge="CHECK-IN" title="Reportar mi estado" subtitle="Eventos activos que te aplican" />
+      <PageHeader badge="CHECK-IN" title="Reportar mi estado" subtitle="Eventos activos que le aplican" />
       <main className="content">
         {carga.estado === 'cargando' && <p className="notice" role="status">Consultando los eventos activos…</p>}
 

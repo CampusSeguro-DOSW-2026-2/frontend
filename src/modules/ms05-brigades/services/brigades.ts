@@ -1,4 +1,4 @@
-import { API_URL, ApiError, NETWORK_ERROR, request } from '../../../shared/services/http';
+import { API_URL, ApiError, NETWORK_ERROR, request, userText } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import type {
   ActivacionResponse, Asignacion, Autoasignacion, AutoasignacionEvento, BrigadistaGestion, BusquedaBrigadistas, EstadoBrigadista,
@@ -77,6 +77,25 @@ export const brigadesApi = {
       fields: { prioridadId: 'prioridad', ubicacionId: 'ubicacion', tipoUbicacion: 'ubicacion', descripcion: 'descripcion', nombreAfectado: 'nombreAfectado' },
     }) as Promise<Incidente>,
 
+  /** La coordinación asigna o cambia el brigadista responsable de un incidente que no está resuelto ni cerrado. */
+  asignarResponsable: (session: Session, eventoId: string, incidenteId: string, responsableId: string) =>
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/responsable`, {
+      method: 'PATCH', session, body: { responsableId },
+    }),
+
+  /** La coordinación cierra un incidente ya resuelto. */
+  cerrarIncidente: (session: Session, eventoId: string, incidenteId: string) =>
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/cerrar`, { method: 'POST', session }),
+
+  /**
+   * Completa una solicitud propia (PUT): la prioridad y la descripción de la solicitud que MS04 creó desde el check-in
+   * «Requiero asistencia». Los campos que no se envían quedan igual.
+   */
+  completarIncidente: (session: Session, eventoId: string, incidenteId: string, body: { prioridadId?: number; descripcion?: string }) =>
+    request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}`, {
+      method: 'PUT', session, body, fields: { prioridadId: 'prioridad', descripcion: 'descripcion' },
+    }) as Promise<Incidente>,
+
   /**
    * Incidentes del evento según el rol (MS05 filtra): el coordinador, el organizador y el auditor ven todos;
    * el brigadista, los que reportó, los que tiene asignados y los de sus zonas.
@@ -118,7 +137,7 @@ export const brigadesApi = {
     }
     const data = await res.json().catch(() => null) as { mensaje?: string } | null;
     if (!res.ok) {
-      throw new ApiError(res.status, data?.mensaje || `No se pudo subir "${archivo.name}".`);
+      throw new ApiError(res.status, userText(data?.mensaje ?? '') || `No se pudo subir "${archivo.name}".`);
     }
     return data as unknown as Evidencia;
   },

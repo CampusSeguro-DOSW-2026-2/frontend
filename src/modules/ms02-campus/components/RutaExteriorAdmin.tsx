@@ -73,7 +73,7 @@ function GeneradorRutas() {
       <h4>Generar rutas del campus</h4>
       <p className="cs-resumen">
         Cada salida se conecta con sus zonas seguras más cercanas. Normalmente no hace falta pulsar nada: las rutas se
-        generan solas al crear o mover una salida o una zona segura (la zona necesita coordenadas). Usa esto para completar
+        generan solas al crear o mover una salida o una zona segura (la zona necesita coordenadas). Use esto para completar
         lo que haya faltado, por ejemplo si el servicio de mapas no respondió.
       </p>
       <div className="cs-form-botones">
@@ -87,7 +87,7 @@ function GeneradorRutas() {
       {resumen && (
         <p className={`cs-alert ${resumen.interrumpida ? 'warn' : 'info'}`} role="status">
           {resumen.interrumpida
-            ? 'El servicio de mapas dejó de responder y se detuvo la generación. Vuelve a intentarlo en unos minutos; solo se calcularán las que falten.'
+            ? 'El servicio de mapas dejó de responder y se detuvo la generación. Vuelva a intentarlo en unos minutos; solo se calcularán las que falten.'
             : resumen.generadas === 0 && resumen.omitidas === 0
               ? 'No hay rutas pendientes: las salidas disponibles ya tienen las suyas, o todavía no hay zonas seguras con coordenadas.'
               : `${plural(resumen.generadas, 'ruta generada', 'rutas generadas')}.`}
@@ -100,7 +100,7 @@ function GeneradorRutas() {
       )}
       {error && (seCortoLaEspera(error)
         ? <p className="cs-alert info" role="status">
-            La generación puede seguir en segundo plano aunque la respuesta tardó demasiado. Revisa las rutas guardadas de
+            La generación puede seguir en segundo plano aunque la respuesta tardó demasiado. Revise las rutas guardadas de
             una salida en un momento.
           </p>
         : <Falla error={error} />)}
@@ -178,15 +178,15 @@ export function RutaExteriorAdmin({ edificios, zonas, puedeCalcular }: {
 
   const validar = () => {
     const e: Errores = {};
-    if (!salidaId) e.salidaId = 'Selecciona la salida de origen.';
-    if (!zonaId) e.zonaSeguraId = 'Selecciona la zona segura de destino.';
+    if (!salidaId) e.salidaId = 'Seleccione la salida de origen.';
+    if (!zonaId) e.zonaSeguraId = 'Seleccione la zona segura de destino.';
     return e;
   };
 
-  const sinSalidas = !edificioId ? 'Selecciona primero un edificio'
+  const sinSalidas = !edificioId ? 'Seleccione primero un edificio'
     : salidas === null ? 'Cargando salidas…'
     : salidas.length === 0 ? 'Este edificio no tiene salidas disponibles'
-    : 'Selecciona una salida';
+    : 'Seleccione una salida';
 
   return (
     <section className="cs-piso" aria-label="Ruta exterior">
@@ -201,7 +201,7 @@ export function RutaExteriorAdmin({ edificios, zonas, puedeCalcular }: {
         <div className="cs-campos">
           <Campo id="exterior-edificio" etiqueta="Edificio">
             <select id="exterior-edificio" value={edificioId} onChange={(e) => elegirEdificio(e.target.value)}>
-              <option value="">Selecciona un edificio</option>
+              <option value="">Seleccione un edificio</option>
               {edificios.filter((e) => e.estado === 'ACTIVO').map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
             </select>
           </Campo>
@@ -214,7 +214,7 @@ export function RutaExteriorAdmin({ edificios, zonas, puedeCalcular }: {
           {puedeCalcular && (
             <Campo id="exterior-zona" etiqueta="Zona segura de destino" error={errores.zonaSeguraId}>
               <select id="exterior-zona" value={zonaId} onChange={(e) => setZonaId(e.target.value)}>
-                <option value="">Selecciona una zona</option>
+                <option value="">Seleccione una zona</option>
                 {zonasActivas.map((z) => (
                   <option key={z.id} value={z.id} disabled={!tieneCoordenadas(z)}>
                     {z.codigo} · {z.nombre}{tieneCoordenadas(z) ? '' : ' (sin coordenadas)'}

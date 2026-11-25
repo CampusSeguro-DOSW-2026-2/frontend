@@ -68,7 +68,9 @@ function menuFor(permissions: string[]): MenuSection[] {
   }
 
   // Event list of MS04 (RF-MS04-13)
-  if (can(PERMISSION.MS04_DASHBOARD_READ)) {
+  // Quien ve Eventos sigue la evacuación desde «Ver en vivo» (mismo panel de MS04): no se duplica la entrada.
+  // El brigadista, que no ve Eventos, conserva este acceso limitado a sus zonas.
+  if (can(PERMISSION.MS04_DASHBOARD_READ) && !canReadEvents) {
     sections.push({ title: 'Evacuación', items: [{ href: '#/evacuacion/eventos', icon: <CalendarIcon />, label: 'Eventos de evacuación' }] });
   }
 
@@ -108,7 +110,8 @@ function menuFor(permissions: string[]): MenuSection[] {
 
   // MS08: indicators and audit, of drills or real events (MS08 returns only the kind each permission allows)
   const analyticsItems: MenuItem[] = [];
-  if (can(PERMISSION.MS08_INDICATORS_DRILL_READ, PERMISSION.MS08_INDICATORS_REAL_EVENT_READ)) {
+  // Indicadores elige los eventos de la lista de MS06: sin poder leer eventos, la pantalla no sirve y no se muestra
+  if (can(PERMISSION.MS08_INDICATORS_DRILL_READ, PERMISSION.MS08_INDICATORS_REAL_EVENT_READ) && canReadEvents) {
     analyticsItems.push({ href: '#/indicadores', icon: <ClipboardCheck />, label: 'Indicadores' });
   }
   if (can(PERMISSION.MS08_AUDIT_DRILL_READ, PERMISSION.MS08_AUDIT_REAL_EVENT_READ)) {

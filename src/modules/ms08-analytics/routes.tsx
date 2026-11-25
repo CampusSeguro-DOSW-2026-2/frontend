@@ -17,6 +17,9 @@ const NO_ACCESS = <main className="page"><p className="notice err" role="alert">
  */
 export const AUDIT_PERMISSIONS = [PERMISSION.MS08_AUDIT_DRILL_READ, PERMISSION.MS08_AUDIT_REAL_EVENT_READ];
 export const INDICATORS_PERMISSIONS = [PERMISSION.MS08_INDICATORS_DRILL_READ, PERMISSION.MS08_INDICATORS_REAL_EVENT_READ];
+/** Indicadores elige los eventos de la lista de MS06: hace falta también poder leer eventos (igual que el menú). */
+export const EVENT_READ_PERMISSIONS = [PERMISSION.MS06_DRILL_READ, PERMISSION.MS06_REAL_EVENT_READ,
+  PERMISSION.MS06_DRILL_MANAGE, PERMISSION.MS06_REAL_EVENT_MANAGE];
 
 /** Rutas de MS08 (Analítica y auditoría). Devuelve undefined si la ruta no es de este módulo. */
 export function analyticsRoutes(route: string, session: Session | null): ReactNode | undefined {
@@ -27,7 +30,7 @@ export function analyticsRoutes(route: string, session: Session | null): ReactNo
   }
 
   if (route === '/indicadores' || route.startsWith('/indicadores/')) {
-    if (!hasPermission(session, ...INDICATORS_PERMISSIONS)) return NO_ACCESS;
+    if (!hasPermission(session, ...INDICATORS_PERMISSIONS) || !hasPermission(session, ...EVENT_READ_PERMISSIONS)) return NO_ACCESS;
     const multi = route.match(/^\/indicadores\/(comparar|ubicaciones)\/([^/]+)$/);
     if (multi) {
       // Ids distintos y con formato UUID, hasta 10 (MS08 valida lo mismo)

@@ -31,11 +31,11 @@ function SalidaForm({ inicial, pisos, onGuardar, onCancelar }: {
 
   const validar = () => {
     const e: Errores = {};
-    if (!pisoId) e.pisoId = 'Selecciona el piso desde el que se sale.';
+    if (!pisoId) e.pisoId = 'Seleccione el piso desde el que se sale.';
     if (!nombre.trim()) e.nombre = 'El nombre es obligatorio.';
     else if (nombre.trim().length > 100) e.nombre = 'El nombre no puede superar 100 caracteres.';
-    if (lat === null || lat < -90 || lat > 90) e.latitud = 'Escribe una latitud entre -90 y 90, por ejemplo 4.78271.';
-    if (lng === null || lng < -180 || lng > 180) e.longitud = 'Escribe una longitud entre -180 y 180, por ejemplo -74.04263.';
+    if (lat === null || lat < -90 || lat > 90) e.latitud = 'Escriba una latitud entre -90 y 90, por ejemplo 4.78271.';
+    if (lng === null || lng < -180 || lng > 180) e.longitud = 'Escriba una longitud entre -180 y 180, por ejemplo -74.04263.';
     return e;
   };
 
@@ -47,7 +47,7 @@ function SalidaForm({ inicial, pisos, onGuardar, onCancelar }: {
       <div className="cs-campos">
         <Campo id={`salida-piso-${id}`} etiqueta="Piso desde el que se sale" error={errores.pisoId}>
           <select id={`salida-piso-${id}`} value={pisoId} onChange={(e) => setPisoId(e.target.value)}>
-            <option value="">Selecciona un piso</option>
+            <option value="">Seleccione un piso</option>
             {pisos.map((p) => <option key={p.id} value={p.id}>Piso {p.numero}{p.nombre ? ` · ${p.nombre}` : ''}</option>)}
           </select>
         </Campo>
@@ -152,7 +152,7 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
         <p className="cs-alert info">
           {salidas.length === 0
             ? 'Este edificio todavía no tiene salidas. Sin una salida no se puede calcular la ruta exterior.'
-            : 'Todas las salidas están inactivas. Marca «Mostrar inactivos» para verlas.'}
+            : 'Todas las salidas están inactivas. Marque «Mostrar inactivos» para verlas.'}
         </p>
       ) : (
         <div className="cs-tabla">

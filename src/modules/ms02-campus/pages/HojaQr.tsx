@@ -73,7 +73,7 @@ export default function HojaQr({ edificioId }: { edificioId: string }) {
     <>
       <div className="no-imprimir">
         <PageHeader badge="ADMINISTRACIÓN" title={`Códigos QR${edificio ? ` · ${edificio.nombre}` : ''}`}
-          subtitle="Imprime y pega cada código en su salón o salida. Al escanearlo se ve la guía de evacuación."
+          subtitle="Imprima y pegue cada código en su salón o salida. Al escanearlo se ve la guía de evacuación."
           context={<a className="cs-volver" href={`#/admin/edificios/${edificioId}`}>← Detalle del edificio</a>} />
       </div>
       <main className="content">

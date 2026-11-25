@@ -7,6 +7,7 @@ import type { Session } from '../../../shared/types';
 import { USE_MS03, activeAlertApi, type ActiveAlert } from '../../ms03-alerts/services/activeAlert';
 import { AccionesEvento } from '../components/AccionesEvento';
 import { OtrosEventos } from '../components/OtrosEventos';
+import { eventsApi } from '../../ms06-drills/services/events';
 import { checkinApi } from '../services/checkin';
 import type { Evento } from '../types';
 import { fechaHora, textoEstadoEvento, tipoEvento } from '../utils/labels';
@@ -16,9 +17,14 @@ import '../styles/checkin.css';
 /** Cada cuánto se vuelve a consultar si empezó o terminó un evento o una alerta. */
 const CONSULTA_MS = 10000;
 
+/** Evento en ejecución para quien lo sigue sin estar convocado (auditor, coordinación): nombre, tipo y a dónde ir. */
+interface EnSeguimiento { id: string; nombre: string; simulacro: boolean; inicio: string | null; href: string; accion: string }
+
 interface EnCurso {
   /** Eventos en ejecución que convocan al usuario (MS04), del más reciente al más antiguo. */
   eventos: Evento[];
+  /** Eventos en ejecución que el usuario puede seguir aunque no esté convocado (MS06 o el panel de MS04). */
+  seguimiento: EnSeguimiento[];
   /** Alerta activa más reciente dirigida al usuario (MS03), o null. */
   alerta: ActiveAlert | null;
 }
@@ -41,11 +47,34 @@ export default function Inicio({ session }: { session: Session }) {
   const puedeReportar = hasPermission(session, PERMISSION.MS04_CHECKIN_WRITE);
   // Sin MS03 activo (VITE_USE_MS03) el servicio de alertas solo tiene una alerta de demostración: no se muestra
   const puedeVerAlertas = USE_MS03 && hasPermission(session, PERMISSION.MS03_ALERT_RECEIVE);
+  // Seguir eventos sin estar convocado: «Ver en vivo» de Eventos (MS06) o, si no, el panel de evacuación (MS04)
+  const puedeVerEnVivo = hasPermission(session, PERMISSION.MS06_DRILL_READ, PERMISSION.MS06_REAL_EVENT_READ,
+    PERMISSION.MS06_DRILL_MANAGE, PERMISSION.MS06_REAL_EVENT_MANAGE);
+  const puedeVerPanel = hasPermission(session, PERMISSION.MS04_DASHBOARD_READ);
+
+  const enSeguimiento = useCallback(async (): Promise<EnSeguimiento[]> => {
+    if (puedeVerEnVivo) {
+      const pagina = await eventsApi.search(session, { status: 'IN_PROGRESS', size: 20 });
+      return pagina.content.map((e) => ({
+        id: e.id, nombre: e.name, simulacro: e.simulacro, inicio: e.startedAt ?? e.startDate,
+        href: `#/eventos/${encodeURIComponent(e.id)}`, accion: 'Ver en vivo',
+      }));
+    }
+    if (puedeVerPanel) {
+      const pagina = await checkinApi.listarEventos(session, { estado: 'EN_EJECUCION', page: 0, size: 20 });
+      return pagina.contenido.map((e) => ({
+        id: e.evento_id, nombre: e.nombre, simulacro: e.simulacro, inicio: e.fecha_inicio,
+        href: `#/evacuacion/eventos/${encodeURIComponent(e.evento_id)}`, accion: 'Ver seguimiento',
+      }));
+    }
+    return [];
+  }, [session, puedeVerEnVivo, puedeVerPanel]);
 
   const consultar = useCallback(async () => {
-    const [eventos, alerta] = await Promise.allSettled([
+    const [eventos, alerta, seguimiento] = await Promise.allSettled([
       puedeVerEventos ? checkinApi.eventosActivos(session) : Promise.resolve<Evento[]>([]),
       puedeVerAlertas ? activeAlertApi.getActiveAlert() : Promise.resolve(null),
+      enSeguimiento(),
     ]);
     // Si una consulta falla se conserva lo último que se supo de esa fuente
     setEnCurso((previo) => ({
@@ -53,10 +82,11 @@ export default function Inicio({ session }: { session: Session }) {
         ? [...eventos.value].sort((a, b) => fechaDe(b) - fechaDe(a))
         : previo?.eventos ?? [],
       alerta: alerta.status === 'fulfilled' ? alerta.value : previo?.alerta ?? null,
+      seguimiento: seguimiento.status === 'fulfilled' ? seguimiento.value : previo?.seguimiento ?? [],
     }));
-    const fallo = [eventos, alerta].find((r): r is PromiseRejectedResult => r.status === 'rejected');
+    const fallo = [eventos, alerta, seguimiento].find((r): r is PromiseRejectedResult => r.status === 'rejected');
     setError(fallo ? errorMessage(fallo.reason) : '');
-  }, [session, puedeVerEventos, puedeVerAlertas]);
+  }, [session, puedeVerEventos, puedeVerAlertas, enSeguimiento]);
 
   useEffect(() => {
     void consultar();
@@ -102,13 +132,46 @@ export default function Inicio({ session }: { session: Session }) {
     );
   }
 
+  // No está convocado, pero sigue los eventos en curso (auditoría, coordinación, organización, brigada)
+  if (enCurso.seguimiento.length > 0) {
+    const n = enCurso.seguimiento.length;
+    return (
+      <>
+        <PageHeader badge="EVENTOS EN CURSO" title={n === 1 ? 'Hay 1 evento en ejecución' : `Hay ${n} eventos en ejecución`}
+          subtitle="Siga el estado de las personas y los incidentes de cada evento." />
+        <main className="content">
+          {aviso}
+          <section className="chk-otros" aria-label="Eventos en ejecución">
+            <ul>
+              {enCurso.seguimiento.map((e) => (
+                <li key={e.id} className="chk-otro">
+                  <span className="tag">{tipoEvento(e.simulacro).toUpperCase()}</span>
+                  <div className="chk-otro-txt">
+                    <b>{e.nombre}</b>
+                    {e.inicio && <small>Iniciado: {fechaHora(e.inicio)}</small>}
+                  </div>
+                  <a className="btn white chk-otro-ir" href={e.href}>{e.accion} →</a>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <AccionesEvento session={session} />
+        </main>
+      </>
+    );
+  }
+
   const { alerta } = enCurso;
+  // «El campus está seguro» solo lo dice quien puede ver eventos o alertas; otro rol ve un inicio neutro
+  const puedeSaber = puedeVerEventos || puedeVerAlertas || puedeVerEnVivo || puedeVerPanel;
   return (
     <>
       {alerta
         ? <PageHeader badge="ALERTA · ACTIVA" title={alerta.title} subtitle="Alerta activa en el campus"
             context={`Iniciada: ${fechaHora(alerta.startedAt)}`} />
-        : <PageHeader badge="SIN EVENTOS EN CURSO" title="El campus está seguro" subtitle="No hay alertas activas." />}
+        : puedeSaber
+          ? <PageHeader badge="SIN EVENTOS EN CURSO" title="El campus está seguro" subtitle="No hay eventos ni alertas activas." />
+          : <PageHeader badge="INICIO" title="Bienvenido a CampusSeguro" subtitle="Use el menú para ir a las secciones que administra." />}
       <main className="content">{aviso}<AccionesEvento session={session} /></main>
     </>
   );

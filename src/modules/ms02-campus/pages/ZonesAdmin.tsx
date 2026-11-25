@@ -47,14 +47,14 @@ function ZonaForm({ inicial, zonasAbiertas, onGuardar, onCancelar }: {
     if (!ubicacion.trim()) e.ubicacion = 'La ubicación es obligatoria.';
     else if (ubicacion.trim().length > 255) e.ubicacion = 'La ubicación no puede superar 255 caracteres.';
     if (!descripcion.trim()) e.descripcion = 'La descripción es obligatoria.';
-    if (!/^\d+$/.test(capacidad.trim()) || Number(capacidad.trim()) < 1) e.capacidad = 'Escribe una capacidad entera mayor que 0.';
+    if (!/^\d+$/.test(capacidad.trim()) || Number(capacidad.trim()) < 1) e.capacidad = 'Escriba una capacidad entera mayor que 0.';
     const lat = leerCoordenada(latitud, 'latitud');
     const lon = leerCoordenada(longitud, 'longitud');
     if (typeof lat === 'string') e.latitud = lat;
     if (typeof lon === 'string') e.longitud = lon;
     // El backend exige las dos juntas o ninguna.
-    if (lat === undefined && lon !== undefined) e.latitud = 'Escribe también la latitud.';
-    if (lon === undefined && lat !== undefined) e.longitud = 'Escribe también la longitud.';
+    if (lat === undefined && lon !== undefined) e.latitud = 'Escriba también la latitud.';
+    if (lon === undefined && lat !== undefined) e.longitud = 'Escriba también la longitud.';
     return e;
   };
 

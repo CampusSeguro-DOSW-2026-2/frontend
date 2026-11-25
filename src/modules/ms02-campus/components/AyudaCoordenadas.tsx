@@ -79,8 +79,8 @@ export function AyudaCoordenadas({ latitud, longitud, onElegir }: {
           </MapContainer>
           <p className="cs-sub" role="status">
             {elegida
-              ? `Coordenadas copiadas a los campos: ${elegida}. Haz clic en otro punto para cambiarlas.`
-              : 'Haz clic en el punto exacto y las coordenadas se copian solas a los campos de latitud y longitud.'}
+              ? `Coordenadas copiadas a los campos: ${elegida}. Haga clic en otro punto para cambiarlas.`
+              : 'Haga clic en el punto exacto y las coordenadas se copian solas a los campos de latitud y longitud.'}
           </p>
         </>
       )}
@@ -88,8 +88,8 @@ export function AyudaCoordenadas({ latitud, longitud, onElegir }: {
       {!(onElegir && verMapa) && (
         <p className="cs-sub">
           {onElegir
-            ? 'Usa «Elegir en el mapa» para marcar el punto y copiar las coordenadas automáticamente.'
-            : 'En OpenStreetMap, haz clic derecho sobre el punto exacto y elige «Centrar el mapa aquí»: la dirección del navegador queda como …#map=19/latitud/longitud. Copia esos dos números en los campos.'}
+            ? 'Use «Elegir en el mapa» para marcar el punto y copiar las coordenadas automáticamente.'
+            : 'En OpenStreetMap, haga clic derecho sobre el punto exacto y elija «Centrar el mapa aquí»: la dirección del navegador queda como …#map=19/latitud/longitud. Copie esos dos números en los campos.'}
         </p>
       )}
     </div>
