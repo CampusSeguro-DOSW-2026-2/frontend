@@ -11,11 +11,11 @@ import { useScopeCatalog } from '../hooks/useScopeCatalog';
 import AlertFilterBar from '../components/AlertFilterBar';
 
 // Estados con estilo propio en el estándar de listados (shared/styles.css). Un estado nuevo o histórico conserva su
-// etiqueta del catálogo de MS03 y se pinta como borrador. La alerta activa se muestra «En ejecución», en amarillo,
+// etiqueta del catálogo de MS03 y se pinta como borrador. La alerta activa se muestra «Enviada», en amarillo,
 // igual que el evento en ejecución de MS06.
 const STATUS_STYLE = ['DRAFT', 'SCHEDULED', 'ACTIVE', 'ARCHIVED'];
 const RUNNING = 'ACTIVE';
-const RUNNING_LABEL = 'En ejecución';
+const RUNNING_LABEL = 'Enviada';
 
 const errMsg = errorMessage;
 const PAGE_SIZE = 10;

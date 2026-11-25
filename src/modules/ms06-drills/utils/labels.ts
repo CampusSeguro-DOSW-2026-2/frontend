@@ -1,6 +1,6 @@
-import { SCOPE_ITEMS, UNKNOWN_PLACE, type ScopeCatalog } from '../../ms03-alerts/services/catalog';
+import { CAMPUS_ITEM, UNKNOWN_PLACE, type ScopeCatalog } from '../../ms03-alerts/services/catalog';
 import { isTechnicalId } from '../../../shared/utils/text';
-import type { EventStatus, ScopeItem } from '../types';
+import type { EventStatus } from '../types';
 
 export const STATUS_LABEL: Record<EventStatus, string> = {
   DRAFT: 'Borrador',
@@ -16,16 +16,15 @@ export const ROLE_LABEL: Record<string, string> = {
   BRIGADISTA: 'Brigadistas',
 };
 
-/** Edificios y zonas del catálogo de prueba (mismos ids que usa MS03). */
-export const SCOPE_OPTIONS: ScopeItem[] = SCOPE_ITEMS
-  .filter((i) => i.id !== 'CAMPUS')
-  .map((i) => ({ type: i.id.startsWith('ZON') ? 'ZONE' : 'BUILDING', id: i.id }));
-
-export const scopeLabel = (id: string) => SCOPE_ITEMS.find((i) => i.id === id)?.label ?? (isTechnicalId(id) ? UNKNOWN_PLACE : id);
+/** Texto de un lugar sin nombre en MS02: nunca se muestra un id técnico. */
+export const scopeLabel = (id: string) => {
+  if (id === CAMPUS_ITEM.id) return CAMPUS_ITEM.label;
+  return isTechnicalId(id) ? UNKNOWN_PLACE : id;
+};
 
 /**
  * Name of a building or zone from the live MS02 catalog (active ones first, then the inactive ones). Without a name
- * it falls back to the demo catalog and then to a generic text: a technical id is never shown.
+ * it falls back to a generic text: a technical id is never shown.
  */
 export const scopeLabelIn = (id: string, catalog?: ScopeCatalog | null) => {
   const live = catalog ? [...catalog.buildings, ...catalog.zones].find((i) => i.id === id) : undefined;

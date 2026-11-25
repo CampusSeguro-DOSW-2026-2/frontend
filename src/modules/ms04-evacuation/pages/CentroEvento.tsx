@@ -53,7 +53,7 @@ type Vigente =
  * Centro del evento en curso (RF-MS04-01 a RF-MS04-05, F-01): reúne lo que la persona necesita mientras el evento está
  * en ejecución. El check-in es de MS04; las rutas (MS02) y los incidentes (MS05) son accesos a sus propias pantallas,
  * visibles solo con su permiso. El mismo formulario registra el primer check-in y lo actualiza, con las cuatro
- * opciones siempre visibles. Elegir Me estoy evacuando o No estoy en el campus envía el reporte; Estoy a salvo pide el
+ * opciones siempre visibles. Elegir Estoy evacuando o No estoy en el campus envía el reporte; Estoy a salvo pide el
  * punto de encuentro y Requiero asistencia, el lugar (edificio o punto de encuentro de MS02), y elegirlo lo envía. Así
  * el reporte se completa en máximo 3 interacciones desde el menú (RNF-MS04-07).
  *

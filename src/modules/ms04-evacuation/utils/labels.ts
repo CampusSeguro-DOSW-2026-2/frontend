@@ -19,7 +19,7 @@ export const textoRol = (rol: string): string => rol;
 /** Texto que ve el usuario para cada estado, en el orden en que se muestran (F-01, RN-MS04-03). */
 export const ESTADOS: { codigo: EstadoCheckin; texto: string }[] = [
   { codigo: 'SAFE', texto: 'Estoy a salvo' },
-  { codigo: 'EVACUATING', texto: 'Me estoy evacuando' },
+  { codigo: 'EVACUATING', texto: 'Estoy evacuando' },
   { codigo: 'NEEDS_ASSISTANCE', texto: 'Requiero asistencia' },
   { codigo: 'OFF_CAMPUS', texto: 'No estoy en el campus' },
 ];
