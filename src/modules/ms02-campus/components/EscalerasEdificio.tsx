@@ -88,11 +88,11 @@ export default function EscalerasEdificio({
     setMensaje('');
 
     if (!nombre.trim()) {
-      setError('Escribe el nombre de la escalera.');
+      setError('Escriba el nombre de la escalera.');
       return;
     }
     if (pisoIds.length < 2) {
-      setError('Selecciona al menos dos pisos activos.');
+      setError('Seleccione al menos dos pisos activos.');
       return;
     }
 
@@ -131,7 +131,7 @@ export default function EscalerasEdificio({
     setMensaje('');
 
     if (disponibilidad !== 'DISPONIBLE' && !motivo.trim()) {
-      setError('Indica el motivo de la restricción.');
+      setError('Indique el motivo de la restricción.');
       return;
     }
 

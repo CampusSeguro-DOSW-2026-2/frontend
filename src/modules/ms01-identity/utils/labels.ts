@@ -63,7 +63,7 @@ export const PERMISSION_LABEL: Record<string, string> = {
   'ms02:safe_zone:write': 'Gestionar zonas seguras y puntos de encuentro (un mismo recurso)',
   'ms02:space:write': 'Gestionar espacios',
   'ms03:alert:manage': 'Crear, programar, activar, segmentar, modificar y finalizar alertas de cualquier tipo',
-  'ms03:alert:manage_drill': 'Igual que el anterior, solo para alertas de tipo SIMULACRO (originadas desde MS06)',
+  'ms03:alert:manage_drill': 'Igual que el anterior, solo para alertas de tipo SIMULACRO (originadas desde Eventos)',
   'ms03:alert:read_history': 'Consultar el historial de alertas',
   'ms03:alert:receive': 'Recibir alertas y confirmar su recepción',
   'ms04:assistance:request': 'Solicitar asistencia desde el check-in',

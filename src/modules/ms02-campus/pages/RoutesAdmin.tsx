@@ -33,8 +33,8 @@ type Datos = Awaited<ReturnType<typeof leer>>;
 const fecha = (iso: string) => new Date(iso).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
 
 function validarMotivo(estado: EstadoRuta | '', motivo: string, errores: Errores) {
-  if (!estado) errores.estado = 'Selecciona el estado de la ruta.';
-  else if (estado !== 'DISPONIBLE' && !motivo.trim()) errores.motivo = 'Escribe el motivo: es obligatorio si la ruta queda bloqueada o restringida.';
+  if (!estado) errores.estado = 'Seleccione el estado de la ruta.';
+  else if (estado !== 'DISPONIBLE' && !motivo.trim()) errores.motivo = 'Escriba el motivo: es obligatorio si la ruta queda bloqueada o restringida.';
   if (motivo.trim().length > 255) errores.motivo = 'El motivo no puede superar 255 caracteres.';
 }
 
@@ -46,7 +46,7 @@ function CamposEstado({ id, estado, motivo, errores, onEstado, onMotivo }: {
     <>
       <Campo id={`ruta-estado-${id}`} etiqueta="Estado" error={errores.estado}>
         <select id={`ruta-estado-${id}`} value={estado} onChange={(e) => onEstado(e.target.value as EstadoRuta | '')}>
-          <option value="">Selecciona un estado</option>
+          <option value="">Seleccione un estado</option>
           <option value="DISPONIBLE">Disponible</option>
           <option value="RESTRINGIDA">Restringida</option>
           <option value="BLOQUEADA">Bloqueada</option>
@@ -79,17 +79,17 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
   const zonasActivas = datos.zonas.filter((z) => z.estado === 'ACTIVO');
 
   const sinEspacios = () => {
-    if (!edificioId) return 'Selecciona primero un edificio';
+    if (!edificioId) return 'Seleccione primero un edificio';
     if (delEdificio.length === 0) return 'Este edificio no tiene espacios registrados';
     if (disponibles.length === 0) return 'Ningún espacio del edificio está disponible';
     if (espaciosLibres.length === 0) return 'Todos los espacios ya tienen ruta';
-    return 'Selecciona un espacio';
+    return 'Seleccione un espacio';
   };
 
   const validar = () => {
     const e: Errores = {};
-    if (!espacioId) e.espacioOrigenId = 'Selecciona el espacio de origen.';
-    if (!zonaId) e.zonaSeguraDestinoId = 'Selecciona la zona segura de destino.';
+    if (!espacioId) e.espacioOrigenId = 'Seleccione el espacio de origen.';
+    if (!zonaId) e.zonaSeguraDestinoId = 'Seleccione la zona segura de destino.';
     if (!descripcion.trim()) e.descripcion = 'Describe el recorrido.';
     else if (descripcion.trim().length > 1000) e.descripcion = 'El recorrido no puede superar 1000 caracteres.';
     validarMotivo(estado, motivo, e);
@@ -107,7 +107,7 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
       <div className="cs-campos">
         <Campo id="ruta-edificio-nueva" etiqueta="Edificio">
           <select id="ruta-edificio-nueva" value={edificioId} onChange={(e) => { setEdificioId(e.target.value); setEspacioId(''); }}>
-            <option value="">Selecciona un edificio</option>
+            <option value="">Seleccione un edificio</option>
             {datos.edificios.filter((e) => e.estado === 'ACTIVO').map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
           </select>
         </Campo>
@@ -119,7 +119,7 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
         </Campo>
         <Campo id="ruta-zona-nueva" etiqueta="Zona segura de destino" error={errores.zonaSeguraDestinoId}>
           <select id="ruta-zona-nueva" value={zonaId} onChange={(e) => setZonaId(e.target.value)}>
-            <option value="">Selecciona una zona</option>
+            <option value="">Seleccione una zona</option>
             {zonasActivas.map((z) => <option key={z.id} value={z.id}>{z.codigo} · {z.nombre}</option>)}
           </select>
         </Campo>
@@ -146,7 +146,7 @@ function ModificarRuta({ ruta, zonas, onGuardar, onCancelar }: {
 
   const validar = () => {
     const e: Errores = {};
-    if (!zonaId) e.zonaSeguraDestinoId = 'Selecciona la zona segura de destino.';
+    if (!zonaId) e.zonaSeguraDestinoId = 'Seleccione la zona segura de destino.';
     if (!descripcion.trim()) e.descripcion = 'Describe el recorrido.';
     else if (descripcion.trim().length > 1000) e.descripcion = 'El recorrido no puede superar 1000 caracteres.';
     return e;

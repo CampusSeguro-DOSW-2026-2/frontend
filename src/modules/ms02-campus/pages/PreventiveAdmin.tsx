@@ -26,11 +26,11 @@ function RecomendacionForm({ inicial, edificios, onGuardar, onCancelar }: {
 
   const validar = () => {
     const e: Errores = {};
-    if (ambito === 'EDIFICIO' && !edificioId) e.edificioId = 'Selecciona el edificio.';
-    if (ambito === 'TIPO_ESPACIO' && !tipo) e.tipoEspacio = 'Selecciona el tipo de espacio.';
+    if (ambito === 'EDIFICIO' && !edificioId) e.edificioId = 'Seleccione el edificio.';
+    if (ambito === 'TIPO_ESPACIO' && !tipo) e.tipoEspacio = 'Seleccione el tipo de espacio.';
     if (!titulo.trim()) e.titulo = 'El título es obligatorio.';
     else if (titulo.trim().length > 150) e.titulo = 'El título no puede superar 150 caracteres.';
-    if (!texto.trim()) e.recomendacion = 'Escribe la recomendación.';
+    if (!texto.trim()) e.recomendacion = 'Escriba la recomendación.';
     return e;
   };
 
@@ -56,14 +56,14 @@ function RecomendacionForm({ inicial, edificios, onGuardar, onCancelar }: {
         {ambito === 'EDIFICIO' ? (
           <Campo id={`rec-edificio-${id}`} etiqueta="Edificio" error={errores.edificioId}>
             <select id={`rec-edificio-${id}`} value={edificioId} onChange={(e) => setEdificioId(e.target.value)}>
-              <option value="">Selecciona un edificio</option>
+              <option value="">Seleccione un edificio</option>
               {edificios.map((e) => <option key={e.id} value={e.id}>{e.nombre}{e.estado === 'INACTIVO' ? ' (inactivo)' : ''}</option>)}
             </select>
           </Campo>
         ) : (
           <Campo id={`rec-tipo-${id}`} etiqueta="Tipo de espacio" error={errores.tipoEspacio}>
             <select id={`rec-tipo-${id}`} value={tipo} onChange={(e) => setTipo(e.target.value as TipoEspacio)}>
-              <option value="">Selecciona un tipo</option>
+              <option value="">Seleccione un tipo</option>
               {Object.entries(TIPOS).map(([valor, nombre]) => <option key={valor} value={valor}>{nombre}</option>)}
             </select>
           </Campo>
@@ -73,7 +73,7 @@ function RecomendacionForm({ inicial, edificios, onGuardar, onCancelar }: {
         </Campo>
       </div>
       <Campo id={`rec-texto-${id}`} etiqueta="Recomendación" error={errores.recomendacion}>
-        <textarea id={`rec-texto-${id}`} rows={4} value={texto} placeholder="Apaga los equipos, deja las mochilas y sal por la escalera más cercana." onChange={(e) => setTexto(e.target.value)} />
+        <textarea id={`rec-texto-${id}`} rows={4} value={texto} placeholder="Apague los equipos, deje las mochilas y salga por la escalera más cercana." onChange={(e) => setTexto(e.target.value)} />
       </Campo>
       {general && <Falla error={general} />}
       <Botones guardando={guardando} onCancelar={onCancelar} />

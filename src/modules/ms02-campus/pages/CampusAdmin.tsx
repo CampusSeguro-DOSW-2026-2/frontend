@@ -69,13 +69,13 @@ function ZonaAbiertaForm({ inicial, onGuardar, onCancelar }: {
     const e: Errores = {};
     if (!nombre.trim()) e.nombre = 'El nombre es obligatorio.';
     else if (nombre.trim().length > 100) e.nombre = 'El nombre no puede superar 100 caracteres.';
-    if (!tipo) e.tipo = 'Selecciona el tipo de zona.';
+    if (!tipo) e.tipo = 'Seleccione el tipo de zona.';
     const lat = leerCoordenada(latitud, 'latitud');
     const lon = leerCoordenada(longitud, 'longitud');
     if (typeof lat === 'string') e.latitud = lat;
     if (typeof lon === 'string') e.longitud = lon;
-    if (lat === undefined && lon !== undefined) e.latitud = 'Escribe también la latitud.';
-    if (lon === undefined && lat !== undefined) e.longitud = 'Escribe también la longitud.';
+    if (lat === undefined && lon !== undefined) e.latitud = 'Escriba también la latitud.';
+    if (lon === undefined && lat !== undefined) e.longitud = 'Escriba también la longitud.';
     return e;
   };
 
@@ -94,7 +94,7 @@ function ZonaAbiertaForm({ inicial, onGuardar, onCancelar }: {
         </Campo>
         <Campo id={`abierta-tipo-${id}`} etiqueta="Tipo" error={errores.tipo}>
           <select id={`abierta-tipo-${id}`} value={tipo} onChange={(e) => setTipo(e.target.value as TipoZonaAbierta | '')}>
-            <option value="">Selecciona un tipo</option>
+            <option value="">Seleccione un tipo</option>
             {(Object.keys(TIPOS_ZONA_ABIERTA) as TipoZonaAbierta[]).map((t) => <option key={t} value={t}>{TIPOS_ZONA_ABIERTA[t]}</option>)}
           </select>
         </Campo>

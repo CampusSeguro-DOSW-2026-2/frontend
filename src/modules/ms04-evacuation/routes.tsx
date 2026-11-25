@@ -8,7 +8,7 @@ import CentroEvento from './pages/CentroEvento';
 import PanelEvento from './pages/PanelEvento';
 import Inicio from './pages/Inicio';
 
-const SIN_ACCESO = <main className="page"><p className="notice err" role="alert">No tienes permisos para ver esta sección.</p></main>;
+const SIN_ACCESO = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
 
 /** Rutas de MS04. Devuelve undefined si la ruta no es de este módulo. */
 export function evacuationRoutes(route: string, session: Session | null): ReactNode | undefined {

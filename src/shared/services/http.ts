@@ -1,5 +1,6 @@
 import type { Session } from '../types';
 import { clearSession, getSession, setSessionNotice } from './session';
+import { withoutIds } from '../utils/text';
 
 /**
  * Cliente HTTP único de CampusSeguro. Todo el tráfico del frontend entra por el API Gateway
@@ -125,11 +126,28 @@ function parseDetails(value: unknown): ErrorDetail[] {
   return details;
 }
 
+const FIELD_ERROR = 'Revise este campo.';
+// Rastro técnico que no se muestra: nombres de servicios, excepciones o códigos HTTP
+const TECHNICAL = /\bMS0\d\b|exception|java\.|stack|HTTP \d{3}|null\b/i;
+// Palabras que solo aparecen en los mensajes en inglés de algunos servicios
+const ENGLISH = /\b(the|cannot|must|should|found|invalid|required|already|failed|is|are|was|not allowed|unavailable)\b/i;
+
+/**
+ * Texto del servidor apto para la persona: sin ids técnicos (UUID), sin rastro técnico y en español. Si no cumple,
+ * devuelve vacío y se usa el mensaje propio del código.
+ */
+export function userText(text: string): string {
+  const clean = withoutIds(text);
+  if (!clean || TECHNICAL.test(clean)) return '';
+  if (ENGLISH.test(clean) && !/[áéíóúñ¿¡]/i.test(clean)) return '';
+  return clean;
+}
+
 /** Mensaje para el usuario según el código del catálogo (Estándares §5) y el estado HTTP. */
 function messageFor(status: number, code: string, server: string, unmapped: ErrorDetail[]): string {
   switch (code) {
     case 'VALIDACION':
-      return unmapped.length > 0 ? unmapped[0].mensaje : VALIDATION_ERROR;
+      return unmapped.length > 0 && unmapped[0].mensaje !== FIELD_ERROR ? unmapped[0].mensaje : VALIDATION_ERROR;
     case 'CODIGO_INVALIDO':
       return INVALID_CODE_ERROR;
     case 'NO_AUTENTICADO':
@@ -187,13 +205,14 @@ function messageFor(status: number, code: string, server: string, unmapped: Erro
   return GENERIC_ERROR;
 }
 
-/** Los errores del servidor se acompañan de la referencia de la petición para que soporte pueda rastrearla. */
-function withReference(message: string, status: number, correlationId: string): string {
-  // El aviso de servicio no disponible se muestra tal cual se acordó, sin referencia
-  if (status >= 500 && correlationId && message !== SERVICE_UNAVAILABLE) {
-    return `${message} Referencia: ${correlationId}.`;
+/**
+ * La referencia de la petición (X-Correlation-ID) no se muestra en pantalla: es un id técnico. Queda en la consola del
+ * navegador y en el ApiError para que soporte pueda rastrear los errores del servidor.
+ */
+function logReference(status: number, code: string, correlationId: string): void {
+  if (status >= 500 && correlationId) {
+    console.warn(`Error ${status}${code ? ` ${code}` : ''} (correlation_id ${correlationId})`);
   }
-  return message;
 }
 
 function buildError(
@@ -205,8 +224,9 @@ function buildError(
   const data = isObject(body) ? body : {};
   // Los MS en Java (MS03, MS05, MS06) responden { code, message, details } en lugar de { codigo, mensaje, errores }
   const code = text(data.codigo) || text(data.code);
-  const server = text(data.mensaje);
-  const details = parseDetails(data.errores ?? data.details);
+  const server = userText(text(data.mensaje));
+  const details = parseDetails(data.errores ?? data.details)
+    .map((d) => ({ campo: d.campo, mensaje: userText(d.mensaje) || FIELD_ERROR }));
   const correlationId = text(data.correlation_id) || headerCorrelationId || '';
 
   const fields: FieldErrors = {};
@@ -220,7 +240,8 @@ function buildError(
     }
   }
 
-  const message = withReference(messageFor(status, code, server, unmapped), status, correlationId);
+  logReference(status, code, correlationId);
+  const message = messageFor(status, code, server, unmapped);
   return new ApiError(status, message, fields, code, details, correlationId);
 }
 

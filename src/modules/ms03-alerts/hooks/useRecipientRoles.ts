@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import type { CatalogItem } from '../services/catalog';
 import { cachedRecipientRoles, loadRecipientRoles } from '../services/recipients';
 
-const LOAD_ERROR = 'No se pudieron cargar los destinatarios desde MS01.';
-const STALE_NOTICE = 'MS01 no respondió: se muestran los destinatarios guardados en este navegador. Se actualizan cuando responda.';
+const LOAD_ERROR = 'No se pudieron cargar los destinatarios.';
+const STALE_NOTICE = 'El servicio de usuarios no respondió: se muestran los destinatarios guardados en este navegador. Se actualizan cuando responda.';
 
 /**
  * Roles destinatarios de MS01 (`GET /api/v1/roles/alert-recipients`), los que tienen `ms03:alert:receive`. Se consulta

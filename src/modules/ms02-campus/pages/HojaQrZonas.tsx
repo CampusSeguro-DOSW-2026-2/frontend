@@ -55,7 +55,7 @@ export default function HojaQrZonas({ zonaId }: { zonaId?: string }) {
     <>
       <div className="no-imprimir">
         <PageHeader badge="ADMINISTRACIÓN" title={zonaId && tarjetas?.length === 1 ? `Código QR · ${tarjetas[0].titulo}` : 'Códigos QR · Zonas seguras'}
-          subtitle="Imprime y pega el código en su punto de encuentro. Al escanearlo se ve cómo llegar."
+          subtitle="Imprima y pegue el código en su punto de encuentro. Al escanearlo se ve cómo llegar."
           context={<a className="cs-volver" href="#/admin/zonas">← Zonas seguras</a>} />
       </div>
       <main className="content">

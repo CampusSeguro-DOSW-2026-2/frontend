@@ -19,7 +19,7 @@ const LOCATIONS_PATH = '/api/v1/analytics/locations';
 /** Filtro de la pantalla → parámetro de consulta de MS08. */
 const AUDIT_PARAMS: Record<keyof AuditFilters, string> = {
   desde: 'desde', hasta: 'hasta', modulo: 'modulo', accion: 'accion', usuarioId: 'usuario_id', eventoId: 'evento_id',
-  tipoEvento: 'tipo_evento', correlationId: 'correlation_id',
+  tipoEvento: 'tipo_evento',
 };
 
 /** Campo de un error 400 de MS08 → filtro de la pantalla, para marcarlo. */
@@ -171,7 +171,6 @@ export const analyticsApi = {
     if (filters.accion.trim()) q.set(AUDIT_PARAMS.accion, filters.accion.trim().toUpperCase());
     if (filters.usuarioId.trim()) q.set(AUDIT_PARAMS.usuarioId, filters.usuarioId.trim().toLowerCase());
     if (filters.eventoId.trim()) q.set(AUDIT_PARAMS.eventoId, filters.eventoId.trim().toLowerCase());
-    if (filters.correlationId.trim()) q.set(AUDIT_PARAMS.correlationId, filters.correlationId.trim().toLowerCase());
     q.set('page', String(page));
     q.set('size', String(size));
     return toPage(await request(`${AUDIT_PATH}?${q}`, { session, fields: AUDIT_FIELDS }), toAuditRecord);

@@ -32,7 +32,7 @@ function EdificioForm({ inicial, campuses, onGuardar, onCancelar }: {
     const e: Errores = {};
     if (!nombre.trim()) e.nombre = 'El nombre es obligatorio.';
     else if (nombre.trim().length > 100) e.nombre = 'El nombre no puede superar 100 caracteres.';
-    if (!campusId) e.campusId = 'Elige el campus al que pertenece el edificio.';
+    if (!campusId) e.campusId = 'Elija el campus al que pertenece el edificio.';
     return e;
   };
 
@@ -149,8 +149,7 @@ export default function BuildingsAdmin() {
         {aviso && <Falla error={aviso} />}
         {errorCampus && (
           <p className="cs-alert stop" role="alert">
-            No se pudieron cargar los campus, así que no puedes crear ni modificar edificios. {errorCampus.message}
-            {errorCampus.correlationId && <small>Código para soporte: {errorCampus.correlationId}</small>}
+            No se pudieron cargar los campus, así que no puede crear ni modificar edificios. {errorCampus.message}
           </p>
         )}
         {puedeGestionar && campuses && !hayCampusActivo && (

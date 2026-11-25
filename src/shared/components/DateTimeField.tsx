@@ -10,7 +10,7 @@ const formatDateTime = (v: string) => {
 };
 
 // El input nativo sigue debajo (teclado, selector y lectores de pantalla); sin foco se muestra el texto con formato.
-export function DateTimeField({ id, value, onChange, invalid, disabled, placeholder = 'Selecciona fecha y hora' }: Props) {
+export function DateTimeField({ id, value, onChange, invalid, disabled, placeholder = 'Seleccione fecha y hora' }: Props) {
   return (
     <div className={`input dt${invalid ? ' bad' : ''}`}>
       <Calendar />

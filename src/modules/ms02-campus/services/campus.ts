@@ -4,7 +4,7 @@ import type {
   Piso, PisoRequest, RecomendacionPreventiva, RecomendacionPreventivaRequest, Ruta, RutaConsultada, RutaListada, Salida,
   SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest, EspacioPublico, SalidaPublica, ZonaSeguraPublica, Escalera, EscaleraRequest, CambiarDisponibilidadEscaleraRequest,
 } from '../types';
-import { API_URL, ApiError, GENERIC_ERROR, NETWORK_ERROR, request } from '../../../shared/services/http';
+import { API_URL, ApiError, GENERIC_ERROR, NETWORK_ERROR, request, userText } from '../../../shared/services/http';
 import { getSession, sessionPermissions } from '../../../shared/services/session';
 
 const BASE = '/api/v1';
@@ -59,7 +59,7 @@ async function imagen(ruta: string): Promise<Blob> {
   if (r.ok) return r.blob();
 
   const cuerpo = (await r.json().catch(() => ({}))) as { codigo?: string; mensaje?: string; correlation_id?: string };
-  const mensaje = r.status === 403 ? 'No tienes permiso para generar códigos QR.' : cuerpo.mensaje || GENERIC_ERROR;
+  const mensaje = r.status === 403 ? 'No tiene permiso para generar códigos QR.' : userText(cuerpo.mensaje ?? '') || GENERIC_ERROR;
   throw new CampusApiError(r.status, cuerpo.codigo ?? 'ERROR', mensaje, {}, cuerpo.correlation_id ?? correlationId);
 }
 

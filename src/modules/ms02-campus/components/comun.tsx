@@ -5,7 +5,6 @@ export function Falla({ error }: { error: CampusApiError }) {
   return (
     <p className="cs-alert stop" role="alert">
       {error.message}
-      {error.correlationId && <small>Código para soporte: {error.correlationId}</small>}
     </p>
   );
 }

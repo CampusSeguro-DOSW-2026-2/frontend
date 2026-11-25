@@ -6,6 +6,7 @@ import { hasPermission } from '../../../shared/services/session';
 import { PERMISSION } from '../../../shared/permissions';
 import type { Session } from '../../../shared/types';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
+import { checkinApi } from '../../ms04-evacuation/services/checkin';
 import { eventsApi } from '../../ms06-drills/services/events';
 import type { EventSummary } from '../../ms06-drills/types';
 import { scopeLabelIn } from '../../ms06-drills/utils/labels';
@@ -24,14 +25,23 @@ interface Props {
 type Prioridad = (typeof PRIORIDADES)[number];
 
 const ESTADO_TEXTO: Record<string, string> = {
-  REPORTADO: 'Tu solicitud quedó registrada. La coordinación ya la recibió y asignará un brigadista.',
-  ASIGNADO: 'Tu solicitud quedó registrada y la brigada de tu zona ya fue avisada. Permanece en un lugar seguro.',
+  REPORTADO: 'Su solicitud quedó registrada. La coordinación ya la recibió y asignará un brigadista. Permanezca en un lugar seguro.',
+  ASIGNADO: 'Su solicitud quedó registrada y la brigada de su zona ya fue avisada. Permanezca en un lugar seguro.',
 };
+
+/** La solicitud quedó en MS04 a la espera de MS05: la brigada la recibe en cuanto el servicio responda. */
+const PENDIENTE_TEXTO = 'Su estado quedó registrado. La solicitud de ayuda llegará a la brigada en cuanto el servicio esté disponible. Permanezca en un lugar seguro.';
+
+type Resultado = { incidente: Incidente | null; fallidas: string[]; aviso?: string };
 
 /**
  * RF-BEI-04 y RF-BEI-05: "Necesito ayuda" (solicitud propia) y "Reportar incidente" (brigadista, para otra persona).
  * Dos pasos, como el mockup: primero la prioridad y luego la zona, con descripción y evidencia opcionales. Las zonas son
  * el alcance del evento (MS06) y sus nombres salen del catálogo vivo de MS02, porque el evento solo guarda los ids.
+ *
+ * Una sola solicitud por persona: «Requiero asistencia» del check-in llega aquí. Con ms04:checkin:write, la solicitud
+ * propia registra el estado en MS04 (que crea la solicitud en MS05) y luego la completa en MS05 con la prioridad, la
+ * descripción y la evidencia. Si MS04 no la registra, se crea directamente en MS05 para no perder la ayuda.
  */
 export default function ReportarIncidente({ session, eventId, forOther = false }: Props) {
   const [event, setEvent] = useState<EventSummary | null | undefined>(undefined);
@@ -44,7 +54,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
   const [errors, setErrors] = useState<FieldErrors>({});
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
-  const [done, setDone] = useState<{ incidente: Incidente; fallidas: string[] } | null>(null);
+  const [done, setDone] = useState<Resultado | null>(null);
   // Nombres de edificios y zonas (MS02): el alcance del evento trae solo sus ids
   const { catalog, loading: cargandoNombres } = useScopeCatalog();
 
@@ -55,6 +65,8 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
   }, [session, eventId]);
 
   const nombre = (id: string) => (cargandoNombres ? 'Cargando…' : scopeLabelIn(id, catalog));
+  // MS04 registra el estado del check-in y MS05 gestiona la solicitud (prioridad, brigadista y seguimiento)
+  const viaCheckin = !forOther && hasPermission(session, PERMISSION.MS04_CHECKIN_WRITE);
 
   const elegirArchivos = (files: FileList | null) => {
     const list = Array.from(files ?? []);
@@ -74,24 +86,33 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
   const enviar = async () => {
     if (!event || !prioridad) return;
     const local: FieldErrors = {};
-    if (!ubicacion) local.ubicacion = forOther ? 'Indica dónde está la persona.' : 'Selecciona la zona donde te encuentras.';
-    if (forOther && !afectado.trim()) local.nombreAfectado = 'Escribe el nombre de la persona afectada.';
+    if (!ubicacion) local.ubicacion = forOther ? 'Indique dónde está la persona.' : 'Seleccione la zona donde se encuentra.';
+    if (forOther && !afectado.trim()) local.nombreAfectado = 'Escriba el nombre de la persona afectada.';
     setErrors(local);
     if (Object.keys(local).length) return;
 
     const zona = event.scope.find((s) => s.id === ubicacion)!;
+    const texto = descripcion.trim() || undefined;
     setSaving(true);
     setMessage('');
     try {
-      const incidente = await brigadesApi.registrarIncidente(session, event.id, {
-        prioridadId: prioridad.id, ubicacionId: zona.id, tipoUbicacion: tipoDesdeAlcance(zona.type),
-        descripcion: descripcion.trim() || undefined, nombreAfectado: forOther ? afectado.trim() : undefined,
-      });
-      const fallidas: string[] = [];
-      for (const f of archivos) {
-        try { await brigadesApi.subirEvidencia(session, event.id, incidente.idIncidente, f); } catch { fallidas.push(f.name); }
+      let resultado: Resultado | null = viaCheckin ? await porCheckin(event.id, zona, prioridad, texto) : null;
+      if (!resultado) {
+        const incidente = await brigadesApi.registrarIncidente(session, event.id, {
+          prioridadId: prioridad.id, ubicacionId: zona.id, tipoUbicacion: tipoDesdeAlcance(zona.type),
+          descripcion: texto, nombreAfectado: forOther ? afectado.trim() : undefined,
+        });
+        resultado = { incidente, fallidas: [] };
       }
-      setDone({ incidente, fallidas });
+      const { incidente } = resultado;
+      if (incidente) {
+        for (const f of archivos) {
+          try { await brigadesApi.subirEvidencia(session, event.id, incidente.idIncidente, f); } catch { resultado.fallidas.push(f.name); }
+        }
+      } else if (archivos.length) {
+        resultado.aviso = 'La evidencia no se pudo adjuntar todavía. Cuando la solicitud llegue a la brigada, puede agregarla desde «Mis incidentes».';
+      }
+      setDone(resultado);
     } catch (err) {
       setMessage(errorMessage(err));
       if (err instanceof ApiError) {
@@ -103,11 +124,40 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
     }
   };
 
-  const back = forOther ? '#/brigadista' : '#/checkin';
+  /**
+   * Requiero asistencia: MS04 guarda el estado y crea la solicitud en MS05 con la prioridad por defecto; aquí se
+   * completa con la que eligió la persona. Devuelve null si MS04 no la registró (la pantalla la crea en MS05).
+   */
+  const porCheckin = async (eventoId: string, zona: { type: 'BUILDING' | 'ZONE'; id: string }, p: Prioridad, texto?: string): Promise<Resultado | null> => {
+    let solicitud;
+    try {
+      const checkin = await checkinApi.reportar(session, eventoId, {
+        estado: 'NEEDS_ASSISTANCE', ubicacion: { tipo: zona.type === 'ZONE' ? 'PUNTO_ENCUENTRO' : 'EDIFICIO', id: zona.id },
+      });
+      solicitud = checkin.solicitud_asistencia;
+    } catch {
+      return null;
+    }
+    if (solicitud?.estado_envio === 'PENDIENTE_ENVIO') return { incidente: null, fallidas: [], aviso: PENDIENTE_TEXTO };
+    if (solicitud?.estado_envio !== 'ENVIADA' || !solicitud.id) return null;
+    try {
+      const incidente = await brigadesApi.completarIncidente(session, eventoId, solicitud.id, { prioridadId: p.id, descripcion: texto ?? '' });
+      return { incidente, fallidas: [] };
+    } catch {
+      // La solicitud ya existe en MS05: no se crea otra
+      return {
+        incidente: { idIncidente: solicitud.id } as Incidente,
+        fallidas: [],
+        aviso: 'Su solicitud llegó a la brigada, pero no se pudieron guardar la prioridad ni la descripción. La brigada la atenderá como emergencia.',
+      };
+    }
+  };
+
+  const back = forOther ? '#/brigadista' : eventId ? `#/checkin/${encodeURIComponent(eventId)}` : '#/checkin';
   const enZona = paso === 'zona' && prioridad !== null;
   const header = enZona
-    ? { badge: 'ZONA Y DETALLES', title: forOther ? '¿Dónde está la persona?' : '¿Dónde necesitas ayuda?', subtitle: forOther ? 'Selecciona la zona donde está la persona afectada.' : 'Selecciona tu zona. Puedes enviar la solicitud sin descripción ni evidencia.' }
-    : { badge: 'PRIORIDAD', title: forOther ? 'Reportar incidente' : '¿Qué tan urgente es?', subtitle: forOther ? 'Para una persona que no puede pedir ayuda por sí misma.' : 'Selecciona la prioridad. La solicitud llega a la brigada de tu zona.' };
+    ? { badge: 'ZONA Y DETALLES', title: forOther ? '¿Dónde está la persona?' : '¿Dónde necesita ayuda?', subtitle: forOther ? 'Seleccione la zona donde está la persona afectada.' : 'Seleccione su zona. Puede enviar la solicitud sin descripción ni evidencia.' }
+    : { badge: 'PRIORIDAD', title: forOther ? 'Reportar incidente' : '¿Qué tan urgente es?', subtitle: forOther ? 'Para una persona que no puede pedir ayuda por sí misma.' : 'Seleccione la prioridad. La solicitud llega a la brigada de su zona.' };
 
   return (
     <>
@@ -124,10 +174,11 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
         {done && (
           <section className="rs-card" role="status">
             <h2>{forOther ? 'Incidente reportado' : 'Solicitud enviada'}</h2>
-            <p>{forOther
+            {done.incidente?.estado && <p>{forOther
               ? `Incidente registrado para ${done.incidente.nombreAfectado} (${done.incidente.estado === 'ASIGNADO' ? 'asignado a la brigada de la zona' : 'pendiente de asignar'}).`
-              : ESTADO_TEXTO[done.incidente.estado] ?? `Estado: ${done.incidente.estado}.`}</p>
-            {done.fallidas.length > 0 && <p className="error">No se pudieron subir: {done.fallidas.join(', ')}.</p>}
+              : ESTADO_TEXTO[done.incidente.estado] ?? 'Su solicitud quedó registrada. Permanezca en un lugar seguro.'}</p>}
+            {done.aviso && <p>{done.aviso}</p>}
+            {done.fallidas.length > 0 && <p className="error">No se pudieron adjuntar: {done.fallidas.join(', ')}. Puede intentarlo de nuevo desde «Mis incidentes».</p>}
             <div className="rs-detail-acts" style={{ justifyContent: 'flex-start' }}>
               {!forOther && hasPermission(session, PERMISSION.MS05_INCIDENT_MANAGE_OWN) && <a className="btn red rs-btn rs-report" href="#/mis-incidentes">Ver mis incidentes</a>}
               <a className="btn white rs-btn rs-report" href={back}>Volver</a>
@@ -138,7 +189,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
         {event && !done && !enZona && (
           <section className="rs-card" aria-labelledby="rs-prio-titulo">
             <h2 id="rs-prio-titulo">Prioridad</h2>
-            <p className="rs-sub">Elige la opción que mejor describe la situación.</p>
+            <p className="rs-sub">Elija la opción que mejor describe la situación.</p>
             <div className="rs-prios" role="group" aria-label="Prioridad">
               {PRIORIDADES.map((p) => (
                 <button key={p.id} type="button" className="rs-prio-card" aria-pressed={prioridad?.id === p.id} onClick={() => elegirPrioridad(p)}>
@@ -164,7 +215,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
               )}
               <div className="rs-sec">
                 <h3 id="rs-zona-titulo">Zona del incidente</h3>
-                <p className="rs-sub">{forOther ? 'Selecciona el bloque donde está la persona.' : 'Selecciona el bloque donde te encuentras.'}</p>
+                <p className="rs-sub">{forOther ? 'Seleccione el bloque donde está la persona.' : 'Seleccione el bloque donde se encuentra.'}</p>
                 <div className="rs-zonas" role="group" aria-labelledby="rs-zona-titulo">
                   {event.scope.map((s) => (
                     <button key={s.id} type="button" className="rs-zona" aria-pressed={ubicacion === s.id}
@@ -180,7 +231,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
               </div>
               <div className="rs-sec">
                 <h3><label htmlFor="desc">Descripción</label> <span className="rs-opt">Opcional</span></h3>
-                <div className="input area"><textarea id="desc" rows={3} maxLength={1000} placeholder="Describe qué ocurrió o indica el piso y un punto de referencia…" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} /></div>
+                <div className="input area"><textarea id="desc" rows={3} maxLength={viaCheckin ? 500 : 1000} placeholder="Describa qué ocurrió o indique el piso y un punto de referencia…" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} /></div>
                 {errors.descripcion && <span className="error" role="alert">{errors.descripcion}</span>}
               </div>
               <div className="rs-sec">
@@ -195,13 +246,13 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
                 </label>
                 {errors.evidencias
                   ? <span className="error" role="alert">{errors.evidencias}</span>
-                  : <span className="rs-sub">Adjunta un archivo solo si puedes hacerlo sin ponerte en riesgo (hasta {MAX_EVIDENCES} archivos png, pdf o mp4).</span>}
+                  : <span className="rs-sub">Adjunte un archivo solo si puede hacerlo sin ponerse en riesgo (hasta {MAX_EVIDENCES} archivos png, pdf o mp4).</span>}
               </div>
             </section>
 
             <aside className="rs-side">
               <section className="rs-card">
-                <h2>{forOther ? 'El reporte' : 'Tu solicitud'}</h2>
+                <h2>{forOther ? 'El reporte' : 'Su solicitud'}</h2>
                 <div className="rs-kv">
                   <small>Prioridad seleccionada</small>
                   <span className={`rs-prio ${prioridad.codigo}`}>{prioridad.label}</span>

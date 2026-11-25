@@ -62,12 +62,12 @@ export function cachedAlertTypes(): CatalogItem[] | null {
 export async function loadAlertTypes(): Promise<CatalogItem[]> {
   const data = await request('/api/v1/alertas/tipos', { session: getSession() ?? undefined });
   if (!Array.isArray(data)) {
-    throw new Error('MS03 devolvió un catálogo de tipos de alerta inválido.');
+    throw new Error('No se pudieron leer los tipos de alerta. Intente de nuevo más tarde.');
   }
   const items = data.filter(isTypeDto).map(toItem);
   // Un catálogo vacío no debe borrar la copia guardada: sin tipos el formulario no puede crear alertas.
   if (!items.length) {
-    throw new Error('MS03 no devolvió tipos de alerta.');
+    throw new Error('Todavía no hay tipos de alerta disponibles.');
   }
   saveTypes(items);
   return items;

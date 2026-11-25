@@ -30,7 +30,6 @@ export interface AuditFilters {
   usuarioId: string;
   eventoId: string;
   tipoEvento: EventKind | '';
-  correlationId: string;
 }
 
 export interface Page<T> { content: T[]; page: number; size: number; totalElements: number; totalPages: number }

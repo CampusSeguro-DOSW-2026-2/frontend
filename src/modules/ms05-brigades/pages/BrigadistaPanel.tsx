@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh';
 import { PERMISSION } from '../../../shared/permissions';
 import { errorMessage } from '../../../shared/services/http';
 import { hasPermission } from '../../../shared/services/session';
@@ -47,6 +48,9 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
   }, [session]);
 
   useEffect(() => { cargar().finally(() => setLoading(false)); }, [cargar]);
+  // Se actualiza solo: nuevos incidentes de su zona y cambios del evento
+  const tick = useAutoRefresh();
+  useEffect(() => { if (tick) void cargar(); }, [tick, cargar]);
 
   const eventos = data?.eventos ?? [];
   const actual: AutoasignacionEvento | undefined = eventos.find((e) => e.evento.eventoId === eventoId) ?? eventos[0];
@@ -69,7 +73,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
     try {
       await brigadesApi.cambiarEstado(session, 'ACTIVO');
       await cargar();
-      setNotice('Quedaste disponible. Ahora elige el evento y tu zona para atender.');
+      setNotice('Quedó disponible. Ahora elija el evento y su zona para atender.');
     } catch (err) {
       setNotice(errorMessage(err));
     } finally {
@@ -86,7 +90,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
       await brigadesApi.cambiarEstado(session, 'INACTIVO');
       await cargar();
       setEditandoZona(false);
-      setNotice('Finalizaste tu turno: quedaste como no disponible.');
+      setNotice('Finalizó su turno: quedó como no disponible.');
     } catch (err) {
       setNotice(errorMessage(err));
     } finally {
@@ -103,7 +107,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
       await brigadesApi.quitarEdificio(session, actual.evento.eventoId);
       await cargar();
       setEditandoZona(false);
-      setNotice('Quitaste tu asignación. Puedes elegir otro edificio cuando quieras.');
+      setNotice('Quitó su asignación. Puede elegir otro edificio cuando quiera.');
     } catch (err) {
       setNotice(errorMessage(err));
     } finally {
@@ -162,7 +166,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
         )}
 
         {actual && !activo && (
-          <p className="notice" role="status">Actívate para elegir tu zona y atender incidentes.</p>
+          <p className="notice" role="status">Actívese para elegir su zona y atender incidentes.</p>
         )}
 
         {actual && activo && (
@@ -213,7 +217,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
                     {canRegisterAssistance && (
                       <a className="btn red" style={{ alignSelf: 'flex-start' }} href={`#/brigadista/reportar/${actual.evento.eventoId}`}>Reportar incidente</a>
                     )}
-                    <IncidentesEvento session={session} eventoId={actual.evento.eventoId} modo="brigadista" />
+                    <IncidentesEvento session={session} eventoId={actual.evento.eventoId} modo="brigadista" refresco={tick} />
                   </>
                 )
               : <div className="ev-empty">El evento aún no está en ejecución. Cuando inicie, aquí verá los incidentes de su zona.</div>}

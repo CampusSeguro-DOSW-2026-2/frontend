@@ -18,7 +18,7 @@ export const PERMISOS_MS07 = {
   administrar: 'ms07:content:manage',
 } as const;
 
-const SIN_ACCESO = <main className="page"><p className="notice err" role="alert">No tienes permisos para ver esta sección.</p></main>;
+const SIN_ACCESO = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
 
 /** Rutas de MS07. Devuelve undefined si la ruta no es de este módulo. */
 export function trainingRoutes(route: string, session: Session | null): ReactNode | undefined {

@@ -90,16 +90,17 @@ export function canExecuteEvent(session: Session, simulacro: boolean): boolean {
   return hasPermission(session, PERMISSION.MS06_REAL_EVENT_EXECUTE);
 }
 
+/** Indicates whether the session can create and edit real events (ms06:real_event:manage) */
+export function canManageRealEvents(session: Session): boolean {
+  return hasPermission(session, PERMISSION.MS06_REAL_EVENT_MANAGE);
+}
+
 /**
- * By decision of the team the form does not show event types, but MS06 requires at least one.
- * It is chosen by permission: who manages drills creates drills ("Simulacro") and who only manages real events
- * creates real events ("Otro").
+ * MS06 requires at least one type. Without a chosen type the kind of event decides it: a drill carries
+ * "Simulacro" and a real event "Otro".
  */
-export async function defaultTypeId(session: Session): Promise<string> {
-  let code = 'OTRO';
-  if (canManageDrills(session)) {
-    code = 'SIMULACRO';
-  }
+export async function defaultTypeId(session: Session, simulacro: boolean): Promise<string> {
+  const code = simulacro ? 'SIMULACRO' : 'OTRO';
   const types = await eventsApi.types(session);
   const found = types.find((t) => t.code === code && t.active);
   if (!found) {

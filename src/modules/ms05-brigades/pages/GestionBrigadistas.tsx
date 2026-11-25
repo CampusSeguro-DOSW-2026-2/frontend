@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh';
 import { Search } from '../../../shared/components/Icons';
 import { PERMISSION } from '../../../shared/permissions';
 import { errorMessage } from '../../../shared/services/http';
 import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
-import IncidentesEvento from '../components/IncidentesEvento';
 import { brigadesApi } from '../services/brigades';
 import type { BrigadistaGestion, EventoOperacion, GestionBrigadistasEvento } from '../types';
 import { nombreUbicacion } from '../utils/ubicaciones';
@@ -69,6 +69,14 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
   }, [session, eventoId]);
 
   useEffect(() => { cargar(); }, [cargar]);
+  // En vivo: cada 15 s se vuelve a pedir el panel sin mostrar «Cargando…»; un fallo pasajero deja lo último que llegó
+  const tick = useAutoRefresh(!!eventoId);
+  useEffect(() => {
+    if (!tick || !eventoId) return undefined;
+    let ignore = false;
+    brigadesApi.gestionEvento(session, eventoId).then((p) => { if (!ignore) setPanel(p); }).catch(() => { /* se conserva */ });
+    return () => { ignore = true; };
+  }, [tick, session, eventoId]);
 
   const { catalog } = useScopeCatalog();
 
@@ -227,11 +235,10 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
         ))}
 
         {evento?.estado === 'EN_EJECUCION' && (
-          <section className="ev-card">
-            <h2>Incidentes · {evento.nombre}</h2>
-            <p className="help">Todos los incidentes reportados en el evento en ejecución, con su estado y si ya tienen un brigadista responsable.</p>
-            <IncidentesEvento session={session} eventoId={evento.eventoId} modo="monitoreo" />
-          </section>
+          // Los incidentes del evento se siguen en un solo lugar: «Ver en vivo» de Eventos (MS06), con el check-in de MS04
+          <p className="notice" role="status">
+            El evento está en ejecución. Siga sus incidentes y el estado de las personas en <a className="plink" href={`#/eventos/${encodeURIComponent(evento.eventoId)}`}>Ver en vivo</a>.
+          </p>
         )}
       </main>
 

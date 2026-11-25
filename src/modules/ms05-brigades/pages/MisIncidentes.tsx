@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh';
 import { Info } from '../../../shared/components/Icons';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
@@ -40,11 +41,13 @@ export default function MisIncidentes({ session }: { session: Session }) {
     }
   }, [session]);
 
-  useEffect(() => { void load(); }, [load]);
+  // Se actualiza sola: la persona ve cuando la brigada toma y resuelve su solicitud
+  const tick = useAutoRefresh();
+  useEffect(() => { void load(); }, [load, tick]);
 
   return (
     <>
-      <PageHeader badge="INCIDENTES" title="Mis incidentes" subtitle="Revisa el estado de las solicitudes de ayuda que enviaste." />
+      <PageHeader badge="INCIDENTES" title="Mis incidentes" subtitle="Revise el estado de las solicitudes de ayuda que envió." />
       <main className="rs-main">
         <a className="rs-back" href="#/checkin">← Volver al evento</a>
         {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={() => void load()}>Reintentar</button></p>}
@@ -79,7 +82,7 @@ export default function MisIncidentes({ session }: { session: Session }) {
             )}
           </section>
         ))}
-        <p className="rs-info"><Info /> Si tu situación cambia, envía una nueva solicitud desde «Solicitar ayuda». La brigada actualiza el estado a medida que te atiende.</p>
+        <p className="rs-info"><Info /> Si su situación cambia, envíe una nueva solicitud desde «Necesito ayuda». La brigada actualiza el estado a medida que lo atiende.</p>
       </main>
     </>
   );

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Info } from '../../../shared/components/Icons';
+import { withoutIds } from '../../../shared/utils/text';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
 import { ApiError, errorMessage } from '../../../shared/services/http';
@@ -95,11 +96,13 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
 
   const p = inc ? prioridadDe(inc.prioridad) : null;
   const st = inc ? estadoIncidente(inc.estado) : null;
-  const codigo = `INC-${incidenteId.slice(0, 6).toUpperCase()}`;
+  // Título del caso para la persona: la descripción (sin ids técnicos), nunca el id del incidente
+  const descripcion = inc?.descripcion ? withoutIds(inc.descripcion) : '';
+  const titulo = descripcion ? (descripcion.length > 60 ? `${descripcion.slice(0, 60)}…` : descripcion) : 'Incidente sin descripción';
 
   return (
     <>
-      <PageHeader badge="BRIGADISTA" title="Atender incidente" subtitle="Revisa la información del caso y registra el resultado de la atención." context="Respuesta oficial" />
+      <PageHeader badge="BRIGADISTA" title="Atender incidente" subtitle="Revise la información del caso y registre el resultado de la atención." context="Respuesta oficial" />
       <main className="rs-main">
         <a className="rs-back" href="#/brigadista">← Volver al panel brigadista</a>
         {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
@@ -110,7 +113,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
             <div className="rs-col">
               <section className="rs-card">
                 <div className="rs-inc-top">
-                  <b>{codigo}{inc.descripcion ? ` · ${inc.descripcion.length > 40 ? `${inc.descripcion.slice(0, 40)}…` : inc.descripcion}` : ''}</b>
+                  <b>{titulo}</b>
                   <span className={`rs-st ${st.clase}`}>{st.texto}</span>
                 </div>
                 <div className="rs-kv">
@@ -127,7 +130,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                 </div>
                 <div className="rs-sec">
                   <h3>Descripción</h3>
-                  <p className="rs-sub">{inc.descripcion || 'El reporte no incluye descripción.'}</p>
+                  <p className="rs-sub">{descripcion || 'El reporte no incluye descripción.'}</p>
                 </div>
                 {inc.observacionesResolucion && (
                   <div className="rs-sec">
@@ -156,7 +159,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
             <aside className="rs-side">
               <form className="rs-card" noValidate onSubmit={(e) => { e.preventDefault(); void finalizar(); }}>
                 <h2>Estado final</h2>
-                <p className="rs-sub">Selecciona el resultado de la atención. El caso no se cerrará hasta que pulses «Finalizar».</p>
+                <p className="rs-sub">Seleccione el resultado de la atención. El caso no se cerrará hasta que pulse «Finalizar».</p>
 
                 {propio && inc.estado === 'ASIGNADO' && canAttend && (
                   <>
@@ -168,7 +171,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                 <fieldset className="rs-final" disabled={!puedeFinalizar} style={{ border: 0, padding: 0, margin: 0 }}>
                   <legend className="rs-sub" style={{ padding: 0, marginBottom: 6 }}>Resultado</legend>
                   {RESULTADOS.map((r) => (
-                    <label key={r.codigo} title={r.disponible ? undefined : 'MS05 aún no registra este resultado.'}>
+                    <label key={r.codigo} title={r.disponible ? undefined : 'Esta opción todavía no está disponible.'}>
                       <input type="radio" name="resultado" value={r.codigo} checked={resultado === r.codigo}
                         disabled={!r.disponible} onChange={() => setResultado(r.codigo)} />
                       <span><b>{r.titulo}</b><small>{r.disponible ? r.texto : `${r.texto} (aún no disponible)`}</small></span>
@@ -185,7 +188,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                   </div>
                 )}
 
-                {!resultado && puedeFinalizar && <span className="rs-sub">Selecciona una opción para continuar.</span>}
+                {!resultado && puedeFinalizar && <span className="rs-sub">Seleccione una opción para continuar.</span>}
                 {!propio && <span className="rs-sub">Solo el brigadista asignado puede registrar el resultado.</span>}
                 {propio && !enAtencion && inc.estado !== 'ASIGNADO' && !finalizado && <span className="rs-sub">El incidente está {st.texto.toLowerCase()}.</span>}
                 {notice && <p className="notice err" role="alert">{notice}</p>}

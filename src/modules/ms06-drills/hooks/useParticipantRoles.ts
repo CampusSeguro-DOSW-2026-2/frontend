@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../../../shared/services/http';
 import { cachedParticipantRoles, loadParticipantRoles, type ParticipantItem } from '../services/participants';
 
-const LOAD_ERROR = 'No se pudieron cargar los participantes desde MS01.';
-const STALE_NOTICE = 'MS01 no respondió: se muestran los participantes guardados en este navegador. Se actualizan cuando responda.';
+const LOAD_ERROR = 'No se pudieron cargar los participantes.';
+const STALE_NOTICE = 'El servicio de usuarios no respondió: se muestran los participantes guardados en este navegador. Se actualizan cuando responda.';
 
 /**
  * Roles que MS06 acepta como participantes (`GET /api/v1/roles/alert-recipients` de MS01, el mismo que usa MS03), los

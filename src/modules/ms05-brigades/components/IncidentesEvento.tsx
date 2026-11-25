@@ -22,13 +22,26 @@ interface Props {
   eventoId: string;
   /** brigadista: ve los suyos y atiende los que tiene asignados. monitoreo: solo lectura (coordinador u organizador). */
   modo: 'brigadista' | 'monitoreo';
+  /** Nombre de cada brigadista por id (panel de gestión de MS05), para mostrar al responsable por su nombre. */
+  nombresBrigadistas?: Record<string, string>;
+  /** Cambia para volver a pedir la página sin perder la posición (monitoreo en vivo). */
+  refresco?: number;
+  /**
+   * Monitoreo con gestión (coordinador u organizador con ms05:assistance:assign_*): brigadistas activos del evento con
+   * su edificio, para asignar responsable (MS05 solo acepta a uno asignado en el lugar del incidente), y cerrar casos.
+   */
+  gestion?: { brigadistas: { id: string; nombre: string; ubicacionId: string | null }[] };
 }
 
 /**
  * Incidentes de un evento, desde MS05 (que filtra según el rol). El brigadista inicia la atención de los que
  * tiene asignados y los marca como resueltos; el coordinador y el organizador los monitorean.
  */
-export default function IncidentesEvento({ session, eventoId, modo }: Props) {
+export default function IncidentesEvento({ session, eventoId, modo, nombresBrigadistas = {}, refresco = 0, gestion }: Props) {
+  const [asignando, setAsignando] = useState<string | null>(null);
+  const [elegido, setElegido] = useState('');
+  const [ocupado, setOcupado] = useState(false);
+  const [aviso, setAviso] = useState('');
   const [data, setData] = useState<Pagina<IncidenteResumen> | null>(null);
   const [page, setPage] = useState(0);
   const [error, setError] = useState('');
@@ -43,9 +56,24 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
       .then((pagina) => { if (!ignore) { setData(pagina); setError(''); } })
       .catch((err) => { if (!ignore) setError(errorMessage(err)); });
     return () => { ignore = true; };
-  }, [session, eventoId, page, version]);
+  }, [session, eventoId, page, version, refresco]);
 
   const propio = (i: IncidenteResumen) => i.brigadistaResponsableId === session.user.id;
+
+  const ejecutar = async (accion: () => Promise<unknown>, exito: string) => {
+    setOcupado(true);
+    setAviso('');
+    try {
+      await accion();
+      setAviso(exito);
+      setAsignando(null);
+      load();
+    } catch (err) {
+      setAviso(errorMessage(err));
+    } finally {
+      setOcupado(false);
+    }
+  };
   // contenido llega con la paginación estándar de MS05; sin ella (versión anterior del servicio) la lista queda vacía.
   const incidentes = data?.contenido ?? [];
 
@@ -53,6 +81,7 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
     <>
       {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
       {!error && data === null && <p className="notice" role="status">Cargando incidentes…</p>}
+      {aviso && <p className="notice" role="status">{aviso}</p>}
       {data && incidentes.length === 0 && (
         <div className="ev-empty">{modo === 'brigadista' ? 'No tiene incidentes en este evento.' : 'No hay incidentes reportados en este evento.'}</div>
       )}
@@ -61,7 +90,7 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
           <thead>
             <tr>
               <th>Prioridad</th><th>Estado</th><th>Ubicación</th><th>Reportado</th><th>Responsable</th>
-              {modo === 'brigadista' && <th style={{ textAlign: 'right' }}>Acciones</th>}
+              {(modo === 'brigadista' || gestion) && <th style={{ textAlign: 'right' }}>Acciones</th>}
             </tr>
           </thead>
           <tbody>
@@ -73,7 +102,9 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
                   <td><span className={`st ${estado.clase}`}>{estado.texto}</span></td>
                   <td>{scopeLabelIn(i.zonaId, catalog)}</td>
                   <td>{formatDate(i.reportadoEn)}</td>
-                  <td>{i.brigadistaResponsableId ? (propio(i) ? 'Tú' : 'Asignado') : <span className="help">Sin asignar</span>}</td>
+                  <td>{i.brigadistaResponsableId
+                    ? (propio(i) ? 'Usted' : nombresBrigadistas[i.brigadistaResponsableId] ?? 'Otro brigadista')
+                    : <span className="help">Sin asignar</span>}</td>
                   {modo === 'brigadista' && (
                     <td>
                       <div className="ev-acts">
@@ -81,6 +112,42 @@ export default function IncidentesEvento({ session, eventoId, modo }: Props) {
                           <a className="btn white" href={`#/brigadista/incidentes/${encodeURIComponent(eventoId)}/${encodeURIComponent(i.incidenteId)}`}>
                             {i.estado === 'ASIGNADO' ? 'Atender' : 'Continuar atención'}
                           </a>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                  {gestion && modo === 'monitoreo' && (
+                    <td>
+                      <div className="ev-acts">
+                        {asignando === i.incidenteId ? (
+                          <>
+                            <select aria-label="Brigadista responsable" value={elegido} onChange={(e) => setElegido(e.target.value)} disabled={ocupado}>
+                              <option value="">Elija un brigadista</option>
+                              {gestion.brigadistas.filter((b) => b.id !== i.brigadistaResponsableId && b.ubicacionId === i.zonaId).map((b) => <option key={b.id} value={b.id}>{b.nombre}</option>)}
+                            </select>
+                            <button type="button" className="btn white" disabled={!elegido || ocupado}
+                              onClick={() => void ejecutar(() => brigadesApi.asignarResponsable(session, eventoId, i.incidenteId, elegido),
+                                `El caso quedó a cargo de ${gestion.brigadistas.find((b) => b.id === elegido)?.nombre ?? 'el brigadista elegido'}.`)}>Guardar</button>
+                            <button type="button" className="btn white" disabled={ocupado} onClick={() => setAsignando(null)}>Cancelar</button>
+                          </>
+                        ) : (
+                          <>
+                            {['REPORTADO', 'ASIGNADO', 'EN_ATENCION'].includes(i.estado) && (
+                              <button type="button" className="btn white"
+                                disabled={ocupado || !gestion.brigadistas.some((b) => b.id !== i.brigadistaResponsableId && b.ubicacionId === i.zonaId)}
+                                title={gestion.brigadistas.some((b) => b.id !== i.brigadistaResponsableId && b.ubicacionId === i.zonaId)
+                                  ? undefined : 'Ningún otro brigadista activo está asignado a este lugar'}
+                                onClick={() => { setAsignando(i.incidenteId); setElegido(''); setAviso(''); }}>
+                                {i.brigadistaResponsableId ? 'Reasignar' : 'Asignar'}
+                              </button>
+                            )}
+                            {i.estado === 'RESUELTO' && (
+                              <button type="button" className="btn white" disabled={ocupado}
+                                onClick={() => { if (window.confirm('¿Cerrar este caso? Ya no se podrá modificar.')) void ejecutar(() => brigadesApi.cerrarIncidente(session, eventoId, i.incidenteId), 'El caso quedó cerrado.'); }}>
+                                Cerrar caso
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </td>

@@ -137,14 +137,14 @@ export default function RouteQuery() {
   return (
     <>
       <PageHeader badge="EVACUACIÓN" title="Rutas de evacuación"
-        subtitle="Consulta la ruta recomendada desde tu edificio o salón hasta la zona segura." context="Campus y seguridad" />
+        subtitle="Consulte la ruta recomendada desde su edificio o salón hasta la zona segura." context="Campus y seguridad" />
       <main className="content">
         <form className="cs-form" onSubmit={(e) => { e.preventDefault(); consultar(); }}>
           <div className="field">
             <label htmlFor="cs-edificio">Edificio</label>
             <div className="input">
               <select id="cs-edificio" value={edificioId} disabled={!edificios?.length} onChange={(e) => elegirEdificio(e.target.value)}>
-                <option value="">{edificios === null ? 'Cargando edificios…' : 'Selecciona un edificio'}</option>
+                <option value="">{edificios === null ? 'Cargando edificios…' : 'Seleccione un edificio'}</option>
                 {edificios?.map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
               </select>
             </div>

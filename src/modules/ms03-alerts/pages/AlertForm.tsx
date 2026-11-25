@@ -185,24 +185,26 @@ export default function AlertForm({ editId }: { editId?: string }) {
             <div className={`input tall${errors.instructions ? ' bad' : ''}`}><textarea id="instr" value={instructions} placeholder="Describe la situación y su ubicación. Incluye únicamente información verificada." onChange={(e) => setInstructions(e.target.value)} /></div>
             {errors.instructions && <span className="error" role="alert">{errors.instructions}</span>}
           </div>
-          <div className="fgroup half">
-            <label className="plabel" htmlFor="start">Inicio</label>
-            <DateTimeField id="start" value={start} onChange={setStart} disabled={scheduled} invalid={!!errors.start} />
-            <span className="help">{scheduled ? 'La alerta ya está programada.' : 'Opcional. Si lo deja vacío, la alerta se emite de inmediato.'}</span>
-            {errors.start && <span className="error" role="alert">{errors.start}</span>}
-          </div>
-          <div className="fgroup half">
-            <PickerBox label="Tipo de alerta" required={!editId} help="Elija uno o varios tipos de emergencia, u Operativa (se usa sola)." editLabel="Editar tipo" items={typeItems} selected={types} onToggle={(id) => setTypes((c) => toggleType(c, id))} error={errors.types} loading={typesLoading} />
-            {typesNotice && (
-              <p className="notice" role="status">
-                {typesNotice} <button type="button" className="plink" onClick={retryTypes}>Reintentar</button>
-              </p>
-            )}
-            {typesError && (
-              <p className="notice err" role="alert">
-                {typesError} <button type="button" className="plink" onClick={retryTypes}>Reintentar</button>
-              </p>
-            )}
+          <div className="two af-row">
+            <div className="fgroup">
+              <label className="plabel" htmlFor="start">Inicio</label>
+              <DateTimeField id="start" value={start} onChange={setStart} disabled={scheduled} invalid={!!errors.start} />
+              <span className="help">{scheduled ? 'La alerta ya está programada.' : 'Opcional. Si lo deja vacío, la alerta se emite de inmediato.'}</span>
+              {errors.start && <span className="error" role="alert">{errors.start}</span>}
+            </div>
+            <div className="fgroup">
+              <PickerBox label="Tipo de alerta" required={!editId} help="Elija uno o varios tipos de emergencia, u Operativa (se usa sola)." editLabel="Editar tipo" items={typeItems} selected={types} onToggle={(id) => setTypes((c) => toggleType(c, id))} error={errors.types} loading={typesLoading} />
+              {typesNotice && (
+                <p className="notice" role="status">
+                  {typesNotice} <button type="button" className="plink" onClick={retryTypes}>Reintentar</button>
+                </p>
+              )}
+              {typesError && (
+                <p className="notice err" role="alert">
+                  {typesError} <button type="button" className="plink" onClick={retryTypes}>Reintentar</button>
+                </p>
+              )}
+            </div>
           </div>
           <div className="fgroup">
             <span className="flabel">Alcance y destinatarios{star(!editId)}</span>

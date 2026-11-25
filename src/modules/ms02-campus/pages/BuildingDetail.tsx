@@ -28,7 +28,7 @@ function PisoForm({ inicial, onGuardar, onCancelar }: {
 
   const validar = () => {
     const e: Errores = {};
-    if (!/^-?\d+$/.test(numero.trim())) e.numero = 'Escribe el número del piso, por ejemplo 1 o -1 para un sótano.';
+    if (!/^-?\d+$/.test(numero.trim())) e.numero = 'Escriba el número del piso, por ejemplo 1 o -1 para un sótano.';
     if (nombre.trim().length > 100) e.nombre = 'El nombre no puede superar 100 caracteres.';
     return e;
   };
@@ -64,7 +64,7 @@ function EspacioForm({ inicial, onGuardar, onCancelar }: {
     const e: Errores = {};
     if (!nombre.trim()) e.nombre = 'El nombre es obligatorio.';
     else if (nombre.trim().length > 100) e.nombre = 'El nombre no puede superar 100 caracteres.';
-    if (!tipo) e.tipo = 'Selecciona el tipo de espacio.';
+    if (!tipo) e.tipo = 'Seleccione el tipo de espacio.';
     return e;
   };
 
@@ -79,7 +79,7 @@ function EspacioForm({ inicial, onGuardar, onCancelar }: {
         </Campo>
         <Campo id={`espacio-tipo-${id}`} etiqueta="Tipo" error={errores.tipo}>
           <select id={`espacio-tipo-${id}`} value={tipo} onChange={(e) => setTipo(e.target.value as TipoEspacio)}>
-            <option value="">Selecciona un tipo</option>
+            <option value="">Seleccione un tipo</option>
             {Object.entries(TIPOS).map(([valor, texto]) => <option key={valor} value={valor}>{texto}</option>)}
           </select>
         </Campo>
@@ -218,7 +218,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
 
         {pisosVisibles.length === 0 && edicion?.tipo !== 'nuevo-piso' && (
           <p className="cs-alert info">
-            {pisos.length === 0 ? 'Este edificio todavía no tiene pisos. Agrega el primero para registrar sus espacios.' : 'Todos los pisos están inactivos. Marca «Mostrar inactivos» para verlos.'}
+            {pisos.length === 0 ? 'Este edificio todavía no tiene pisos. Agregue el primero para registrar sus espacios.' : 'Todos los pisos están inactivos. Marque «Mostrar inactivos» para verlos.'}
           </p>
         )}
 

@@ -13,12 +13,25 @@ import type { ScopeCatalog } from './catalog';
  */
 let cached: Promise<ScopeCatalog> | null = null;
 
+/**
+ * Nombres de todos los edificios y zonas, incluidos los inactivos, solo para mostrar el nombre de un lugar que ya
+ * no se ofrece (por ejemplo, el alcance de un evento antiguo). Si falla, se usan los nombres de los activos.
+ */
+const allNames = (): Promise<Record<string, string>> =>
+  Promise.all([campus.edificios.listar(true), campus.zonas.listar(true)])
+    .then(([buildings, zones]) => Object.fromEntries([
+      ...buildings.map((b) => [b.id, b.nombre] as const),
+      ...zones.map((z) => [z.id, z.nombre || z.codigo] as const),
+    ]))
+    .catch(() => ({}));
+
 export function loadScopeCatalog(): Promise<ScopeCatalog> {
   if (!cached) {
-    cached = Promise.all([campus.edificios.listar(), campus.zonas.listar()])
-      .then(([buildings, zones]) => ({
+    cached = Promise.all([campus.edificios.listar(), campus.zonas.listar(), allNames()])
+      .then(([buildings, zones, names]) => ({
         buildings: buildings.map((building) => ({ id: building.id, label: building.nombre, group: 'Edificios' })),
         zones: zones.map((zone) => ({ id: zone.id, label: zone.nombre || zone.codigo, group: 'Zonas' })),
+        names,
       }))
       .catch((error: unknown) => {
         cached = null;
