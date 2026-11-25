@@ -16,24 +16,6 @@ export const UNKNOWN_PLACE = 'Lugar sin nombre disponible';
 /** Único alcance que no depende del catálogo remoto. */
 export const CAMPUS_ITEM: CatalogItem = { id: 'CAMPUS', label: 'Todo el campus', group: 'Campus' };
 
-// LEGADO: ids de demostración del catálogo de prueba. MS03 ya no los usa (su picker sale de MS02,
-// ver `services/scope.ts`); se conservan porque MS06 los reutiliza para el alcance de sus eventos.
-export const SCOPE_ITEMS: CatalogItem[] = [
-  { id: 'CAMPUS', label: 'Todo el campus', group: 'Campus' },
-  { id: 'BLD-001', label: 'Edificio A', group: 'Edificios' },
-  { id: 'BLD-002', label: 'Edificio B', group: 'Edificios' },
-  { id: 'BLD-003', label: 'Edificio C', group: 'Edificios' },
-  { id: 'BLD-004', label: 'Edificio D', group: 'Edificios' },
-  { id: 'BLD-005', label: 'Edificio E', group: 'Edificios' },
-  { id: 'BLD-006', label: 'Edificio F', group: 'Edificios' },
-  { id: 'BLD-007', label: 'Edificio G', group: 'Edificios' },
-  { id: 'BLD-008', label: 'Edificio H', group: 'Edificios' },
-  { id: 'BLD-009', label: 'Edificio I', group: 'Edificios' },
-  { id: 'BLD-010', label: 'Biblioteca Jorge Álvarez Lleras', group: 'Edificios' },
-  { id: 'BLD-011', label: 'Coliseo El Otoño', group: 'Edificios' },
-  { id: 'ZON-001', label: 'Plazoleta frente al Edificio F', group: 'Zonas' },
-];
-
 // Opción de destinatario para un rol de MS01: se muestra con su nombre original, el mismo que guarda MS01. La lista de
 // roles que reciben alertas no se declara aquí: sale de MS01 (`services/recipients.ts`), que incluye los roles que cree
 // o edite el administrador.
