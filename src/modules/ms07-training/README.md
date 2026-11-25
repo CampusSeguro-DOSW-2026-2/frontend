@@ -14,7 +14,7 @@
 | `#/evaluaciones` | `pages/Evaluaciones.tsx` | `ms07:quiz:take` | Evaluaciones activas, con filtro por categoría |
 | `#/evaluaciones/{id}` | `pages/PresentarEvaluacion.tsx` | `ms07:quiz:take` | Presentar la evaluación y ver el puntaje con la corrección; se puede repetir |
 | `#/mi-progreso` | `pages/MiProgreso.tsx` | `ms07:quiz:take` | Avance por categoría (contenidos vistos y promedio de los mejores puntajes), mejor resultado de cada evaluación y contenidos consultados; lo inactivado después sale como «No disponible» |
-| `#/tutor` | `pages/Tutor.tsx` | `ms07:tutor:use` | Chat con el Tutor CampusSeguro (RF-15): preguntas sugeridas, respuesta con los contenidos usados como fuente (enlazan a `#/aprendizaje/{id}`), aviso cuando no hay información y botón Reintentar si la IA no responde a tiempo |
+| `#/tutor` | `pages/Tutor.tsx` | `ms07:tutor:use` | Chat con el Tutor CampusSeguro (RF-15): preguntas sugeridas, respuesta con los contenidos usados como fuente (enlazan a `#/aprendizaje/{id}`), mensaje amable cuando la pregunta no es del tema o los contenidos no la cubren (con el protocolo oficial y dos preguntas de ejemplo) y botón Reintentar si la IA no responde a tiempo |
 | `#/admin/evaluaciones` | `pages/AdminEvaluaciones.tsx` | `ms07:content:manage` | Crear, modificar, inactivar y reactivar evaluaciones (editor en `components/EditorEvaluacion.tsx`) |
 
 Las pantallas y el menú se muestran por permiso del token, nunca por nombre de rol. Nada se borra: lo inactivo solo
