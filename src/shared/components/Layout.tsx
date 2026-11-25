@@ -91,8 +91,16 @@ function menuFor(permissions: string[]): MenuSection[] {
   if (can(PERMISSION.MS02_ROUTE_READ)) {
     campusItems.push({ href: '#/rutas', icon: <MapLine />, label: 'Rutas de evacuación' });
   }
+  // MS07: tutor, learning center, evaluations and progress, each by its own permission
   if (can(PERMISSION.MS07_TUTOR_USE)) {
     campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
+  }
+  if (can(PERMISSION.MS07_CONTENT_READ)) {
+    campusItems.push({ href: '#/aprendizaje', icon: <LifeBuoy />, label: 'Aprendizaje' });
+  }
+  if (can(PERMISSION.MS07_QUIZ_TAKE)) {
+    campusItems.push({ href: '#/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
+    campusItems.push({ href: '#/mi-progreso', icon: <ClipboardCheck />, label: 'Mi progreso' });
   }
   if (campusItems.length > 0) {
     sections.push({ title: 'Campus', items: campusItems });
@@ -117,6 +125,10 @@ function menuFor(permissions: string[]): MenuSection[] {
   }
   if (can('ms01:role:read_all', 'ms01:role:manage')) {
     adminItems.push({ href: '#/roles', icon: <ShieldCheck />, label: 'Roles' });
+  }
+  if (can(PERMISSION.MS07_CONTENT_MANAGE)) {
+    adminItems.push({ href: '#/admin/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
+    adminItems.push({ href: '#/admin/aprendizaje', icon: <LifeBuoy />, label: 'Contenidos' });
   }
   if (adminItems.length > 0) {
     sections.push({ title: 'Administración', items: adminItems });

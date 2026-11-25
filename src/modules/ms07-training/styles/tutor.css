@@ -1,0 +1,106 @@
+/* Tutor CampusSeguro de MS07 (RF-15): chat con el asistente, con las fuentes de cada respuesta */
+.tu-main{gap:16px}
+.tu-ctx{color:#fff;font-weight:600;text-decoration:none}
+.tu-ctx:hover{text-decoration:underline}
+.tu-oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.tu-chat{display:flex;flex-direction:column;width:100%;max-width:960px;align-self:center;height:clamp(540px,calc(100vh - 340px),800px);background:#fff;border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 1px 2px rgba(15,23,42,.04),0 12px 32px rgba(15,23,42,.06)}
+.tu-chat svg.i{width:18px;height:18px}
+
+.tu-barra{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line)}
+.tu-quien{display:flex;flex-direction:column;min-width:0}
+.tu-quien b{font:700 16px/20px 'Outfit',sans-serif}
+.tu-quien small{font-size:12px;line-height:16px;color:var(--mut)}
+.tu-nueva{display:inline-flex;align-items:center;gap:8px;margin-left:auto;height:36px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:600 13px/1 'Outfit',sans-serif;cursor:pointer;white-space:nowrap}
+.tu-nueva:hover:not(:disabled){border-color:var(--red);color:var(--red)}
+.tu-nueva:disabled{opacity:.6;cursor:default}
+.tu-nueva svg.i{width:16px;height:16px}
+
+.tu-avatar{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:999px;background:var(--cream);color:var(--red)}
+.tu-avatar.grande{width:64px;height:64px}
+.tu-avatar.grande svg.i{width:32px;height:32px}
+
+.tu-registro{flex:1;overflow-y:auto;padding:24px;background:var(--bg);overscroll-behavior:contain}
+
+/* Primera vista: saludo y preguntas sugeridas */
+.tu-registro:has(.tu-bienvenida){display:flex}
+.tu-bienvenida{display:flex;flex-direction:column;align-items:center;gap:8px;max-width:640px;margin:auto;padding:8px 0;text-align:center}
+.tu-bienvenida h2{margin-top:8px;font:700 24px/30px 'Outfit',sans-serif}
+.tu-bienvenida p{color:var(--mut);font-size:15px}
+.tu-sugerencias{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%;margin:16px 0 0;padding:0;list-style:none}
+.tu-sugerencias button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;height:100%;min-height:64px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:#fff;color:var(--ink);font:600 14px/1.4 'Geist',sans-serif;text-align:left;cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
+.tu-sugerencias button::after{content:'→';color:var(--red);font-weight:700}
+.tu-sugerencias button:hover:not(:disabled){border-color:var(--red);background:var(--cream);transform:translateY(-1px)}
+.tu-sugerencias button:disabled{opacity:.6;cursor:default}
+
+/* Mensajes */
+.tu-mensajes{display:flex;flex-direction:column;gap:16px;margin:0;padding:0;list-style:none}
+.tu-fila{display:flex;align-items:flex-end;gap:10px;animation:tu-entra .22s ease-out}
+.tu-fila.propia{justify-content:flex-end}
+.tu-burbuja{max-width:min(640px,85%);padding:12px 16px;border-radius:18px;font:400 15px/1.6 'Geist',sans-serif;overflow-wrap:anywhere}
+.tu-burbuja.usuario{white-space:pre-line;background:var(--red);color:#fff;border-bottom-right-radius:6px}
+.tu-burbuja.tutor,.tu-burbuja.error{display:flex;flex-direction:column;gap:10px;background:#fff;border:1px solid var(--line);border-bottom-left-radius:6px}
+.tu-burbuja.error{background:#FEF2F2;border-color:#FECACA}
+.tu-texto{white-space:pre-line}
+
+.tu-fuentes{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.tu-fuentes>span{font:800 11px/1 'Outfit',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.tu-fuentes ul{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.tu-fuentes a{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:var(--cream);color:var(--red);font:600 12px/16px 'Geist',sans-serif;text-decoration:none;transition:background .15s,color .15s}
+.tu-fuentes a:hover{background:var(--red);color:#fff}
+.tu-fuentes svg.i{width:14px;height:14px}
+/* Sin información: preguntas de ejemplo que sí puede responder */
+.tu-ejemplos{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.tu-ejemplos>span{font:800 11px/1 'Outfit',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.tu-ejemplos ul{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}
+.tu-ejemplos button{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);font:600 12px/16px 'Geist',sans-serif;text-align:left;cursor:pointer;transition:border-color .15s,background .15s,color .15s}
+.tu-ejemplos button:hover:not(:disabled){border-color:var(--red);background:var(--cream);color:var(--red)}
+.tu-ejemplos button:disabled{opacity:.6;cursor:default}
+.tu-reintentar{align-self:flex-start;height:34px;padding:0 14px;border:1px solid var(--red);border-radius:10px;background:#fff;color:var(--red);font:600 13px/1 'Outfit',sans-serif;cursor:pointer}
+.tu-reintentar:hover:not(:disabled){background:var(--red);color:#fff}
+.tu-reintentar:disabled{opacity:.6;cursor:default}
+
+/* El tutor está escribiendo */
+.tu-escribiendo{flex-direction:row!important;align-items:center;gap:5px!important;padding:16px 18px}
+.tu-escribiendo i{width:8px;height:8px;border-radius:999px;background:var(--mut);animation:tu-punto 1.2s infinite ease-in-out}
+.tu-escribiendo i:nth-child(2){animation-delay:.15s}
+.tu-escribiendo i:nth-child(3){animation-delay:.3s}
+
+/* Redactor */
+.tu-redactor{display:flex;flex-direction:column;gap:6px;padding:14px 16px 12px;border-top:1px solid var(--line);background:#fff}
+.tu-caja{display:flex;align-items:flex-end;gap:10px;padding:8px 8px 8px 16px;border:1px solid var(--line);border-radius:16px;background:#fff;transition:border-color .15s}
+.tu-caja:focus-within{border-color:var(--red);outline:3px solid var(--cream);outline-offset:0}
+.tu-caja textarea{flex:1;min-width:0;max-height:160px;padding:9px 0;border:0;outline:0;background:none;resize:none;color:var(--ink);font:400 15px/1.5 'Geist',sans-serif}
+.tu-caja textarea::placeholder{color:var(--mut)}
+.tu-enviar{display:grid;place-items:center;width:44px;height:44px;flex:none;border:0;border-radius:12px;background:var(--red);color:#fff;cursor:pointer;transition:background .15s}
+.tu-enviar:hover:not(:disabled){background:var(--dark)}
+.tu-enviar:disabled{background:var(--line);color:var(--mut);cursor:default}
+.tu-pie{display:flex;justify-content:space-between;gap:12px;padding:0 4px;font-size:12px;line-height:16px;color:var(--mut)}
+.tu-limite{color:var(--red);font-weight:600}
+
+.tu-nota{width:100%;max-width:720px;align-self:center;text-align:center;font-size:12px;line-height:1.5;color:var(--mut)}
+
+@keyframes tu-entra{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes tu-punto{0%,80%,100%{opacity:.35;transform:translateY(0)}40%{opacity:1;transform:translateY(-4px)}}
+
+@media (max-width:700px){
+  .content.tu-main{padding:16px 12px 24px}
+  /* En el celular el encabezado va sin subtítulo para que el chat quepa en la pantalla */
+  body:has(.tu-chat) .page-header{min-height:0;padding-top:20px;padding-bottom:20px}
+  body:has(.tu-chat) .page-header p{display:none}
+  .tu-chat{height:calc(100dvh - 248px);min-height:420px;border-radius:16px}
+  .tu-barra{padding:12px 14px}
+  .tu-quien small,.tu-nueva span{display:none}
+  .tu-nueva{width:36px;padding:0;justify-content:center}
+  .tu-avatar.grande{width:52px;height:52px}
+  .tu-bienvenida h2{font-size:20px;line-height:26px}
+  .tu-registro{padding:16px 12px}
+  .tu-sugerencias{grid-template-columns:1fr}
+  .tu-burbuja{max-width:88%}
+  .tu-fila .tu-avatar{display:none}
+  .tu-pie span:first-child{visibility:hidden}
+}
+@media (prefers-reduced-motion:reduce){
+  .tu-fila,.tu-escribiendo i{animation:none}
+  .tu-sugerencias button,.tu-sugerencias button:hover{transition:none;transform:none}
+}
