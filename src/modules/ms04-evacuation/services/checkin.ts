@@ -1,10 +1,14 @@
 import { ApiError, request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
-import type { Checkin, CheckinRequest, EstadoEvento, Evento, EventoPage } from '../types';
+import type {
+  Checkin, CheckinRequest, CheckinResumen, Consolidado, EstadoCheckin, EstadoEvento, Evento, EventoPage, Pagina, Pendiente,
+  PersonaAsistencia, RegistroHistorial, Resultados,
+} from '../types';
 
 /**
  * Cliente de MS04 (Evacuación y check-in). Todo pasa por el API Gateway con el JWT de la sesión: el Gateway agrega
- * X-User-Id y X-User-Role, y MS04 identifica al usuario solo por ellos (RN-MS04-06). MS04 responde los errores
+ * X-User-Id, X-User-Role y X-User-Permission; MS04 identifica al usuario por X-User-Id (RN-MS04-06) y autoriza con
+ * X-User-Permission. MS04 responde los errores
  * con el ErrorResponse de los Estándares y los mensajes ya en español, así que se muestran tal cual.
  */
 const BASE = '/api/v1/chi/eventos';
@@ -71,4 +75,55 @@ export const checkinApi = {
       total_paginas: data?.total_paginas ?? 0,
     };
   },
+
+  /** Un evento en cualquier estado (RF-MS04-13); ms04:dashboard:read. */
+  async evento(session: Session, eventoId: string): Promise<Evento> {
+    return (await request(`${BASE}/${enc(eventoId)}`, { session })) as Evento;
+  },
+
+  /** Consolidado por estado y por punto de encuentro (RF-MS04-06); el brigadista solo ve sus zonas (RN-MS04-14). */
+  async consolidado(session: Session, eventoId: string): Promise<Consolidado> {
+    return (await request(`${BASE}/${enc(eventoId)}/consolidado`, { session })) as Consolidado;
+  },
+
+  /** Personas con su estado vigente (RF-MS04-06), filtrables por estado. */
+  personas(session: Session, eventoId: string, filtro: { estado?: EstadoCheckin; page: number; size: number }) {
+    return pagina<CheckinResumen>(session, `${BASE}/${enc(eventoId)}/personas`, filtro);
+  },
+
+  /** Personas convocadas que no han reportado (RF-MS04-07); necesita a MS01 para la población. */
+  pendientes(session: Session, eventoId: string, filtro: { page: number; size: number }) {
+    return pagina<Pendiente>(session, `${BASE}/${enc(eventoId)}/pendientes`, filtro);
+  },
+
+  /** Personas que requieren asistencia y el estado del envío de su solicitud a MS05 (RF-MS04-08). */
+  asistencia(session: Session, eventoId: string, filtro: { page: number; size: number }) {
+    return pagina<PersonaAsistencia>(session, `${BASE}/${enc(eventoId)}/asistencia`, filtro);
+  },
+
+  /** Todos los cambios de estado del evento (RF-MS04-10); ms04:history:read. */
+  historial(session: Session, eventoId: string, filtro: { estado?: EstadoCheckin; page: number; size: number }) {
+    return pagina<RegistroHistorial>(session, `${BASE}/${enc(eventoId)}/historial`, filtro);
+  },
+
+  /** Resultados del evento, parciales mientras no esté FINALIZADO (RF-MS04-12); ms04:history:read. */
+  async resultados(session: Session, eventoId: string): Promise<Resultados> {
+    return (await request(`${BASE}/${enc(eventoId)}/resultados`, { session })) as Resultados;
+  },
 };
+
+/** Pide una página de un listado del panel y la deja completa aunque falten campos. */
+async function pagina<T>(
+  session: Session, ruta: string, filtro: { estado?: string; page: number; size: number },
+): Promise<Pagina<T>> {
+  const params = new URLSearchParams({ page: String(filtro.page), size: String(filtro.size) });
+  if (filtro.estado) params.set('estado', filtro.estado);
+  const data = (await request(`${ruta}?${params.toString()}`, { session })) as Partial<Pagina<T>> | null;
+  return {
+    contenido: Array.isArray(data?.contenido) ? data.contenido : [],
+    page: data?.page ?? filtro.page,
+    size: data?.size ?? filtro.size,
+    total_elementos: data?.total_elementos ?? 0,
+    total_paginas: data?.total_paginas ?? 0,
+  };
+}

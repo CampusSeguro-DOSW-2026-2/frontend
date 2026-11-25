@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } from '../services/campus';
+import { PERMISSION } from '../../../shared/permissions';
+import { campus, CampusApiError, comoCampusError as comoError, currentPermissions } from '../services/campus';
 import type { Campus, CampusRequest, TipoZonaAbierta, ZonaAbierta, ZonaAbiertaRequest } from '../types';
 import { TIPOS_ZONA_ABIERTA } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
@@ -121,8 +122,8 @@ export default function CampusAdmin() {
   const [aviso, setAviso] = useState<CampusApiError | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
 
-  const roles = rolesDeSesion();
-  const puedeGestionar = roles === null || roles.includes('ADMIN');
+  const permissions = currentPermissions();
+  const puedeGestionar = permissions.includes(PERMISSION.MS02_BUILDING_WRITE);
 
   const aplicar = useCallback((d: Datos) => { setDatos(d); setErrorCarga(null); }, []);
 

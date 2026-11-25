@@ -1,16 +1,5 @@
+import { PERMISSION } from '../../shared/permissions';
 import type { AlertOrigin } from './services/alerts';
-
-/**
- * Permisos de MS03 según los roles oficiales de MS01 (matriz del backend, ms03:alert:*):
- * - COORDINADOR: recibe, administra todas las alertas y consulta el historial.
- * - ORGANIZADOR: recibe, consulta el historial y administra solo alertas de simulacro.
- * - AUDITOR: solo consulta el historial.
- * - ESTUDIANTE, PROFESOR, ADMINISTRATIVO y BRIGADISTA: solo reciben alertas.
- * - ADMIN: sin permisos en MS03.
- * El backend es quien decide; esto solo evita mostrar acciones que responderían 403.
- */
-const RECEIVE = ['ESTUDIANTE', 'PROFESOR', 'ADMINISTRATIVO', 'BRIGADISTA', 'COORDINADOR', 'ORGANIZADOR'];
-const HISTORY = ['COORDINADOR', 'ORGANIZADOR', 'AUDITOR'];
 
 export interface AlertAccess {
   /** Ve el listado de todas las alertas. */
@@ -23,13 +12,21 @@ export interface AlertAccess {
   canManage: (origin: AlertOrigin) => boolean;
 }
 
-export function alertAccess(roles: string[]): AlertAccess {
-  const has = (r: string) => roles.includes(r);
-  const coordinator = has('COORDINADOR');
+/**
+ * Alert actions allowed by the permissions of the token (ms03:alert:*). The backend decides; this only avoids showing
+ * actions that would answer 403.
+ *
+ * @param permissions permission codes of the session
+ * @return what the session can do with alerts
+ */
+export function alertAccess(permissions: string[]): AlertAccess {
+  const can = (code: string) => permissions.includes(code);
+  const managesAll = can(PERMISSION.MS03_ALERT_MANAGE);
+  const managesDrills = can(PERMISSION.MS03_ALERT_MANAGE_DRILL);
   return {
-    canReadHistory: roles.some((r) => HISTORY.includes(r)),
-    canReceive: roles.some((r) => RECEIVE.includes(r)),
-    canCreate: coordinator,
-    canManage: (origin) => coordinator || (has('ORGANIZADOR') && origin === 'SIMULATION'),
+    canReadHistory: can(PERMISSION.MS03_ALERT_READ_HISTORY),
+    canReceive: can(PERMISSION.MS03_ALERT_RECEIVE),
+    canCreate: managesAll,
+    canManage: (origin) => managesAll || (managesDrills && origin === 'SIMULATION'),
   };
 }

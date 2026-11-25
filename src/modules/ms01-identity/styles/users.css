@@ -152,3 +152,49 @@ a.btn{text-decoration:none}
 .chip-removed .chip{text-decoration:line-through;opacity:.6}
 .chip-removed .chip::before{content:'− '}
 .panel .actions .btn.fit{width:auto;min-width:200px;padding:0 24px}
+
+/* Crear y editar rol: panel más ancho, nombre y descripción lado a lado y permisos en tarjetas con casilla redonda */
+.panel.role-panel{max-width:1120px}
+.role-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:24px;align-items:start}
+.role-panel .perm-groups.picker{max-height:640px;padding:20px}
+.role-panel .perm-groups.picker .perm-group ul{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;margin-top:12px}
+.role-panel .perm-groups.picker li{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;transition:border-color .15s,background .15s}
+.role-panel .perm-groups.picker li:has(input:checked){border-color:var(--red);background:var(--cream)}
+.role-panel .perm-groups.picker li label{align-items:flex-start;flex-wrap:nowrap;line-height:20px}
+.role-panel .perm-groups.picker li code{align-self:flex-start;margin-left:30px}
+.role-panel .perm-groups.picker label .tag{margin-left:auto}
+.role-panel .perm-groups.picker input[type=checkbox],.role-panel .picker-only input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;display:grid;place-items:center;width:20px;height:20px;margin:0;border:2px solid #CBD5E1;border-radius:50%;background:#fff;cursor:pointer;transition:background .15s,border-color .15s}
+.role-panel .perm-groups.picker input[type=checkbox]:checked,.role-panel .picker-only input[type=checkbox]:checked{background:var(--red);border-color:var(--red)}
+.role-panel .perm-groups.picker input[type=checkbox]:checked::after,.role-panel .picker-only input[type=checkbox]:checked::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.role-panel .perm-groups.picker input[type=checkbox]:disabled{cursor:default;opacity:.55}
+.role-panel .perm-groups.picker input[type=checkbox]:focus-visible,.role-panel .picker-only input[type=checkbox]:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+@media (max-width:900px){
+  .role-fields{grid-template-columns:1fr}
+}
+
+/* Editar roles y cambiar estado de varios usuarios: panel ancho, correos en una línea, roles para todos en tarjetas
+   y plegables */
+.panel.wide-edit{max-width:1280px}
+.wide-edit .utable .mail{min-width:240px;white-space:nowrap;overflow-wrap:normal}
+.wide-edit .utable td .pills{flex-wrap:wrap}
+.wide-edit .general-block{display:flex;flex-direction:column;gap:16px}
+.wide-edit .general-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.wide-edit .general-head h2{flex:none}
+.wide-edit .general-summary{flex:1;color:var(--mut);font-size:14px}
+.wide-edit .general-head .linkbtn{align-self:auto}
+.wide-edit .role-checklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:0;border:0;background:none}
+.wide-edit .role-checklist li{flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.wide-edit .role-checklist li:last-child{border-bottom:1px solid var(--line)}
+.wide-edit .role-checklist li.changed{border-color:var(--red);background:var(--cream)}
+.wide-edit .role-checklist label{min-width:0;width:100%}
+.wide-edit .role-checklist .holders{margin-left:30px}
+.wide-edit .role-checklist .change{margin-left:30px}
+
+/* Casillas redondas en las listas de usuarios y de roles (mismo estilo que el formulario de rol) */
+.utable input[type=checkbox],.role-checklist input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;display:grid;place-items:center;width:20px;height:20px;margin:0;border:2px solid #CBD5E1;border-radius:50%;background:#fff;cursor:pointer;transition:background .15s,border-color .15s}
+.utable input[type=checkbox]:checked,.role-checklist input[type=checkbox]:checked{background:var(--red);border-color:var(--red)}
+.utable input[type=checkbox]:checked::after,.role-checklist input[type=checkbox]:checked::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.utable input[type=checkbox]:indeterminate,.role-checklist input[type=checkbox]:indeterminate{border-color:var(--red);background:#fff}
+.utable input[type=checkbox]:indeterminate::after,.role-checklist input[type=checkbox]:indeterminate::after{content:'';width:10px;height:2px;border:0;background:var(--red);transform:none}
+.utable input[type=checkbox]:disabled,.role-checklist input[type=checkbox]:disabled{cursor:default;opacity:.55}
+.utable input[type=checkbox]:focus-visible,.role-checklist input[type=checkbox]:focus-visible{outline:3px solid var(--blue);outline-offset:2px}

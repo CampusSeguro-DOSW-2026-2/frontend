@@ -4,11 +4,12 @@ import { ApiError, errorMessage, type FieldErrors } from '../../../shared/servic
 import { FilePen, Info } from '../../../shared/components/Icons';
 import { PickerBox } from '../../ms03-alerts/components/PickerBox';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
+import { useParticipantRoles } from '../hooks/useParticipantRoles';
 import { labelOf, listEs, type CatalogItem } from '../../ms03-alerts/services/catalog';
 import type { Session } from '../../../shared/types';
-import { defaultTypeId, eventsApi, isOrganizer } from '../services/events';
+import { canManageDrills, defaultTypeId, eventsApi } from '../services/events';
 import type { EventStatus, EventType, ParticipantRole, ScopeItem } from '../types';
-import { PARTICIPANT_ROLE_ITEMS, STATUS_LABEL, fromLocalInput, scopeLabel, toLocalInput } from '../utils/labels';
+import { STATUS_LABEL, fromLocalInput, scopeLabel, toLocalInput } from '../utils/labels';
 import '../styles/events.css';
 
 interface Form { name: string; description: string; start: string; scope: ScopeItem[]; roles: ParticipantRole[] }
@@ -27,7 +28,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
   // Event types of the MS06 catalog. A drill (type SIMULACRO) and a real event cannot turn into each other.
   const [catalogTypes, setCatalogTypes] = useState<EventType[]>([]);
   const [knownTypes, setKnownTypes] = useState<EventType[]>([]);
-  const [isDrill, setIsDrill] = useState(isOrganizer(session));
+  const [isDrill, setIsDrill] = useState(canManageDrills(session));
   const [typesError, setTypesError] = useState('');
   const [typesAttempt, setTypesAttempt] = useState(0);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -38,6 +39,11 @@ export default function EventForm({ session, editId }: { session: Session; editI
   const [confirmFinish, setConfirmFinish] = useState(false);
   // Buildings and zones come from MS02: MS06 validates these same UUIDs when the event is saved.
   const { catalog, loading: scopeLoading, error: scopeError, retry: retryScope } = useScopeCatalog();
+  // Participants come from MS01: the roles that receive the alerts, including the ones the administrator created.
+  const {
+    items: participantItems, loading: participantsLoading, error: participantsError,
+    notice: participantsNotice, retry: retryParticipants,
+  } = useParticipantRoles();
   const scopeItems = useMemo<CatalogItem[]>(() => {
     const live = catalog ? [...catalog.buildings, ...catalog.zones] : [];
     // Ids already in the event that MS02 no longer lists (inactive or old demo ids) stay visible so they can be removed.
@@ -165,7 +171,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
           <h1>{editId ? 'Editar evento' : 'Crear evento'}</h1>
           <p>{inProgress
             ? 'El evento está en ejecución: al guardar se reenvían las alertas a brigadistas y participantes.'
-            : `${editId ? '' : isOrganizer(session) ? 'Se creará como simulacro. ' : 'Se creará como evento real. '}Con fecha, alcance y participantes completos queda Programado; si falta alguno, se guarda como Borrador.`}</p>
+            : `${editId ? '' : canManageDrills(session) ? 'Se creará como simulacro. ' : 'Se creará como evento real. '}Con fecha, alcance y participantes completos queda Programado; si falta alguno, se guarda como Borrador.`}</p>
         </div>
       </header>
       <main className="ev-form">
@@ -205,12 +211,22 @@ export default function EventForm({ session, editId }: { session: Session; editI
             <div className="two">
               <PickerBox label="Edificios y zonas" help="El evento se realizará en los lugares seleccionados." editLabel="Editar edificios y zonas"
                 items={scopeItems} selected={form.scope.map((s) => s.id)} onToggle={toggleScope} error={errors.scope} loading={scopeLoading} />
-              <PickerBox label="Participantes" help="Grupos que serán convocados a este evento." editLabel="Editar participantes"
-                items={PARTICIPANT_ROLE_ITEMS} selected={form.roles} onToggle={toggleRole} error={errors.participantRoles} />
+              <PickerBox label="Participantes" help="Roles que serán convocados a este evento." editLabel="Editar participantes"
+                items={participantItems} selected={form.roles} onToggle={toggleRole} error={errors.participantRoles} loading={participantsLoading} />
             </div>
             {scopeError && (
               <p className="notice err" role="alert">
                 {scopeError} <button type="button" className="plink" onClick={retryScope}>Reintentar</button>
+              </p>
+            )}
+            {participantsError && (
+              <p className="notice err" role="alert">
+                {participantsError} <button type="button" className="plink" onClick={retryParticipants}>Reintentar</button>
+              </p>
+            )}
+            {participantsNotice && (
+              <p className="notice" role="status">
+                {participantsNotice} <button type="button" className="plink" onClick={retryParticipants}>Reintentar</button>
               </p>
             )}
           </div>
@@ -233,7 +249,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
             <div className="sum2-row"><small>Tipo</small><span>{typeIds.length ? listEs(typeIds.map((t) => labelOf(typeItems, t))) : '—'}</span></div>
             <div className="sum2-row"><small>Inicio</small><span>{form.start ? new Date(form.start).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</span></div>
             <div className="sum2-row"><small>Edificios y zonas</small><span>{form.scope.length ? form.scope.map((s) => labelOf(scopeItems, s.id)).join(' · ') : '—'}</span></div>
-            <div className="sum2-row"><small>Participantes</small><span>{form.roles.length ? listEs(form.roles.map((r) => labelOf(PARTICIPANT_ROLE_ITEMS, r))) : '—'}</span></div>
+            <div className="sum2-row"><small>Participantes</small><span>{form.roles.length ? listEs(form.roles.map((r) => labelOf(participantItems, r))) : '—'}</span></div>
             <div className="sep" />
             <div className="sum2-row"><small>{inProgress ? 'Sigue en' : 'Quedará como'}</small><span><span className={`st ${willBe}`}>{STATUS_LABEL[willBe]}</span></span></div>
           </div>

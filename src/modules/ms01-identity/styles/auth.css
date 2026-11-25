@@ -1,5 +1,5 @@
 /* Pantalla de registro: formulario a la izquierda, foto del campus a la derecha */
-.reg{display:grid;grid-template-columns:59fr 41fr;min-height:calc(100dvh - 68px);background:var(--bg)}
+.reg{display:grid;grid-template-columns:59fr 41fr;min-height:100dvh;background:var(--bg)}
 .reg-main{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:40px 24px;text-align:center}
 .reg-logo{width:112px;height:auto;color:var(--red)}
 .reg h1{font:800 32px/120% 'Outfit',sans-serif;color:var(--ink)}

@@ -29,47 +29,42 @@ export const SCOPE_ITEMS: CatalogItem[] = [
   { id: 'ZON-001', label: 'Plazoleta frente al Edificio F', group: 'Zonas' },
 ];
 
-// Roles oficiales de CampusSeguro que pueden recibir alertas (permiso ms03:alert:receive).
-// ADMIN y AUDITOR existen pero no reciben alertas, por eso no se ofrecen como destinatarios.
-export const ROLE_ITEMS: CatalogItem[] = [
-  { id: 'ESTUDIANTE', label: 'Estudiantes', group: 'Roles' },
-  { id: 'PROFESOR', label: 'Profesores', group: 'Roles' },
-  { id: 'ADMINISTRATIVO', label: 'Personal administrativo', group: 'Roles' },
-  { id: 'BRIGADISTA', label: 'Brigadistas', group: 'Roles' },
-  { id: 'COORDINADOR', label: 'Coordinadores', group: 'Roles' },
-  { id: 'ORGANIZADOR', label: 'Organizadores', group: 'Roles' },
-];
-// Etiquetas de los 8 roles oficiales, para mostrar alertas creadas fuera de esta pantalla (p. ej. por MS06).
-const ROLE_LABELS: Record<string, string> = {
-  ...Object.fromEntries(ROLE_ITEMS.map((r) => [r.id, r.label])),
-  ADMIN: 'Administradores',
-  AUDITOR: 'Auditores',
+// Opción de destinatario para un rol de MS01: se muestra con su nombre original, el mismo que guarda MS01. La lista de
+// roles que reciben alertas no se declara aquí: sale de MS01 (`services/recipients.ts`), que incluye los roles que cree
+// o edite el administrador.
+export const roleItem = (rol: string): CatalogItem => ({ id: rol, label: rol, group: 'Roles' });
+
+// OPERATIVA (logística o administrativa) es el único tipo local de MS03: el resto sale del catálogo de MS06.
+// Es exclusiva: no se combina con los de emergencia.
+export const OPERATIONAL_TYPE = 'OPERATIVA';
+
+/**
+ * Tipo por defecto del formulario, deducido del catálogo de MS03: prefiere `OTRO`; si no está, el primer tipo
+ * distinto de OPERATIVA; si el catálogo solo trae OPERATIVA (o está vacío), el primero o cadena vacía.
+ */
+export const defaultAlertType = (items: CatalogItem[]): string => {
+  if (items.some((item) => item.id === 'OTRO')) return 'OTRO';
+  const emergency = items.find((item) => item.id !== OPERATIONAL_TYPE);
+  return emergency?.id ?? items[0]?.id ?? '';
 };
 
-// Tipos de alerta. OPERATIVA (logística o administrativa) es exclusiva: no se combina con los de emergencia.
-export const TYPE_ITEMS: CatalogItem[] = [
-  { id: 'EARTHQUAKE', label: 'Sismo', group: 'Emergencia' },
-  { id: 'FIRE', label: 'Incendio', group: 'Emergencia' },
-  { id: 'OTHER', label: 'Otra emergencia', group: 'Emergencia' },
-  { id: 'OPERATIVA', label: 'Operativa (logística o administrativa)', group: 'Operativa' },
-];
-export const DEFAULT_TYPES: AlertType[] = ['OTHER'];
 /** Aplica la regla de MS03: OPERATIVA va sola; los tipos de emergencia se pueden combinar. */
 export const toggleType = (current: AlertType[], id: AlertType): AlertType[] => {
   if (current.includes(id)) return current.filter((t) => t !== id);
-  if (id === 'OPERATIVA') return ['OPERATIVA'];
-  return [...current.filter((t) => t !== 'OPERATIVA'), id];
+  if (id === OPERATIONAL_TYPE) return [OPERATIONAL_TYPE];
+  return [...current.filter((t) => t !== OPERATIONAL_TYPE), id];
 };
 
 export const labelOf = (items: CatalogItem[], id: string) => items.find((i) => i.id === id)?.label ?? id;
 export const scopeIdsOf = (s: { type: string; ids?: string[] }) => (s.type === 'CAMPUS' ? ['CAMPUS'] : s.ids ?? []);
 export const listEs = (xs: string[]) => {
-  const l = xs.map((x, i) => (i === 0 ? x : x.charAt(0).toLowerCase() + x.slice(1)));
+  // Los nombres en mayúsculas (los roles de MS01) se muestran tal cual
+  const l = xs.map((x, i) => (i === 0 || x === x.toUpperCase() ? x : x.charAt(0).toLowerCase() + x.slice(1)));
   return l.length > 1 ? `${l.slice(0, -1).join(', ')} y ${l[l.length - 1]}` : l[0] ?? '';
 };
 /** Destinatarios en texto: los roles por nombre y los usuarios individuales como un conteo. */
 export const recipientsText = (recipients: Recipient[]) => {
-  const names = recipients.filter((r) => r.type === 'ROLE').map((r) => ROLE_LABELS[r.id] ?? r.id);
+  const names = recipients.filter((r) => r.type === 'ROLE').map((r) => r.id);
   const users = recipients.filter((r) => r.type === 'USER').length;
   if (users) names.push(users === 1 ? '1 usuario' : `${users} usuarios`);
   return listEs(names);

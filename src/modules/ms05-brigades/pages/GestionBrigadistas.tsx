@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search } from '../../../shared/components/Icons';
+import { PERMISSION } from '../../../shared/permissions';
 import { errorMessage } from '../../../shared/services/http';
+import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
+import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import IncidentesEvento from '../components/IncidentesEvento';
 import { brigadesApi } from '../services/brigades';
 import type { BrigadistaGestion, EventoOperacion, GestionBrigadistasEvento } from '../types';
+import { nombreUbicacion } from '../utils/ubicaciones';
 import '../../ms06-drills/styles/events.css';
 import '../styles/brigadas.css';
 
@@ -66,33 +70,65 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
 
   useEffect(() => { cargar(); }, [cargar]);
 
+  const { catalog } = useScopeCatalog();
+
+  // MS05 solo guarda el id de la ubicación; el nombre sale del catálogo vivo de MS02.
+  const brigadistas = useMemo(
+    () => (panel?.brigadistas ?? []).map((b) => ({
+      ...b,
+      nombreUbicacion: b.ubicacionId ? nombreUbicacion(b.ubicacionId, b.nombreUbicacion, catalog) : null,
+    })),
+    [panel, catalog],
+  );
+
   const visibles = useMemo(() => {
     if (!panel) return [];
     const q = norm(texto.trim());
-    return panel.brigadistas
+    return brigadistas
       .filter((b) => filtro === 'TODOS' || b.estado === filtro)
       .filter((b) => !q || norm(b.nombre).includes(q));
-  }, [panel, texto, filtro]);
+  }, [panel, brigadistas, texto, filtro]);
 
-  // Agrupa en el orden que entrega MS05: activos por edificio, activos sin edificio e inactivos
+  // Agrupa en el orden que entrega MS05: activos por edificio, activos sin edificio e inactivos. La clave es el id
+  // de la ubicación (no el nombre) para no mezclar dos edificios que se llamen igual.
   const grupos = useMemo(() => {
-    const out: { titulo: string; items: BrigadistaGestion[] }[] = [];
+    const out: { clave: string; titulo: string; items: BrigadistaGestion[] }[] = [];
     for (const b of visibles) {
+      const clave = b.estado !== 'ACTIVO' ? 'INACTIVOS' : b.ubicacionId ?? 'SIN_EDIFICIO';
       const titulo = b.estado !== 'ACTIVO' ? 'Inactivos' : b.nombreUbicacion ?? 'Activos sin edificio';
       const last = out[out.length - 1];
-      if (last && last.titulo === titulo) last.items.push(b);
-      else out.push({ titulo, items: [b] });
+      if (last && last.clave === clave) last.items.push(b);
+      else out.push({ clave, titulo, items: [b] });
     }
     return out;
   }, [visibles]);
 
-  const evento = panel?.evento;
+  // Los edificios del evento llegan de MS05 solo con su id; el nombre sale del catálogo vivo de MS02.
+  const evento = useMemo(
+    () => (panel?.evento
+      ? {
+          ...panel.evento,
+          edificios: panel.evento.edificios.map((e) => ({
+            ...e,
+            nombre: nombreUbicacion(e.ubicacionId, e.nombre, catalog),
+          })),
+        }
+      : undefined),
+    [panel, catalog],
+  );
 
-  // Misma regla que MS05 y MS06: el coordinador gestiona eventos reales y el organizador simulacros
-  const roles = session.user.roles;
-  const coordina = roles.includes('COORDINADOR');
-  const organiza = roles.includes('ORGANIZADOR');
-  const tipos = coordina && organiza ? 'eventos ni simulacros' : organiza ? 'simulacros' : 'eventos reales';
+  // Same rule as MS05 and MS06: real events and drills are managed with their own permission
+  const managesReal = hasPermission(session, PERMISSION.MS05_BRIGADIER_ASSIGN_TO_REAL);
+  const managesDrills = hasPermission(session, PERMISSION.MS05_BRIGADIER_ASSIGN_TO_DRILL);
+  let eventKinds = 'eventos reales';
+  let eventKindsTitle = 'Eventos reales';
+  if (managesReal && managesDrills) {
+    eventKinds = 'eventos ni simulacros';
+    eventKindsTitle = 'Eventos reales y simulacros';
+  } else if (managesDrills) {
+    eventKinds = 'simulacros';
+    eventKindsTitle = 'Simulacros';
+  }
 
   return (
     <>
@@ -100,7 +136,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
         <div>
           <h1>Gestión de brigadistas</h1>
           <p>
-            {coordina && organiza ? 'Eventos reales y simulacros' : organiza ? 'Simulacros' : 'Eventos reales'}: primero los brigadistas activos, por edificio; después los inactivos.
+            {eventKindsTitle}: primero los brigadistas activos, por edificio; después los inactivos.
             {' '}Despliega a cada uno para ver sus incidentes y cambiar su edificio.
           </p>
         </div>
@@ -108,7 +144,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
       <main className="ev-main">
         {eventos === null && <p className="notice" role="status">Cargando eventos…</p>}
         {eventos && eventos.length === 0 && !error && (
-          <div className="ev-empty">No hay {tipos} programados ni en ejecución. Cuando se programe uno, aquí podrá gestionar a sus brigadistas.</div>
+          <div className="ev-empty">No hay {eventKinds} programados ni en ejecución. Cuando se programe uno, aquí podrá gestionar a sus brigadistas.</div>
         )}
 
         {eventos && eventos.length > 1 && (
@@ -157,7 +193,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
         )}
 
         {panel && !loading && grupos.map((g) => (
-          <section key={g.titulo} className="bg-list" aria-label={g.titulo}>
+          <section key={g.clave} className="bg-list" aria-label={g.titulo}>
             <h3 className="bg-group">{g.titulo}</h3>
             {g.items.map((b) => {
               const open = abierto === b.brigadistaId;

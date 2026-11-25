@@ -4,7 +4,8 @@ import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { checkinApi } from '../services/checkin';
 import type { EstadoEvento, EventoPage } from '../types';
-import { ESTADOS_EVENTO, fechaHora, textoEstadoEvento, textoRol, tipoEvento } from '../utils/labels';
+import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
+import { ESTADOS_EVENTO, fechaHora, textoEscenario, textoEstadoEvento, textoRol, tipoEvento } from '../utils/labels';
 import '../styles/checkin.css';
 
 /** Mensaje de la lista cuando no hay eventos, o ninguno con el estado elegido (F-07). */
@@ -23,6 +24,8 @@ export default function ListaEventos({ session }: { session: Session }) {
   const [datos, setDatos] = useState<EventoPage | null>(null);
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(true);
+  // Nombres de MS02 para los eventos guardados con ids; si MS02 no responde, se muestra el texto de MS04
+  const { catalog } = useScopeCatalog();
   const [intento, setIntento] = useState(0);
 
   useEffect(() => {
@@ -77,9 +80,9 @@ export default function ListaEventos({ session }: { session: Session }) {
                   <span>Inicio: <b>{fechaHora(evento.fecha_inicio) || 'Sin fecha'}</b></span>
                   {evento.fecha_cierre && <span>Cierre: <b>{fechaHora(evento.fecha_cierre)}</b></span>}
                   {evento.escenario.edificios.length > 0 && (
-                    <span>Edificios: <b>{evento.escenario.edificios.join(', ')}</b></span>
+                    <span>Edificios: <b>{textoEscenario(evento.escenario.edificios, catalog)}</b></span>
                   )}
-                  {evento.escenario.zonas.length > 0 && <span>Zonas: <b>{evento.escenario.zonas.join(', ')}</b></span>}
+                  {evento.escenario.zonas.length > 0 && <span>Zonas: <b>{textoEscenario(evento.escenario.zonas, catalog)}</b></span>}
                   {evento.roles_convocados.length > 0 && (
                     <span>Convocados: <b>{evento.roles_convocados.map(textoRol).join(', ')}</b></span>
                   )}
@@ -87,6 +90,9 @@ export default function ListaEventos({ session }: { session: Session }) {
                 <span className={`chk-habilitado${evento.checkin_habilitado ? ' si' : ''}`}>
                   {evento.checkin_habilitado ? 'Check-in habilitado' : 'Check-in deshabilitado'}
                 </span>
+                <a className="btn white chk-ir" href={`#/evacuacion/eventos/${encodeURIComponent(evento.evento_id)}`}>
+                  Abrir panel
+                </a>
               </li>
             ))}
           </ul>

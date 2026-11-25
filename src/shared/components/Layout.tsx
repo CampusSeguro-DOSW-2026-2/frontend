@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Session } from '../types';
+import { PERMISSION } from '../permissions';
 import { sessionPermissions } from '../services/session';
 import {
-  BellIcon, CalendarIcon, CalendarPlus, ChatIcon, ClipboardCheck, CloseIcon, HomeIcon, LifeBuoy, LogOut, MapLine,
+  BellIcon, CalendarIcon, CalendarPlus, ChatIcon, ClipboardCheck, CloseIcon, FilePen, HomeIcon, LifeBuoy, LogOut, MapLine,
   Megaphone, MenuIcon, ShieldCheck, UserIcon, Users,
 } from './Icons';
 
@@ -15,100 +16,132 @@ const ROLE_LABEL: Record<string, string> = {
   COORDINADOR: 'Coordinador de emergencias', ORGANIZADOR: 'Organizador de simulacros', ADMIN: 'Administrador', AUDITOR: 'Auditor',
 };
 
+/** Nombre visible de un rol: los iniciales con su nombre; los creados por el administrador, sin mayúsculas ni guion bajo. */
+const roleName = (role: string) => {
+  const text = role.replace(/_+/g, ' ').trim().toLowerCase();
+  return ROLE_LABEL[role] ?? text.charAt(0).toUpperCase() + text.slice(1);
+};
+
 /**
- * Menú principal según los roles de la sesión (diseño "Menú hamburguesa": comunidad, brigadista y roles
- * administrativos). Solo se muestran las opciones que el rol puede usar; nada aparece deshabilitado.
+ * Main menu built from the permissions of the token (design "Menú hamburguesa": community, brigade and administrative
+ * options). Only the options that the permissions allow are shown, nothing appears disabled. Roles are never checked:
+ * the administrator can create roles and change their permissions.
  */
-function menuFor(roles: string[], permissions: string[]): MenuSection[] {
-  const has = (...r: string[]) => r.some((x) => roles.includes(x));
+function menuFor(permissions: string[]): MenuSection[] {
   const can = (...p: string[]) => p.some((x) => permissions.includes(x));
-  const coordination = has('COORDINADOR', 'ORGANIZADOR');
-  const oversight = has('ADMIN', 'AUDITOR');
-  const community = has('ESTUDIANTE', 'PROFESOR', 'ADMINISTRATIVO', 'BRIGADISTA', 'COORDINADOR', 'ORGANIZADOR');
   const sections: MenuSection[] = [{ items: [{ href: '#/simulacro', icon: <HomeIcon />, label: 'Inicio' }] }];
 
-  if (has('BRIGADISTA')) {
+  if (can(PERMISSION.MS05_PANEL_READ_OWN)) {
     sections.push({
       title: 'Brigada',
       items: [
         { href: '#/brigadista', icon: <ClipboardCheck />, label: 'Panel de responsabilidades' },
-        // Auto asignación (RF-BEI-01, opción 2): elegir edificio en el mapa en eventos programados o en ejecución
+        // Self-assignment (RF-BEI-01, option 2): pick a building on the map for scheduled or running events
         { href: '#/brigadista/autoasignacion', icon: <MapLine />, label: 'Auto asignación' },
       ],
     });
   }
-  if (community) {
-    sections.push({
-      title: 'Emergencia',
-      items: [
-        // Check-in de MS04 (RF-MS04-01 a 04): reportar el propio estado durante un evento activo
-        { href: '#/checkin', icon: <ShieldCheck />, label: 'Reportar mi estado' },
-        { href: '#/ayuda', icon: <LifeBuoy />, label: 'Necesito ayuda' },
-      ],
-    });
+
+  const emergencyItems: MenuItem[] = [];
+  if (can(PERMISSION.MS04_CHECKIN_WRITE)) {
+    // MS04 check-in (RF-MS04-01 to 04): report the own status during an active event
+    emergencyItems.push({ href: '#/checkin', icon: <ShieldCheck />, label: 'Reportar mi estado' });
   }
-  if (coordination || oversight) {
-    const items: MenuItem[] = [{ href: '#/eventos', icon: <CalendarIcon />, label: 'Eventos' }];
-    if (coordination) items.push({ href: '#/eventos/nuevo', icon: <CalendarPlus />, label: 'Crear evento' });
-    sections.push({ title: 'Eventos', items });
+  if (can(PERMISSION.MS05_INCIDENT_REPORT)) {
+    emergencyItems.push({ href: '#/ayuda', icon: <LifeBuoy />, label: 'Necesito ayuda' });
   }
-  // Permisos de MS03 (ms03-alerts/permissions.ts): historial para coordinador, organizador y auditor; crear, solo coordinador
-  // Lista de eventos de MS04 (RF-MS04-13): ms04:dashboard:read
-  if (has('BRIGADISTA', 'COORDINADOR', 'ORGANIZADOR', 'AUDITOR')) {
+  if (can(PERMISSION.MS05_INCIDENT_MANAGE_OWN)) {
+    emergencyItems.push({ href: '#/mis-incidentes', icon: <ClipboardCheck />, label: 'Mis incidentes' });
+  }
+  if (emergencyItems.length > 0) {
+    sections.push({ title: 'Emergencia', items: emergencyItems });
+  }
+
+  const canManageEvents = can(PERMISSION.MS06_DRILL_MANAGE, PERMISSION.MS06_REAL_EVENT_MANAGE);
+  const canReadEvents = canManageEvents || can(PERMISSION.MS06_DRILL_READ, PERMISSION.MS06_REAL_EVENT_READ);
+  if (canReadEvents) {
+    const eventItems: MenuItem[] = [{ href: '#/eventos', icon: <CalendarIcon />, label: 'Eventos' }];
+    if (canManageEvents) {
+      eventItems.push({ href: '#/eventos/nuevo', icon: <CalendarPlus />, label: 'Crear evento' });
+    }
+    sections.push({ title: 'Eventos', items: eventItems });
+  }
+
+  // Event list of MS04 (RF-MS04-13)
+  if (can(PERMISSION.MS04_DASHBOARD_READ)) {
     sections.push({ title: 'Evacuación', items: [{ href: '#/evacuacion/eventos', icon: <CalendarIcon />, label: 'Eventos de evacuación' }] });
   }
-  if (coordination || has('AUDITOR')) {
-    const items: MenuItem[] = [{ href: '#/alertas', icon: <BellIcon />, label: 'Alertas' }];
-    if (has('COORDINADOR')) items.push({ href: '#/alertas/nueva', icon: <Megaphone />, label: 'Crear alerta' });
-    sections.push({ title: 'Alertas', items });
+
+  if (can(PERMISSION.MS03_ALERT_READ_HISTORY)) {
+    const alertItems: MenuItem[] = [{ href: '#/alertas', icon: <BellIcon />, label: 'Alertas' }];
+    if (can(PERMISSION.MS03_ALERT_MANAGE)) {
+      alertItems.push({ href: '#/alertas/nueva', icon: <Megaphone />, label: 'Crear alerta' });
+    }
+    sections.push({ title: 'Alertas', items: alertItems });
   }
-  if (coordination) {
+
+  if (can(PERMISSION.MS05_BRIGADIER_ASSIGN_TO_REAL, PERMISSION.MS05_BRIGADIER_ASSIGN_TO_DRILL)) {
     sections.push({ title: 'Brigada e incidentes', items: [{ href: '#/brigadistas', icon: <Users />, label: 'Gestión de brigadistas' }] });
   }
-  const campusRead = has(
-    'ESTUDIANTE',
-    'PROFESOR',
-    'ADMINISTRATIVO',
-    'BRIGADISTA',
-    'COORDINADOR',
-    'ORGANIZADOR',
-    'ADMIN',
-    'AUDITOR',
-  );
 
   const campusItems: MenuItem[] = [];
-
-  campusItems.push({ href: '#/edificios', icon: <HomeIcon />, label: 'Edificios y espacios' });
-
-  if (campusRead) {
-    campusItems.push(
-      { href: '#/rutas', icon: <MapLine />, label: 'Rutas de evacuación' },
-    );
+  if (can(PERMISSION.MS02_CAMPUS_READ)) {
+    campusItems.push({ href: '#/edificios', icon: <HomeIcon />, label: 'Edificios y espacios' });
   }
-  // Tutor CampusSeguro de MS07 (RF-15): por permiso
-  if (can('ms07:tutor:use')) campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
-  // Evaluaciones de MS07 (RF-14): por permiso, porque los roles los define el administrador
-  // Centro de aprendizaje de MS07 (RF-12): contenidos preventivos, por permiso
-  if (can('ms07:content:read')) campusItems.push({ href: '#/aprendizaje', icon: <LifeBuoy />, label: 'Aprendizaje' });
-  if (can('ms07:quiz:take')) campusItems.push({ href: '#/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
-  if (can('ms07:quiz:take')) campusItems.push({ href: '#/mi-progreso', icon: <ClipboardCheck />, label: 'Mi progreso' });
+  if (can(PERMISSION.MS02_ROUTE_READ)) {
+    campusItems.push({ href: '#/rutas', icon: <MapLine />, label: 'Rutas de evacuación' });
+  }
+  // MS07: tutor, learning center, evaluations and progress, each by its own permission
+  if (can(PERMISSION.MS07_TUTOR_USE)) {
+    campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
+  }
+  if (can(PERMISSION.MS07_CONTENT_READ)) {
+    campusItems.push({ href: '#/aprendizaje', icon: <LifeBuoy />, label: 'Aprendizaje' });
+  }
+  if (can(PERMISSION.MS07_QUIZ_TAKE)) {
+    campusItems.push({ href: '#/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
+    campusItems.push({ href: '#/mi-progreso', icon: <ClipboardCheck />, label: 'Mi progreso' });
+  }
+  if (campusItems.length > 0) {
+    sections.push({ title: 'Campus', items: campusItems });
+  }
 
-  sections.push({
-    title: 'Campus',
-    items: campusItems,
-  });
-  // Administración de MS01: por permisos del token, porque los roles los define el administrador (RF-MS01-10)
+  // MS08: indicators and audit, of drills or real events (MS08 returns only the kind each permission allows)
+  const analyticsItems: MenuItem[] = [];
+  if (can(PERMISSION.MS08_INDICATORS_DRILL_READ, PERMISSION.MS08_INDICATORS_REAL_EVENT_READ)) {
+    analyticsItems.push({ href: '#/indicadores', icon: <ClipboardCheck />, label: 'Indicadores' });
+  }
+  if (can(PERMISSION.MS08_AUDIT_DRILL_READ, PERMISSION.MS08_AUDIT_REAL_EVENT_READ)) {
+    analyticsItems.push({ href: '#/auditoria', icon: <FilePen />, label: 'Auditoría' });
+  }
+  if (analyticsItems.length > 0) {
+    sections.push({ title: 'Analítica', items: analyticsItems });
+  }
+
+  // MS01 administration
   const adminItems: MenuItem[] = [];
-  if (can('ms01:user:read')) adminItems.push({ href: '#/usuarios', icon: <Users />, label: 'Usuarios' });
+  if (can('ms01:user:read')) {
+    adminItems.push({ href: '#/usuarios', icon: <Users />, label: 'Usuarios' });
+  }
   if (can('ms01:role:read_all', 'ms01:role:manage')) {
     adminItems.push({ href: '#/roles', icon: <ShieldCheck />, label: 'Roles' });
   }
-  if (can('ms07:content:manage')) adminItems.push({ href: '#/admin/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
-  if (can('ms07:content:manage')) adminItems.push({ href: '#/admin/aprendizaje', icon: <LifeBuoy />, label: 'Contenidos' });
+  if (can(PERMISSION.MS07_CONTENT_MANAGE)) {
+    adminItems.push({ href: '#/admin/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
+    adminItems.push({ href: '#/admin/aprendizaje', icon: <LifeBuoy />, label: 'Contenidos' });
+  }
   if (adminItems.length > 0) {
     sections.push({ title: 'Administración', items: adminItems });
   }
-  if (has('ADMIN', 'COORDINADOR')) {
+
+  const canAdministerCampus = can(
+    PERMISSION.MS02_BUILDING_WRITE,
+    PERMISSION.MS02_SPACE_WRITE,
+    PERMISSION.MS02_SAFE_ZONE_WRITE,
+    PERMISSION.MS02_ROUTE_WRITE,
+    PERMISSION.MS02_ROUTE_STATUS_WRITE,
+  );
+  if (canAdministerCampus) {
     sections.push({
       title: 'Administración campus',
       items: [{ href: '#/admin/edificios', icon: <HomeIcon />, label: 'Edificios, zonas y rutas' }],
@@ -136,7 +169,7 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
   const toggle = useRef<HTMLButtonElement>(null);
   const userBox = useRef<HTMLDivElement>(null);
   const roles = session?.user.roles ?? [];
-  const sections = menuFor(roles, sessionPermissions(session));
+  const sections = menuFor(sessionPermissions(session));
   const active = currentHref(current, sections);
 
   // Se cierra al elegir una opción y con Escape; al abrir, el foco pasa al menú y al cerrar vuelve al botón
@@ -158,7 +191,7 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
     return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onClick); };
   }, [userOpen]);
 
-  const role = roles.map((r) => ROLE_LABEL[r] ?? r).join(' · ');
+  const role = roles.map(roleName).join(' · ');
   const initials = (session?.user.email ?? '?').slice(0, 2).toUpperCase();
 
   return (

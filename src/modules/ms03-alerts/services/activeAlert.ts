@@ -18,7 +18,7 @@ export const USE_MS03 = import.meta.env.VITE_USE_MS03 === 'true';
 export const localApi: ActiveAlertApi = {
   async getActiveAlert() {
     return {
-      id: 'demo', types: ['EARTHQUAKE'], title: 'Simulacro Sísmico Nacional', scope: { type: 'CAMPUS' },
+      id: 'demo', types: ['SISMO'], title: 'Simulacro Sísmico Nacional', scope: { type: 'CAMPUS' },
       instructions: [
         'Agáchate, cúbrete debajo de una mesa y sostente.',
         'Evacúe ordenadamente por las salidas indicadas.',

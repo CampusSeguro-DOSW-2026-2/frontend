@@ -1,6 +1,6 @@
 import { request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
-import type { PuntoEncuentro } from '../types';
+import type { Edificio, PuntoEncuentro } from '../types';
 
 /**
  * Consultas de solo lectura a MS02 (Campus) que necesita el reporte de estado: MS02 es dueño de los puntos de
@@ -18,5 +18,15 @@ export const campusApi = {
     return puntos
       .filter((p) => p.estado === 'ACTIVO')
       .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  },
+
+  /**
+   * Edificios de MS02 para Requiero asistencia (RN-MS04-09), ordenados por nombre. `GET /buildings` solo devuelve los
+   * activos.
+   */
+  async edificios(session: Session): Promise<Edificio[]> {
+    const data = await request('/api/v1/buildings', { session });
+    const edificios = Array.isArray(data) ? (data as Edificio[]) : [];
+    return [...edificios].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
   },
 };

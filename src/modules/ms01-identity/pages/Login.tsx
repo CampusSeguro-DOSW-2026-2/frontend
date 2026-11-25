@@ -3,7 +3,7 @@ import { TextField } from '../components/TextField';
 import { ApiError, loginUser } from '../services/identity';
 import { errorMessage } from '../../../shared/services/http';
 import { clearRecovery } from '../services/recovery';
-import { saveSession, takeSessionNotice } from '../../../shared/services/session';
+import { HOME_ROUTE, saveSession, takeSessionNotice } from '../../../shared/services/session';
 import { emailFormatError, loginPasswordError } from '../utils/validation';
 import type { LoginDraft } from '../types';
 import '../styles/auth.css';
@@ -14,9 +14,6 @@ const EMPTY: LoginDraft = {
 };
 
 type Errors = Partial<Record<keyof LoginDraft, string>>;
-
-// Destino después de iniciar sesión: la pantalla de simulacro activo
-const HOME_ROUTE = '#/simulacro';
 
 // Orden visual de los campos: sirve para enfocar el primero con error
 const FIELD_ORDER: (keyof Errors)[] = ['email', 'password'];

@@ -1,3 +1,4 @@
+import type { ScopeCatalog } from '../../ms03-alerts/services/catalog';
 import type { EstadoCheckin, EstadoEvento } from '../types';
 
 /** Estados del evento en el orden del filtro (F-07); '' es Todos. */
@@ -12,13 +13,8 @@ export const ESTADOS_EVENTO: { codigo: EstadoEvento | ''; texto: string }[] = [
 export const textoEstadoEvento = (codigo: EstadoEvento): string =>
   ESTADOS_EVENTO.find((e) => e.codigo === codigo)?.texto ?? codigo;
 
-const ROLES: Record<string, string> = {
-  ESTUDIANTE: 'Estudiantes', PROFESOR: 'Profesores', ADMINISTRATIVO: 'Personal administrativo',
-  BRIGADISTA: 'Brigadistas', COORDINADOR: 'Coordinadores', ORGANIZADOR: 'Organizadores',
-};
-
-/** Rol convocado en plural, como se lista en el evento. */
-export const textoRol = (rol: string): string => ROLES[rol] ?? rol;
+/** Rol convocado con su nombre original de MS01: los roles son dinámicos y no se traducen en el front. */
+export const textoRol = (rol: string): string => rol;
 
 /** Texto que ve el usuario para cada estado, en el orden en que se muestran (F-01, RN-MS04-03). */
 export const ESTADOS: { codigo: EstadoCheckin; texto: string }[] = [
@@ -41,4 +37,14 @@ export function fechaHora(iso: string | null | undefined): string {
   if (!iso) return '';
   const fecha = new Date(iso);
   return Number.isNaN(fecha.getTime()) ? '' : FECHA_HORA.format(fecha);
+}
+
+/**
+ * Edificios o zonas del escenario en texto. MS06 debe enviar los nombres de MS02 (RN-MS04-24), pero los eventos que
+ * MS04 ya guardó con los ids de MS02 se traducen con el catálogo de MS02. Un texto que no es un id del catálogo (un
+ * nombre) o que no se puede traducir porque MS02 no respondió se muestra tal cual.
+ */
+export function textoEscenario(valores: string[], catalog: ScopeCatalog | null): string {
+  const items = catalog ? [...catalog.buildings, ...catalog.zones] : [];
+  return valores.map((v) => items.find((i) => i.id === v)?.label ?? v).join(', ');
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { campus, CampusApiError, comoCampusError as comoError, rolesDeSesion } from '../services/campus';
+import { PERMISSION } from '../../../shared/permissions';
+import { campus, CampusApiError, comoCampusError as comoError, currentPermissions } from '../services/campus';
 import type { CrearRutaRequest, Edificio, Espacio, EstadoRuta, Ruta, ZonaSegura } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
 import { RutaExteriorAdmin } from '../components/RutaExteriorAdmin';
@@ -201,9 +202,9 @@ export default function RoutesAdmin() {
   const [filtroEdificio, setFiltroEdificio] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<EstadoRuta | ''>('');
 
-  const roles = rolesDeSesion();
-  const puedeGestionar = roles === null || roles.includes('ADMIN');
-  const puedeCambiarEstado = roles === null || roles.includes('ADMIN') || roles.includes('COORDINADOR');
+  const permissions = currentPermissions();
+  const puedeGestionar = permissions.includes(PERMISSION.MS02_ROUTE_WRITE);
+  const puedeCambiarEstado = permissions.includes(PERMISSION.MS02_ROUTE_STATUS_WRITE);
 
   const aplicar = useCallback((d: Datos) => { setDatos(d); setErrorCarga(null); }, []);
 

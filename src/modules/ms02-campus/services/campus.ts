@@ -5,7 +5,7 @@ import type {
   SalidaRequest, TipoEspacio, ZonaSegura, ZonaSeguraRequest, EspacioPublico, SalidaPublica, ZonaSeguraPublica, Escalera, EscaleraRequest, CambiarDisponibilidadEscaleraRequest,
 } from '../types';
 import { API_URL, ApiError, GENERIC_ERROR, NETWORK_ERROR, request } from '../../../shared/services/http';
-import { getSession } from '../../../shared/services/session';
+import { getSession, sessionPermissions } from '../../../shared/services/session';
 
 const BASE = '/api/v1';
 
@@ -28,7 +28,8 @@ export class CampusApiError extends Error {
 export const comoCampusError = (e: unknown) =>
   e instanceof CampusApiError ? e : new CampusApiError(0, 'ERROR', GENERIC_ERROR, {}, '');
 
-export const rolesDeSesion = (): string[] | null => getSession()?.user.roles ?? null;
+/** Permission codes of the current session (empty without a session) */
+export const currentPermissions = (): string[] => sessionPermissions(getSession());
 
 async function pedir<T>(metodo: 'GET' | 'POST' | 'PUT' | 'PATCH', ruta: string, cuerpo?: unknown, publica = false): Promise<T> {
   try {

@@ -6,7 +6,7 @@ import { logoutUser } from '../services/identity';
 import { getRoles } from '../services/roles';
 import { setSessionNotice } from '../../../shared/services/session';
 import { errorMessage, getMyProfile } from '../services/users';
-import { ROLE_LABEL } from '../utils/labels';
+import { roleLabel } from '../utils/labels';
 import type { ProfileData, RolePermissions } from '../types';
 import type { Session } from '../../../shared/types';
 import '../styles/users.css';
@@ -114,7 +114,7 @@ export default function Profile({ session }: { session: Session }) {
 
               {rolesChanged && (
                 <p className="notice" role="status">
-                  Sus roles cambiaron (ahora: {profile.roles.map((r) => ROLE_LABEL[r] ?? r).join(', ')}).
+                  Sus roles cambiaron (ahora: {profile.roles.map(roleLabel).join(', ')}).
                   Inicie sesión de nuevo para que se apliquen a su sesión.
                 </p>
               )}
