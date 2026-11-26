@@ -1,4 +1,5 @@
 import { Cargando } from '../../../shared/components/Cargando';
+import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import GaleriaImagenes from '../components/GaleriaImagenes';
 import { Fragment, useCallback, useEffect, useState } from 'react';
@@ -49,7 +50,7 @@ function PisoForm({ inicial, onGuardar, onCancelar }: {
         </Campo>
       </div>
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar piso" />
     </form>
   );
 }
@@ -87,7 +88,7 @@ function EspacioForm({ inicial, onGuardar, onCancelar }: {
         </Campo>
       </div>
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar espacio" />
     </form>
   );
 }
@@ -141,18 +142,30 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
 
   const editar = (e: Edicion) => { setEdicion(e); setAviso(null); };
 
-  const guardar = async (accion: () => Promise<unknown>) => {
+  // Crear o modificar: al guardar se cierra el formulario y un aviso confirma el cambio (docs/PATRONES-UI.md)
+  const guardar = async (exito: string, accion: () => Promise<unknown>) => {
     await accion();
     await cargar();
     setEdicion(null);
+    avisar({ tono: 'exito', texto: exito });
   };
 
-  const cambiarEstado = async (clave: string, pisoId: string, accion: () => Promise<unknown>) => {
+  type Servicio = { inactivar: (id: string) => Promise<unknown>; reactivar: (id: string) => Promise<unknown> };
+  // Inactivar y reactivar no piden confirmación: se hacen de una vez y el aviso ofrece «Deshacer» (docs/PATRONES-UI.md)
+  const cambiarEstado = async (clave: string, pisoId: string, activo: boolean, servicio: Servicio, que: string) => {
     setOcupado(clave);
     setAviso(null);
     try {
-      await accion();
+      await (activo ? servicio.inactivar(clave) : servicio.reactivar(clave));
       await cargar();
+      avisar({
+        tono: 'exito',
+        texto: `Se ${activo ? 'inactivó' : 'reactivó'} ${que}.`,
+        deshacer: async () => {
+          await (activo ? servicio.reactivar(clave) : servicio.inactivar(clave));
+          await cargar();
+        },
+      });
     } catch (e) {
       setAviso({ pisoId, error: comoError(e) });
     } finally {
@@ -214,7 +227,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
           <section className="cs-piso">
             <h3 className="cs-piso-titulo">Nuevo piso</h3>
             <PisoForm onCancelar={() => editar(null)}
-              onGuardar={(datos) => guardar(() => campus.pisos.crear(edificioId, datos))} />
+              onGuardar={(datos) => guardar('Piso creado.', () => campus.pisos.crear(edificioId, datos))} />
           </section>
         )}
 
@@ -233,7 +246,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                 <>
                   <h3 className="cs-piso-titulo" id={`piso-${piso.id}`}>Editar piso {piso.numero}</h3>
                   <PisoForm inicial={piso} onCancelar={() => editar(null)}
-                    onGuardar={(datos) => guardar(() => campus.pisos.modificar(piso.id, datos))} />
+                    onGuardar={(datos) => guardar('Cambios del piso guardados.', () => campus.pisos.modificar(piso.id, datos))} />
                 </>
               ) : (
                 <div className="cs-piso-cabecera">
@@ -247,8 +260,8 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                     )}
                     {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'piso', id: piso.id })}>Editar</button>}
                     <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === piso.id}
-                      onClick={() => cambiarEstado(piso.id, piso.id, () => (activo ? campus.pisos.inactivar(piso.id) : campus.pisos.reactivar(piso.id)))}>
-                      {ocupado === piso.id ? 'Guardando…' : activo ? 'Inactivar' : 'Reactivar'}
+                      onClick={() => cambiarEstado(piso.id, piso.id, activo, campus.pisos, `el piso ${piso.numero}`)}>
+                      {ocupado === piso.id ? (activo ? 'Inactivando…' : 'Reactivando…') : activo ? 'Inactivar' : 'Reactivar'}
                     </button>
                   </div>
                 </div>
@@ -260,7 +273,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                 <div className="cs-subeditor">
                   <h4>Nuevo espacio en el piso {piso.numero}</h4>
                   <EspacioForm onCancelar={() => editar(null)}
-                    onGuardar={(datos) => guardar(() => campus.espacios.crear(piso.id, datos))} />
+                    onGuardar={(datos) => guardar('Espacio creado.', () => campus.espacios.crear(piso.id, datos))} />
                 </div>
               )}
 
@@ -277,7 +290,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                           return (
                             <tr key={espacio.id}><td colSpan={4}>
                               <EspacioForm inicial={espacio} onCancelar={() => editar(null)}
-                                onGuardar={(datos) => guardar(() => campus.espacios.modificar(espacio.id, { nombre: datos.nombre, tipo: datos.tipo }))} />
+                                onGuardar={(datos) => guardar('Cambios del espacio guardados.', () => campus.espacios.modificar(espacio.id, { nombre: datos.nombre, tipo: datos.tipo }))} />
                             </td></tr>
                           );
                         }
@@ -292,8 +305,8 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                                 {espacioActivo && <BotonQr elemento="espacio" id={espacio.id} nombre={espacio.nombre} />}
                                 {espacioActivo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'espacio', id: espacio.id })}>Editar</button>}
                                 <button type="button" className={`cs-mini${espacioActivo ? ' peligro' : ''}`} disabled={ocupado === espacio.id}
-                                  onClick={() => cambiarEstado(espacio.id, piso.id, () => (espacioActivo ? campus.espacios.inactivar(espacio.id) : campus.espacios.reactivar(espacio.id)))}>
-                                  {ocupado === espacio.id ? 'Guardando…' : espacioActivo ? 'Inactivar' : 'Reactivar'}
+                                  onClick={() => cambiarEstado(espacio.id, piso.id, espacioActivo, campus.espacios, `el espacio «${espacio.nombre}»`)}>
+                                  {ocupado === espacio.id ? (espacioActivo ? 'Inactivando…' : 'Reactivando…') : espacioActivo ? 'Inactivar' : 'Reactivar'}
                                 </button>
                               </div>
                             </td>

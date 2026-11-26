@@ -1,4 +1,5 @@
 import { Mensaje } from '../../../shared/components/Mensaje';
+import { avisar } from '../../../shared/services/feedback';
 import { useCallback, useEffect, useState } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
 import {
@@ -180,14 +181,17 @@ export default function EscalerasEdificio({
     setMensaje('');
     setGuardando(true);
     try {
-      if (escalera.estado === 'ACTIVO') {
-        await campus.escaleras.inactivar(escalera.id);
-        setMensaje('Escalera inactivada.');
-      } else {
-        await campus.escaleras.reactivar(escalera.id);
-        setMensaje('Escalera reactivada.');
-      }
+      const activa = escalera.estado === 'ACTIVO';
+      await (activa ? campus.escaleras.inactivar(escalera.id) : campus.escaleras.reactivar(escalera.id));
       await cargar();
+      avisar({
+        tono: 'exito',
+        texto: `Se ${activa ? 'inactivó' : 'reactivó'} la escalera «${escalera.nombre}».`,
+        deshacer: async () => {
+          await (activa ? campus.escaleras.reactivar(escalera.id) : campus.escaleras.inactivar(escalera.id));
+          await cargar();
+        },
+      });
     } catch (e) {
       const apiError = e instanceof CampusApiError ? e : comoCampusError(e);
       setError(apiError.message);

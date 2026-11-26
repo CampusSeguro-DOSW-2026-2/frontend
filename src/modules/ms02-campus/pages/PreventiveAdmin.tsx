@@ -1,4 +1,5 @@
 import { Cargando } from '../../../shared/components/Cargando';
+import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
@@ -78,7 +79,7 @@ function RecomendacionForm({ inicial, edificios, onGuardar, onCancelar }: {
         <textarea id={`rec-texto-${id}`} rows={4} value={texto} placeholder="Apague los equipos, deje las mochilas y salga por la escalera más cercana." onChange={(e) => setTexto(e.target.value)} />
       </Campo>
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar recomendación" />
     </form>
   );
 }
@@ -118,10 +119,12 @@ export default function PreventiveAdmin() {
 
   const editar = (e: Edicion) => { setEdicion(e); setAviso(null); };
 
-  const guardar = async (accion: () => Promise<unknown>) => {
+  // Crear o modificar: al guardar se cierra el formulario y un aviso confirma el cambio (docs/PATRONES-UI.md)
+  const guardar = async (exito: string, accion: () => Promise<unknown>) => {
     await accion();
     await recargar();
     setEdicion(null);
+    avisar({ tono: 'exito', texto: exito });
   };
 
   const inactivar = async (id: string) => {
@@ -131,6 +134,7 @@ export default function PreventiveAdmin() {
       await campus.recomendaciones.inactivar(id);
       await recargar();
       setEdicion(null);
+      avisar({ tono: 'exito', texto: 'Recomendación inactivada.' });
     } catch (e) {
       setAviso(comoError(e));
     } finally {
@@ -153,7 +157,7 @@ export default function PreventiveAdmin() {
         <li key={r.id} className="cs-recomendacion editando">
           <h4>Editar recomendación</h4>
           <RecomendacionForm inicial={r} edificios={edificios} onCancelar={() => editar(null)}
-            onGuardar={(datos) => guardar(() => campus.recomendaciones.modificar(r.id, datos))} />
+            onGuardar={(datos) => guardar('Cambios de la recomendación guardados.', () => campus.recomendaciones.modificar(r.id, datos))} />
         </li>
       );
     }
@@ -210,7 +214,7 @@ export default function PreventiveAdmin() {
               <section className="cs-piso">
                 <h3 className="cs-piso-titulo">Nueva recomendación</h3>
                 <RecomendacionForm edificios={edificios} onCancelar={() => editar(null)}
-                  onGuardar={(datos) => guardar(() => campus.recomendaciones.crear(datos))} />
+                  onGuardar={(datos) => guardar('Recomendación creada.', () => campus.recomendaciones.crear(datos))} />
               </section>
             )}
 

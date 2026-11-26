@@ -20,10 +20,11 @@ export function Campo({ id, etiqueta, error, children }: { id: string; etiqueta:
   );
 }
 
-export function Botones({ guardando, onCancelar }: { guardando: boolean; onCancelar: () => void }) {
+/** Pie de los formularios de administración: la acción repite el objeto («Guardar edificio»), nunca «Guardar» solo. */
+export function Botones({ guardando, onCancelar, accion }: { guardando: boolean; onCancelar: () => void; accion: string }) {
   return (
     <div className="cs-form-botones">
-      <button type="submit" className="cs-mini primario" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
+      <button type="submit" className="cs-mini primario" disabled={guardando} aria-busy={guardando || undefined}>{guardando ? 'Guardando…' : accion}</button>
       <button type="button" className="cs-mini" onClick={onCancelar} disabled={guardando}>Cancelar</button>
     </div>
   );

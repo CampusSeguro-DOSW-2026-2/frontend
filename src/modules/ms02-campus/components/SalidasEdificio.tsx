@@ -1,4 +1,5 @@
 import { Cargando } from '../../../shared/components/Cargando';
+import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import GaleriaImagenes from './GaleriaImagenes';
 import { Fragment, useCallback, useEffect, useState } from 'react';
@@ -68,7 +69,7 @@ function SalidaForm({ inicial, pisos, onGuardar, onCancelar }: {
       <AyudaCoordenadas latitud={latitud} longitud={longitud}
         onElegir={(la, lo) => { setLatitud(String(la)); setLongitud(String(lo)); }} />
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar salida" />
     </form>
   );
 }
@@ -100,18 +101,29 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
 
   const recargar = async () => aplicar(await campus.salidas.listarPorEdificio(edificio.id, true));
 
-  const guardar = async (accion: () => Promise<unknown>) => {
+  // Crear o modificar: al guardar se cierra el formulario y un aviso confirma el cambio (docs/PATRONES-UI.md)
+  const guardar = async (exito: string, accion: () => Promise<unknown>) => {
     await accion();
     await recargar();
     setEdicion(null);
+    avisar({ tono: 'exito', texto: exito });
   };
 
   const cambiarEstado = async (s: Salida) => {
     setOcupado(s.id);
     setError(null);
     try {
-      await (s.estado === 'ACTIVO' ? campus.salidas.inactivar(s.id) : campus.salidas.reactivar(s.id));
+      const activa = s.estado === 'ACTIVO';
+      await (activa ? campus.salidas.inactivar(s.id) : campus.salidas.reactivar(s.id));
       await recargar();
+      avisar({
+        tono: 'exito',
+        texto: `Se ${activa ? 'inactivó' : 'reactivó'} la salida «${s.nombre}».`,
+        deshacer: async () => {
+          await (activa ? campus.salidas.reactivar(s.id) : campus.salidas.inactivar(s.id));
+          await recargar();
+        },
+      });
     } catch (e) {
       setError(comoError(e));
     } finally {
@@ -144,7 +156,7 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
         <div className="cs-subeditor">
           <h4>Nueva salida</h4>
           <SalidaForm pisos={pisosActivos} onCancelar={() => setEdicion(null)}
-            onGuardar={(datos) => guardar(() => campus.salidas.crear(edificio.id, datos))} />
+            onGuardar={(datos) => guardar('Salida creada.', () => campus.salidas.crear(edificio.id, datos))} />
         </div>
       )}
 
@@ -167,7 +179,7 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
                     <tr key={s.id}><td colSpan={5}>
                       <SalidaForm inicial={s} pisos={pisos.filter((p) => p.estado === 'ACTIVO' || p.id === s.pisoId)}
                         onCancelar={() => setEdicion(null)}
-                        onGuardar={(datos) => guardar(() => campus.salidas.modificar(s.id,
+                        onGuardar={(datos) => guardar('Cambios de la salida guardados.', () => campus.salidas.modificar(s.id,
                           { pisoId: datos.pisoId, nombre: datos.nombre, latitud: datos.latitud, longitud: datos.longitud }))} />
                     </td></tr>
                   );
@@ -186,7 +198,7 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
                         {activa && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: s.id })}>Editar</button>}
                         <button type="button" className={`cs-mini${activa ? ' peligro' : ''}`} disabled={ocupado === s.id}
                           onClick={() => cambiarEstado(s)}>
-                          {ocupado === s.id ? 'Guardando…' : activa ? 'Inactivar' : 'Reactivar'}
+                          {ocupado === s.id ? (activa ? 'Inactivando…' : 'Reactivando…') : activa ? 'Inactivar' : 'Reactivar'}
                         </button>
                       </div>
                     </td>
