@@ -1,9 +1,13 @@
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { Cargando } from '../../../shared/components/Cargando';
 import { PageHeader } from '../../../shared/components/Layout';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { confirmar } from '../../../shared/services/feedback';
+import { formatDate } from '../../ms06-drills/utils/labels';
 import { PickerBox } from '../components/PickerBox';
 import { DateTimeField } from '../../../shared/components/DateTimeField';
-import { FilePen, Info, Send } from '../../../shared/components/Icons';
+import { FilePen, Send } from '../../../shared/components/Icons';
 import { alertsApi, type Alert, type AlertInput, type AlertType, type Recipient, type Scope } from '../services/alerts';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { getSession, sessionPermissions } from '../../../shared/services/session';
@@ -132,6 +136,19 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const submit = async () => {
     const e = validate(); setErrors(e); setApiError('');
     if (Object.keys(e).length) return;
+    // Emitir notifica a la comunidad y no se deshace: se confirma con el alcance y los destinatarios a la vista
+    if (!editId && !(await confirmar({
+      titulo: `¿Emitir la alerta «${title.trim()}»?`,
+      texto: (
+        <>
+          <p><b>Edificios y zonas:</b> {scopeText}</p>
+          <p><b>Destinatarios:</b> {rolesText}{users.length > 0 && ` y ${users.length} ${users.length === 1 ? 'persona' : 'personas'}`}</p>
+          <p>{start ? `Se enviará el ${formatDate(new Date(start).toISOString())}.` : 'Se enviará de inmediato y no se puede deshacer.'}</p>
+        </>
+      ),
+      accion: 'Emitir alerta',
+      peligro: true,
+    }))) return;
     setBusy(true);
     const t = scopeIds[0] === 'CAMPUS' ? 'CAMPUS' : scopeType ?? kindOf(scopeIds[0]);
     const payload: AlertInput = {
@@ -165,11 +182,13 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const badge = (!alert ? 'Borrador' : scheduled ? 'Programada' : etiquetaCodigo(alert.status)).toUpperCase();
   const star = (on: boolean) => on && <span className="req"> *</span>;
 
-  if (loading) return <main className="page"><p className="notice">Cargando alerta…</p></main>;
-  if (forbidden) return <main className="page"><p className="notice" role="alert">No tiene permisos para {editId ? 'editar esta alerta' : 'crear alertas'}. <a href="#/alertas">Volver al listado</a></p></main>;
+  const volverListado = <a className="plink" href="#/alertas">Volver al listado</a>;
+
+  if (loading) return <main className="page"><Cargando texto="Cargando alerta…" /></main>;
+  if (forbidden) return <main className="page"><Mensaje tono="error" acciones={volverListado}>No tiene permisos para {editId ? 'editar esta alerta' : 'crear alertas'}.</Mensaje></main>;
   // PUT /alertas/{id} solo acepta un scope: editar aquí borraría los demás alcances de la alerta.
-  if (scopeKinds > 1) return <main className="page"><p className="notice" role="alert">Esta alerta cubre edificios y zonas a la vez y este formulario solo edita un tipo de alcance. <a href="#/alertas">Volver al listado</a></p></main>;
-  if (blocked) return <main className="page"><p className="notice" role="alert">Esta alerta ya no se puede editar. <a href="#/alertas">Volver al listado</a></p></main>;
+  if (scopeKinds > 1) return <main className="page"><Mensaje tono="aviso" acciones={volverListado}>Esta alerta cubre edificios y zonas a la vez y este formulario solo edita un tipo de alcance.</Mensaje></main>;
+  if (blocked) return <main className="page"><Mensaje tono="aviso" acciones={volverListado}>Esta alerta ya no se puede editar.</Mensaje></main>;
 
   return (
     <>
@@ -196,14 +215,10 @@ export default function AlertForm({ editId }: { editId?: string }) {
             <div className="fgroup">
               <PickerBox label="Tipo de alerta" required={!editId} help="Elija uno o varios tipos de emergencia, u Operativa (se usa sola)." editLabel="Editar tipo" items={typeItems} selected={types} onToggle={(id) => setTypes((c) => toggleType(c, id))} error={errors.types} loading={typesLoading} />
               {typesNotice && (
-                <p className="notice" role="status">
-                  {typesNotice} <button type="button" className="plink" onClick={retryTypes}>Reintentar</button>
-                </p>
+                <Mensaje tono="aviso" compacto onReintentar={retryTypes}>{typesNotice}</Mensaje>
               )}
               {typesError && (
-                <p className="notice err" role="alert">
-                  {typesError} <button type="button" className="plink" onClick={retryTypes}>Reintentar</button>
-                </p>
+                <Mensaje tono="error" compacto onReintentar={retryTypes}>{typesError}</Mensaje>
               )}
             </div>
           </div>
@@ -214,19 +229,13 @@ export default function AlertForm({ editId }: { editId?: string }) {
               <PickerBox label="Destinatarios" required={!editId} help="Grupos que recibirán el aviso en este alcance." editLabel="Editar destinatarios" items={roleItems} selected={roles} onToggle={toggleRole} error={errors.roles} loading={rolesLoading} />
             </div>
             {scopeError && (
-              <p className="notice err" role="alert">
-                {scopeError} <button type="button" className="plink" onClick={retryScope}>Reintentar</button>
-              </p>
+              <Mensaje tono="error" compacto onReintentar={retryScope}>{scopeError}</Mensaje>
             )}
             {rolesNotice && (
-              <p className="notice" role="status">
-                {rolesNotice} <button type="button" className="plink" onClick={retryRoles}>Reintentar</button>
-              </p>
+              <Mensaje tono="aviso" compacto onReintentar={retryRoles}>{rolesNotice}</Mensaje>
             )}
             {rolesError && (
-              <p className="notice err" role="alert">
-                {rolesError} <button type="button" className="plink" onClick={retryRoles}>Reintentar</button>
-              </p>
+              <Mensaje tono="error" compacto onReintentar={retryRoles}>{rolesError}</Mensaje>
             )}
           </div>
         </form>
@@ -240,10 +249,9 @@ export default function AlertForm({ editId }: { editId?: string }) {
             <div className="sum2-row"><small>Edificios y zonas</small><span>{scopeText || '—'}</span></div>
             <div className="sum2-row"><small>Destinatarios</small><span>{rolesText || '—'}</span></div>
           </div>
-          <div className="notice2"><Info /><div><b>Emitir notificará a la comunidad</b>
-            <p>Se enviará un aviso a los destinatarios del alcance seleccionado{start && !scheduled ? ' una vez llegue la hora programada' : ''}. Todavía no se ha enviado ninguna notificación.</p></div></div>
+          <Mensaje tono="info" titulo="Emitir notificará a la comunidad">Se enviará un aviso a los destinatarios del alcance seleccionado{start && !scheduled ? ' una vez llegue la hora programada' : ''}. Todavía no se ha enviado ninguna notificación.</Mensaje>
           <p className="foot">Complete los campos obligatorios y revise el mensaje antes de emitir.</p>
-          {apiError && <p className="notice err" role="alert">{apiError}</p>}
+          {apiError && <Mensaje tono="error">{apiError}</Mensaje>}
           <div className="actions">
             <button type="button" className="btn red" disabled={busy} onClick={submit}><Send />{busy ? 'Enviando…' : editId ? 'Guardar cambios' : 'Emitir alerta'}</button>
             <button type="button" className="btn white" onClick={() => { window.location.hash = '#/alertas'; }}>Cancelar</button>

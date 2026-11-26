@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { AlertFilterGroup } from '../services/alertFilters';
 
@@ -81,14 +83,10 @@ export default function AlertFilterBar({
   onRetry,
 }: AlertFilterBarProps) {
   if (loading) {
-    return <p className="notice" role="status">Cargando filtros…</p>;
+    return <Cargando texto="Cargando filtros…" />;
   }
   if (error) {
-    return (
-      <p className="notice err" role="alert">
-        {error} {onRetry && <button type="button" className="plink" onClick={onRetry}>Reintentar</button>}
-      </p>
-    );
+    return <Mensaje tono="error" compacto onReintentar={onRetry}>{error}</Mensaje>;
   }
   if (!groups.length) {
     return null;

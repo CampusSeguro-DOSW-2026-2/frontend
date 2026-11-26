@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Edit, EmptyLogo, Plus, Search } from '../../../shared/components/Icons';
+import { Cargando } from '../../../shared/components/Cargando';
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Edit, Plus, Search, ShieldCheck } from '../../../shared/components/Icons';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { confirmar, type OpcionesConfirmar } from '../../../shared/services/feedback';
 import { formatDate } from '../../ms06-drills/utils/labels';
 import { errorMessage } from '../../../shared/services/http';
 import { getSession, sessionPermissions } from '../../../shared/services/session';
@@ -22,7 +26,7 @@ const PAGE_SIZE = 10;
 const MAX_PAGE_SIZE = 100; // límite de MS03
 const REFRESH_MS = 15000;
 
-const EMPTY_ALL = 'El campus está seguro. No hay alertas';
+const EMPTY_ALL = 'No hay alertas';
 const EMPTY_FILTERED = 'No hay alertas que coincidan con el filtro';
 
 const fetchPage = async (filters: Record<string, string[]>, page: number, size = PAGE_SIZE) => {
@@ -111,8 +115,8 @@ export default function AlertList() {
     } catch (e) { setError(errMsg(e)); } finally { setLoading(false); }
   };
 
-  const act = async (fn: () => Promise<unknown>, ask: string) => {
-    if (!window.confirm(ask)) return;
+  const act = async (fn: () => Promise<unknown>, pregunta: OpcionesConfirmar) => {
+    if (!(await confirmar(pregunta))) return;
     try { await fn(); reload(); } catch (e) { setError(errMsg(e)); }
   };
 
@@ -151,12 +155,14 @@ export default function AlertList() {
             <Search /><input aria-label="Buscar alertas" placeholder="Buscar por título o descripción" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
         </div>
-        {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={reload}>Reintentar</button></p>}
-        {loading && items.length === 0 && <p className="notice" role="status">Cargando alertas…</p>}
+        {error && <Mensaje tono="error" onReintentar={reload}>{error}</Mensaje>}
+        {loading && items.length === 0 && <Cargando texto="Cargando alertas…" />}
         {empty && (
-          <div className="ev-empty"><EmptyLogo /><p>{hasSelection(selected) ? EMPTY_FILTERED : EMPTY_ALL}</p></div>
+          hasSelection(selected)
+            ? <EstadoVacio titulo={EMPTY_FILTERED}>Quite algún filtro para ver más alertas.</EstadoVacio>
+            : <EstadoVacio titulo={EMPTY_ALL} icono={<ShieldCheck />}>El campus está seguro. Cuando se emita una alerta, aparecerá aquí.</EstadoVacio>
         )}
-        {!empty && items.length > 0 && shown.length === 0 && <div className="ev-empty">No hay alertas que coincidan con la búsqueda.</div>}
+        {!empty && items.length > 0 && shown.length === 0 && <EstadoVacio titulo="Ninguna alerta coincide con la búsqueda">Pruebe con otras palabras o quite algún filtro.</EstadoVacio>}
         {shown.length > 0 && (
           <table className="ev-table">
             <thead><tr><th>Alerta</th><th>Alcance y destinatarios</th><th>Creada</th><th>Estado</th><th style={{ textAlign: 'right' }}>Acciones</th></tr></thead>
@@ -179,7 +185,9 @@ export default function AlertList() {
                       <div className="ev-acts">
                         {editable && <a className="ev-icon" href={`#/alertas/${a.id}/editar`} aria-label={`Editar ${a.title}`} title="Editar"><Edit /></a>}
                         {manage && !s.off && (
-                          <button type="button" className="btn white" onClick={() => act(() => alertsApi.archive(a.id), `¿Archivar la alerta «${a.title}»? Dejará de mostrarse como vigente.`)}>Archivar</button>
+                          <button type="button" className="btn white" onClick={() => act(() => alertsApi.archive(a.id), {
+                            titulo: `¿Archivar la alerta «${a.title}»?`, texto: 'Dejará de mostrarse como vigente.', accion: 'Archivar alerta', peligro: true,
+                          })}>Archivar</button>
                         )}
                       </div>
                     </td>

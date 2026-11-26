@@ -1,3 +1,4 @@
+import { Cargando } from '../../../shared/components/Cargando';
 import { useState } from 'react';
 import { Close, Plus } from '../../../shared/components/Icons';
 import type { CatalogItem } from '../services/catalog';
@@ -17,7 +18,7 @@ export function PickerBox({ label, required, help, editLabel, items, selected, o
       <span className="plabel">{label}{required && <span className="req"> *</span>}</span>
       <div className={`pbox${error ? ' bad' : ''}`}>
         <span className="help">{help}</span>
-        {loading ? <span className="notice" role="status">Cargando opciones…</span> : (
+        {loading ? <Cargando texto="Cargando opciones…" /> : (
           <>
             <div className="pills">
               {items.filter((i) => selected.includes(i.id)).map((i) => (
