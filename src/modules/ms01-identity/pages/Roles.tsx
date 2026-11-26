@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { Fragment, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { RoleChip } from '../components/Chips';
@@ -98,11 +100,11 @@ export default function Roles({ session, onEditRole, onRoleDeleted }: Props) {
           </div>
         )}
 
-        {notice && <p className="notice" role="status">{notice}</p>}
+        {notice && <Mensaje tono="exito">{notice}</Mensaje>}
 
         {error && (
           <div className="panel wide-panel">
-            <p className="notice err" role="alert">{error}</p>
+            <Mensaje tono="error">{error}</Mensaje>
             <button type="button" className="btn white" onClick={() => setAttempt((n) => n + 1)}>Reintentar</button>
           </div>
         )}
@@ -156,8 +158,8 @@ export default function Roles({ session, onEditRole, onRoleDeleted }: Props) {
                         <tr className="row-detail">
                           <td colSpan={columns}>
                             <div className="role-confirm" role="alertdialog" aria-labelledby={`del-${item.role}`}>
-                              <p id={`del-${item.role}`} className="notice err">{DELETE_WARNING}</p>
-                              {deleteError && <p className="notice err" role="alert">{deleteError}</p>}
+                              <Mensaje id={`del-${item.role}`} tono="aviso">{DELETE_WARNING}</Mensaje>
+                              {deleteError && <Mensaje tono="error">{deleteError}</Mensaje>}
                               <div className="btns">
                                 <button type="button" className="btn red" disabled={deleting} onClick={() => void remove(item.role)}>
                                   {deleting ? 'Eliminando…' : `Eliminar ${item.role}`}
@@ -180,7 +182,7 @@ export default function Roles({ session, onEditRole, onRoleDeleted }: Props) {
                 })}
               </tbody>
             </table>
-            {!roles && <p className="empty" role="status">Cargando los roles…</p>}
+            {!roles && <Cargando texto="Cargando los roles…" />}
           </div>
         )}
       </main>

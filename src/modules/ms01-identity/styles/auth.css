@@ -65,7 +65,7 @@
 /* Recuperación de contraseña (mockup código-recuperación-web): código de 6 dígitos, una casilla por dígito */
 .code-field .lbl{font-size:13px;line-height:17px}
 .code-boxes{display:flex;justify-content:flex-start;gap:clamp(6px,.9cqw,13px)}
-.code-box{flex:none;width:clamp(40px,3.8cqw,55px);aspect-ratio:1;padding:0;border:1px solid var(--line);border-radius:12px;background:#fff;text-align:center;font:700 20px/1 'Outfit',sans-serif;color:var(--ink);caret-color:var(--red)}
+.code-box{flex:none;width:clamp(40px,3.8cqw,55px);aspect-ratio:1;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:center;font:700 20px/1 'Outfit',sans-serif;color:var(--ink);caret-color:var(--red)}
 .code-box:disabled{opacity:.7}
 button.login-forgot{padding:0;border:0;background:none;cursor:pointer}
 button.login-forgot:disabled{opacity:.6;cursor:default}

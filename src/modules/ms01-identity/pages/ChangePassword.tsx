@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { Campo } from '../../../shared/components/Campo';
@@ -118,7 +119,7 @@ export default function ChangePassword({ session }: { session: Session }) {
       <main className="content narrow">
         {done ? (
           <section className="panel">
-            <p className="notice" role="status">{done}</p>
+            <Mensaje tono="exito">{done}</Mensaje>
             <a className="btn red" href="#/perfil">Volver al perfil</a>
           </section>
         ) : (
@@ -165,7 +166,7 @@ export default function ChangePassword({ session }: { session: Session }) {
               maxLength={64}
             />
 
-            {serverError && <p className="notice err" role="alert">{serverError}</p>}
+            {serverError && <Mensaje tono="error">{serverError}</Mensaje>}
 
             <div className="actions">
               <button type="submit" className="btn red" disabled={submitting}>

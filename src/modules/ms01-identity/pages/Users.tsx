@@ -1,3 +1,6 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
@@ -187,7 +190,7 @@ export default function Users({ session, selected, onSelectedChange }: Props) {
 
         {error && (
           <div className="panel wide-panel">
-            <p className="notice err" role="alert">{error}</p>
+            <Mensaje tono="error">{error}</Mensaje>
             <button type="button" className="btn white" onClick={() => setQuery((q) => ({ ...q }))}>Reintentar</button>
           </div>
         )}
@@ -237,8 +240,8 @@ export default function Users({ session, selected, onSelectedChange }: Props) {
                 ))}
               </tbody>
             </table>
-            {loading && rows.length === 0 && <p className="empty" role="status">Cargando usuarios…</p>}
-            {!loading && rows.length === 0 && <p className="empty">No se encontraron usuarios con esos criterios.</p>}
+            {loading && rows.length === 0 && <Cargando texto="Cargando usuarios…" />}
+            {!loading && rows.length === 0 && <EstadoVacio titulo="No se encontraron usuarios">Pruebe con otros criterios de búsqueda o filtros.</EstadoVacio>}
           </div>
         )}
 

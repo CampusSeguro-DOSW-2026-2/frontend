@@ -1,3 +1,4 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
 import { useState } from 'react';
 import { Search } from '../../../shared/components/Icons';
 import { MODULE_LABEL, PERMISSION_LABEL } from '../utils/labels';
@@ -108,7 +109,7 @@ export function PermissionPicker({
       )}
 
       <div className={`perm-groups picker${error ? ' bad' : ''}`}>
-        {groups.size === 0 && <p className="empty">No hay permisos que coincidan con la búsqueda.</p>}
+        {groups.size === 0 && <EstadoVacio titulo="Ningún permiso coincide con la búsqueda">Pruebe con otras palabras.</EstadoVacio>}
         {[...groups.entries()].map(([module, items]) => {
           const total = catalog.filter((item) => moduleOf(item.code) === module);
           const count = total.filter((item) => isSelected(item.code)).length;

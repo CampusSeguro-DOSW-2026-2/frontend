@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
 import { Campo } from '../../../shared/components/Campo';
 import { ApiError, loginUser } from '../services/identity';
@@ -124,7 +125,7 @@ export default function Login() {
             void submit();
           }}
         >
-          {notice && <p className="notice" role="status">{notice}</p>}
+          {notice && <Mensaje tono="info">{notice}</Mensaje>}
 
           <Campo
             id="email"
@@ -162,7 +163,7 @@ export default function Login() {
           <a className="login-forgot" href="#/recuperar-contrasena">¿Olvidó su contraseña?</a>
 
           {serverError && (
-            <p className="notice err" role="alert">{serverError}</p>
+            <Mensaje tono="error">{serverError}</Mensaje>
           )}
 
           <button type="submit" className="btn red" disabled={submitting}>

@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { StateChip } from '../components/Chips';
@@ -94,18 +95,18 @@ export default function ChangeStatus({ session, selected, onSelectedChange }: Pr
       <main className="content narrow">
         {selected.length === 0 && !done ? (
           <section className="panel">
-            <p className="notice" role="status">No hay usuarios seleccionados. Vuelva al listado y marque los que desea modificar.</p>
+            <Mensaje tono="info">No hay usuarios seleccionados. Vuelva al listado y marque los que desea modificar.</Mensaje>
             <a className="btn white" href="#/usuarios">Volver al listado</a>
           </section>
         ) : (
           <section className="panel wide-edit" aria-busy={submitting}>
             {done ? (
               <>
-                <p className="notice" role="status">
+                <Mensaje tono="exito">
                   {activated > 0 && `${activated} ${activated === 1 ? 'usuario pasó' : 'usuarios pasaron'} a Activo. `}
                   {deactivated > 0 && `${deactivated} ${deactivated === 1 ? 'usuario pasó' : 'usuarios pasaron'} a Inactivo. `}
                   {deactivated > 0 && 'Su sesión se cerró.'}
-                </p>
+                </Mensaje>
                 <button type="button" className="btn red" onClick={backToList}>Volver al listado</button>
               </>
             ) : (
@@ -119,7 +120,7 @@ export default function ChangeStatus({ session, selected, onSelectedChange }: Pr
               </div>
             )}
 
-            {error && <p className="notice err" role="alert">{error}</p>}
+            {error && <Mensaje tono="error">{error}</Mensaje>}
 
             <h2>Usuarios seleccionados</h2>
             <div className="tablewrap">

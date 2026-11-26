@@ -1,3 +1,5 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { Campo } from '../../../shared/components/Campo';
@@ -97,7 +99,7 @@ export default function EditProfile({ session }: { session: Session }) {
       />
       <main className="content narrow">
         {loading ? (
-          <p className="notice" role="status">Cargando su perfil…</p>
+          <Cargando texto="Cargando su perfil…" />
         ) : (
           <form
             className="panel"
@@ -122,7 +124,7 @@ export default function EditProfile({ session }: { session: Session }) {
                 maxLength={30} />
             </div>
 
-            {serverError && <p className="notice err" role="alert">{serverError}</p>}
+            {serverError && <Mensaje tono="error">{serverError}</Mensaje>}
 
             <div className="actions">
               <button type="submit" className="btn red" disabled={submitting}>

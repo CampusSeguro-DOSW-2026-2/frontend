@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
 import { CodeInput } from '../components/CodeInput';
 import { Marca } from '../components/Marca';
@@ -237,12 +238,12 @@ export default function Register() {
               aria-busy={submitting}
               onSubmit={(e) => { e.preventDefault(); void submit(); }}
             >
-              {info && <p className="notice" role="status">{info}</p>}
+              {info && <Mensaje tono="info">{info}</Mensaje>}
 
               <CodeInput id="code" label="Código de verificación" value={code} onChange={onCode}
                 error={codeErr} disabled={submitting} />
 
-              {serverError && <p className="notice err" role="alert">{serverError}</p>}
+              {serverError && <Mensaje tono="error">{serverError}</Mensaje>}
 
               <button type="submit" className="btn red" disabled={submitting}>
                 {submitting ? 'Verificando…' : 'Crear cuenta'}
@@ -304,7 +305,7 @@ export default function Register() {
                 onChange={(v) => set('confirmPassword', v)} error={errors.confirmPassword}
                 autoComplete="new-password" maxLength={64} />
 
-              {serverError && <p className="notice err" role="alert">{serverError}</p>}
+              {serverError && <Mensaje tono="error">{serverError}</Mensaje>}
 
               <button type="submit" className="btn red" disabled={submitting}>
                 {submitting ? 'Enviando código…' : 'Registrarse'}

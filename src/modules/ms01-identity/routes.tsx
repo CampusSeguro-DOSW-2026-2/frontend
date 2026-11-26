@@ -1,3 +1,4 @@
+import { Mensaje } from '../../shared/components/Mensaje';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import Register from './pages/Register';
@@ -23,7 +24,7 @@ import type { Session } from '../../shared/types';
 export const PUBLIC_ROUTES = ['/', '/login', '/registro', '/recuperar-contrasena', '/cambiar-contrasena'];
 
 const NO_ACCESS = (
-  <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>
+  <main className="page"><Mensaje tono="error">No tiene permisos para ver esta sección.</Mensaje></main>
 );
 
 /** Rutas de MS01. Devuelve undefined si la ruta no es de este módulo. */

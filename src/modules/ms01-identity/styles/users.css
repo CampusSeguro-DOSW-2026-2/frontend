@@ -1,6 +1,6 @@
 /* Perfil y administración de usuarios (mismos colores y tipografías del manual) */
 .content.narrow{align-items:center}
-.panel{display:flex;flex-direction:column;gap:24px;width:100%;max-width:720px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px}
+.panel{display:flex;flex-direction:column;gap:24px;width:100%;max-width:720px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:32px}
 .panel h2{font:700 20px/25px 'Outfit',sans-serif}
 .panel > .btn{align-self:flex-start;width:220px;height:52px;border-radius:14px}
 .panel .actions{flex-direction:row;flex-wrap:wrap}
@@ -9,9 +9,9 @@
 
 /* chips de estado y rol */
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{display:inline-flex;align-items:center;font:700 12px/16px 'Outfit',sans-serif;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--mut);white-space:nowrap}
-.chip.state-activo{background:#EFF6FF;border-color:#BFDBFE;color:#1E3A8A}
-.chip.state-inactivo{background:#F1F5F9;border-color:var(--line);color:var(--mut)}
+.chip{display:inline-flex;align-items:center;font:700 12px/16px 'Outfit',sans-serif;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--mut);white-space:nowrap}
+.chip.state-activo{background:var(--info-bg);border-color:var(--info-line);color:var(--info)}
+.chip.state-inactivo{background:var(--neutral-bg);border-color:var(--line);color:var(--mut)}
 .chip.role{background:var(--cream);border-color:var(--red);color:var(--red)}
 
 /* perfil */
@@ -34,7 +34,7 @@
 .selbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .selbar .btn{width:200px;height:48px;border-radius:14px;font-size:15px}
 .selbar span{color:var(--mut);font-size:14px}
-.tablewrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
 .utable{width:100%;border-collapse:collapse;font-size:14px}
 .utable th{background:var(--cream);text-align:left;font:700 13px/17px 'Outfit',sans-serif;padding:14px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
 .utable td{padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -44,7 +44,6 @@
 .utable input[type=checkbox]{width:18px;height:18px;accent-color:var(--red);cursor:pointer}
 .utable .mail{font-weight:600;overflow-wrap:anywhere}
 .utable .me{color:var(--mut);font-weight:400}
-.empty{padding:32px;text-align:center;color:var(--mut)}
 .pager{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .pager .btn{width:140px;height:44px;border-radius:12px;font-size:14px}
 .pager span{color:var(--mut);font-size:13px}
@@ -59,7 +58,7 @@
 .perms h2{font:700 20px/25px 'Outfit',sans-serif}
 .perms .lead{color:var(--mut);font-size:14px}
 .role-list{display:flex;flex-direction:column;gap:12px}
-.role-block{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.role-block{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 .role-block summary{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none}
 .role-block summary::-webkit-details-marker{display:none}
 .role-block summary::after{content:'';margin-left:auto;width:8px;height:8px;border-right:2px solid var(--mut);border-bottom:2px solid var(--mut);transform:rotate(45deg);transition:transform .15s}
@@ -92,7 +91,7 @@
 .role-confirm{display:flex;flex-direction:column;gap:12px;margin:16px 16px 0}
 .role-confirm .btns{display:flex;flex-wrap:wrap;gap:12px}
 .role-confirm .btn{width:200px;height:52px;border-radius:14px}
-.perm-groups.picker{padding:16px;border:1px solid var(--line);border-radius:12px;background:#fff;max-height:520px;overflow:auto}
+.perm-groups.picker{padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--surface);max-height:520px;overflow:auto}
 .perm-groups.picker.bad{border-color:var(--red)}
 .perm-groups.picker label{display:flex;align-items:center;flex-wrap:wrap;gap:10px;cursor:pointer;font:400 14px/18px inherit}
 .perm-groups.picker input{flex:none;width:18px;height:18px;accent-color:var(--red)}
@@ -102,7 +101,7 @@
 .picker-only{display:flex;align-items:center;gap:8px;font:600 13px/17px 'Outfit',sans-serif;cursor:pointer}
 .picker-only input{width:18px;height:18px;accent-color:var(--red)}
 .picker-summary{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:14px}
-.picker-summary .plus,.picker-changes .plus{color:#166534}
+.picker-summary .plus,.picker-changes .plus{color:var(--ok)}
 .picker-summary .minus,.picker-changes .minus{color:var(--red)}
 .picker-summary .linkbtn{align-self:auto}
 .picker-changes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px}
@@ -115,7 +114,7 @@
 .perm-groups.picker .tag{font:700 11px/14px 'Outfit',sans-serif;padding:2px 8px;border-radius:999px;background:var(--bg);border:1px solid var(--line);color:var(--mut)}
 
 /* Editar roles (F-09): una sola lista de roles con casillas de tres estados y vista previa por usuario */
-.role-checklist{list-style:none;margin:0;padding:8px 16px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:#fff}
+.role-checklist{list-style:none;margin:0;padding:8px 16px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
 .role-checklist.bad{border-color:var(--red)}
 .role-checklist li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:10px 0;border-bottom:1px solid var(--line)}
 .role-checklist li:last-child{border-bottom:0}
@@ -124,8 +123,8 @@
 .role-checklist .name{font:700 14px/18px 'Outfit',sans-serif}
 .role-checklist .holders{color:var(--mut);font-size:13px}
 .role-checklist .change{font:700 12px/16px 'Outfit',sans-serif;padding:3px 10px;border-radius:999px}
-.role-checklist .change.plus{background:#F0FDF4;color:#166534}
-.role-checklist .change.minus{background:#FEF2F2;color:var(--red)}
+.role-checklist .change.plus{background:var(--ok-bg);color:var(--ok)}
+.role-checklist .change.minus{background:var(--err-bg);color:var(--red)}
 .role-checklist li.changed{background:var(--cream)}
 .chip-new .chip{border-style:dashed}
 .chip-new .chip::before{content:'+ '}
@@ -155,14 +154,14 @@
 .role-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:24px;align-items:start}
 .role-panel .perm-groups.picker{max-height:640px;padding:20px}
 .role-panel .perm-groups.picker .perm-group ul{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:10px;margin-top:12px}
-.role-panel .perm-groups.picker li{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;transition:border-color .15s,background .15s}
+.role-panel .perm-groups.picker li{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);transition:border-color .15s,background .15s}
 .role-panel .perm-groups.picker li:has(input:checked){border-color:var(--red);background:var(--cream)}
 .role-panel .perm-groups.picker li label{align-items:flex-start;flex-wrap:nowrap;line-height:20px}
 .role-panel .perm-groups.picker li code{align-self:flex-start;margin-left:30px}
 .role-panel .perm-groups.picker label .tag{margin-left:auto}
-.role-panel .perm-groups.picker input[type=checkbox],.role-panel .picker-only input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;display:grid;place-items:center;width:20px;height:20px;margin:0;border:2px solid #CBD5E1;border-radius:50%;background:#fff;cursor:pointer;transition:background .15s,border-color .15s}
+.role-panel .perm-groups.picker input[type=checkbox],.role-panel .picker-only input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;display:grid;place-items:center;width:20px;height:20px;margin:0;border:2px solid var(--neutral-line);border-radius:50%;background:var(--surface);cursor:pointer;transition:background .15s,border-color .15s}
 .role-panel .perm-groups.picker input[type=checkbox]:checked,.role-panel .picker-only input[type=checkbox]:checked{background:var(--red);border-color:var(--red)}
-.role-panel .perm-groups.picker input[type=checkbox]:checked::after,.role-panel .picker-only input[type=checkbox]:checked::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.role-panel .perm-groups.picker input[type=checkbox]:checked::after,.role-panel .picker-only input[type=checkbox]:checked::after{content:'';width:5px;height:9px;border:solid var(--surface);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
 .role-panel .perm-groups.picker input[type=checkbox]:disabled{cursor:default;opacity:.55}
 .role-panel .perm-groups.picker input[type=checkbox]:focus-visible,.role-panel .picker-only input[type=checkbox]:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 @media (max-width:900px){
@@ -180,7 +179,7 @@
 .wide-edit .general-summary{flex:1;color:var(--mut);font-size:14px}
 .wide-edit .general-head .linkbtn{align-self:auto}
 .wide-edit .role-checklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:10px;padding:0;border:0;background:none}
-.wide-edit .role-checklist li{flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}
+.wide-edit .role-checklist li{flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
 .wide-edit .role-checklist li:last-child{border-bottom:1px solid var(--line)}
 .wide-edit .role-checklist li.changed{border-color:var(--red);background:var(--cream)}
 .wide-edit .role-checklist label{min-width:0;width:100%}
@@ -188,10 +187,10 @@
 .wide-edit .role-checklist .change{margin-left:30px}
 
 /* Casillas redondas en las listas de usuarios y de roles (mismo estilo que el formulario de rol) */
-.utable input[type=checkbox],.role-checklist input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;display:grid;place-items:center;width:20px;height:20px;margin:0;border:2px solid #CBD5E1;border-radius:50%;background:#fff;cursor:pointer;transition:background .15s,border-color .15s}
+.utable input[type=checkbox],.role-checklist input[type=checkbox]{appearance:none;-webkit-appearance:none;flex:none;display:grid;place-items:center;width:20px;height:20px;margin:0;border:2px solid var(--neutral-line);border-radius:50%;background:var(--surface);cursor:pointer;transition:background .15s,border-color .15s}
 .utable input[type=checkbox]:checked,.role-checklist input[type=checkbox]:checked{background:var(--red);border-color:var(--red)}
-.utable input[type=checkbox]:checked::after,.role-checklist input[type=checkbox]:checked::after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
-.utable input[type=checkbox]:indeterminate,.role-checklist input[type=checkbox]:indeterminate{border-color:var(--red);background:#fff}
+.utable input[type=checkbox]:checked::after,.role-checklist input[type=checkbox]:checked::after{content:'';width:5px;height:9px;border:solid var(--surface);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.utable input[type=checkbox]:indeterminate,.role-checklist input[type=checkbox]:indeterminate{border-color:var(--red);background:var(--surface)}
 .utable input[type=checkbox]:indeterminate::after,.role-checklist input[type=checkbox]:indeterminate::after{content:'';width:10px;height:2px;border:0;background:var(--red);transform:none}
 .utable input[type=checkbox]:disabled,.role-checklist input[type=checkbox]:disabled{cursor:default;opacity:.55}
 .utable input[type=checkbox]:focus-visible,.role-checklist input[type=checkbox]:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
