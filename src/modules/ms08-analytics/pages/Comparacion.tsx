@@ -1,6 +1,7 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useCallback, useEffect, useState } from 'react';
 import type { Session } from '../../../shared/types';
-import ErrorNotice from '../components/ErrorNotice';
 import { eventName, multiEventHref, useEventNames } from '../hooks/useEventNames';
 import { analyticsApi } from '../services/analytics';
 import type { ComparisonChange, ComparisonRow } from '../types';
@@ -71,9 +72,9 @@ export default function Comparacion({ session, ids }: { session: Session; ids: s
         <a className="btn white" href={multiEventHref('ubicaciones', ids)}>Ver por ubicación</a>
       </header>
       <main className="ev-main">
-        {loading && <p className="notice" role="status">Calculando la comparación…</p>}
-        {!loading && error !== null && <ErrorNotice error={error} onRetry={load} />}
-        {!loading && error === null && rows && rows.length === 0 && <div className="ev-empty">No hay datos para comparar estos eventos.</div>}
+        {loading && <Mensaje tono="info">Calculando la comparación…</Mensaje>}
+        {!loading && error !== null && <Mensaje error={error} onReintentar={load} />}
+        {!loading && error === null && rows && rows.length === 0 && <EstadoVacio titulo="No hay datos para comparar estos eventos">Elija otros eventos en Indicadores.</EstadoVacio>}
         {!loading && error === null && rows && rows.length > 0 && (
           <>
             <table className="ev-table an-table">

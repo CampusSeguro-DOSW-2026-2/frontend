@@ -1,3 +1,6 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useCallback, useEffect, useState } from 'react';
 import { Search } from '../../../shared/components/Icons';
 import { ApiError } from '../../../shared/services/http';
@@ -6,7 +9,6 @@ import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { eventsApi } from '../../ms06-drills/services/events';
 import type { EventData, EventStatus, EventSummary, Page } from '../../ms06-drills/types';
 import { STATUS_LABEL, scopeLabelIn } from '../../ms06-drills/utils/labels';
-import ErrorNotice from '../components/ErrorNotice';
 import { multiEventHref } from '../hooks/useEventNames';
 import { analyticsApi, PAGE_SIZE } from '../services/analytics';
 import type { Bucket, EventIndicators, IndicatorsResult, TimeStat } from '../types';
@@ -19,12 +21,11 @@ const PENDING_TEXT = 'Pendiente de cálculo';
 
 function Pending({ finished }: { finished: boolean }) {
   return (
-    <div className="an-pending" role="status">
-      <b>{PENDING_TEXT}</b>
-      <span>{finished
+    <Mensaje tono="aviso" titulo={PENDING_TEXT}>
+      {finished
         ? 'Los datos de este evento aún no han sido recopilados. El resumen aparecerá cuando estén disponibles.'
-        : 'El resumen se calcula cuando el evento finaliza.'}</span>
-    </div>
+        : 'El resumen se calcula cuando el evento finaliza.'}
+    </Mensaje>
   );
 }
 
@@ -136,8 +137,8 @@ function EventIndicatorsView({ session, eventoId }: { session: Session; eventoId
         {data && <a className="btn white" href={multiEventHref('ubicaciones', [eventoId])}>Ver por ubicación</a>}
       </header>
       <main className="ev-main">
-        {loading && <p className="notice" role="status">Cargando indicadores…</p>}
-        {!loading && error !== null && <ErrorNotice error={error} onRetry={load} />}
+        {loading && <Cargando texto="Cargando indicadores…" />}
+        {!loading && error !== null && <Mensaje error={error} onReintentar={load} />}
         {!loading && error === null && result?.pendiente && <Pending finished={finished} />}
         {!loading && error === null && data && <Summary data={data} />}
       </main>
@@ -231,11 +232,11 @@ function EventPicker({ session }: { session: Session }) {
           )}
         </div>
 
-        {forbidden && <p className="notice" role="status">No tiene permiso para consultar la lista de eventos. Pida acceso a la coordinación.</p>}
-        {error !== null && !forbidden && <ErrorNotice error={error} onRetry={load} />}
-        {loading && <p className="notice" role="status">Cargando eventos…</p>}
+        {forbidden && <Mensaje tono="info">No tiene permiso para consultar la lista de eventos. Pida acceso a la coordinación.</Mensaje>}
+        {error !== null && !forbidden && <Mensaje error={error} onReintentar={load} />}
+        {loading && <Cargando texto="Cargando eventos…" />}
         {!loading && data && items.length === 0 && (
-          <div className="ev-empty">{query ? 'No hay eventos con ese nombre.' : status === 'FINISHED' ? 'Todavía no hay eventos finalizados.' : 'Todavía no hay eventos.'}</div>
+          <EstadoVacio titulo={query ? 'Ningún evento tiene ese nombre' : status === 'FINISHED' ? 'Todavía no hay eventos finalizados' : 'Todavía no hay eventos'} />
         )}
 
         {items.length > 0 && (
