@@ -19,13 +19,14 @@ type Resultado = 'TRANSFERIDO' | 'RESUELTO' | 'NO_SE_PUDO';
 
 /**
  * Resultados del mockup. MS05 solo registra «Resuelto» (POST /resolver, con observaciones obligatorias); «Transferido»
- * y «No se pudo» se muestran deshabilitados hasta que MS05 los admita en su contrato.
+ * y «No se pudo» no se muestran hasta que MS05 los admita en su contrato (basta con cambiar `disponible`).
  */
 const RESULTADOS: { codigo: Resultado; titulo: string; texto: string; icono: string; disponible: boolean }[] = [
   { codigo: 'TRANSFERIDO', titulo: 'Transferido', texto: 'La atención pasó a otro responsable.', icono: '⇄', disponible: false },
   { codigo: 'RESUELTO', titulo: 'Resuelto', texto: 'La situación fue atendida y solucionada.', icono: '✓', disponible: true },
   { codigo: 'NO_SE_PUDO', titulo: 'No se pudo', texto: 'No fue posible completar la atención.', icono: '✕', disponible: false },
 ];
+const DISPONIBLES = RESULTADOS.filter((r) => r.disponible);
 
 const PinIcon = () => (
   <svg className="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
@@ -44,7 +45,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
   const [inc, setInc] = useState<IncidenteDetalle | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [resultado, setResultado] = useState<Resultado | null>(null);
+  const [resultado, setResultado] = useState<Resultado | null>(DISPONIBLES.length === 1 ? DISPONIBLES[0].codigo : null);
   const [observaciones, setObservaciones] = useState('');
   const [errorObs, setErrorObs] = useState('');
   const [busy, setBusy] = useState(false);
@@ -110,82 +111,76 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
         {!inc && !error && <Cargando texto="Cargando incidente…" />}
 
         {inc && st && (
-          <div className="rs-grid">
-            <div className="rs-col">
-              <section className="rs-card">
-                <div className="rs-inc-top">
-                  <b>{titulo}</b>
-                  <span className={`rs-st ${st.clase}`}>{st.texto}</span>
-                </div>
-                <div className="rs-kv">
-                  <small>Persona afectada</small>
-                  <span className="rs-person">{inc.nombreAfectado || 'Sin nombre registrado'}</span>
-                </div>
+          <div className="rs-grid rs-atender">
+            <section className="rs-card rs-caso" aria-labelledby="rs-caso-titulo">
+              <div className="rs-inc-top">
                 <PrioridadChip codigo={inc.prioridad} />
-                <div className="rs-place">
-                  <PinIcon />
-                  <div>
-                    <b>{scopeLabelIn(inc.ubicacionId, catalog)}</b>
-                    <small>Reportado {formatDate(inc.fechaReporte)}</small>
-                  </div>
+                <span className={`rs-st ${st.clase}`}>{st.texto}</span>
+              </div>
+              <h2 id="rs-caso-titulo" className="rs-caso-titulo">{titulo}</h2>
+              <div className="rs-place">
+                <PinIcon />
+                <div>
+                  <b>{scopeLabelIn(inc.ubicacionId, catalog)}</b>
+                  <small>Reportado {formatDate(inc.fechaReporte)}</small>
                 </div>
+              </div>
+              <div className="rs-kv">
+                <small>Persona afectada</small>
+                <span className="rs-person">{inc.nombreAfectado || 'Sin nombre registrado'}</span>
+              </div>
+              {descripcion.length > 60 && (
                 <div className="rs-sec">
-                  <h3>Descripción</h3>
-                  <p className="rs-sub">{descripcion || 'El reporte no incluye descripción.'}</p>
+                  <h3>Descripción completa</h3>
+                  <p className="rs-sub">{descripcion}</p>
                 </div>
-                {inc.observacionesResolucion && (
-                  <div className="rs-sec">
-                    <h3>Resolución</h3>
-                    <p className="rs-sub">{inc.observacionesResolucion}{inc.fechaResolucion && ` · ${formatDate(inc.fechaResolucion)}`}</p>
-                  </div>
-                )}
-              </section>
-              <section className="rs-card">
-                <h2>Evidencia</h2>
-                {inc.evidencias.length === 0 && (
-                  <div className="rs-file">
-                    <span className="rs-file-ico"><FileIcon /></span>
-                    <span><b>No se adjuntó evidencia</b><small>El reporte no incluye archivos ni fotografías.</small></span>
-                  </div>
-                )}
-                {inc.evidencias.map((e) => (
-                  <div key={e.id ?? e.nombreArchivo} className="rs-file">
-                    <span className="rs-file-ico"><FileIcon /></span>
-                    <span><b>{e.nombreArchivo}</b><small>{[e.tipoContenido, e.fechaCarga && formatDate(e.fechaCarga)].filter(Boolean).join(' · ')}</small></span>
-                  </div>
-                ))}
-              </section>
-            </div>
+              )}
+              {inc.observacionesResolucion && (
+                <div className="rs-sec">
+                  <h3>Resolución</h3>
+                  <p className="rs-sub">{inc.observacionesResolucion}{inc.fechaResolucion && ` · ${formatDate(inc.fechaResolucion)}`}</p>
+                </div>
+              )}
+            </section>
 
             <aside className="rs-side">
               <form className="rs-card" noValidate onSubmit={(e) => { e.preventDefault(); void finalizar(); }}>
-                <h2>Estado final</h2>
-                <p className="rs-sub">Seleccione el resultado de la atención. El caso no se cerrará hasta que pulse «Finalizar».</p>
+                <h2>Resultado de la atención</h2>
 
                 {propio && inc.estado === 'ASIGNADO' && canAttend && (
                   <>
-                    <Mensaje tono="info">La atención aún no ha iniciado.</Mensaje>
-                    <button type="button" className="btn red rs-btn" disabled={busy} onClick={() => void iniciar()}>{busy ? 'Iniciando…' : 'Iniciar atención'}</button>
+                    <p className="rs-sub">La atención aún no ha iniciado. Iníciela cuando llegue al lugar.</p>
+                    <button type="button" className="btn red rs-btn" disabled={busy} aria-busy={busy || undefined} onClick={() => void iniciar()}>{busy ? 'Iniciando…' : 'Iniciar atención'}</button>
                   </>
                 )}
 
-                <fieldset className="rs-final" disabled={!puedeFinalizar} style={{ border: 0, padding: 0, margin: 0 }}>
-                  <legend className="rs-sub" style={{ padding: 0, marginBottom: 6 }}>Resultado</legend>
-                  {RESULTADOS.map((r) => (
-                    <label key={r.codigo} title={r.disponible ? undefined : 'Esta opción todavía no está disponible.'}>
-                      <input type="radio" name="resultado" value={r.codigo} checked={resultado === r.codigo}
-                        disabled={!r.disponible} onChange={() => setResultado(r.codigo)} />
-                      <span><b>{r.titulo}</b><small>{r.disponible ? r.texto : `${r.texto} (aún no disponible)`}</small></span>
-                      <span className="rs-final-ico" aria-hidden="true">{r.icono}</span>
-                    </label>
-                  ))}
-                </fieldset>
+                {puedeFinalizar && (
+                  <>
+                    <p className="rs-sub">
+                      {DISPONIBLES.length === 1
+                        ? `Por ahora el único resultado que se registra es «${DISPONIBLES[0].titulo}». El caso no se cierra hasta que pulse «Finalizar atención».`
+                        : 'Seleccione el resultado. El caso no se cierra hasta que pulse «Finalizar atención».'}
+                    </p>
+                    <fieldset className="rs-final" style={{ border: 0, padding: 0, margin: 0 }}>
+                      <legend className="rs-sub" style={{ padding: 0, marginBottom: 6 }}>Resultado</legend>
+                      {DISPONIBLES.map((r) => (
+                        <label key={r.codigo}>
+                          <input type="radio" name="resultado" value={r.codigo} checked={resultado === r.codigo} onChange={() => setResultado(r.codigo)} />
+                          <span><b>{r.titulo}</b><small>{r.texto}</small></span>
+                          <span className="rs-final-ico" aria-hidden="true">{r.icono}</span>
+                        </label>
+                      ))}
+                    </fieldset>
+                  </>
+                )}
 
                 {resultado === 'RESUELTO' && puedeFinalizar && (
                   <div className="rs-sec">
                     <label htmlFor="obs" className="rs-sub"><b>¿Cómo se resolvió?</b> (obligatorio)</label>
-                    <div className="input area"><textarea id="obs" rows={3} maxLength={1000} value={observaciones} onChange={(e) => setObservaciones(e.target.value)} /></div>
-                    {errorObs && <span className="error" role="alert">{errorObs}</span>}
+                    <div className="input area"><textarea id="obs" rows={3} maxLength={1000} value={observaciones}
+                      aria-invalid={errorObs ? true : undefined} aria-describedby={errorObs ? 'obs-error' : undefined}
+                      onChange={(e) => setObservaciones(e.target.value)} /></div>
+                    {errorObs && <span className="error" id="obs-error" role="alert">{errorObs}</span>}
                   </div>
                 )}
 
@@ -195,12 +190,30 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                 {notice && <Mensaje tono="error">{notice}</Mensaje>}
                 {finalizado && <Mensaje tono="exito">Incidente marcado como resuelto.</Mensaje>}
 
-                <button type="submit" className={`btn rs-btn ${puedeFinalizar && resultado ? 'red' : 'off'}`} disabled={!puedeFinalizar || !resultado || busy}>
-                  {busy && enAtencion ? 'Finalizando…' : 'Finalizar atención'}
-                </button>
+                {puedeFinalizar && (
+                  <button type="submit" className={`btn rs-btn ${resultado ? 'red' : 'off'}`} disabled={!resultado || busy} aria-busy={busy || undefined}>
+                    {busy ? 'Finalizando…' : 'Finalizar atención'}
+                  </button>
+                )}
               </form>
               <Mensaje tono="info" compacto>Volver al panel no finaliza el incidente. El caso permanece en atención mientras no registre un resultado.</Mensaje>
             </aside>
+
+            <section className="rs-card rs-evid">
+              <h2>Evidencia</h2>
+              {inc.evidencias.length === 0 && (
+                <div className="rs-file">
+                  <span className="rs-file-ico"><FileIcon /></span>
+                  <span><b>No se adjuntó evidencia</b><small>El reporte no incluye archivos ni fotografías.</small></span>
+                </div>
+              )}
+              {inc.evidencias.map((e) => (
+                <div key={e.id ?? e.nombreArchivo} className="rs-file">
+                  <span className="rs-file-ico"><FileIcon /></span>
+                  <span><b>{e.nombreArchivo}</b><small>{[e.tipoContenido, e.fechaCarga && formatDate(e.fechaCarga)].filter(Boolean).join(' · ')}</small></span>
+                </div>
+              ))}
+            </section>
           </div>
         )}
       </main>

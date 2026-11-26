@@ -76,8 +76,15 @@
 .rs-detail-acts{display:flex;justify-content:flex-end;gap:12px;align-items:center}
 /* Atender incidente */
 .rs-inc-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.rs-inc-top b{font:700 14px 'Outfit',sans-serif}
-.rs-person{font:700 26px/32px 'Outfit',sans-serif}
+.rs-inc-top{flex-wrap:wrap;justify-content:flex-start}
+/* El caso manda: título grande; la persona afectada es un dato más */
+.rs-caso-titulo.rs-caso-titulo{font:800 24px/30px 'Outfit',sans-serif;overflow-wrap:anywhere}
+.rs-person{font:600 16px/22px 'Outfit',sans-serif}
+/* Escritorio: caso y evidencia a la izquierda, la acción fija a la derecha. Celular: caso, acción y luego evidencia */
+.rs-atender{grid-template-areas:"caso side" "evid side"}
+.rs-atender>.rs-caso{grid-area:caso;min-width:0}
+.rs-atender>.rs-evid{grid-area:evid;min-width:0}
+.rs-atender>.rs-side{grid-area:side}
 .rs-place{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:12px;background:var(--neutral-bg)}
 .rs-place svg.i{color:var(--red)}
 .rs-place b{display:block;font:700 16px 'Outfit',sans-serif}
@@ -97,6 +104,8 @@
 .rs-btn.off{background:var(--line);border-color:var(--line);color:var(--mut)}
 @media(max-width:960px){
   .rs-grid{grid-template-columns:1fr}
+  .rs-atender{grid-template-areas:"caso" "side" "evid"}
+  .rs-caso-titulo.rs-caso-titulo{font-size:21px;line-height:27px}
   .rs-side{position:static}
   .rs-main{padding:20px 16px 32px}
   .rs-head{padding:24px 16px}
