@@ -87,7 +87,7 @@ export default function AdminEvaluaciones({ session }: { session: Session }) {
             inicial={edicion.tipo === 'modificar' ? edicion.evaluacion : undefined}
             categorias={categorias} onGuardar={guardar} onCancelar={() => setEdicion(null)} />
         ) : (
-          <div className="ev-acciones">
+          <div className="evl-acciones">
             <button type="button" className="btn red" onClick={() => { setAviso(''); setEdicion({ tipo: 'nueva' }); }}>
               Crear evaluación
             </button>
@@ -97,13 +97,13 @@ export default function AdminEvaluaciones({ session }: { session: Session }) {
         {errorCarga && <p className="notice err" role="alert">{errorCarga}</p>}
         {!evaluaciones && !errorCarga && <p className="notice" role="status">Cargando las evaluaciones…</p>}
         {evaluaciones && evaluaciones.length === 0 && (
-          <div className="ev-vacio" role="status">Todavía no hay evaluaciones. Cree la primera.</div>
+          <div className="evl-vacio" role="status">Todavía no hay evaluaciones. Cree la primera.</div>
         )}
 
         {evaluaciones && evaluaciones.length > 0 && (
-          <table className="ev-tabla">
+          <table className="evl-tabla">
             <thead>
-              <tr><th>Título</th><th>Tema</th><th>Categoría</th><th>Estado</th><th><span className="ev-oculto">Acciones</span></th></tr>
+              <tr><th>Título</th><th>Tema</th><th>Categoría</th><th>Estado</th><th><span className="evl-oculto">Acciones</span></th></tr>
             </thead>
             <tbody>
               {evaluaciones.map((e) => {
@@ -113,12 +113,12 @@ export default function AdminEvaluaciones({ session }: { session: Session }) {
                     <td>{e.title}</td>
                     <td>{e.topic}</td>
                     <td>{nombreCategoria(e.categoryId)}</td>
-                    <td><span className={`ev-estado ${e.status}`}>{activa ? 'Activa' : 'Inactiva'}</span></td>
+                    <td><span className={`evl-estado ${e.status}`}>{activa ? 'Activa' : 'Inactiva'}</span></td>
                     <td>
-                      <div className="ev-fila-acciones">
-                        <button type="button" className="ev-mini" disabled={ocupado === e.id}
+                      <div className="evl-fila-acciones">
+                        <button type="button" className="evl-mini" disabled={ocupado === e.id}
                           onClick={() => abrirModificar(e.id)}>Modificar</button>
-                        <button type="button" className={`ev-mini${activa ? ' peligro' : ''}`} disabled={ocupado === e.id}
+                        <button type="button" className={`evl-mini${activa ? ' peligro' : ''}`} disabled={ocupado === e.id}
                           onClick={() => cambiarEstado(e)}>
                           {ocupado === e.id ? 'Guardando…' : activa ? 'Inactivar' : 'Reactivar'}
                         </button>

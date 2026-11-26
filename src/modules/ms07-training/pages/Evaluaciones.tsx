@@ -67,14 +67,14 @@ export default function Evaluaciones({ session }: { session: Session }) {
         )}
         {cargando && !datos && !error && <p className="notice" role="status">Consultando las evaluaciones…</p>}
         {datos && !error && evaluaciones.length === 0 && (
-          <div className="ev-vacio" role="status">No hay evaluaciones disponibles en esta categoría.</div>
+          <div className="evl-vacio" role="status">No hay evaluaciones disponibles en esta categoría.</div>
         )}
 
         {!error && evaluaciones.length > 0 && (
-          <ul className="ev-lista" aria-label="Evaluaciones" aria-busy={cargando}>
+          <ul className="evl-lista" aria-label="Evaluaciones" aria-busy={cargando}>
             {evaluaciones.map((e) => (
               <li key={e.id}>
-                <a className="ev-card" href={`#/evaluaciones/${encodeURIComponent(e.id)}`}>
+                <a className="evl-card" href={`#/evaluaciones/${encodeURIComponent(e.id)}`}>
                   {nombreCategoria(e.categoryId) && <span className="tag">{nombreCategoria(e.categoryId).toUpperCase()}</span>}
                   <h3>{e.title}</h3>
                   <p>Tema: {e.topic}</p>
@@ -85,7 +85,7 @@ export default function Evaluaciones({ session }: { session: Session }) {
         )}
 
         {!error && datos && datos.total_paginas > 1 && (
-          <div className="ev-pager">
+          <div className="evl-pager">
             <span>Página {datos.page + 1} de {datos.total_paginas} · {datos.total_elementos} evaluaciones</span>
             <div>
               <button type="button" className="pill" disabled={cargando || pagina === 0}

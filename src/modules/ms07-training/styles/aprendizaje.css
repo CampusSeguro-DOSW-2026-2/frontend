@@ -40,4 +40,4 @@
 .ap-campo small{color:var(--mut)}
 .ap-error{color:var(--red);font-size:13px}
 .ap-botones{display:flex;gap:12px;flex-wrap:wrap}
-@media (max-width:700px){.content{padding:24px 16px}}
+

@@ -33,7 +33,7 @@ aaintegration); todo lo demás lo responde el tutor con los contenidos oficiales
 | `pages/` | Pantallas (una por ruta) |
 | `components/` | Componentes que solo usa este módulo |
 | `services/training.ts` | Cliente de MS07 por el API Gateway |
-| `styles/` | Estilos del módulo (prefijo `ev-` para evaluaciones, `ap-` para contenidos y `tu-` para el tutor) |
+| `styles/` | Estilos del módulo (prefijo `evl-` para evaluaciones, `ap-` para contenidos y `tu-` para el tutor) |
 | `utils/` | Funciones auxiliares del módulo |
 | `hooks/` | Hooks propios del módulo |
 | `types.ts` | Tipos del módulo |

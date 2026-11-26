@@ -105,26 +105,26 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
   };
 
   return (
-    <form className="ev-editor" onSubmit={enviar} noValidate aria-label={inicial ? 'Modificar evaluación' : 'Nueva evaluación'}>
+    <form className="evl-editor" onSubmit={enviar} noValidate aria-label={inicial ? 'Modificar evaluación' : 'Nueva evaluación'}>
       <h2 className="title sm22">{inicial ? 'Modificar evaluación' : 'Nueva evaluación'}</h2>
       <div className="two">
         <div className="field">
-          <label htmlFor="ev-titulo">Título</label>
-          <div className="input"><input id="ev-titulo" value={titulo} maxLength={150} placeholder="Evacuación básica"
+          <label htmlFor="evl-titulo">Título</label>
+          <div className="input"><input id="evl-titulo" value={titulo} maxLength={150} placeholder="Evacuación básica"
             onChange={(e) => { setTitulo(e.target.value); limpiar('title'); }} /></div>
           {errores.title && <span className="error">{errores.title}</span>}
         </div>
         <div className="field">
-          <label htmlFor="ev-tema">Tema</label>
-          <div className="input"><input id="ev-tema" value={tema} maxLength={150} placeholder="Rutas de salida"
+          <label htmlFor="evl-tema">Tema</label>
+          <div className="input"><input id="evl-tema" value={tema} maxLength={150} placeholder="Rutas de salida"
             onChange={(e) => { setTema(e.target.value); limpiar('topic'); }} /></div>
           {errores.topic && <span className="error">{errores.topic}</span>}
         </div>
       </div>
       <div className="field">
-        <label htmlFor="ev-categoria">Categoría</label>
+        <label htmlFor="evl-categoria">Categoría</label>
         <div className="input">
-          <select id="ev-categoria" value={categoria} onChange={(e) => { setCategoria(e.target.value); limpiar('categoryId'); }}>
+          <select id="evl-categoria" value={categoria} onChange={(e) => { setCategoria(e.target.value); limpiar('categoryId'); }}>
             <option value="">Seleccione una categoría</option>
             {opcionesCategoria.map((c) => (
               <option key={c.id} value={c.id}>{c.name}{c.status === 'INACTIVO' ? ' (inactiva)' : ''}</option>
@@ -135,18 +135,18 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
       </div>
 
       {preguntas.map((p, i) => (
-        <section key={i} className="ev-ed-pregunta" aria-label={`Pregunta ${i + 1}`}>
-          <div className="ev-ed-cab">
-            <label htmlFor={`ev-q${i}`}>Pregunta {i + 1}</label>
+        <section key={i} className="evl-ed-pregunta" aria-label={`Pregunta ${i + 1}`}>
+          <div className="evl-ed-cab">
+            <label htmlFor={`evl-q${i}`}>Pregunta {i + 1}</label>
             {preguntas.length > 1 && (
-              <button type="button" className="ev-mini peligro"
+              <button type="button" className="evl-mini peligro"
                 onClick={() => setPreguntas((ps) => ps.filter((_, j) => j !== i))}>Quitar pregunta</button>
             )}
           </div>
-          <div className="input"><input id={`ev-q${i}`} value={p.statement} maxLength={500} placeholder="¿Por dónde se debe salir?"
+          <div className="input"><input id={`evl-q${i}`} value={p.statement} maxLength={500} placeholder="¿Por dónde se debe salir?"
             onChange={(e) => cambiarPregunta(i, { statement: e.target.value })} /></div>
           {p.options.map((o, k) => (
-            <div key={k} className="ev-ed-opcion">
+            <div key={k} className="evl-ed-opcion">
               <div className="input"><input aria-label={`Opción ${k + 1} de la pregunta ${i + 1}`} value={o.text} maxLength={300}
                 placeholder={`Opción ${k + 1}`} onChange={(e) => cambiarOpcion(i, k, { text: e.target.value })} /></div>
               <label>
@@ -154,13 +154,13 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
                 Correcta
               </label>
               {p.options.length > 2 && (
-                <button type="button" className="ev-mini" aria-label={`Quitar opción ${k + 1}`}
+                <button type="button" className="evl-mini" aria-label={`Quitar opción ${k + 1}`}
                   onClick={() => cambiarPregunta(i, { options: p.options.filter((_, m) => m !== k) })}>Quitar</button>
               )}
             </div>
           ))}
           {p.options.length < MAX_OPCIONES && (
-            <button type="button" className="ev-mini" onClick={() => cambiarPregunta(i, { options: [...p.options, opcionVacia()] })}>
+            <button type="button" className="evl-mini" onClick={() => cambiarPregunta(i, { options: [...p.options, opcionVacia()] })}>
               Agregar opción
             </button>
           )}
@@ -175,7 +175,7 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
       {errores.questions && <span className="error">{errores.questions}</span>}
 
       {general && <p className="notice err" role="alert">{general}</p>}
-      <div className="ev-acciones">
+      <div className="evl-acciones">
         <button type="submit" className="btn red" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
         <button type="button" className="btn white" onClick={onCancelar} disabled={guardando}>Cancelar</button>
       </div>

@@ -27,7 +27,7 @@ export default function PresentarEvaluacion({ session, id }: { session: Session;
     return () => { vigente = false; };
   }, [session, id]);
 
-  const volver = <a className="ev-volver" href="#/evaluaciones">← Evaluaciones</a>;
+  const volver = <a className="evl-volver" href="#/evaluaciones">← Evaluaciones</a>;
 
   if (error || !evaluacion) {
     return (
@@ -69,8 +69,8 @@ export default function PresentarEvaluacion({ session, id }: { session: Session;
       <PageHeader badge="APRENDIZAJE" title={evaluacion.title} subtitle={`Tema: ${evaluacion.topic}`} context={volver} />
       <main className="content">
         {resultado && (
-          <section className="ev-resultado" aria-live="polite">
-            <span className="ev-puntaje">{resultado.score}%</span>
+          <section className="evl-resultado" aria-live="polite">
+            <span className="evl-puntaje">{resultado.score}%</span>
             <div>
               <h2 className="title sm22">
                 {resultado.correctAnswers} de {resultado.totalQuestions} respuestas correctas
@@ -81,18 +81,18 @@ export default function PresentarEvaluacion({ session, id }: { session: Session;
         )}
 
         <form onSubmit={enviar} noValidate>
-          <ol className="ev-preguntas">
+          <ol className="evl-preguntas">
             {preguntas.map((p) => {
               const c = correccion.get(p.id);
               return (
-                <li key={p.id} className={`ev-pregunta${c ? (c.correct ? ' ok' : ' mal') : ''}`}>
+                <li key={p.id} className={`evl-pregunta${c ? (c.correct ? ' ok' : ' mal') : ''}`}>
                   <fieldset disabled={!!resultado}>
                     <legend>{p.position}. {p.statement}</legend>
                     {p.options.map((o) => {
                       const esCorrecta = c?.correctOptionId === o.id;
                       const esErrada = c && !c.correct && c.optionId === o.id;
                       return (
-                        <label key={o.id} className={`ev-opcion${esCorrecta ? ' ok' : ''}${esErrada ? ' mal' : ''}`}>
+                        <label key={o.id} className={`evl-opcion${esCorrecta ? ' ok' : ''}${esErrada ? ' mal' : ''}`}>
                           <input type="radio" name={p.id} value={o.id} checked={elegidas[p.id] === o.id}
                             onChange={() => setElegidas((prev) => ({ ...prev, [p.id]: o.id }))} />
                           {o.text}
@@ -109,7 +109,7 @@ export default function PresentarEvaluacion({ session, id }: { session: Session;
 
           {errorEnvio && <p className="notice err" role="alert">{errorEnvio}</p>}
 
-          <div className="ev-acciones ev-enviar">
+          <div className="evl-acciones evl-enviar">
             {resultado ? (
               <>
                 <button type="button" className="btn red" onClick={repetir}>Presentar de nuevo</button>
