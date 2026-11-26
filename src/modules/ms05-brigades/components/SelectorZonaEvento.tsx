@@ -73,7 +73,7 @@ export default function SelectorZonaEvento({ session, eventoId, edificios, miUbi
             <p className="help">{confirmar.brigadistasAsignados === 1 ? 'Hay 1 brigadista' : `Hay ${confirmar.brigadistasAsignados} brigadistas`} en este edificio.</p>
             <div className="row2">
               <button type="button" className="btn white" onClick={() => setConfirmar(null)} disabled={busy}>Cancelar</button>
-              <button type="button" className="btn red" onClick={() => void asignarse()} disabled={busy}>{busy ? 'Guardando…' : 'Aceptar'}</button>
+              <button type="button" className="btn red" onClick={() => void asignarse()} disabled={busy}>{busy ? 'Guardando…' : miUbicacionId ? 'Cambiar de edificio' : 'Asignarme aquí'}</button>
             </div>
           </div>
         </div>

@@ -93,7 +93,7 @@ export default function EventList({ session, canManage }: { session: Session; ca
                         <a className="ev-icon" href={`#/eventos/${e.id}/editar`} aria-label={`Editar ${e.name}`} title="Editar"><Edit /></a>
                       )}
                       <a className={`btn ${e.status === 'IN_PROGRESS' ? 'deep' : 'white'}`} href={`#/eventos/${e.id}`}>
-                        {e.status === 'IN_PROGRESS' ? 'Ver en vivo' : e.status === 'FINISHED' ? 'Ver resultados' : 'Ver'}
+                        {e.status === 'IN_PROGRESS' ? 'Ver en vivo' : e.status === 'FINISHED' ? 'Ver resultados' : 'Ver detalle'}
                       </a>
                     </div>
                   </td>

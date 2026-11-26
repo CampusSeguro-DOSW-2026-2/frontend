@@ -10,7 +10,7 @@
 .rs-opt{font:400 12px 'Geist',sans-serif;color:var(--mut)}
 .rs-sub{font-size:13px;color:var(--mut)}
 .rs-sec{display:flex;flex-direction:column;gap:10px}
-.rs-zonas{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.rs-zonas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(130px,100%),1fr));gap:12px}
 .rs-zona{display:flex;justify-content:center;align-items:center;gap:8px;min-height:52px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;color:#475569;font:700 15px/20px 'Outfit',sans-serif;text-align:center;cursor:pointer}
 .rs-zona:hover{border-color:var(--red)}
 .rs-zona[aria-pressed=true]{background:#FEF2F2;border:2px solid var(--red);color:var(--red)}
@@ -26,7 +26,8 @@
 .rs-kv small{font-size:12px;color:var(--mut)}
 .rs-kv b{font:700 18px/24px 'Outfit',sans-serif}
 .rs-link{align-self:flex-start;background:none;border:0;padding:0;color:var(--red);font:600 12px 'Geist',sans-serif;text-decoration:underline;cursor:pointer}
-.rs-info{display:flex;align-items:flex-start;gap:10px;background:#F1F5F9;border-radius:12px;padding:14px 16px;font-size:12px;line-height:18px;color:var(--mut)}
+.rs-info{display:flex;align-items:flex-start;gap:10px;background:var(--info-bg);border:1px solid var(--info-line);border-radius:12px;padding:14px 16px;font-size:13px;line-height:18px;color:var(--info)}
+.rs-info .ico{color:var(--info);flex:none}
 .rs-btn{height:48px;border-radius:10px;font-size:15px}
 /* Prioridad */
 .rs-prio{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:4px 10px;border-radius:6px;font:800 12px/16px 'Outfit',sans-serif;white-space:nowrap}
@@ -34,7 +35,7 @@
 .rs-prio.EMERGENCIA.solid{background:var(--red);color:#fff}
 .rs-prio.URGENCIA_MODERADA{background:var(--pale);color:#92400E}
 .rs-prio.POCA_URGENCIA{background:#F0FDF4;color:#166534}
-.rs-prios{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.rs-prios{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px}
 .rs-prio-card{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:22px;border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--ink);text-align:left;cursor:pointer}
 .rs-prio-card b{font:700 20px/26px 'Outfit',sans-serif}
 .rs-prio-card span{font-size:13px;color:var(--mut)}
@@ -111,3 +112,7 @@
   .rs-detail-grid{grid-template-columns:1fr}
   .rs-table th:nth-child(3),.rs-table td:nth-child(3){display:none}
 }
+
+/* Áreas táctiles de 44 px en celular y escritorio (docs/PATRONES-UI.md) */
+.rs-back,.rs-link{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 4px;margin:0 -4px}
+.rs-toggle{width:var(--tap);height:var(--tap);margin-left:0}

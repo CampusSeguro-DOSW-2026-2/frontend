@@ -1,3 +1,4 @@
+import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useRef, useState } from 'react';
 import { campus, comoCampusError } from '../services/campus';
 import type { CampusApiError } from '../services/campus';
@@ -16,7 +17,7 @@ function Recorrido({ ruta, zona }: { ruta: RutaExterior; zona?: string }) {
     <article className="cs-exterior">
       <div className="cs-exterior-cabecera">
         <strong>{zona ?? 'Zona segura'}</strong>
-        <span className={`cs-estado ${TONOS[ruta.estado]}`}>{ruta.estado}</span>
+        <span className={`cs-estado ${TONOS[ruta.estado]}`}>{etiquetaCodigo(ruta.estado)}</span>
       </div>
       <p>
         {ruta.distanciaMetros != null ? distancia(ruta.distanciaMetros) : 'Sin distancia'}
@@ -245,7 +246,7 @@ export function RutaExteriorAdmin({ edificios, zonas, puedeCalcular }: {
         <div className="cs-subeditor">
           <h4>Rutas guardadas de esta salida</h4>
           {guardadas.length === 0
-            ? <p className="cs-vacio">Esta salida todavía no tiene rutas exteriores. Si acabas de crearla o moverla, se generan en unos segundos: pulsa Actualizar.</p>
+            ? <p className="cs-vacio">Esta salida todavía no tiene rutas exteriores. Si acaba de crearla o moverla, se generan en unos segundos: pulse Actualizar.</p>
             : [...guardadas].sort(porDistancia).map((r) => <Recorrido key={r.id} ruta={r} zona={nombreZona.get(r.zonaSeguraDestinoId)} />)}
           <div className="cs-form-botones">
             <button type="button" className="cs-mini" disabled={actualizando} onClick={actualizar}>{actualizando ? 'Actualizando…' : 'Actualizar'}</button>

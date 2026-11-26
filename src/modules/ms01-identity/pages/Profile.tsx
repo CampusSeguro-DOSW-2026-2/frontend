@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Cargando } from '../../../shared/components/Cargando';
 import { PageHeader } from '../../../shared/components/Layout';
 import { RoleChip, StateChip } from '../components/Chips';
 import { RoleDetails } from '../components/Permissions';
@@ -90,7 +91,7 @@ export default function Profile({ session }: { session: Session }) {
           </section>
         )}
 
-        {!error && !profile && <p className="notice" role="status">Cargando su perfil…</p>}
+        {!error && !profile && <Cargando texto="Cargando su perfil…" />}
 
         {profile && (
           <section className="panel" aria-label="Mi perfil">
@@ -107,6 +108,7 @@ export default function Profile({ session }: { session: Session }) {
               <div><dt>Primer apellido</dt><dd>{profile.firstLastName}</dd></div>
               <div><dt>Segundo apellido</dt><dd>{profile.secondLastName || '—'}</dd></div>
               <div className="wide"><dt>Correo institucional</dt><dd>{profile.email}</dd></div>
+              <div className="wide"><dt>{profile.roles.length === 1 ? 'Rol' : `Roles (${profile.roles.length})`}</dt><dd>{profile.roles.map(roleLabel).join(', ') || 'Sin roles asignados'}</dd></div>
             </dl>
 
             <section className="perms" aria-labelledby="perms-title">
@@ -126,7 +128,7 @@ export default function Profile({ session }: { session: Session }) {
                 </>
               )}
 
-              {!rolesError && !catalog && <p className="notice" role="status">Cargando sus permisos…</p>}
+              {!rolesError && !catalog && <Cargando texto="Cargando sus permisos…" />}
 
               {catalog && (
                 <>

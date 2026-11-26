@@ -254,7 +254,7 @@ export default function EscalerasEdificio({
           </label>
 
           <fieldset>
-            <legend>Pisos que conecta (selecciona mínimo dos)</legend>
+            <legend>Pisos que conecta (seleccione mínimo dos)</legend>
             {pisosActivos.length === 0 ? (
               <p>No hay pisos activos disponibles.</p>
             ) : (
@@ -412,7 +412,7 @@ export default function EscalerasEdificio({
                         onChange={(e) => setMotivo(e.target.value)}
                         maxLength={255}
                         required
-                        placeholder="Describe por qué no está disponible"
+                        placeholder="Describa por qué no está disponible"
                       />
                     </label>
                   )}

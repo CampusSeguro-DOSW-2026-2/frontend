@@ -1,3 +1,4 @@
+import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PickerBox } from '../components/PickerBox';
@@ -161,28 +162,28 @@ export default function AlertForm({ editId }: { editId?: string }) {
 
   const scopeText = scopeIds.map((i) => labelOf(scopeItems, i)).join(' · ');
   const rolesText = listEs(roles.map((r) => labelOf(roleItems, r)));
-  const badge = !alert ? 'BORRADOR' : scheduled ? 'PROGRAMADA' : alert.status === 'DRAFT' ? 'BORRADOR' : alert.status;
+  const badge = (!alert ? 'Borrador' : scheduled ? 'Programada' : etiquetaCodigo(alert.status)).toUpperCase();
   const star = (on: boolean) => on && <span className="req"> *</span>;
 
   if (loading) return <main className="page"><p className="notice">Cargando alerta…</p></main>;
-  if (forbidden) return <main className="page"><p className="notice" role="alert">No cuentas con permisos para {editId ? 'editar esta alerta' : 'crear alertas'}. <a href="#/alertas">Volver al listado</a></p></main>;
+  if (forbidden) return <main className="page"><p className="notice" role="alert">No tiene permisos para {editId ? 'editar esta alerta' : 'crear alertas'}. <a href="#/alertas">Volver al listado</a></p></main>;
   // PUT /alertas/{id} solo acepta un scope: editar aquí borraría los demás alcances de la alerta.
   if (scopeKinds > 1) return <main className="page"><p className="notice" role="alert">Esta alerta cubre edificios y zonas a la vez y este formulario solo edita un tipo de alcance. <a href="#/alertas">Volver al listado</a></p></main>;
   if (blocked) return <main className="page"><p className="notice" role="alert">Esta alerta ya no se puede editar. <a href="#/alertas">Volver al listado</a></p></main>;
 
   return (
     <>
-      <PageHeader badge={badge} title={editId ? 'Editar alerta' : 'Crear alerta'} subtitle="Redacte el mensaje, defina el alcance y revise los destinatarios antes de emitir." context="Configuración de alerta" />
+      <PageHeader volver={{ href: '#/alertas', texto: 'Alertas' }} badge={badge} title={editId ? 'Editar alerta' : 'Crear alerta'} subtitle="Redacte el mensaje, defina el alcance y revise los destinatarios antes de emitir." context="Configuración de alerta" />
       <main className="alert-layout">
         <form className="af" noValidate onSubmit={(e) => { e.preventDefault(); submit(); }}>
           <div className="fgroup">
             <label className="flabel" htmlFor="title">Título{star(!editId)}</label>
-            <div className={`input${errors.title ? ' bad' : ''}`}><input id="title" value={title} placeholder={editId ? 'Alerta a editar' : 'Escriba un título breve y claro para la comunidad'} onChange={(e) => setTitle(e.target.value)} /></div>
+            <div className={`input${errors.title ? ' bad' : ''}`}><input id="title" value={title} placeholder={editId ? 'Título de la alerta' : 'Escriba un título breve y claro para la comunidad'} onChange={(e) => setTitle(e.target.value)} /></div>
             {errors.title && <span className="error" role="alert">{errors.title}</span>}
           </div>
           <div className="fgroup">
             <label className="flabel" htmlFor="instr">Descripción{star(!editId)}</label>
-            <div className={`input tall${errors.instructions ? ' bad' : ''}`}><textarea id="instr" value={instructions} placeholder="Describe la situación y su ubicación. Incluye únicamente información verificada." onChange={(e) => setInstructions(e.target.value)} /></div>
+            <div className={`input tall${errors.instructions ? ' bad' : ''}`}><textarea id="instr" value={instructions} placeholder="Describa la situación y su ubicación. Incluya únicamente información verificada." onChange={(e) => setInstructions(e.target.value)} /></div>
             {errors.instructions && <span className="error" role="alert">{errors.instructions}</span>}
           </div>
           <div className="two af-row">

@@ -149,7 +149,7 @@ export default function PreventiveAdmin() {
     if (edicion?.tipo === 'modificar' && edicion.id === r.id) {
       return (
         <li key={r.id} className="cs-recomendacion editando">
-          <h4>Modificar recomendación</h4>
+          <h4>Editar recomendación</h4>
           <RecomendacionForm inicial={r} edificios={edificios} onCancelar={() => editar(null)}
             onGuardar={(datos) => guardar(() => campus.recomendaciones.modificar(r.id, datos))} />
         </li>
@@ -164,7 +164,7 @@ export default function PreventiveAdmin() {
           </div>
           {puedeGestionar && edicion?.tipo !== 'inactivar' && (
             <div className="cs-acciones">
-              <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'modificar', id: r.id })}>Modificar</button>
+              <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'modificar', id: r.id })}>Editar</button>
               <button type="button" className="cs-mini peligro" onClick={() => editar({ tipo: 'inactivar', id: r.id })}>Inactivar</button>
             </div>
           )}
@@ -213,7 +213,7 @@ export default function PreventiveAdmin() {
             )}
 
             {recomendaciones.length === 0 && edicion?.tipo !== 'nueva' && (
-              <p className="cs-alert info">Aún no hay recomendaciones. Las que agregues aparecerán en la tarjeta de cada ruta.</p>
+              <p className="cs-alert info">Aún no hay recomendaciones. Las que agregue aparecerán en la tarjeta de cada ruta.</p>
             )}
 
             {porEdificio.length > 0 && (

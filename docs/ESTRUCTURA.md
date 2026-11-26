@@ -10,8 +10,8 @@ src/
 │
 ├── shared/                   # Reutilizable por todos los módulos
 │   ├── assets/icons/         # Iconos oficiales (docs/mockups/icons)
-│   ├── components/           # Layout (barra y encabezado), Icons, DateTimeField
-│   ├── services/             # http.ts (cliente del API Gateway), session.ts, localStore.ts
+│   ├── components/           # Layout, Icons, Campo, DateTimeField, Mensaje, EstadoVacio, Cargando, Feedback
+│   ├── services/             # http.ts (cliente del API Gateway), session.ts, localStore.ts, feedback.ts
 │   ├── styles.css            # Tokens y estilos globales
 │   └── types.ts              # Session, SessionUser
 │
@@ -46,7 +46,8 @@ modules/msXX-nombre/
 2. **Rutas:** cada módulo exporta su función de rutas en `routes.tsx`. Recibe la ruta y devuelve la pantalla, o `undefined` si la ruta no es suya. `app/App.tsx` solo encadena esas funciones; para agregar un módulo nuevo se importa su función ahí.
 3. **Red:** las páginas nunca llaman `fetch`; todo pasa por `services/` del módulo. Para el API Gateway se usa `shared/services/http.ts` (`request`).
 4. **Sesión:** `shared/services/session.ts` y el tipo `Session` son compartidos; la pantalla de inicio de sesión y las demás de identidad viven en `ms01-identity`.
-5. **Estilos:** tokens y clases generales en `shared/styles.css`; lo propio de un módulo en su `styles/`.
+5. **Estilos:** tokens y clases generales en `shared/styles.css`; lo propio de un módulo en su `styles/`, sin colores escritos directamente (se usan los tokens).
+6. **Interfaz:** mensajes, estados vacíos, carga, confirmaciones, botones, formularios y textos siguen [PATRONES-UI.md](PATRONES-UI.md).
 
 ## Para el squad de MS02
 

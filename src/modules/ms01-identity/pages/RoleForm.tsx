@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PermissionPicker } from '../components/PermissionPicker';
-import { TextField } from '../components/TextField';
+import { Campo } from '../../../shared/components/Campo';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { createRole, getPermissionCatalog, updateRole, updateRolePermissions } from '../services/roles';
 import { roleLabel } from '../utils/labels';
@@ -126,7 +126,7 @@ export default function RoleForm({ session, mode, role }: Props) {
   if (!creating && !role) {
     return (
       <>
-        <PageHeader badge="ADMINISTRACIÓN" title="Editar rol" subtitle="Cambie el nombre, la descripción o los permisos del rol." />
+        <PageHeader volver={{ href: '#/roles', texto: 'Roles' }} badge="ADMINISTRACIÓN" title="Editar rol" subtitle="Cambie el nombre, la descripción o los permisos del rol." />
         <main className="content narrow">
           <section className="panel">
             <p className="notice" role="status">No hay un rol elegido. Vuelva a la lista de roles y elija uno.</p>
@@ -141,7 +141,7 @@ export default function RoleForm({ session, mode, role }: Props) {
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={{ href: '#/roles', texto: 'Roles' }}
         badge="ADMINISTRACIÓN"
         title={creating ? 'Crear rol' : 'Editar rol'}
         subtitle={creating
@@ -152,12 +152,12 @@ export default function RoleForm({ session, mode, role }: Props) {
         <form className="panel role-panel" noValidate aria-busy={submitting}
           onSubmit={(e) => { e.preventDefault(); void submit(); }}>
           <div className="role-fields">
-            <TextField id="name" label="Nombre del rol" placeholder="Ingrese el nombre, por ejemplo MONITOR_EVACUACION"
+            <Campo id="name" label="Nombre del rol" placeholder="Ingrese el nombre, por ejemplo MONITOR_EVACUACION"
               value={form.name} onChange={(v) => set('name', v)} error={errors.name} maxLength={30}
               hint={saved?.system
                 ? 'Los roles de sistema no se pueden renombrar.'
                 : `Se guarda en mayúsculas y se muestra como «${roleLabel(form.name.trim().toUpperCase() || 'MONITOR_EVACUACION')}».`} />
-            <TextField id="description" label="Descripción" placeholder="Ingrese qué hace el rol"
+            <Campo id="description" label="Descripción" placeholder="Ingrese qué hace el rol"
               value={form.description} onChange={(v) => set('description', v)} error={errors.description}
               maxLength={200} multiline hint={`${form.description.length} de 200 caracteres`} />
           </div>

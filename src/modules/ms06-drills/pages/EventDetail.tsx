@@ -1,3 +1,4 @@
+import { etiquetaRol } from '../../../shared/utils/etiquetas';
 import { useCallback, useEffect, useState } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
 import { errorMessage } from '../../../shared/services/http';
@@ -251,7 +252,7 @@ export default function EventDetail({ session, id }: { session: Session; id: str
             <dt>Descripción</dt><dd>{ev.description || '—'}</dd>
             <dt>Inicio programado</dt><dd>{formatDate(ev.startDate)}</dd>
             <dt>Alcance</dt><dd>{ev.scope.map((s) => scopeLabelIn(s.id, catalog)).join(', ') || 'Pendiente'}</dd>
-            <dt>Participantes</dt><dd>{ev.participantRoles.map((r) => ROLE_LABEL[r] ?? r).join(', ') || 'Pendiente'}</dd>
+            <dt>Participantes</dt><dd>{ev.participantRoles.map((r) => ROLE_LABEL[r] ?? etiquetaRol(r)).join(', ') || 'Pendiente'}</dd>
             <dt>Creado</dt><dd>{formatDate(ev.createdAt)}{ev.createdBy && !isTechnicalId(ev.createdBy) ? ` por ${ev.createdBy}` : ''}</dd>
             <dt>Alertas</dt><dd>{ev.alerts.length ? `${ev.alerts.length} asociadas` : 'Ninguna todavía'}</dd>
           </dl>
@@ -270,7 +271,7 @@ export default function EventDetail({ session, id }: { session: Session; id: str
             </ul>
             <div className="row2">
               <button type="button" className="btn white" onClick={() => setConfirm(false)} disabled={finishing}>Seguir en vivo</button>
-              <button type="button" className="btn red" onClick={finish} disabled={finishing}>{finishing ? 'Finalizando…' : 'Finalizar'}</button>
+              <button type="button" className="btn red" onClick={finish} disabled={finishing}>{finishing ? 'Finalizando…' : 'Finalizar evento'}</button>
             </div>
           </div>
         </div>

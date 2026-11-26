@@ -181,7 +181,7 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
                     <td>
                       <div className="cs-acciones">
                         {activa && <BotonQr elemento="salida" id={s.id} nombre={s.nombre} />}
-                        {activa && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: s.id })}>Modificar</button>}
+                        {activa && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: s.id })}>Editar</button>}
                         <button type="button" className={`cs-mini${activa ? ' peligro' : ''}`} disabled={ocupado === s.id}
                           onClick={() => cambiarEstado(s)}>
                           {ocupado === s.id ? 'Guardando…' : activa ? 'Inactivar' : 'Reactivar'}

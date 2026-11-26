@@ -145,7 +145,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
           <h1>Gestión de brigadistas</h1>
           <p>
             {eventKindsTitle}: primero los brigadistas activos, por edificio; después los inactivos.
-            {' '}Despliega a cada uno para ver sus incidentes y cambiar su edificio.
+            {' '}Abra a cada uno para ver sus incidentes y cambiar su edificio.
           </p>
         </div>
       </header>
@@ -310,7 +310,7 @@ function CambiarAsignacion({ session, evento, brigadista, onClose, onDone }: {
         {error && <p className="notice err" role="alert">{error}</p>}
         <div className="row2">
           <button type="button" className="btn white" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="button" className="btn red" onClick={aceptar} disabled={saving || !seleccion}>{saving ? 'Guardando…' : 'Aceptar'}</button>
+          <button type="button" className="btn red" onClick={aceptar} disabled={saving || !seleccion}>{saving ? 'Guardando…' : 'Cambiar de edificio'}</button>
         </div>
       </div>
     </div>

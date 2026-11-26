@@ -86,7 +86,7 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
         <div>
           <a className="back" href="#/brigadista">← Panel de responsabilidades</a>
           <h1>Auto asignación</h1>
-          <p>¡Hola! Qué gusto que nos quiera ayudar. Elija en el mapa el edificio donde va a apoyar durante el evento.</p>
+          <p>Elija en el mapa el edificio donde va a apoyar durante el evento.</p>
         </div>
       </header>
       <main className="ev-main">
@@ -135,8 +135,8 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
                 <p className="aa-state">Estado <span className={activo ? 'on' : 'off'}>{activo ? 'activo' : 'inactivo'}</span></p>
                 {!activo && (
                   <>
-                    <button type="button" className="btn red" disabled={busy} onClick={activarse}>{busy ? 'Activando…' : 'Activarse'}</button>
-                    <p className="aa-hint">Por favor, para asignarse primero debe activarse.</p>
+                    <button type="button" className="btn red" disabled={busy} onClick={activarse}>{busy ? 'Activando…' : 'Estoy disponible'}</button>
+                    <p className="aa-hint">Para elegir un edificio, primero marque que está disponible.</p>
                   </>
                 )}
                 {activo && (

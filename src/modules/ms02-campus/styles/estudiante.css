@@ -1,6 +1,6 @@
 .cs-estudiante-edificios {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
   gap: 24px;
   align-items: start;
 }
@@ -51,7 +51,7 @@
 
 .cs-estudiante-espacios {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
   gap: 16px;
 }
 
@@ -162,3 +162,20 @@
     padding: 16px;
   }
 }
+
+/* Tarjeta de edificio: la foto como portada arriba y, sin foto, un respaldo visual claro (nunca una caja vacía) */
+.cs-estudiante-edificio{padding:0;overflow:hidden;display:flex;flex-direction:column;background:var(--surface)}
+.cs-estudiante-edificio .cs-estudiante-edificio-info{padding:18px 20px 20px}
+.cs-estudiante-ir{align-self:stretch;margin-top:4px}
+.cs-portada-lista{display:flex;flex-direction:column;gap:16px}
+.cs-portada{position:relative;margin:0;aspect-ratio:16/9;overflow:hidden;background:var(--cream)}
+.cs-portada img{display:block;width:100%;height:100%;object-fit:cover}
+.cs-portada.grande{border-radius:16px;border:1px solid var(--line);aspect-ratio:4/3}
+.cs-portada.cargando{background:linear-gradient(100deg,var(--neutral-bg) 30%,var(--bg) 50%,var(--neutral-bg) 70%);background-size:200% 100%;animation:cs-brillo 1.2s ease-in-out infinite}
+@keyframes cs-brillo{from{background-position:100% 0}to{background-position:-100% 0}}
+.cs-sin-foto{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:16px;text-align:center;color:var(--red);background:var(--cream)}
+.cs-galeria .cs-sin-foto{position:static;min-height:140px;border-radius:12px}
+.cs-sin-foto svg.i{width:40px;height:40px}
+.cs-sin-foto b{font:700 18px/22px 'Outfit',sans-serif;color:var(--ink)}
+.cs-sin-foto small{font-size:13px;color:var(--mut)}
+@media(prefers-reduced-motion:reduce){.cs-portada.cargando{animation:none}}

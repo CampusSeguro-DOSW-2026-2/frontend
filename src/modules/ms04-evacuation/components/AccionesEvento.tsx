@@ -26,19 +26,19 @@ export function AccionesEvento({ session }: { session: Session }) {
   if (acciones.length === 0) return null;
   return (
     <section className="chk-bloque" aria-labelledby="chk-acciones-titulo">
-      <div>
-        <h2 id="chk-acciones-titulo" className="title">¿Qué necesita hacer?</h2>
-        <p className="chk-sub">Siga las indicaciones de la brigada y elija la acción que necesita.</p>
-      </div>
-      <ul className="chk-acciones fila" aria-label="Acciones durante el evento">
+      <h2 id="chk-acciones-titulo" className="chk-bloque-titulo">Accesos rápidos</h2>
+      {/* Cada acceso es una fila compacta y toda la fila es el enlace (área táctil completa) */}
+      <ul className="chk-accesos" aria-label="Accesos rápidos">
         {acciones.map((a) => (
-          <li key={a.href} className="chk-accion fila">
-            <span className="chk-accion-ico" aria-hidden="true">{a.icono}</span>
-            <div className="chk-accion-txt">
-              <h3>{a.titulo}</h3>
-              <p>{a.texto}</p>
-            </div>
-            <a className="btn red" href={a.href}>{a.boton} →</a>
+          <li key={a.href}>
+            <a className="chk-acceso" href={a.href}>
+              <span className="chk-accion-ico" aria-hidden="true">{a.icono}</span>
+              <span className="chk-accion-txt">
+                <b>{a.boton}</b>
+                <small>{a.texto}</small>
+              </span>
+              <span className="chk-acceso-ir" aria-hidden="true">→</span>
+            </a>
           </li>
         ))}
       </ul>

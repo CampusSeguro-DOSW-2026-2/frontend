@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { TextField } from '../components/TextField';
+import { Campo } from '../../../shared/components/Campo';
 import { ApiError, loginUser } from '../services/identity';
 import { errorMessage } from '../../../shared/services/http';
 import { clearRecovery } from '../services/recovery';
 import { HOME_ROUTE, saveSession, takeSessionNotice } from '../../../shared/services/session';
 import { emailFormatError, loginPasswordError } from '../utils/validation';
 import type { LoginDraft } from '../types';
+import { Marca } from '../components/Marca';
 import '../styles/auth.css';
 
 const EMPTY: LoginDraft = {
@@ -107,7 +108,7 @@ export default function Login() {
   return (
     <div className="reg login">
       <main className="reg-main">
-        <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
+        <Marca />
 
         <h1>¡Qué bueno verlo de nuevo!</h1>
         <p className="reg-sub">
@@ -125,7 +126,7 @@ export default function Login() {
         >
           {notice && <p className="notice" role="status">{notice}</p>}
 
-          <TextField
+          <Campo
             id="email"
             label="Correo institucional"
             type="email"
@@ -137,7 +138,7 @@ export default function Login() {
             maxLength={100}
           />
 
-          <TextField
+          <Campo
             id="password"
             label="Contraseña"
             type="password"

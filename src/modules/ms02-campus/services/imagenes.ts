@@ -42,7 +42,7 @@ async function comprobarRespuesta(respuesta: Response): Promise<void> {
   };
 
   if (respuesta.status === 401) {
-    throw new Error('Tu sesión ha expirado. Inicia sesión nuevamente.');
+    throw new Error('Su sesión venció. Inicie sesión de nuevo.');
   }
   if (respuesta.status === 403) {
     throw new Error('No tiene permisos para gestionar las imágenes de este elemento.');

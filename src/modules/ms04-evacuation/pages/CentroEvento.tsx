@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Home, Info, LifeBuoy, LogOut, ShieldCheck } from '../../../shared/components/Icons';
+import { Cargando } from '../../../shared/components/Cargando';
+import { Home, LifeBuoy, LogOut, ShieldCheck } from '../../../shared/components/Icons';
 import { PageHeader } from '../../../shared/components/Layout';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { PERMISSION } from '../../../shared/permissions';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { hasPermission } from '../../../shared/services/session';
@@ -61,11 +63,12 @@ type Vigente =
  * formulario, que registra aquí el estado y deja en MS05 la prioridad, la descripción y la evidencia. Sin ese permiso
  * se pide solo el lugar, como antes.
  *
- * La pantalla de inicio la usa con el evento que ya consultó (`eventoActual`), así no lo vuelve a pedir, y con un
- * aviso (`aviso`) que se muestra antes de los accesos.
+ * La pantalla de inicio la usa con el evento que ya consultó (`eventoActual`), así no lo vuelve a pedir, con un aviso
+ * (`aviso`) que va arriba y con lo que va después del check-in y los accesos (`despues`: los otros eventos en curso).
+ * En celular, el check-in y el estado actual quedan visibles sin desplazarse.
  */
-export default function CentroEvento({ session, eventoId, eventoActual, aviso }: {
-  session: Session; eventoId: string; eventoActual?: Evento; aviso?: ReactNode;
+export default function CentroEvento({ session, eventoId, eventoActual, aviso, despues }: {
+  session: Session; eventoId: string; eventoActual?: Evento; aviso?: ReactNode; despues?: ReactNode;
 }) {
   const [eventoConsultado, setEventoConsultado] = useState<Evento | null>(null);
   const evento = eventoActual ?? eventoConsultado;
@@ -199,7 +202,7 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={eventoActual ? undefined : { href: '#/simulacro', texto: 'Inicio' }}
         badge={evento ? `${tipoEvento(evento.simulacro)} · ${textoEstadoEvento(evento.estado)}`.toUpperCase() : 'CHECK-IN'}
         title={evento?.nombre ?? 'Reportar mi estado'}
         subtitle={evento ? 'Evacuación del campus en curso' : 'Elija la opción que describe su situación.'}
@@ -207,17 +210,16 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
       />
       <main className="content">
         {aviso}
-        <AccionesEvento session={session} />
 
         <section className="chk-checkin" aria-labelledby="chk-estado-titulo">
           <div className="chk-checkin-cab">
             <div>
-              <h2 id="chk-estado-titulo" className="title sm22">Check-in · ¿Cómo se encuentra?</h2>
-              {vigente.estado === 'cargando' && <p className="chk-sub" role="status">Consultando su estado actual…</p>}
+              <h2 id="chk-estado-titulo" className="title sm22">¿Cómo se encuentra?</h2>
+              {vigente.estado === 'cargando' && <Cargando texto="Consultando su estado actual…" />}
               {vigente.estado === 'listo' && (
-                <p className="chk-sub" role="status">
+                <p className={`chk-sub${actual ? ' chk-vigente' : ''}`} role="status">
                   {actual
-                    ? <>Su estado actual: <b>{describir(actual)}</b>{actual.fecha_hora && ` · ${fechaHora(actual.fecha_hora)}`}. Puede cambiarlo.</>
+                    ? <>Su estado actual: <b>{describir(actual)}</b>{actual.fecha_hora && ` (reportado: ${fechaHora(actual.fecha_hora)})`}. Puede cambiarlo.</>
                     : 'Seleccione su estado actual. Aún no ha registrado su check-in en este evento.'}
                 </p>
               )}
@@ -235,20 +237,15 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
               <small className="chk-nota">Elija «Estoy a salvo» solo cuando esté fuera de peligro.</small>
             </div>
           </div>
-          {vigente.estado === 'error' && <p className="notice err" role="alert">{vigente.mensaje}</p>}
+          {vigente.estado === 'error' && <Mensaje tono="error">{vigente.mensaje}</Mensaje>}
 
           {elegido === 'SAFE' && (
             <div className="chk-puntos" role="region" aria-labelledby="chk-punto-titulo">
               <h3 id="chk-punto-titulo" className="chk-paso">¿En qué punto de encuentro está?</h3>
-              {puntos.estado === 'cargando' && <p className="notice" role="status">Consultando los puntos de encuentro…</p>}
-              {puntos.estado === 'error' && (
-                <>
-                  <p className="notice err" role="alert">{puntos.mensaje}</p>
-                  <button type="button" className="btn white chk-retry" onClick={cargarPuntos}>Intentar de nuevo</button>
-                </>
-              )}
+              {puntos.estado === 'cargando' && <Cargando texto="Consultando los puntos de encuentro…" />}
+              {puntos.estado === 'error' && <Mensaje tono="error" onReintentar={cargarPuntos}>{puntos.mensaje}</Mensaje>}
               {puntos.estado === 'listo' && puntos.items.length === 0 && (
-                <p className="notice" role="status">No hay puntos de encuentro disponibles.</p>
+                <Mensaje tono="aviso">No hay puntos de encuentro disponibles. Siga las indicaciones de la brigada.</Mensaje>
               )}
               {puntos.estado === 'listo' && puntos.items.length > 0 && (
                 <ul aria-label="Puntos de encuentro">
@@ -279,15 +276,10 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
                   </button>
                 ))}
               </div>
-              {lugares.estado === 'cargando' && <p className="notice" role="status">Consultando los lugares…</p>}
-              {lugares.estado === 'error' && (
-                <>
-                  <p className="notice err" role="alert">{lugares.mensaje}</p>
-                  <button type="button" className="btn white chk-retry" onClick={recargarLugares}>Intentar de nuevo</button>
-                </>
-              )}
+              {lugares.estado === 'cargando' && <Cargando texto="Consultando los lugares…" />}
+              {lugares.estado === 'error' && <Mensaje tono="error" onReintentar={recargarLugares}>{lugares.mensaje}</Mensaje>}
               {lugares.estado === 'listo' && lugares.items.length === 0 && (
-                <p className="notice" role="status">No hay lugares disponibles.</p>
+                <Mensaje tono="aviso">No hay lugares disponibles. Siga las indicaciones de la brigada.</Mensaje>
               )}
               {lugares.estado === 'listo' && lugares.items.length > 0 && (
                 <ul aria-label="Lugares">
@@ -307,12 +299,20 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
             </div>
           )}
 
-          {enviando && <p className="notice" role="status">Enviando su estado…</p>}
-          {error && !errorCampo && <p className="notice err" role="alert">{error}</p>}
-          {confirmado && actual && <p className="notice chk-ok" role="status">{mensajeExito(actual)}</p>}
+          {enviando && <Cargando texto="Enviando su estado…" />}
+          {error && !errorCampo && <Mensaje tono="error">{error}</Mensaje>}
+          {confirmado && actual && <Mensaje tono="exito">{mensajeExito(actual)}</Mensaje>}
         </section>
 
-        <p className="chk-info"><Info /> El check-in informa su estado a la brigada. «Requiero asistencia» abre la solicitud de ayuda: elija la urgencia y la zona, y la brigada la recibe con su estado.</p>
+        <AccionesEvento session={session} />
+        {despues}
+
+        <Mensaje tono="info" compacto>
+          El check-in informa su estado a la brigada.{' '}
+          {ayudaEnMs05
+            ? '«Requiero asistencia» abre la solicitud de ayuda: elija la urgencia y la zona, y la brigada la recibe con su estado.'
+            : '«Requiero asistencia» le pide el lugar donde está para que la brigada lo encuentre.'}
+        </Mensaje>
       </main>
     </>
   );

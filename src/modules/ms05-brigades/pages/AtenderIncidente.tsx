@@ -78,7 +78,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
 
   const finalizar = async () => {
     if (resultado !== 'RESUELTO') return;
-    if (!observaciones.trim()) { setErrorObs('Describe cómo se resolvió el incidente.'); return; }
+    if (!observaciones.trim()) { setErrorObs('Describa cómo se resolvió el incidente.'); return; }
     setErrorObs('');
     setBusy(true);
     setNotice('');
@@ -195,10 +195,10 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                 {finalizado && <p className="notice chk-ok" role="status">Incidente marcado como resuelto.</p>}
 
                 <button type="submit" className={`btn rs-btn ${puedeFinalizar && resultado ? 'red' : 'off'}`} disabled={!puedeFinalizar || !resultado || busy}>
-                  {busy && enAtencion ? 'Finalizando…' : 'Finalizar'}
+                  {busy && enAtencion ? 'Finalizando…' : 'Finalizar atención'}
                 </button>
               </form>
-              <p className="rs-info"><Info /> Volver al panel no finaliza el incidente. El caso permanece en atención mientras no registres un resultado.</p>
+              <p className="rs-info"><Info /> Volver al panel no finaliza el incidente. El caso permanece en atención mientras no registre un resultado.</p>
             </aside>
           </div>
         )}

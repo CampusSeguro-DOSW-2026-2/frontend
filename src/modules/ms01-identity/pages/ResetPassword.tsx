@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { TextField } from '../components/TextField';
+import { Campo } from '../../../shared/components/Campo';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { resetPassword } from '../services/password';
 import { clearRecovery, readRecovery, saveRecovery } from '../services/recovery';
 import { setSessionNotice } from '../../../shared/services/session';
 import { confirmationError, MESSAGES, passwordPolicyError } from '../utils/validation';
 import type { PasswordResetDraft } from '../types';
+import { Marca } from '../components/Marca';
 import '../styles/auth.css';
 
 const EMPTY: PasswordResetDraft = { password: '', confirmPassword: '' };
@@ -129,7 +130,7 @@ export default function ResetPassword() {
   return (
     <div className="reg login">
       <main className="reg-main">
-        <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
+        <Marca />
 
         <h1>Cambie su contraseña</h1>
         <p className="reg-sub">Cree una nueva contraseña para proteger el acceso a su cuenta.</p>
@@ -143,7 +144,7 @@ export default function ResetPassword() {
             void submit();
           }}
         >
-          <TextField
+          <Campo
             id="password"
             label="Nueva contraseña"
             type="password"
@@ -155,7 +156,7 @@ export default function ResetPassword() {
             maxLength={64}
           />
 
-          <TextField
+          <Campo
             id="confirmPassword"
             label="Confirme la contraseña"
             type="password"

@@ -90,7 +90,7 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
     const e: Errores = {};
     if (!espacioId) e.espacioOrigenId = 'Seleccione el espacio de origen.';
     if (!zonaId) e.zonaSeguraDestinoId = 'Seleccione la zona segura de destino.';
-    if (!descripcion.trim()) e.descripcion = 'Describe el recorrido.';
+    if (!descripcion.trim()) e.descripcion = 'Describa el recorrido.';
     else if (descripcion.trim().length > 1000) e.descripcion = 'El recorrido no puede superar 1000 caracteres.';
     validarMotivo(estado, motivo, e);
     return e;
@@ -125,7 +125,7 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
         </Campo>
       </div>
       <Campo id="ruta-descripcion-nueva" etiqueta="Recorrido" error={errores.descripcion}>
-        <textarea id="ruta-descripcion-nueva" rows={3} value={descripcion} placeholder="Sal por la puerta principal, gira a la derecha y baja por la escalera norte." onChange={(e) => setDescripcion(e.target.value)} />
+        <textarea id="ruta-descripcion-nueva" rows={3} value={descripcion} placeholder="Salga por la puerta principal, gire a la derecha y baje por la escalera norte." onChange={(e) => setDescripcion(e.target.value)} />
       </Campo>
       <div className="cs-campos">
         <CamposEstado id="nueva" estado={estado} motivo={motivo} errores={errores} onEstado={setEstado} onMotivo={setMotivo} />
@@ -147,7 +147,7 @@ function ModificarRuta({ ruta, zonas, onGuardar, onCancelar }: {
   const validar = () => {
     const e: Errores = {};
     if (!zonaId) e.zonaSeguraDestinoId = 'Seleccione la zona segura de destino.';
-    if (!descripcion.trim()) e.descripcion = 'Describe el recorrido.';
+    if (!descripcion.trim()) e.descripcion = 'Describa el recorrido.';
     else if (descripcion.trim().length > 1000) e.descripcion = 'El recorrido no puede superar 1000 caracteres.';
     return e;
   };
@@ -319,7 +319,7 @@ export default function RoutesAdmin() {
                     return (
                       <tr key={r.id}><td colSpan={6}>
                         <div className="cs-subeditor">
-                          <h4>{edicion.tipo === 'modificar' ? 'Modificar ruta' : 'Cambiar estado'} de {espacio.get(r.espacioOrigenId)?.nombre ?? 'la ruta'}</h4>
+                          <h4>{edicion.tipo === 'modificar' ? 'Editar ruta' : 'Cambiar estado'} de {espacio.get(r.espacioOrigenId)?.nombre ?? 'la ruta'}</h4>
                           {edicion.tipo === 'modificar' ? (
                             <ModificarRuta ruta={r} zonas={datos.zonas} onCancelar={() => setEdicion(null)}
                               onGuardar={(zonaId, descripcion) => guardar(() => campus.rutas.actualizar(r.id, { zonaSeguraDestinoId: zonaId, descripcion }))} />
@@ -341,7 +341,7 @@ export default function RoutesAdmin() {
                       <td className="cs-fecha">{fecha(r.actualizadaEn)}</td>
                       <td>
                         <div className="cs-acciones">
-                          {puedeGestionar && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: r.id })}>Modificar</button>}
+                          {puedeGestionar && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: r.id })}>Editar</button>}
                           {puedeCambiarEstado && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'estado', id: r.id })}>Cambiar estado</button>}
                         </div>
                       </td>

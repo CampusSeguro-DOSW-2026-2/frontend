@@ -119,13 +119,13 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
     <>
       <header className="ev-head">
         <div>
-          <span className="badge" style={{ background: 'var(--amber)', color: '#fff' }}>BRIGADISTA</span>
+          <span className="badge aviso">BRIGADISTA</span>
           <h1 style={{ marginTop: 10 }}>Panel de responsabilidades</h1>
           <p>Elija el evento, su zona y atienda los incidentes que le corresponden.</p>
         </div>
         <div className="hbtns" role="group" aria-label="Mi disponibilidad">
           {activo
-            ? <button type="button" className="btn ghost" disabled={busy} onClick={() => void finalizar()}>{busy ? 'Finalizando…' : 'Finalizar'}</button>
+            ? <button type="button" className="btn ghost" disabled={busy} onClick={() => void finalizar()}>{busy ? 'Finalizando…' : 'Finalizar mi turno'}</button>
             : <button type="button" className="btn light" disabled={busy} onClick={() => void disponible()}>{busy ? 'Activando…' : 'Estoy disponible'}</button>}
         </div>
       </header>

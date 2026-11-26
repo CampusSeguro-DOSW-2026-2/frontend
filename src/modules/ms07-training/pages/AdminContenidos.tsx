@@ -186,9 +186,9 @@ export default function AdminContenidos({ session }: { session: Session }) {
                             <td><span className={`ap-estado ${c.status}`}>{activo ? 'Activo' : 'Inactivo'}</span></td>
                             <td>
                               <div className="ap-fila-acciones">
-                                <a className="ap-mini" href={`#/aprendizaje/${encodeURIComponent(c.id)}`}>Ver</a>
+                                <a className="ap-mini" href={`#/aprendizaje/${encodeURIComponent(c.id)}`}>Ver contenido</a>
                                 <button type="button" className="ap-mini" disabled={ocupado === c.id}
-                                  onClick={() => abrirModificarContenido(c.id)}>Modificar</button>
+                                  onClick={() => abrirModificarContenido(c.id)}>Editar</button>
                                 <button type="button" className={`ap-mini${activo ? ' peligro' : ''}`} disabled={ocupado === c.id}
                                   onClick={() => cambiarEstadoContenido(c)}>
                                   {ocupado === c.id ? 'Guardando…' : activo ? 'Inactivar' : 'Reactivar'}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { TextField } from '../components/TextField';
+import { Campo } from '../../../shared/components/Campo';
 import { ApiError } from '../services/identity';
 import { errorMessage, getMyProfile, updateMyProfile } from '../services/users';
 import { nameError } from '../utils/validation';
@@ -90,7 +90,7 @@ export default function EditProfile({ session }: { session: Session }) {
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={{ href: '#/perfil', texto: 'Mi perfil' }}
         badge="MI PERFIL"
         title="Editar perfil"
         subtitle="Actualice sus nombres y apellidos. El correo, los roles y el estado no se modifican desde aquí."
@@ -106,18 +106,18 @@ export default function EditProfile({ session }: { session: Session }) {
             onSubmit={(e) => { e.preventDefault(); void submit(); }}
           >
             <div className="two">
-              <TextField id="firstName" label="Primer nombre" placeholder="Ingrese su primer nombre"
+              <Campo id="firstName" label="Primer nombre" placeholder="Ingrese su primer nombre"
                 value={form.firstName} onChange={(v) => set('firstName', v)} error={errors.firstName}
                 autoComplete="given-name" maxLength={30} />
-              <TextField id="secondName" label="Segundo nombre" optional placeholder="Ingrese su segundo nombre"
+              <Campo id="secondName" label="Segundo nombre" optional placeholder="Ingrese su segundo nombre"
                 value={form.secondName} onChange={(v) => set('secondName', v)} error={errors.secondName}
                 autoComplete="additional-name" maxLength={30} />
             </div>
             <div className="two">
-              <TextField id="firstLastName" label="Primer apellido" placeholder="Ingrese su primer apellido"
+              <Campo id="firstLastName" label="Primer apellido" placeholder="Ingrese su primer apellido"
                 value={form.firstLastName} onChange={(v) => set('firstLastName', v)} error={errors.firstLastName}
                 autoComplete="family-name" maxLength={30} />
-              <TextField id="secondLastName" label="Segundo apellido" optional placeholder="Ingrese su segundo apellido"
+              <Campo id="secondLastName" label="Segundo apellido" optional placeholder="Ingrese su segundo apellido"
                 value={form.secondLastName} onChange={(v) => set('secondLastName', v)} error={errors.secondLastName}
                 maxLength={30} />
             </div>
@@ -126,7 +126,7 @@ export default function EditProfile({ session }: { session: Session }) {
 
             <div className="actions">
               <button type="submit" className="btn red" disabled={submitting}>
-                {submitting ? 'Guardando…' : 'Cambiar'}
+                {submitting ? 'Guardando…' : 'Guardar cambios'}
               </button>
               <a className="btn white" href="#/perfil">Cancelar</a>
             </div>

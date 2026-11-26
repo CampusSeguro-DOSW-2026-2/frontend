@@ -1,51 +1,54 @@
 /* Evaluaciones de MS07 (RF-14): lista, presentación con su corrección y editor del administrador */
-.ev-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin:0;padding:0;list-style:none}
-.ev-card{display:flex;flex-direction:column;gap:8px;padding:20px;background:#fff;border:1px solid var(--line);border-radius:16px;color:inherit;text-decoration:none}
-.ev-card:hover{border-color:var(--red)}
-.ev-card h3{font:700 18px/24px 'Outfit',sans-serif}
-.ev-card p{color:var(--mut)}
-.ev-card .tag{align-self:flex-start}
-.ev-vacio{padding:32px;text-align:center;color:var(--mut);background:#fff;border:1px dashed var(--line);border-radius:16px}
-.ev-pager{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;color:var(--mut)}
-.ev-pager div{display:flex;gap:8px}
+.evl-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:16px;margin:0;padding:0;list-style:none}
+.evl-card{display:flex;flex-direction:column;gap:8px;padding:20px;background:#fff;border:1px solid var(--line);border-radius:16px;color:inherit;text-decoration:none}
+.evl-card:hover{border-color:var(--red)}
+.evl-card h3{font:700 18px/24px 'Outfit',sans-serif}
+.evl-card p{color:var(--mut)}
+.evl-card .tag{align-self:flex-start}
+.evl-vacio{padding:32px;text-align:center;color:var(--mut);background:#fff;border:1px dashed var(--line);border-radius:16px}
+.evl-pager{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;color:var(--mut);font-size:13px}
+.evl-pager div{display:flex;gap:8px}
 
-.ev-preguntas{display:flex;flex-direction:column;gap:20px;margin:0;padding:0;list-style:none}
-.ev-pregunta{display:flex;flex-direction:column;gap:12px;padding:20px;background:#fff;border:1px solid var(--line);border-radius:16px}
-.ev-pregunta legend{font:700 16px/22px 'Outfit',sans-serif;padding:0}
-.ev-pregunta fieldset{display:flex;flex-direction:column;gap:8px;border:0;margin:0;padding:0}
-.ev-opcion{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:400 14px/1.4 'Geist',sans-serif;cursor:pointer}
-.ev-pregunta fieldset:not(:disabled) .ev-opcion:has(input:checked){border-color:var(--red);background:var(--cream)}
-.ev-opcion.ok{border-color:#16A34A;background:#F0FDF4}
-.ev-opcion.mal{border-color:var(--red);background:#FEF2F2}
-.ev-opcion small{margin-left:auto;font-weight:700}
-.ev-pregunta.ok{border-color:#16A34A}
-.ev-pregunta.mal{border-color:var(--red)}
-.ev-resultado{display:flex;align-items:center;gap:24px;padding:24px;background:#fff;border:1px solid var(--line);border-radius:16px}
-.ev-puntaje{font:800 44px/1 'Outfit',sans-serif;color:var(--red)}
-.ev-acciones{display:flex;gap:12px;flex-wrap:wrap}
-.ev-acciones .btn{min-width:200px}
-.ev-enviar{margin-top:24px;align-items:center}
+.evl-preguntas{display:flex;flex-direction:column;gap:20px;margin:0;padding:0;list-style:none}
+.evl-pregunta{display:flex;flex-direction:column;gap:12px;padding:20px;background:#fff;border:1px solid var(--line);border-radius:16px}
+.evl-pregunta legend{font:700 16px/22px 'Outfit',sans-serif;padding:0}
+.evl-pregunta fieldset{display:flex;flex-direction:column;gap:8px;border:0;margin:0;padding:0}
+.evl-opcion{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;font:400 14px/1.4 'Geist',sans-serif;cursor:pointer}
+.evl-pregunta fieldset:not(:disabled) .evl-opcion:has(input:checked){border-color:var(--red);background:var(--cream)}
+.evl-opcion.ok{border-color:#16A34A;background:#F0FDF4}
+.evl-opcion.mal{border-color:var(--red);background:#FEF2F2}
+.evl-opcion small{margin-left:auto;font-weight:700}
+.evl-pregunta.ok{border-color:#16A34A}
+.evl-pregunta.mal{border-color:var(--red)}
+.evl-resultado{display:flex;align-items:center;gap:24px;padding:24px;background:#fff;border:1px solid var(--line);border-radius:16px}
+.evl-puntaje{font:800 44px/1 'Outfit',sans-serif;color:var(--red)}
+.evl-acciones{display:flex;gap:12px;flex-wrap:wrap}
+.evl-acciones .btn{min-width:200px}
+.evl-enviar{margin-top:24px;align-items:center}
 
-.ev-tabla{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.ev-tabla th,.ev-tabla td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
-.ev-tabla th{font:700 13px/18px 'Outfit',sans-serif;color:var(--mut);background:var(--bg)}
-.ev-tabla tr.inactiva td{color:var(--mut)}
-.ev-mini{display:inline-flex;align-items:center;height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font:600 13px/1 'Outfit',sans-serif;cursor:pointer}
-.ev-mini.peligro{color:var(--red)}
-.ev-ed-pregunta>.ev-mini{align-self:flex-start}
-.ev-volver{color:#fff;font-weight:600}
-.ev-mini:disabled{opacity:.6;cursor:default}
-.ev-fila-acciones{display:flex;gap:8px;flex-wrap:wrap}
-.ev-estado{font:700 12px/1 'Outfit',sans-serif;padding:6px 8px;border-radius:6px;background:#F0FDF4;color:#166534}
-.ev-estado.INACTIVO{background:var(--bg);color:var(--mut)}
+.evl-tabla{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.evl-tabla th,.evl-tabla td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+.evl-tabla th{font:700 13px/18px 'Outfit',sans-serif;color:var(--mut);background:var(--bg)}
+.evl-tabla tr.inactiva td{color:var(--mut)}
+.evl-mini{display:inline-flex;align-items:center;height:34px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font:600 13px/1 'Outfit',sans-serif;cursor:pointer}
+.evl-mini.peligro{color:var(--red)}
+.evl-ed-pregunta>.evl-mini{align-self:flex-start}
+.evl-volver{color:#fff;font-weight:600}
+.evl-mini:disabled{opacity:.6;cursor:default}
+.evl-fila-acciones{display:flex;gap:8px;flex-wrap:wrap}
+.evl-estado{font:700 12px/1 'Outfit',sans-serif;padding:6px 8px;border-radius:6px;background:#F0FDF4;color:#166534}
+.evl-estado.INACTIVO{background:var(--bg);color:var(--mut)}
 
-.ev-editor{display:flex;flex-direction:column;gap:20px;padding:24px;background:#fff;border:1px solid var(--line);border-radius:16px}
-.ev-editor select{border:0;outline:0;background:none;flex:1;font:400 14px/150% 'Geist',sans-serif;color:var(--ink)}
-.ev-editor .error{color:var(--red);font-size:13px}
-.ev-ed-pregunta{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
-.ev-ed-cab{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.ev-ed-opcion{display:flex;align-items:center;gap:10px}
-.ev-ed-opcion .input{flex:1;min-height:44px;padding:10px 14px}
-.ev-ed-opcion label{display:flex;align-items:center;gap:6px;font:600 13px/1 'Geist',sans-serif;white-space:nowrap}
-.ev-oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-@media (max-width:700px){.content{padding:24px 16px}.ev-tabla{display:block;overflow-x:auto}}
+.evl-editor{display:flex;flex-direction:column;gap:20px;padding:24px;background:#fff;border:1px solid var(--line);border-radius:16px}
+.evl-editor select{border:0;outline:0;background:none;flex:1;font:400 14px/150% 'Geist',sans-serif;color:var(--ink)}
+.evl-editor .error{color:var(--red);font-size:13px}
+.evl-ed-pregunta{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
+.evl-ed-cab{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.evl-ed-opcion{display:flex;align-items:center;gap:10px}
+.evl-ed-opcion .input{flex:1;min-height:44px;padding:10px 14px}
+.evl-ed-opcion label{display:flex;align-items:center;gap:6px;font:600 13px/1 'Geist',sans-serif;white-space:nowrap}
+.evl-oculto{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:700px){.evl-tabla{display:block;overflow-x:auto}}
+
+/* Áreas táctiles de 44 px en celular y escritorio (docs/PATRONES-UI.md) */
+.evl-mini{min-height:var(--tap)}

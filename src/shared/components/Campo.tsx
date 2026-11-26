@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { Eye, EyeOff } from '../../../shared/components/Icons';
-import '../styles/auth.css';
+import { Eye, EyeOff } from './Icons';
 
 interface Props {
   id: string;
@@ -10,20 +9,25 @@ interface Props {
   onChange: (v: string) => void;
   error?: string;
   optional?: boolean;
-  type?: 'text' | 'email' | 'password';
+  type?: 'text' | 'email' | 'password' | 'tel' | 'number' | 'search' | 'url';
   icon?: ReactNode;
   hint?: string;
   placeholder?: string;
   autoComplete?: string;
   maxLength?: number;
+  disabled?: boolean;
+  inputMode?: 'text' | 'email' | 'tel' | 'numeric' | 'decimal' | 'search' | 'url';
   /** Texto largo: varias líneas que crecen con el contenido (solo para type="text"). */
   multiline?: boolean;
 }
 
-/** Campo de texto con la identidad visual: etiqueta, error y ayuda accesibles, y ojo para contraseñas. */
-export function TextField({
+/**
+ * Campo de formulario único de la aplicación: etiqueta, ayuda y error accesibles (aria-invalid y aria-describedby), marca
+ * de opcional y ojo para contraseñas con área táctil de 44 px. Los formularios enfocan el primer campo con error al enviar.
+ */
+export function Campo({
   id, label, value, onChange, error, optional = false, type = 'text', icon, hint, placeholder, autoComplete, maxLength,
-  multiline = false,
+  disabled = false, inputMode, multiline = false,
 }: Props) {
   const [visible, setVisible] = useState(false);
   const isPassword = type === 'password';
@@ -44,6 +48,7 @@ export function TextField({
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             maxLength={maxLength}
+            disabled={disabled}
             rows={3}
             aria-required={!optional}
             aria-invalid={!!error}
@@ -57,6 +62,8 @@ export function TextField({
           placeholder={placeholder}
           autoComplete={autoComplete}
           maxLength={maxLength}
+          disabled={disabled}
+          inputMode={inputMode}
           aria-required={!optional}
           aria-invalid={!!error}
           aria-describedby={error || hint ? msgId : undefined}

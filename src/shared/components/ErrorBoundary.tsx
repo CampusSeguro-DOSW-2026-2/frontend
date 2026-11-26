@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
+import { Mensaje } from './Mensaje';
 
 interface Props { children: ReactNode }
 interface State { failed: boolean }
@@ -26,8 +27,10 @@ export class ErrorBoundary extends Component<Props, State> {
     }
     return (
       <main className="page">
-        <p className="notice err" role="alert">No se pudo mostrar esta pantalla. Reintente o vaya a otra sección.</p>
-        <button type="button" className="btn white" onClick={() => this.setState({ failed: false })}>Reintentar</button>
+        <Mensaje tono="error" titulo="No se pudo mostrar esta pantalla" onReintentar={() => this.setState({ failed: false })}
+          acciones={<a className="plink" href="#/simulacro">Ir al inicio</a>}>
+          Reintente o elija otra opción del menú.
+        </Mensaje>
       </main>
     );
   }

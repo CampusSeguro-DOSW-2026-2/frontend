@@ -36,9 +36,10 @@ export const MESSAGES = {
   secondName: 'El segundo nombre debe tener entre 2 y 30 letras.',
   firstLastName: 'El primer apellido debe tener entre 2 y 30 letras.',
   secondLastName: 'El segundo apellido debe tener entre 2 y 30 letras.',
-  registerEmail: 'Correo no válido.',
+  emailRequired: 'Ingrese su correo institucional.',
+  registerEmail: 'El correo no es válido. Use su correo institucional (@escuelaing.edu.co o @mail.escuelaing.edu.co).',
   duplicatedEmail: 'El correo ya está registrado.',
-  email: 'Ingrese un correo válido.',
+  email: 'El correo no es válido. Revise que tenga la forma nombre@dominio.',
   password: 'La contraseña debe tener 8 a 64 caracteres, con mayúscula, minúscula, número y carácter especial.',
   mismatch: 'Las contraseñas no coinciden.',
   loginPassword: 'Ingrese su contraseña.',
@@ -75,6 +76,9 @@ export function nameError(field: NameField, value: string): string {
 /** Correo del registro (F-01): formato válido, dominio institucional y hasta 100 caracteres. */
 export function registerEmailError(value: string): string {
   const email = value.trim();
+  if (email === '') {
+    return MESSAGES.emailRequired;
+  }
   if (email.length > EMAIL_MAX_LENGTH || !INSTITUTIONAL_EMAIL.test(email)) {
     return MESSAGES.registerEmail;
   }
@@ -84,6 +88,9 @@ export function registerEmailError(value: string): string {
 /** Correo del login y de la recuperación (F-02, F-04 y F-05): formato válido y hasta 100 caracteres. */
 export function emailFormatError(value: string): string {
   const email = value.trim();
+  if (email === '') {
+    return MESSAGES.emailRequired;
+  }
   if (email.length > EMAIL_MAX_LENGTH || !EMAIL_FORMAT.test(email)) {
     return MESSAGES.email;
   }

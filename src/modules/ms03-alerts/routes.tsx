@@ -9,7 +9,7 @@ import { PERMISSION } from '../../shared/permissions';
 /** Rutas de MS03. Devuelve undefined si la ruta no es de este módulo. */
 export function alertRoutes(route: string, session: Session | null): ReactNode | undefined {
   const access = alertAccess(sessionPermissions(session));
-  const denied = <main className="page"><p className="notice" role="alert">No cuentas con permisos para ver esta sección.</p></main>;
+  const denied = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
   switch (route) {
     case '/alertas': return access.canReadHistory ? <AlertList /> : denied;
     // Crear exige ms03:alert:manage; editar, manage o manage_drill (el formulario afina según el origen de la alerta)

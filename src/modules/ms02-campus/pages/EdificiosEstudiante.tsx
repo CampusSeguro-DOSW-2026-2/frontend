@@ -30,7 +30,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
       setError('');
 
       if (!puedeConsultar) {
-        setError('Tu rol no tiene permiso para consultar el campus.');
+        setError('Su rol no tiene permiso para consultar el campus.');
         setCargando(false);
         return;
       }
@@ -81,7 +81,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
       <>
         <PageHeader badge="CAMPUS" title="Edificios" subtitle="Consulte los edificios y sus espacios." />
         <main className="content">
-          <p className="cs-alert stop">Tu rol no tiene permiso para consultar el campus.</p>
+          <p className="cs-alert stop">Su rol no tiene permiso para consultar el campus.</p>
         </main>
       </>
     );
@@ -120,7 +120,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
         <PageHeader
           badge="CAMPUS"
           title="Edificios"
-          subtitle="Explora los edificios del campus, sus fotografías y los espacios disponibles."
+          subtitle="Explore los edificios del campus, sus fotografías y los espacios disponibles."
         />
 
         <main className="content">
@@ -130,19 +130,21 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
             <div className="cs-estudiante-edificios">
               {edificios.map((item) => (
                 <article className="cs-estudiante-edificio" key={item.id}>
-                  <div className="cs-estudiante-edificio-info">
-                    <h2>{item.nombre}</h2>
-                    <p>{item.descripcion || 'Sin descripción disponible.'}</p>
-                    <a className="cs-mini" href={`#/edificios/${item.id}`}>
-                      Ver pisos y espacios
-                    </a>
-                  </div>
-
                   <GaleriaImagenes
                     tipoElemento="EDIFICIO"
                     elementoId={item.id}
                     editable={false}
+                    portada
+                    nombre={item.nombre}
                   />
+
+                  <div className="cs-estudiante-edificio-info">
+                    <h2>{item.nombre}</h2>
+                    <p>{item.descripcion || 'Consulte sus pisos, espacios y rutas de evacuación.'}</p>
+                    <a className="btn white sm cs-estudiante-ir" href={`#/edificios/${item.id}`}>
+                      Ver pisos y espacios
+                    </a>
+                  </div>
                 </article>
               ))}
             </div>
@@ -196,7 +198,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
                                 <h4>{espacio.nombre}</h4>
                                 <span>{TIPOS[espacio.tipo]}</span>
                                 <span className={`cs-estado ${espacio.disponible ? 'ok' : 'warn'}`}>
-                                  {espacio.disponible ? 'DISPONIBLE' : 'NO DISPONIBLE'}
+                                  {espacio.disponible ? 'Disponible' : 'No disponible'}
                                 </span>
                               </div>
                             </article>
@@ -216,6 +218,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
               elementoId={edificio.id}
               editable={false}
               grande
+              nombre={edificio.nombre}
             />
           </aside>
         </div>

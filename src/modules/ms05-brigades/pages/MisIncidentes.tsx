@@ -60,7 +60,7 @@ export default function MisIncidentes({ session }: { session: Session }) {
               <small className="rs-sub">Inició {formatDate(evento.startedAt)}</small>
             </div>
             {err && <p className="notice err" role="alert" style={{ margin: '0 20px 16px' }}>{err}</p>}
-            {!err && incidentes.length === 0 && <div className="rs-empty">No has enviado solicitudes en este evento. <a className="plink" href="#/ayuda">Solicitar ayuda</a></div>}
+            {!err && incidentes.length === 0 && <div className="rs-empty">No ha enviado solicitudes en este evento. <a className="plink" href="#/ayuda">Solicitar ayuda</a></div>}
             {incidentes.length > 0 && (
               <table className="rs-table">
                 <thead><tr><th>Prioridad</th><th>Ubicación</th><th>Reportado</th><th>Estado</th></tr></thead>

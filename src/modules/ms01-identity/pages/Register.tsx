@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CodeInput } from '../components/CodeInput';
-import { Logo } from '../components/Logo';
-import { TextField } from '../components/TextField';
+import { Marca } from '../components/Marca';
+import { Campo } from '../../../shared/components/Campo';
 import {
   ApiError, REGISTRATION_RESEND_SECONDS, registerUser, resendRegistrationCode, verifyRegistration,
 } from '../services/identity';
@@ -212,7 +212,7 @@ export default function Register() {
   return (
     <div className="reg">
       <main className="reg-main">
-        <Logo className="reg-logo" />
+        <Marca />
 
         {step === 'done' && (
           <section className="reg-done" role="status">
@@ -261,7 +261,7 @@ export default function Register() {
 
         {step === 'form' && (
           <>
-            <h1>Bienvenido a CampusSeguro</h1>
+            <h1>Cree su cuenta</h1>
             <p className="reg-sub">¿Ya tiene una cuenta? <a href="#/login">Inicie sesión</a></p>
 
             <form
@@ -270,36 +270,36 @@ export default function Register() {
               aria-busy={submitting}
               onSubmit={(e) => { e.preventDefault(); void submit(); }}
             >
-              <TextField id="email" label="Correo institucional" type="email"
+              <Campo id="email" label="Correo institucional" type="email"
                 placeholder="Ingrese su correo institucional" value={form.email}
                 onChange={(v) => set('email', v)} error={errors.email} autoComplete="email" maxLength={100} />
 
               <div className="two">
-                <TextField id="firstName" label="Primer nombre"
+                <Campo id="firstName" label="Primer nombre"
                   placeholder="Ingrese su primer nombre" value={form.firstName}
                   onChange={(v) => set('firstName', v)} error={errors.firstName}
                   autoComplete="given-name" maxLength={30} />
-                <TextField id="secondName" label="Segundo nombre" optional
+                <Campo id="secondName" label="Segundo nombre" optional
                   placeholder="Ingrese su segundo nombre" value={form.secondName}
                   onChange={(v) => set('secondName', v)} error={errors.secondName}
                   autoComplete="additional-name" maxLength={30} />
               </div>
               <div className="two">
-                <TextField id="firstLastName" label="Primer apellido"
+                <Campo id="firstLastName" label="Primer apellido"
                   placeholder="Ingrese su primer apellido" value={form.firstLastName}
                   onChange={(v) => set('firstLastName', v)} error={errors.firstLastName}
                   autoComplete="family-name" maxLength={30} />
-                <TextField id="secondLastName" label="Segundo apellido" optional
+                <Campo id="secondLastName" label="Segundo apellido" optional
                   placeholder="Ingrese su segundo apellido" value={form.secondLastName}
                   onChange={(v) => set('secondLastName', v)} error={errors.secondLastName}
                   maxLength={30} />
               </div>
 
-              <TextField id="password" label="Contraseña" type="password"
+              <Campo id="password" label="Contraseña" type="password"
                 placeholder="Ingrese su contraseña" value={form.password}
                 onChange={(v) => set('password', v)} error={errors.password}
                 autoComplete="new-password" maxLength={64} />
-              <TextField id="confirmPassword" label="Confirme la contraseña" type="password"
+              <Campo id="confirmPassword" label="Confirme la contraseña" type="password"
                 placeholder="Ingrese de nuevo su contraseña" value={form.confirmPassword}
                 onChange={(v) => set('confirmPassword', v)} error={errors.confirmPassword}
                 autoComplete="new-password" maxLength={64} />

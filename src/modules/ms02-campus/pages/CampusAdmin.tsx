@@ -1,3 +1,4 @@
+import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
@@ -165,7 +166,7 @@ export default function CampusAdmin() {
     }
   };
 
-  const cabecera = <PageHeader badge="ADMINISTRACIÓN" title="Campus y zonas abiertas" subtitle="Gestiona los campus y sus zonas abiertas: zonas verdes, plazoletas, canchas y parqueaderos." />;
+  const cabecera = <PageHeader badge="ADMINISTRACIÓN" title="Campus y zonas abiertas" subtitle="Gestione los campus y sus zonas abiertas: zonas verdes, plazoletas, canchas y parqueaderos." />;
 
   if (!datos) {
     return (
@@ -211,12 +212,12 @@ export default function CampusAdmin() {
                 <div className="cs-piso-cabecera">
                   <h3 className="cs-piso-titulo">
                     {c.nombre}
-                    <span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{c.estado}</span>
+                    <span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{etiquetaCodigo(c.estado)}</span>
                     {c.descripcion && <span>{c.descripcion}</span>}
                   </h3>
                   {puedeGestionar && (
                     <div className="cs-acciones">
-                      {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'campus', id: c.id })}>Modificar</button>}
+                      {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'campus', id: c.id })}>Editar</button>}
                       {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona-nueva', campusId: c.id })}>Agregar zona abierta</button>}
                       <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === c.id}
                         onClick={() => cambiarEstado(c.id, activo, { inactivar: () => campus.campuses.inactivar(c.id), reactivar: () => campus.campuses.reactivar(c.id) })}>
@@ -262,11 +263,11 @@ export default function CampusAdmin() {
                                 </>
                               ) : '—'}
                             </td>
-                            <td><span className={`cs-estado ${zonaActiva ? 'ok' : 'info'}`}>{z.estado}</span></td>
+                            <td><span className={`cs-estado ${zonaActiva ? 'ok' : 'info'}`}>{etiquetaCodigo(z.estado)}</span></td>
                             <td>
                               {puedeGestionar && (
                                 <div className="cs-acciones">
-                                  {zonaActiva && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona', id: z.id })}>Modificar</button>}
+                                  {zonaActiva && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona', id: z.id })}>Editar</button>}
                                   <button type="button" className={`cs-mini${zonaActiva ? ' peligro' : ''}`} disabled={ocupado === z.id}
                                     onClick={() => cambiarEstado(z.id, zonaActiva, { inactivar: () => campus.zonasAbiertas.inactivar(z.id), reactivar: () => campus.zonasAbiertas.reactivar(z.id) })}>
                                     {ocupado === z.id ? 'Guardando…' : zonaActiva ? 'Inactivar' : 'Reactivar'}

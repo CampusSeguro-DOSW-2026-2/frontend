@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { ErrorBoundary } from '../shared/components/ErrorBoundary';
+import { FeedbackHost } from '../shared/components/Feedback';
+import { Mensaje } from '../shared/components/Mensaje';
 import { Navbar } from '../shared/components/Layout';
+import { useTablasEnTarjetas } from '../shared/hooks/useTablasEnTarjetas';
 import { getSession, HOME_ROUTE, setSessionNotice, syncRememberedSession } from '../shared/services/session';
 import { logoutUser } from '../modules/ms01-identity/services/identity';
 import { PUBLIC_ROUTES, useIdentityRoutes } from '../modules/ms01-identity/routes';
@@ -17,13 +20,21 @@ import '../shared/styles.css';
 // Router mínimo por hash para no añadir dependencias; sustituible por react-router.
 const path = () => window.location.hash.replace(/^#/, '') || '/';
 
-const NOT_IMPLEMENTED = <main className="page"><p className="notice">Esta sección aún no está implementada.</p></main>;
+const NOT_IMPLEMENTED = (
+  <main className="page">
+    <Mensaje tono="info" titulo="Esta sección aún no está disponible" acciones={<a className="plink" href="#/simulacro">Ir al inicio</a>}>
+      Revise la dirección o elija otra opción del menú.
+    </Mensaje>
+  </main>
+);
 
 // Shell: sesión, barra de navegación y enrutado. Cada módulo (src/modules/msXX-*) declara sus rutas.
 export default function App() {
   const [route, setRoute] = useState(path());
   const [session, setSession] = useState(getSession);
   const identityRoutes = useIdentityRoutes(session);
+  // En celular, las tablas se muestran como tarjetas, sin desplazamiento horizontal
+  useTablasEnTarjetas();
   // Cierra la sesión en cuanto el Gateway rechaza el token (cambio de roles, permisos o estado: RF-MS01-11)
   useSessionGuard(session, route);
 
@@ -83,6 +94,8 @@ export default function App() {
       {!isPublic && <Navbar current={route} session={session} onLogout={logout} />}
       {/* Un error al mostrar una pantalla no deja en blanco la aplicación; al cambiar de ruta se reinicia */}
       <ErrorBoundary key={route}>{page}</ErrorBoundary>
+      {/* Diálogo de confirmación y avisos breves de toda la aplicación (shared/services/feedback.ts) */}
+      <FeedbackHost />
       {/* Solo en desarrollo: acceso a las pantallas de prueba (la barra del mockup no tiene "Alertas"). */}
       {import.meta.env.DEV && <footer className="demo-nav">
         Vistas de demostración: <a href="#/login">Inicio de sesión</a> · <a href="#/registro">Registro</a> · <a href="#/recuperar-contrasena">Recuperar contraseña</a> · <a href="#/perfil">Perfil</a> · <a href="#/usuarios">Usuarios</a> · <a href="#/roles">Roles</a> · <a href="#/eventos">Eventos</a> · <a href="#/simulacro">Simulacro activo</a> · <a href="#/brigadista">Brigadista</a> · <a href="#/brigadistas">Gestión de brigadistas</a> · <a href="#/checkin">Reportar mi estado</a> · <a href="#/ayuda">Necesito ayuda</a> · <a href="#/alertas">Alertas</a>

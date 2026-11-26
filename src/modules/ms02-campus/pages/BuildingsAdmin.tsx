@@ -1,3 +1,4 @@
+import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
@@ -122,7 +123,7 @@ export default function BuildingsAdmin() {
     }
   };
 
-  const cabecera = <PageHeader badge="ADMINISTRACIÓN" title="Edificios" subtitle="Gestiona los edificios del campus y entra a sus pisos y espacios." />;
+  const cabecera = <PageHeader badge="ADMINISTRACIÓN" title="Edificios" subtitle="Gestione los edificios del campus y entre a sus pisos y espacios." />;
 
   if (!edificios) {
     return (
@@ -154,7 +155,7 @@ export default function BuildingsAdmin() {
         )}
         {puedeGestionar && campuses && !hayCampusActivo && (
           <p className="cs-alert info">
-            Para crear edificios primero registra un campus activo en <a href="#/admin/campus">Campus y zonas abiertas</a>.
+            Para crear edificios, primero registre un campus activo en <a href="#/admin/campus">Campus y zonas abiertas</a>.
           </p>
         )}
 
@@ -190,7 +191,7 @@ export default function BuildingsAdmin() {
           <p className="cs-alert info">
             {edificios.length === 0
               ? 'Todavía no hay edificios registrados.'
-              : 'No hay edificios con este filtro. Prueba con «Todos».'}
+              : 'No hay edificios con este filtro. Pruebe con «Todos».'}
           </p>
         ) : visibles.length > 0 && (
           <div className="cs-tabla">
@@ -215,12 +216,12 @@ export default function BuildingsAdmin() {
                       <td className="cs-codigo">{edificio.nombre}</td>
                       <td>{campuses?.find((c) => c.id === edificio.campusId)?.nombre ?? '—'}</td>
                       <td className="cs-descripcion">{edificio.descripcion || '—'}</td>
-                      <td><span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{edificio.estado}</span></td>
+                      <td><span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{etiquetaCodigo(edificio.estado)}</span></td>
                       <td>
                         <div className="cs-acciones">
                           <a className="cs-mini" href={`#/admin/edificios/${edificio.id}`}>Pisos y espacios</a>
                           {puedeGestionar && activo && campuses && (
-                            <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'edificio', id: edificio.id })}>Modificar</button>
+                            <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'edificio', id: edificio.id })}>Editar</button>
                           )}
                           {puedeGestionar && (
                             <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === edificio.id}

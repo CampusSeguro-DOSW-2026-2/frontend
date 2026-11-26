@@ -200,7 +200,7 @@ export default function Tutor({ session }: { session: Session }) {
   return (
     <>
       <PageHeader
-        badge="TUTOR AI"
+        badge="TUTOR IA"
         title="Tutor CampusSeguro"
         subtitle="Pregunte cómo prevenir y cómo actuar ante un sismo. Las respuestas salen de los contenidos oficiales del campus."
         context={<a className="tu-ctx" href="#/aprendizaje">Centro de aprendizaje →</a>}

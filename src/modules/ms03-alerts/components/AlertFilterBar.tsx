@@ -57,7 +57,7 @@ function MultiSelect({ group, values, onToggle, onClear }: {
           ))}
           <div className="filter-dd-foot">
             <button type="button" className="plink" disabled={values.length === 0} onClick={onClear}>Quitar selección</button>
-            <button type="button" className="plink" onClick={() => setOpen(false)}>Listo</button>
+            <button type="button" className="plink" onClick={() => setOpen(false)}>Aplicar filtro</button>
           </div>
         </div>
       )}

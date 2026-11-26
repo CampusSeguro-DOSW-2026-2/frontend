@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { TextField } from '../components/TextField';
+import { Campo } from '../../../shared/components/Campo';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { changeMyPassword } from '../services/password';
 import {
@@ -110,7 +110,7 @@ export default function ChangePassword({ session }: { session: Session }) {
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={{ href: '#/perfil', texto: 'Mi perfil' }}
         badge="MI PERFIL"
         title="Cambiar contraseña"
         subtitle="Ingrese su contraseña actual y elija una nueva, distinta de la actual."
@@ -131,7 +131,7 @@ export default function ChangePassword({ session }: { session: Session }) {
               void submit();
             }}
           >
-            <TextField
+            <Campo
               id="current"
               label="Contraseña actual"
               type="password"
@@ -142,7 +142,7 @@ export default function ChangePassword({ session }: { session: Session }) {
               autoComplete="current-password"
               maxLength={64}
             />
-            <TextField
+            <Campo
               id="next"
               label="Nueva contraseña"
               type="password"
@@ -153,7 +153,7 @@ export default function ChangePassword({ session }: { session: Session }) {
               autoComplete="new-password"
               maxLength={64}
             />
-            <TextField
+            <Campo
               id="confirm"
               label="Confirmar nueva contraseña"
               type="password"
