@@ -12,7 +12,10 @@ import ErrorNotice from '../components/ErrorNotice';
 import FiltroBusqueda, { type Opcion } from '../components/FiltroBusqueda';
 import { useEventNames } from '../hooks/useEventNames';
 import { useUserNames } from '../hooks/useUserNames';
-import { analyticsApi, PAGE_SIZE } from '../services/analytics';
+import { analyticsApi } from '../services/analytics';
+
+/** Registros por página: pocos, porque en celular cada registro es una tarjeta con siete datos. */
+const REGISTROS_POR_PAGINA = 10;
 import { peopleApi } from '../services/people';
 import type { AuditFilters, AuditRecord, EventKind, Page } from '../types';
 import {
@@ -110,11 +113,11 @@ export default function Auditoria({ session }: { session: Session }) {
 
   const load = useCallback(async () => {
     if (Object.keys(validate(applied)).length > 0) return;
-    if (sinCoincidencias) { setData({ content: [], page: 0, size: PAGE_SIZE, totalElements: 0, totalPages: 0 }); setLoading(false); return; }
+    if (sinCoincidencias) { setData({ content: [], page: 0, size: REGISTROS_POR_PAGINA, totalElements: 0, totalPages: 0 }); setLoading(false); return; }
     setLoading(true);
     setError(null);
     try {
-      setData(await analyticsApi.audit(session, applied, page, PAGE_SIZE));
+      setData(await analyticsApi.audit(session, applied, page, REGISTROS_POR_PAGINA));
     } catch (err) {
       setError(err);
       // MS08 marca el filtro que rechazó (400 VALIDACION): se muestra junto al campo
