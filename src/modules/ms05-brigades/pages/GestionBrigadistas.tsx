@@ -12,6 +12,7 @@ import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { brigadesApi } from '../services/brigades';
 import type { BrigadistaGestion, EventoOperacion, GestionBrigadistasEvento } from '../types';
 import { nombreUbicacion } from '../utils/ubicaciones';
+import Dialogo from '../components/Dialogo';
 import '../../ms06-drills/styles/events.css';
 import '../styles/brigadas.css';
 
@@ -275,12 +276,6 @@ function CambiarAsignacion({ session, evento, brigadista, onClose, onDone }: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const aceptar = async () => {
     const edificio = evento.edificios.find((e) => e.ubicacionId === seleccion);
     if (!edificio) { setError('Elija un edificio.'); return; }
@@ -297,10 +292,18 @@ function CambiarAsignacion({ session, evento, brigadista, onClose, onDone }: {
   };
 
   return (
-    <div className="ev-modal-bg" role="presentation" onClick={onClose}>
-      <div className="ev-modal" role="dialog" aria-modal="true" aria-labelledby="cambio-titulo" onClick={(e) => e.stopPropagation()}>
-        <h2 id="cambio-titulo">Cambiar asignación</h2>
-        <p className="help">{brigadista.nombre} · actualmente en <b>{brigadista.nombreUbicacion ?? 'ningún edificio'}</b>. Un edificio no puede quedar sin brigadistas.</p>
+    <Dialogo
+      titulo={`Cambiar la asignación de ${brigadista.nombre}`}
+      onCerrar={onClose}
+      ocupado={saving}
+      botones={(
+        <>
+          <button type="button" className="btn red" onClick={aceptar} disabled={saving || !seleccion} aria-busy={saving || undefined}>{saving ? 'Guardando…' : 'Cambiar de edificio'}</button>
+          <button type="button" className="btn white" onClick={onClose} disabled={saving}>Cancelar</button>
+        </>
+      )}
+    >
+        <p>Actualmente en <b>{brigadista.nombreUbicacion ?? 'ningún edificio'}</b>. Un edificio no puede quedar sin brigadistas.</p>
         {evento.edificios.length === 0 && <Mensaje tono="error">El evento no tiene edificios registrados.</Mensaje>}
         <div className="bg-opts" role="radiogroup" aria-label="Edificios del evento">
           {evento.edificios.map((e) => (
@@ -311,11 +314,6 @@ function CambiarAsignacion({ session, evento, brigadista, onClose, onDone }: {
           ))}
         </div>
         {error && <Mensaje tono="error">{error}</Mensaje>}
-        <div className="row2">
-          <button type="button" className="btn white" onClick={onClose} disabled={saving}>Cancelar</button>
-          <button type="button" className="btn red" onClick={aceptar} disabled={saving || !seleccion}>{saving ? 'Guardando…' : 'Cambiar de edificio'}</button>
-        </div>
-      </div>
-    </div>
+    </Dialogo>
   );
 }

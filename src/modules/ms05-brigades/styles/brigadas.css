@@ -55,3 +55,8 @@
 /* ---------- Panel del brigadista ---------- */
 .bp-zona-acts{display:flex;gap:8px;flex-wrap:wrap}
 @media (max-width:760px){.bp-zona-acts .btn{flex:1 1 auto}}
+
+/* ---------- Ventanas (components/Dialogo, con las clases .dialogo de shared) ---------- */
+.dlg-ms05 .dialogo-texto{display:flex;flex-direction:column;gap:12px}
+.dlg-ms05 .dialogo-texto b{color:var(--ink)}
+.dlg-ms05 .bg-opt{color:var(--ink)}
