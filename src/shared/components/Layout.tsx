@@ -215,7 +215,9 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
     return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onPointer); };
   }, [userOpen]);
 
-  const role = roles.map(roleName).join(' · ');
+  // Con más de 3 roles se muestra el principal y «+N»; la lista completa queda en el título
+  const allRoles = roles.map(roleName).join(' · ');
+  const role = roles.length > 3 ? `${roleName(roles[0])} +${roles.length - 1}` : allRoles;
   const initials = (session?.user.email ?? '?').slice(0, 2).toUpperCase();
 
   return (
@@ -230,7 +232,7 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
             <button type="button" className="nav-user-btn" aria-haspopup="menu" aria-expanded={userOpen} aria-controls="user-menu"
               onClick={() => setUserOpen((v) => !v)}>
               <span className="nav-avatar" aria-hidden="true">{initials}</span>
-              <span className="nav-who"><b>{session.user.email}</b><small>{role}</small></span>
+              <span className="nav-who"><b>{session.user.email}</b><small title={allRoles}>{role}</small></span>
             </button>
             {userOpen && (
               <ul id="user-menu" className="user-menu" role="menu" aria-label="Mi cuenta">
@@ -249,7 +251,7 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
               <span className="brand">CampusSeguro</span>
               <button type="button" className="nav-burger" aria-label="Cerrar menú" onClick={() => { setOpen(false); toggle.current?.focus(); }}><CloseIcon /></button>
             </div>
-            {session && <div className="drawer-user"><span className="nav-avatar" aria-hidden="true">{initials}</span><span className="nav-who"><b>{session.user.email}</b><small>{role}</small></span></div>}
+            {session && <div className="drawer-user"><span className="nav-avatar" aria-hidden="true">{initials}</span><span className="nav-who"><b>{session.user.email}</b><small title={allRoles}>{role}</small></span></div>}
             <div className="drawer-items">
               {sections.map((s) => (
                 <div key={s.title ?? 'main'} className="drawer-sec">

@@ -217,7 +217,7 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso }:
               {vigente.estado === 'listo' && (
                 <p className="chk-sub" role="status">
                   {actual
-                    ? <>Su estado actual: <b>{describir(actual)}</b>{actual.fecha_hora && ` · ${fechaHora(actual.fecha_hora)}`}. Puede cambiarlo.</>
+                    ? <>Su estado actual: <b>{describir(actual)}</b>{actual.fecha_hora && ` (reportado: ${fechaHora(actual.fecha_hora)})`}. Puede cambiarlo.</>
                     : 'Seleccione su estado actual. Aún no ha registrado su check-in en este evento.'}
                 </p>
               )}

@@ -165,7 +165,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const star = (on: boolean) => on && <span className="req"> *</span>;
 
   if (loading) return <main className="page"><p className="notice">Cargando alerta…</p></main>;
-  if (forbidden) return <main className="page"><p className="notice" role="alert">No cuentas con permisos para {editId ? 'editar esta alerta' : 'crear alertas'}. <a href="#/alertas">Volver al listado</a></p></main>;
+  if (forbidden) return <main className="page"><p className="notice" role="alert">No tiene permisos para {editId ? 'editar esta alerta' : 'crear alertas'}. <a href="#/alertas">Volver al listado</a></p></main>;
   // PUT /alertas/{id} solo acepta un scope: editar aquí borraría los demás alcances de la alerta.
   if (scopeKinds > 1) return <main className="page"><p className="notice" role="alert">Esta alerta cubre edificios y zonas a la vez y este formulario solo edita un tipo de alcance. <a href="#/alertas">Volver al listado</a></p></main>;
   if (blocked) return <main className="page"><p className="notice" role="alert">Esta alerta ya no se puede editar. <a href="#/alertas">Volver al listado</a></p></main>;
@@ -177,12 +177,12 @@ export default function AlertForm({ editId }: { editId?: string }) {
         <form className="af" noValidate onSubmit={(e) => { e.preventDefault(); submit(); }}>
           <div className="fgroup">
             <label className="flabel" htmlFor="title">Título{star(!editId)}</label>
-            <div className={`input${errors.title ? ' bad' : ''}`}><input id="title" value={title} placeholder={editId ? 'Alerta a editar' : 'Escriba un título breve y claro para la comunidad'} onChange={(e) => setTitle(e.target.value)} /></div>
+            <div className={`input${errors.title ? ' bad' : ''}`}><input id="title" value={title} placeholder={editId ? 'Título de la alerta' : 'Escriba un título breve y claro para la comunidad'} onChange={(e) => setTitle(e.target.value)} /></div>
             {errors.title && <span className="error" role="alert">{errors.title}</span>}
           </div>
           <div className="fgroup">
             <label className="flabel" htmlFor="instr">Descripción{star(!editId)}</label>
-            <div className={`input tall${errors.instructions ? ' bad' : ''}`}><textarea id="instr" value={instructions} placeholder="Describe la situación y su ubicación. Incluye únicamente información verificada." onChange={(e) => setInstructions(e.target.value)} /></div>
+            <div className={`input tall${errors.instructions ? ' bad' : ''}`}><textarea id="instr" value={instructions} placeholder="Describa la situación y su ubicación. Incluya únicamente información verificada." onChange={(e) => setInstructions(e.target.value)} /></div>
             {errors.instructions && <span className="error" role="alert">{errors.instructions}</span>}
           </div>
           <div className="two af-row">

@@ -146,7 +146,7 @@ export default function ForgotPassword() {
     }
   };
 
-  let buttonLabel = 'Restablecer contraseña';
+  let buttonLabel = step === 'email' ? 'Enviar código' : 'Restablecer contraseña';
   if (submitting && step === 'email') {
     buttonLabel = 'Enviando código…';
   }
