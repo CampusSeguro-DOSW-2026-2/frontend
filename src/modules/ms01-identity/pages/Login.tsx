@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TextField } from '../components/TextField';
+import { Campo } from '../../../shared/components/Campo';
 import { ApiError, loginUser } from '../services/identity';
 import { errorMessage } from '../../../shared/services/http';
 import { clearRecovery } from '../services/recovery';
@@ -125,7 +125,7 @@ export default function Login() {
         >
           {notice && <p className="notice" role="status">{notice}</p>}
 
-          <TextField
+          <Campo
             id="email"
             label="Correo institucional"
             type="email"
@@ -137,7 +137,7 @@ export default function Login() {
             maxLength={100}
           />
 
-          <TextField
+          <Campo
             id="password"
             label="Contraseña"
             type="password"

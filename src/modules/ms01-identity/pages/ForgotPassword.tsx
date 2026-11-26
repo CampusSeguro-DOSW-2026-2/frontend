@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CodeInput } from '../components/CodeInput';
-import { TextField } from '../components/TextField';
+import { Campo } from '../../../shared/components/Campo';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { requestPasswordCode } from '../services/password';
 import { clearRecovery, readRecovery, RESEND_SECONDS, saveRecovery } from '../services/recovery';
@@ -175,7 +175,7 @@ export default function ForgotPassword() {
         >
           {info && <p className="notice" role="status">{info}</p>}
 
-          <TextField
+          <Campo
             id="email"
             label="Correo institucional"
             type="email"

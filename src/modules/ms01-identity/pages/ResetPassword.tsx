@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TextField } from '../components/TextField';
+import { Campo } from '../../../shared/components/Campo';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { resetPassword } from '../services/password';
 import { clearRecovery, readRecovery, saveRecovery } from '../services/recovery';
@@ -143,7 +143,7 @@ export default function ResetPassword() {
             void submit();
           }}
         >
-          <TextField
+          <Campo
             id="password"
             label="Nueva contraseña"
             type="password"
@@ -155,7 +155,7 @@ export default function ResetPassword() {
             maxLength={64}
           />
 
-          <TextField
+          <Campo
             id="confirmPassword"
             label="Confirme la contraseña"
             type="password"
