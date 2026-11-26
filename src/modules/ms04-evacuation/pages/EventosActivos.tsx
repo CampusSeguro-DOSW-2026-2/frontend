@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Cargando } from '../../../shared/components/Cargando';
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
@@ -9,7 +12,7 @@ import { fechaHora, textoEscenario, tipoEvento } from '../utils/labels';
 import '../styles/checkin.css';
 
 /** Mensaje de la pantalla inicial cuando no hay evento activo que le aplique al usuario (RNF-MS04-07). */
-export const SIN_EVENTO_ACTIVO = 'No hay ningún evento activo.';
+export const SIN_EVENTO_ACTIVO = 'No hay ningún evento activo';
 
 type Carga =
   | { estado: 'cargando' }
@@ -53,17 +56,14 @@ export default function EventosActivos({ session }: { session: Session }) {
     <>
       <PageHeader badge="CHECK-IN" title="Reportar mi estado" subtitle="Eventos activos que le aplican" />
       <main className="content">
-        {carga.estado === 'cargando' && <p className="notice" role="status">Consultando los eventos activos…</p>}
+        {carga.estado === 'cargando' && <Cargando texto="Consultando los eventos activos…" />}
 
-        {carga.estado === 'error' && (
-          <>
-            <p className="notice err" role="alert">{carga.mensaje}</p>
-            <button type="button" className="btn white chk-retry" onClick={reintentar}>Intentar de nuevo</button>
-          </>
-        )}
+        {carga.estado === 'error' && <Mensaje tono="error" onReintentar={reintentar}>{carga.mensaje}</Mensaje>}
 
         {carga.estado === 'listo' && carga.eventos.length === 0 && (
-          <p className="notice" role="status">{SIN_EVENTO_ACTIVO}</p>
+          <EstadoVacio titulo={SIN_EVENTO_ACTIVO}>
+            Cuando empiece un simulacro o una emergencia que lo convoque, podrá reportar su estado aquí.
+          </EstadoVacio>
         )}
 
         {carga.estado === 'listo' && carga.eventos.length > 0 && (

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh';
 import { PageHeader } from '../../../shared/components/Layout';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import SeguimientoEvento from '../components/SeguimientoEvento';
@@ -40,12 +41,7 @@ export default function PanelEvento({ session, eventoId }: { session: Session; e
       />
       <main className="content">
         <a className="chk-volver" href="#/evacuacion/eventos">← Volver a los eventos</a>
-        {error && (
-          <div className="chk-error">
-            <p className="notice err" role="alert">{error}</p>
-            <button type="button" className="btn white chk-retry" onClick={reintentar}>Intentar de nuevo</button>
-          </div>
-        )}
+        {error && <Mensaje tono="error" onReintentar={reintentar}>{error}</Mensaje>}
         <SeguimientoEvento session={session} eventoId={eventoId} refresco={tick} />
       </main>
     </>
