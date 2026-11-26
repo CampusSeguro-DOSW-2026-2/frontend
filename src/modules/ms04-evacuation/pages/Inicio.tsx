@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Cargando } from '../../../shared/components/Cargando';
 import { PageHeader } from '../../../shared/components/Layout';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { PERMISSION } from '../../../shared/permissions';
 import { errorMessage } from '../../../shared/services/http';
 import { hasPermission } from '../../../shared/services/session';
@@ -97,11 +99,11 @@ export default function Inicio({ session }: { session: Session }) {
   }, [consultar]);
 
   const aviso = error
-    ? <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={() => void consultar()}>Reintentar</button></p>
+    ? <Mensaje tono="error" onReintentar={() => void consultar()}>{error}</Mensaje>
     : null;
 
   if (!enCurso) {
-    return <main className="content"><p className="notice" role="status">Consultando si hay un evento o una alerta en curso…</p></main>;
+    return <main className="content"><Cargando texto="Consultando si hay un evento o una alerta en curso…" /></main>;
   }
 
   // El evento elegido mientras siga en curso; si no, el más reciente
@@ -112,11 +114,12 @@ export default function Inicio({ session }: { session: Session }) {
       setElegidoId(id);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    const avisos = <>{aviso}<OtrosEventos eventos={otros} onElegir={elegir} /></>;
+    // Los demás eventos en curso van después del check-in y de los accesos: lo primero es reportar el estado
+    const otrosEventos = <OtrosEventos eventos={otros} onElegir={elegir} />;
     if (puedeReportar) {
       return (
         <CentroEvento key={evento.evento_id} session={session} eventoId={evento.evento_id} eventoActual={evento}
-          aviso={avisos} />
+          aviso={aviso} despues={otrosEventos} />
       );
     }
     return (
@@ -127,7 +130,7 @@ export default function Inicio({ session }: { session: Session }) {
           subtitle="Evacuación del campus en curso"
           context={evento.fecha_inicio ? `Iniciado: ${fechaHora(evento.fecha_inicio)}` : undefined}
         />
-        <main className="content">{avisos}<AccionesEvento session={session} /></main>
+        <main className="content">{aviso}<AccionesEvento session={session} />{otrosEventos}</main>
       </>
     );
   }
@@ -141,6 +144,7 @@ export default function Inicio({ session }: { session: Session }) {
           subtitle="Siga el estado de las personas y los incidentes de cada evento." />
         <main className="content">
           {aviso}
+          <AccionesEvento session={session} />
           <section className="chk-otros" aria-label="Eventos en ejecución">
             <ul>
               {enCurso.seguimiento.map((e) => (
@@ -155,7 +159,6 @@ export default function Inicio({ session }: { session: Session }) {
               ))}
             </ul>
           </section>
-          <AccionesEvento session={session} />
         </main>
       </>
     );

@@ -41,6 +41,14 @@ export default function Aprendizaje({ session }: { session: Session }) {
 
   const iniciarCarga = () => { setCargando(true); setError(''); };
   const nombreCategoria = (id: string) => categorias.find((c) => c.id === id)?.name ?? '';
+  // Una línea que dice qué es el contenido y para qué sirve: la descripción de su categoría o, si no tiene, una frase
+  // armada con el nombre de la categoría
+  const resumen = (id: string) => {
+    const cat = categorias.find((c) => c.id === id);
+    const descripcion = cat?.description?.trim();
+    if (descripcion) return descripcion;
+    return cat ? `Guía preventiva sobre ${cat.name.toLowerCase()}: le indica cómo prepararse y cómo actuar.` : 'Guía preventiva: le indica cómo prepararse y cómo actuar ante una emergencia.';
+  };
   const contenidos = datos?.contenido ?? [];
 
   return (
@@ -78,7 +86,8 @@ export default function Aprendizaje({ session }: { session: Session }) {
                 <a className="ap-card" href={`#/aprendizaje/${encodeURIComponent(c.id)}`}>
                   {nombreCategoria(c.categoryId) && <span className="tag">{nombreCategoria(c.categoryId).toUpperCase()}</span>}
                   <h3>{c.title}</h3>
-                  <p>Actualizado el {fechaCorta(c.updatedAt)}</p>
+                  <p className="ap-resumen">{resumen(c.categoryId)}</p>
+                  <small className="ap-fecha">Actualizado el {fechaCorta(c.updatedAt)} · Leer →</small>
                 </a>
               </li>
             ))}

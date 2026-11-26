@@ -71,6 +71,7 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .page-header{display:flex;flex-direction:column;gap:12px;background:var(--red);color:var(--on-color);padding:32px 48px;min-height:166px}
 .hrow{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:25px}
 .badge{background:var(--surface);color:var(--red);font:800 12px/15px 'Outfit',sans-serif;padding:5px 10px;border-radius:6px}
+.badge.aviso{background:var(--warn-bg);color:var(--warn)}
 .ctx{font-size:14px;line-height:18px;opacity:.95}
 /* enlaces de «← Volver» y de contexto sobre el encabezado rojo: blancos y con área táctil completa */
 .ctx a,.ev-head .back,.ev-head .plink{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--on-color);font-weight:600;text-decoration:none;opacity:1}
