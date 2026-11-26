@@ -1,4 +1,5 @@
 import type { AlertType, Recipient, Scope } from './alerts';
+import { isTechnicalId } from '../../../shared/utils/text';
 
 export interface CatalogItem { id: string; label: string; group: string }
 
@@ -42,7 +43,9 @@ export const toggleType = (current: AlertType[], id: AlertType): AlertType[] => 
   return [...current.filter((t) => t !== OPERATIONAL_TYPE), id];
 };
 
-export const labelOf = (items: CatalogItem[], id: string) => items.find((i) => i.id === id)?.label ?? id;
+/** Etiqueta de una opción del catálogo; si no está y el valor es un id técnico, un texto genérico (nunca el UUID). */
+export const labelOf = (items: CatalogItem[], id: string) =>
+  items.find((i) => i.id === id)?.label ?? (isTechnicalId(id) ? 'No disponible' : id);
 export const scopeIdsOf = (s: { type: string; ids?: string[] }) => (s.type === 'CAMPUS' ? ['CAMPUS'] : s.ids ?? []);
 export const listEs = (xs: string[]) => {
   // Los nombres en mayúsculas (los roles de MS01) se muestran tal cual

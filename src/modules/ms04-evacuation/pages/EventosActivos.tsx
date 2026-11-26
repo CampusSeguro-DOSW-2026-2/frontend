@@ -68,22 +68,25 @@ export default function EventosActivos({ session }: { session: Session }) {
 
         {carga.estado === 'listo' && carga.eventos.length > 0 && (
           <ul className="chk-eventos" aria-label="Eventos activos">
-            {carga.eventos.map((evento) => (
+            {carga.eventos.map((evento) => {
+              // Solo nombres: si MS02 no conoce ningún lugar del evento, el dato se omite (nunca un UUID)
+              const edificios = textoEscenario(evento.escenario.edificios, catalog);
+              const zonas = textoEscenario(evento.escenario.zonas, catalog);
+              return (
               <li key={evento.evento_id} className="chk-evento">
                 <span className="tag">{tipoEvento(evento.simulacro).toUpperCase()}</span>
                 <h3>{evento.nombre}</h3>
                 <div className="chk-meta">
                   {evento.fecha_inicio && <span>Iniciado: <b>{fechaHora(evento.fecha_inicio)}</b></span>}
-                  {evento.escenario.edificios.length > 0 && (
-                    <span>Edificios: <b>{textoEscenario(evento.escenario.edificios, catalog)}</b></span>
-                  )}
-                  {evento.escenario.zonas.length > 0 && <span>Zonas: <b>{textoEscenario(evento.escenario.zonas, catalog)}</b></span>}
+                  {edificios && <span>Edificios: <b>{edificios}</b></span>}
+                  {zonas && <span>Zonas: <b>{zonas}</b></span>}
                 </div>
                 <a className="btn red chk-ir" href={`#/checkin/${encodeURIComponent(evento.evento_id)}`}>
                   Abrir evento
                 </a>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </main>
