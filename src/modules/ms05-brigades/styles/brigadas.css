@@ -54,7 +54,18 @@
 
 /* ---------- Panel del brigadista ---------- */
 .bp-zona-acts{display:flex;gap:8px;flex-wrap:wrap}
-@media (max-width:760px){.bp-zona-acts .btn{flex:1 1 auto}}
+/* Resumen de una línea de la zona: solo en celular; en escritorio la tarjeta del evento ya lo muestra */
+.bp-resumen{display:none;align-items:center;flex-wrap:wrap;gap:0 8px;font-size:15px}
+.bp-resumen b{font-weight:700}
+.bp-evento-nombre{display:none}
+@media (max-width:760px){
+  .bp-zona-acts .btn{flex:1 1 auto}
+  .bp-evento,.bp-head p,.bp-ayuda{display:none}
+  .bp-resumen{display:flex}
+  .bp-evento-nombre{display:inline;font-weight:400;color:var(--mut);font-size:15px}
+  /* Las tarjetas de incidentes no van dentro de otra tarjeta */
+  .ev-card.bp-incidentes{background:none;border:0;padding:0}
+}
 
 /* ---------- Ventanas (components/Dialogo, con las clases .dialogo de shared) ---------- */
 .dlg-ms05 .dialogo-texto{display:flex;flex-direction:column;gap:12px}

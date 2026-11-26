@@ -10,6 +10,11 @@ import { formatDate, scopeLabelIn } from '../../ms06-drills/utils/labels';
 import { brigadesApi } from '../services/brigades';
 import type { IncidenteResumen, Pagina } from '../types';
 import PrioridadChip from './PrioridadChip';
+import { PRIORIDADES } from '../types';
+import { prioridadDe } from '../utils/incidentes';
+
+/** Posición de la prioridad en el catálogo (Emergencia = 0), por código o por nombre como la lee prioridadDe. */
+const rango = (codigo: string) => PRIORIDADES.findIndex((p) => p.codigo === prioridadDe(codigo).codigo);
 
 const ESTADOS: Record<string, { texto: string; clase: string }> = {
   REPORTADO: { texto: 'Reportado', clase: 'DRAFT' },
@@ -79,7 +84,12 @@ export default function IncidentesEvento({ session, eventoId, modo, nombresBriga
     }
   };
   // contenido llega con la paginación estándar de MS05; sin ella (versión anterior del servicio) la lista queda vacía.
-  const incidentes = data?.contenido ?? [];
+  const pagina = data?.contenido ?? [];
+  // Brigadista: Emergencia primero y, dentro de cada prioridad, del más reciente al más antiguo. Solo ordena la página
+  // cargada; MS05 acepta ordenarPor, pero por un solo campo y la prioridad por nombre (alfabético), no por urgencia.
+  const incidentes = modo === 'brigadista'
+    ? [...pagina].sort((a, b) => rango(a.prioridad) - rango(b.prioridad) || Date.parse(b.reportadoEn) - Date.parse(a.reportadoEn))
+    : pagina;
 
   return (
     <>

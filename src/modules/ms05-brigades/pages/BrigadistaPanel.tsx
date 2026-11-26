@@ -136,7 +136,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
 
   return (
     <>
-      <header className="ev-head">
+      <header className="ev-head bp-head">
         <div>
           <span className="badge aviso">BRIGADISTA</span>
           <h1 style={{ marginTop: 10 }}>Panel de responsabilidades</h1>
@@ -170,7 +170,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
         )}
 
         {actual && (
-          <section className="ev-card">
+          <section className="ev-card bp-evento">
             <div>
               <span className={`st ${actual.evento.estado === 'EN_EJECUCION' ? 'IN_PROGRESS' : 'SCHEDULED'}`}>
                 {ESTADO_EVENTO[actual.evento.estado] ?? actual.evento.estado}
@@ -202,6 +202,18 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
           </section>
         )}
 
+        {/* En celular, la tarjeta del evento se resume en una línea para que el primer «Atender» quede a la vista */}
+        {actual && activo && !editandoZona && (
+          <p className="bp-resumen">
+            <span><b>Mi zona:</b> {miZona || 'Sin asignar'}</span>
+            <span aria-hidden="true">·</span>
+            <button type="button" className="plink" disabled={busy} onClick={() => setEditandoZona(true)}
+              aria-label={actual.ubicacionId ? 'Cambiar mi zona' : 'Elegir mi zona'}>
+              {actual.ubicacionId ? 'Cambiar' : 'Elegir'}
+            </button>
+          </p>
+        )}
+
         {actual && !activo && (
           <Mensaje tono="info">Marque «Estoy disponible» para elegir su zona y atender incidentes.</Mensaje>
         )}
@@ -225,19 +237,24 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
                 setNotice(`Quedó asignado a ${nombre}.`);
               }}
             />
-            <button type="button" className="btn white sm" style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={() => setEditandoZona(false)}>
-              {actual.ubicacionId ? 'Cancelar el cambio' : 'Cerrar el mapa'}
-            </button>
+            <div className="bp-zona-acts">
+              <button type="button" className="btn white sm" disabled={busy} onClick={() => setEditandoZona(false)}>
+                {actual.ubicacionId ? 'Cancelar el cambio' : 'Cerrar el mapa'}
+              </button>
+              {actual.ubicacionId && (
+                <button type="button" className="btn ghost sm" disabled={busy} onClick={() => void quitarZona()}>Quitar mi asignación</button>
+              )}
+            </div>
           </section>
         )}
 
         {actual && (
-          <section className="ev-card" aria-labelledby="bp-incidentes">
-            <h2 id="bp-incidentes">Incidentes</h2>
+          <section className="ev-card bp-incidentes" aria-labelledby="bp-incidentes">
+            <h2 id="bp-incidentes">Incidentes<span className="bp-evento-nombre"> · {actual.evento.nombre}</span></h2>
             {actual.evento.estado === 'EN_EJECUCION'
               ? (
                   <>
-                    <p className="help">Los que reportó, los que tiene asignados y los de su zona. Toque «Atender» para iniciar la atención y registrar el resultado.</p>
+                    <p className="help bp-ayuda">Los que reportó, los que tiene asignados y los de su zona. Toque «Atender» para iniciar la atención y registrar el resultado.</p>
                     {activo && !actual.ubicacionId && (
                       <Mensaje tono="aviso" compacto>Aún no tiene zona: elija una para recibir los incidentes de ese lugar.</Mensaje>
                     )}
