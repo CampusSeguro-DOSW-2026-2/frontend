@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { campus, CampusApiError, comoCampusError as comoError } from '../services/campus';
 import type { EspacioPublico, SalidaPublica, ZonaSeguraPublica } from '../types';
 import { TIPOS } from '../types';
@@ -12,6 +14,8 @@ type Resultado =
   | { tipo: 'zonas'; datos: ZonaSeguraPublica };
 
 const AYUDA = 'Ante cualquier duda, siga las indicaciones del personal de emergencia.';
+/** Qué hacer cuando la página no puede orientar: siempre hay un paso siguiente que no depende de la app. */
+const PASO_SIGUIENTE = 'Pida ayuda a un brigadista o siga la señalización de evacuación hasta la salida más cercana.';
 
 const enMapa = (latitud: number, longitud: number) =>
   `https://www.openstreetmap.org/?mlat=${latitud}&mlon=${longitud}#map=19/${latitud}/${longitud}`;
@@ -24,13 +28,25 @@ function leer(tipo: TipoQr, id: string): Promise<Resultado> {
   return campus.publico.zona(id).then((datos) => ({ tipo, datos }));
 }
 
-function mensajeDeError(error: CampusApiError) {
-  if (error.status === 404 || error.status === 400) return 'Este código QR no corresponde a ningún lugar registrado.';
-  return error.message;
+/** El error dice qué pasó (título) y qué hacer (texto), sin depender de que la persona vuelva a intentar. */
+function ErrorQr({ error, onReintentar }: { error: CampusApiError; onReintentar: () => void }) {
+  const noExiste = error.status === 404 || error.status === 400;
+  return (
+    <Mensaje
+      tono="error"
+      className="qr-msj"
+      titulo={noExiste ? 'Este código QR no corresponde a ningún lugar registrado.' : 'No se pudo cargar la guía de este lugar.'}
+      onReintentar={noExiste ? undefined : onReintentar}
+      textoReintentar="Intentar de nuevo"
+    >
+      {PASO_SIGUIENTE}
+    </Mensaje>
+  );
 }
 
-function Aviso({ texto }: { texto: string }) {
-  return <p className="qr-aviso" role="alert">{texto}</p>;
+/** Aviso del lugar (no disponible, sin ruta, ruta con restricciones): en ámbar, con el paso siguiente si hace falta. */
+function Aviso({ texto, paso = false }: { texto: string; paso?: boolean }) {
+  return <Mensaje tono="aviso" className="qr-msj">{texto}{paso ? ` ${PASO_SIGUIENTE}` : ''}</Mensaje>;
 }
 
 function Espacio({ e }: { e: EspacioPublico }) {
@@ -69,7 +85,7 @@ function Espacio({ e }: { e: EspacioPublico }) {
       {e.disponible && pasos.length === 0 && (
         <section className="qr-tarjeta" aria-labelledby="qr-que-hacer">
           <h2 id="qr-que-hacer">Qué hacer</h2>
-          {g?.mensaje && <Aviso texto={g.mensaje} />}
+          {g?.mensaje && <Aviso texto={g.mensaje} paso={!e.evacuacion?.tieneRuta} />}
           {e.evacuacion?.tieneRuta ? (
             <>
               {e.evacuacion.recorrido && <p className="qr-texto">{e.evacuacion.recorrido}</p>}
@@ -77,7 +93,7 @@ function Espacio({ e }: { e: EspacioPublico }) {
               {e.evacuacion.mensaje && <Aviso texto={e.evacuacion.mensaje} />}
             </>
           ) : (
-            !g?.mensaje && <Aviso texto="Este lugar todavía no tiene una ruta de evacuación registrada." />
+            !g?.mensaje && <Aviso texto="Este lugar todavía no tiene una ruta de evacuación registrada." paso />
           )}
         </section>
       )}
@@ -133,14 +149,16 @@ function Zona({ z }: { z: ZonaSeguraPublica }) {
 export default function QrPublico({ tipo, id }: { tipo: TipoQr; id: string }) {
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const [error, setError] = useState<CampusApiError | null>(null);
+  // Cambia para volver a pedir el lugar (sin conexión en el momento del escaneo)
+  const [intento, setIntento] = useState(0);
 
   useEffect(() => {
     let vigente = true;
     leer(tipo, id)
-      .then((r) => { if (vigente) setResultado(r); })
+      .then((r) => { if (vigente) { setResultado(r); setError(null); } })
       .catch((e) => { if (vigente) setError(comoError(e)); });
     return () => { vigente = false; };
-  }, [tipo, id]);
+  }, [tipo, id, intento]);
 
   return (
     <div className="qr-pagina">
@@ -149,8 +167,8 @@ export default function QrPublico({ tipo, id }: { tipo: TipoQr; id: string }) {
         <span className="qr-sello">EVACUACIÓN</span>
       </header>
       <main className="qr-contenido">
-        {error && <Aviso texto={mensajeDeError(error)} />}
-        {!error && !resultado && <p className="qr-texto" role="status">Cargando…</p>}
+        {error && <ErrorQr error={error} onReintentar={() => { setError(null); setIntento((n) => n + 1); }} />}
+        {!error && !resultado && <Cargando texto="Cargando la guía de evacuación…" />}
         {resultado?.tipo === 'espacios' && <Espacio e={resultado.datos} />}
         {resultado?.tipo === 'salidas' && <Salida s={resultado.datos} />}
         {resultado?.tipo === 'zonas' && <Zona z={resultado.datos} />}

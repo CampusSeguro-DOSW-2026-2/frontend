@@ -10,11 +10,14 @@
 .qr-pasos{margin:0;padding-left:28px;display:flex;flex-direction:column;gap:12px;font:600 19px/145% 'Geist',sans-serif}
 .qr-pasos li::marker{font:800 19px 'Outfit',sans-serif;color:var(--red)}
 .qr-texto{font-size:17px;line-height:150%}
-.qr-boton{display:flex;justify-content:center;align-items:center;min-height:52px;padding:0 20px;border-radius:14px;background:var(--ink);color:var(--on-color);font:700 16px/20px 'Outfit',sans-serif;text-decoration:none}
+/* La guía es la acción principal de la página: botón rojo de marca, a lo ancho y de 52 px */
+.qr-boton{display:flex;justify-content:center;align-items:center;min-height:52px;padding:0 20px;border-radius:14px;background:var(--red);color:var(--on-color);font:700 16px/20px 'Outfit',sans-serif;text-decoration:none;transition:transform var(--dur-press) var(--ease-out)}
+.qr-boton:active{transform:scale(.97)}
 .qr-boton:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
 .qr-detalle summary{cursor:pointer;font:600 15px/20px 'Geist',sans-serif;color:var(--mut);padding:6px 0}
 .qr-detalle ol{margin:8px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:6px;font-size:15px;line-height:145%}
-.qr-aviso{background:var(--err-bg);border:1px solid var(--err-line);color:var(--err);border-radius:12px;padding:14px 16px;font:600 16px/150% 'Geist',sans-serif}
+/* Avisos y errores con Mensaje (shared), en letra más grande: se leen de pie y con prisa */
+.msj.qr-msj{font-size:16px}
 .qr-recomendaciones{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
 .qr-recomendaciones li{display:flex;flex-direction:column;gap:4px;font-size:15px;line-height:150%}
 .qr-recomendaciones strong{font:700 15px/20px 'Outfit',sans-serif}
