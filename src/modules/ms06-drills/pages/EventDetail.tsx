@@ -271,7 +271,7 @@ export default function EventDetail({ session, id }: { session: Session; id: str
             </ul>
             <div className="row2">
               <button type="button" className="btn white" onClick={() => setConfirm(false)} disabled={finishing}>Seguir en vivo</button>
-              <button type="button" className="btn red" onClick={finish} disabled={finishing}>{finishing ? 'Finalizando…' : 'Finalizar'}</button>
+              <button type="button" className="btn red" onClick={finish} disabled={finishing}>{finishing ? 'Finalizando…' : 'Finalizar evento'}</button>
             </div>
           </div>
         </div>

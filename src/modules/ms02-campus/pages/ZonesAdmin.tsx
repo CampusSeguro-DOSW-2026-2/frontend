@@ -301,7 +301,7 @@ export default function ZonesAdmin() {
                           <div className="cs-acciones">
                             {activa && <a className="cs-mini cs-enlace-boton" href={`#/admin/zonas/${zona.id}/qr`}>QR</a>}
                             {activa && (
-                              <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona', id: zona.id })}>Modificar</button>
+                              <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona', id: zona.id })}>Editar</button>
                             )}
                             <button type="button" className={`cs-mini${activa ? ' peligro' : ''}`} disabled={ocupado === zona.id}
                               onClick={() => cambiarEstado(zona)}>

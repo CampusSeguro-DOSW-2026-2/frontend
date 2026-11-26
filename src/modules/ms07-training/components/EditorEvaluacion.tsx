@@ -105,8 +105,8 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
   };
 
   return (
-    <form className="evl-editor" onSubmit={enviar} noValidate aria-label={inicial ? 'Modificar evaluación' : 'Nueva evaluación'}>
-      <h2 className="title sm22">{inicial ? 'Modificar evaluación' : 'Nueva evaluación'}</h2>
+    <form className="evl-editor" onSubmit={enviar} noValidate aria-label={inicial ? 'Editar evaluación' : 'Nueva evaluación'}>
+      <h2 className="title sm22">{inicial ? 'Editar evaluación' : 'Nueva evaluación'}</h2>
       <div className="two">
         <div className="field">
           <label htmlFor="evl-titulo">Título</label>
@@ -155,7 +155,7 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
               </label>
               {p.options.length > 2 && (
                 <button type="button" className="evl-mini" aria-label={`Quitar opción ${k + 1}`}
-                  onClick={() => cambiarPregunta(i, { options: p.options.filter((_, m) => m !== k) })}>Quitar</button>
+                  onClick={() => cambiarPregunta(i, { options: p.options.filter((_, m) => m !== k) })}>Quitar opción</button>
               )}
             </div>
           ))}
@@ -176,7 +176,7 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
 
       {general && <p className="notice err" role="alert">{general}</p>}
       <div className="evl-acciones">
-        <button type="submit" className="btn red" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
+        <button type="submit" className="btn red" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar evaluación'}</button>
         <button type="button" className="btn white" onClick={onCancelar} disabled={guardando}>Cancelar</button>
       </div>
     </form>

@@ -319,7 +319,7 @@ export default function RoutesAdmin() {
                     return (
                       <tr key={r.id}><td colSpan={6}>
                         <div className="cs-subeditor">
-                          <h4>{edicion.tipo === 'modificar' ? 'Modificar ruta' : 'Cambiar estado'} de {espacio.get(r.espacioOrigenId)?.nombre ?? 'la ruta'}</h4>
+                          <h4>{edicion.tipo === 'modificar' ? 'Editar ruta' : 'Cambiar estado'} de {espacio.get(r.espacioOrigenId)?.nombre ?? 'la ruta'}</h4>
                           {edicion.tipo === 'modificar' ? (
                             <ModificarRuta ruta={r} zonas={datos.zonas} onCancelar={() => setEdicion(null)}
                               onGuardar={(zonaId, descripcion) => guardar(() => campus.rutas.actualizar(r.id, { zonaSeguraDestinoId: zonaId, descripcion }))} />
@@ -341,7 +341,7 @@ export default function RoutesAdmin() {
                       <td className="cs-fecha">{fecha(r.actualizadaEn)}</td>
                       <td>
                         <div className="cs-acciones">
-                          {puedeGestionar && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: r.id })}>Modificar</button>}
+                          {puedeGestionar && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'modificar', id: r.id })}>Editar</button>}
                           {puedeCambiarEstado && <button type="button" className="cs-mini" onClick={() => setEdicion({ tipo: 'estado', id: r.id })}>Cambiar estado</button>}
                         </div>
                       </td>

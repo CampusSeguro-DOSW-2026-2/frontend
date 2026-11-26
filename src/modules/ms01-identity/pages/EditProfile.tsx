@@ -126,7 +126,7 @@ export default function EditProfile({ session }: { session: Session }) {
 
             <div className="actions">
               <button type="submit" className="btn red" disabled={submitting}>
-                {submitting ? 'Guardando…' : 'Cambiar'}
+                {submitting ? 'Guardando…' : 'Guardar cambios'}
               </button>
               <a className="btn white" href="#/perfil">Cancelar</a>
             </div>

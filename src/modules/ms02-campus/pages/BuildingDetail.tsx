@@ -229,7 +229,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
             <section key={piso.id} className={`cs-piso${activo ? '' : ' inactivo'}`} aria-labelledby={`piso-${piso.id}`}>
               {edicion?.tipo === 'piso' && edicion.id === piso.id ? (
                 <>
-                  <h3 className="cs-piso-titulo" id={`piso-${piso.id}`}>Modificar piso {piso.numero}</h3>
+                  <h3 className="cs-piso-titulo" id={`piso-${piso.id}`}>Editar piso {piso.numero}</h3>
                   <PisoForm inicial={piso} onCancelar={() => editar(null)}
                     onGuardar={(datos) => guardar(() => campus.pisos.modificar(piso.id, datos))} />
                 </>
@@ -243,7 +243,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                     {activo && edificio.estado === 'ACTIVO' && (
                       <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'nuevo-espacio', pisoId: piso.id })}>Agregar espacio</button>
                     )}
-                    {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'piso', id: piso.id })}>Modificar</button>}
+                    {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'piso', id: piso.id })}>Editar</button>}
                     <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === piso.id}
                       onClick={() => cambiarEstado(piso.id, piso.id, () => (activo ? campus.pisos.inactivar(piso.id) : campus.pisos.reactivar(piso.id)))}>
                       {ocupado === piso.id ? 'Guardando…' : activo ? 'Inactivar' : 'Reactivar'}
@@ -288,7 +288,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                             <td>
                               <div className="cs-acciones">
                                 {espacioActivo && <BotonQr elemento="espacio" id={espacio.id} nombre={espacio.nombre} />}
-                                {espacioActivo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'espacio', id: espacio.id })}>Modificar</button>}
+                                {espacioActivo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'espacio', id: espacio.id })}>Editar</button>}
                                 <button type="button" className={`cs-mini${espacioActivo ? ' peligro' : ''}`} disabled={ocupado === espacio.id}
                                   onClick={() => cambiarEstado(espacio.id, piso.id, () => (espacioActivo ? campus.espacios.inactivar(espacio.id) : campus.espacios.reactivar(espacio.id)))}>
                                   {ocupado === espacio.id ? 'Guardando…' : espacioActivo ? 'Inactivar' : 'Reactivar'}

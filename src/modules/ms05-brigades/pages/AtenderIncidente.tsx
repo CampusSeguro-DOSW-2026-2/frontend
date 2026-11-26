@@ -195,7 +195,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                 {finalizado && <p className="notice chk-ok" role="status">Incidente marcado como resuelto.</p>}
 
                 <button type="submit" className={`btn rs-btn ${puedeFinalizar && resultado ? 'red' : 'off'}`} disabled={!puedeFinalizar || !resultado || busy}>
-                  {busy && enAtencion ? 'Finalizando…' : 'Finalizar'}
+                  {busy && enAtencion ? 'Finalizando…' : 'Finalizar atención'}
                 </button>
               </form>
               <p className="rs-info"><Info /> Volver al panel no finaliza el incidente. El caso permanece en atención mientras no registre un resultado.</p>

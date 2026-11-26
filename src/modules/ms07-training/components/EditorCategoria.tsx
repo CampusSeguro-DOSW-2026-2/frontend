@@ -51,8 +51,8 @@ export default function EditorCategoria({ inicial, onGuardar, onCancelar }: Prop
   };
 
   return (
-    <form className="ap-form" onSubmit={enviar} noValidate aria-label={inicial ? 'Modificar categoría' : 'Nueva categoría'}>
-      <h2>{inicial ? 'Modificar categoría' : 'Nueva categoría'}</h2>
+    <form className="ap-form" onSubmit={enviar} noValidate aria-label={inicial ? 'Editar categoría' : 'Nueva categoría'}>
+      <h2>{inicial ? 'Editar categoría' : 'Nueva categoría'}</h2>
       {errorGeneral && <p className="notice err" role="alert">{errorGeneral}</p>}
 
       <div className="ap-campo">
@@ -74,7 +74,7 @@ export default function EditorCategoria({ inicial, onGuardar, onCancelar }: Prop
       </div>
 
       <div className="ap-botones">
-        <button type="submit" className="btn red" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
+        <button type="submit" className="btn red" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar categoría'}</button>
         <button type="button" className="btn white" disabled={guardando} onClick={onCancelar}>Cancelar</button>
       </div>
     </form>

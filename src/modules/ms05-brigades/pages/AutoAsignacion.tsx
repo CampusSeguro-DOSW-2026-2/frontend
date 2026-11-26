@@ -135,7 +135,7 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
                 <p className="aa-state">Estado <span className={activo ? 'on' : 'off'}>{activo ? 'activo' : 'inactivo'}</span></p>
                 {!activo && (
                   <>
-                    <button type="button" className="btn red" disabled={busy} onClick={activarse}>{busy ? 'Activando…' : 'Activarse'}</button>
+                    <button type="button" className="btn red" disabled={busy} onClick={activarse}>{busy ? 'Activando…' : 'Estoy disponible'}</button>
                     <p className="aa-hint">Para elegir un edificio, primero marque que está disponible.</p>
                   </>
                 )}

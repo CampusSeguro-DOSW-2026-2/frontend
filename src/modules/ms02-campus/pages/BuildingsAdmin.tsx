@@ -221,7 +221,7 @@ export default function BuildingsAdmin() {
                         <div className="cs-acciones">
                           <a className="cs-mini" href={`#/admin/edificios/${edificio.id}`}>Pisos y espacios</a>
                           {puedeGestionar && activo && campuses && (
-                            <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'edificio', id: edificio.id })}>Modificar</button>
+                            <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'edificio', id: edificio.id })}>Editar</button>
                           )}
                           {puedeGestionar && (
                             <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === edificio.id}

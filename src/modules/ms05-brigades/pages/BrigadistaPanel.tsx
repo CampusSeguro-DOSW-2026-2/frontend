@@ -125,7 +125,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
         </div>
         <div className="hbtns" role="group" aria-label="Mi disponibilidad">
           {activo
-            ? <button type="button" className="btn ghost" disabled={busy} onClick={() => void finalizar()}>{busy ? 'Finalizando…' : 'Finalizar'}</button>
+            ? <button type="button" className="btn ghost" disabled={busy} onClick={() => void finalizar()}>{busy ? 'Finalizando…' : 'Finalizar mi turno'}</button>
             : <button type="button" className="btn light" disabled={busy} onClick={() => void disponible()}>{busy ? 'Activando…' : 'Estoy disponible'}</button>}
         </div>
       </header>

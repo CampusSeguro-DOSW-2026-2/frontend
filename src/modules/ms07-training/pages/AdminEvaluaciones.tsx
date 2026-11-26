@@ -117,7 +117,7 @@ export default function AdminEvaluaciones({ session }: { session: Session }) {
                     <td>
                       <div className="evl-fila-acciones">
                         <button type="button" className="evl-mini" disabled={ocupado === e.id}
-                          onClick={() => abrirModificar(e.id)}>Modificar</button>
+                          onClick={() => abrirModificar(e.id)}>Editar</button>
                         <button type="button" className={`evl-mini${activa ? ' peligro' : ''}`} disabled={ocupado === e.id}
                           onClick={() => cambiarEstado(e)}>
                           {ocupado === e.id ? 'Guardando…' : activa ? 'Inactivar' : 'Reactivar'}

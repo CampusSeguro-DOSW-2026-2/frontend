@@ -217,7 +217,7 @@ export default function CampusAdmin() {
                   </h3>
                   {puedeGestionar && (
                     <div className="cs-acciones">
-                      {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'campus', id: c.id })}>Modificar</button>}
+                      {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'campus', id: c.id })}>Editar</button>}
                       {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona-nueva', campusId: c.id })}>Agregar zona abierta</button>}
                       <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === c.id}
                         onClick={() => cambiarEstado(c.id, activo, { inactivar: () => campus.campuses.inactivar(c.id), reactivar: () => campus.campuses.reactivar(c.id) })}>
@@ -267,7 +267,7 @@ export default function CampusAdmin() {
                             <td>
                               {puedeGestionar && (
                                 <div className="cs-acciones">
-                                  {zonaActiva && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona', id: z.id })}>Modificar</button>}
+                                  {zonaActiva && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona', id: z.id })}>Editar</button>}
                                   <button type="button" className={`cs-mini${zonaActiva ? ' peligro' : ''}`} disabled={ocupado === z.id}
                                     onClick={() => cambiarEstado(z.id, zonaActiva, { inactivar: () => campus.zonasAbiertas.inactivar(z.id), reactivar: () => campus.zonasAbiertas.reactivar(z.id) })}>
                                     {ocupado === z.id ? 'Guardando…' : zonaActiva ? 'Inactivar' : 'Reactivar'}

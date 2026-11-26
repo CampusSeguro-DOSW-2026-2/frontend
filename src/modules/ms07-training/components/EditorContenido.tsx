@@ -59,8 +59,8 @@ export default function EditorContenido({ inicial, categorias, onGuardar, onCanc
   };
 
   return (
-    <form className="ap-form" onSubmit={enviar} noValidate aria-label={inicial ? 'Modificar contenido' : 'Nuevo contenido'}>
-      <h2>{inicial ? 'Modificar contenido' : 'Nuevo contenido'}</h2>
+    <form className="ap-form" onSubmit={enviar} noValidate aria-label={inicial ? 'Editar contenido' : 'Nuevo contenido'}>
+      <h2>{inicial ? 'Editar contenido' : 'Nuevo contenido'}</h2>
       {errorGeneral && <p className="notice err" role="alert">{errorGeneral}</p>}
 
       <div className="ap-campo">
@@ -94,7 +94,7 @@ export default function EditorContenido({ inicial, categorias, onGuardar, onCanc
       </div>
 
       <div className="ap-botones">
-        <button type="submit" className="btn red" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar'}</button>
+        <button type="submit" className="btn red" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar contenido'}</button>
         <button type="button" className="btn white" disabled={guardando} onClick={onCancelar}>Cancelar</button>
       </div>
     </form>
