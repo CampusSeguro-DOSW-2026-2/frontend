@@ -170,7 +170,7 @@ export default function ChangeRoles({ session, selected, onSelectedChange }: Pro
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={{ href: '#/usuarios', texto: 'Usuarios' }}
         badge="ADMINISTRACIÓN"
         title="Editar roles"
         subtitle="Cambie los roles de todos los seleccionados o de cada usuario y revise cómo queda cada uno antes de aplicar."

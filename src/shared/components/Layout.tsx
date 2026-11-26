@@ -272,11 +272,21 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
   );
 }
 
-export function PageHeader({ badge, title, subtitle, context }: { badge: string; title: string; subtitle: string; context?: ReactNode }) {
+/** Enlace «← Volver» de las pantallas de detalle y de formulario: a dónde lleva y con qué texto. */
+export interface Volver { href: string; texto: string }
+
+/**
+ * Encabezado rojo de las pantallas. En detalle y formularios lleva `volver` (siempre arriba a la izquierda, con área
+ * táctil completa) para que la persona sepa cómo salir sin buscar en el menú.
+ */
+export function PageHeader({ badge, title, subtitle, context, volver }: {
+  badge: string; title: string; subtitle: string; context?: ReactNode; volver?: Volver;
+}) {
   return (
     <header className="page-header">
+      {volver && <a className="ph-volver" href={volver.href}>← {volver.texto}</a>}
       <div className="hrow"><span className="badge">{badge}</span>{context && <span className="ctx">{context}</span>}</div>
-      <div><h1>{title}</h1><p>{subtitle}</p></div>
+      <div><h1>{title}</h1>{subtitle && <p>{subtitle}</p>}</div>
     </header>
   );
 }

@@ -110,7 +110,7 @@ export default function ChangePassword({ session }: { session: Session }) {
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={{ href: '#/perfil', texto: 'Mi perfil' }}
         badge="MI PERFIL"
         title="Cambiar contraseña"
         subtitle="Ingrese su contraseña actual y elija una nueva, distinta de la actual."

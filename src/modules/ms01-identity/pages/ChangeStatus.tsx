@@ -86,7 +86,7 @@ export default function ChangeStatus({ session, selected, onSelectedChange }: Pr
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={{ href: '#/usuarios', texto: 'Usuarios' }}
         badge="ADMINISTRACIÓN"
         title="Cambiar estado"
         subtitle="Elija el estado de cada usuario seleccionado y aplique todos los cambios a la vez."

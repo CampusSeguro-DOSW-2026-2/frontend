@@ -74,8 +74,9 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .badge.aviso{background:var(--warn-bg);color:var(--warn)}
 .ctx{font-size:14px;line-height:18px;opacity:.95}
 /* enlaces de «← Volver» y de contexto sobre el encabezado rojo: blancos y con área táctil completa */
-.ctx a,.ev-head .back,.ev-head .plink{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--on-color);font-weight:600;text-decoration:none;opacity:1}
-.ctx a:hover,.ev-head .back:hover,.ev-head .plink:hover{text-decoration:underline;text-underline-offset:3px}
+.ctx a,.ev-head .back,.ev-head .plink,.ph-volver{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--on-color);font-weight:600;text-decoration:none;opacity:1}
+.ctx a:hover,.ev-head .back:hover,.ev-head .plink:hover,.ph-volver:hover{text-decoration:underline;text-underline-offset:3px}
+.ph-volver{align-self:flex-start;margin:-10px 0 -6px;font-size:15px}
 .page-header h1{font:800 32px/120% 'Outfit',sans-serif}
 .page-header p{font-size:16px;line-height:21px;opacity:.9;margin-top:6px}
 /* contenedores */

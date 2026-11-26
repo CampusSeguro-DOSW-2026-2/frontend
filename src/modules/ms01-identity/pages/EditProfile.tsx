@@ -90,7 +90,7 @@ export default function EditProfile({ session }: { session: Session }) {
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={{ href: '#/perfil', texto: 'Mi perfil' }}
         badge="MI PERFIL"
         title="Editar perfil"
         subtitle="Actualice sus nombres y apellidos. El correo, los roles y el estado no se modifican desde aquí."

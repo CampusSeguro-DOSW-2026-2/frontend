@@ -172,7 +172,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
 
   return (
     <>
-      <PageHeader badge={badge} title={editId ? 'Editar alerta' : 'Crear alerta'} subtitle="Redacte el mensaje, defina el alcance y revise los destinatarios antes de emitir." context="Configuración de alerta" />
+      <PageHeader volver={{ href: '#/alertas', texto: 'Alertas' }} badge={badge} title={editId ? 'Editar alerta' : 'Crear alerta'} subtitle="Redacte el mensaje, defina el alcance y revise los destinatarios antes de emitir." context="Configuración de alerta" />
       <main className="alert-layout">
         <form className="af" noValidate onSubmit={(e) => { e.preventDefault(); submit(); }}>
           <div className="fgroup">

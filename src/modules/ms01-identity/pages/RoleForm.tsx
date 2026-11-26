@@ -126,7 +126,7 @@ export default function RoleForm({ session, mode, role }: Props) {
   if (!creating && !role) {
     return (
       <>
-        <PageHeader badge="ADMINISTRACIÓN" title="Editar rol" subtitle="Cambie el nombre, la descripción o los permisos del rol." />
+        <PageHeader volver={{ href: '#/roles', texto: 'Roles' }} badge="ADMINISTRACIÓN" title="Editar rol" subtitle="Cambie el nombre, la descripción o los permisos del rol." />
         <main className="content narrow">
           <section className="panel">
             <p className="notice" role="status">No hay un rol elegido. Vuelva a la lista de roles y elija uno.</p>
@@ -141,7 +141,7 @@ export default function RoleForm({ session, mode, role }: Props) {
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={{ href: '#/roles', texto: 'Roles' }}
         badge="ADMINISTRACIÓN"
         title={creating ? 'Crear rol' : 'Editar rol'}
         subtitle={creating

@@ -202,7 +202,7 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso, d
 
   return (
     <>
-      <PageHeader
+      <PageHeader volver={eventoActual ? undefined : { href: '#/simulacro', texto: 'Inicio' }}
         badge={evento ? `${tipoEvento(evento.simulacro)} · ${textoEstadoEvento(evento.estado)}`.toUpperCase() : 'CHECK-IN'}
         title={evento?.nombre ?? 'Reportar mi estado'}
         subtitle={evento ? 'Evacuación del campus en curso' : 'Elija la opción que describe su situación.'}
