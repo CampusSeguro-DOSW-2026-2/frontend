@@ -1,7 +1,9 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useMemo, useState } from 'react';
 import { DateTimeField } from '../../../shared/components/DateTimeField';
 import { ApiError, errorMessage, type FieldErrors } from '../../../shared/services/http';
-import { FilePen, Info } from '../../../shared/components/Icons';
+import { FilePen } from '../../../shared/components/Icons';
 import { PickerBox } from '../../ms03-alerts/components/PickerBox';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { useParticipantRoles } from '../hooks/useParticipantRoles';
@@ -175,7 +177,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
     }
   };
 
-  if (loading) return <main className="ev-main"><p className="notice" role="status">Cargando evento…</p></main>;
+  if (loading) return <main className="ev-main"><Cargando texto="Cargando evento…" /></main>;
 
   return (
     <>
@@ -190,9 +192,9 @@ export default function EventForm({ session, editId }: { session: Session; editI
       </header>
       <main className="ev-form">
         <form className="ev-fields" noValidate onSubmit={(e) => { e.preventDefault(); save(); }}>
-          {finished && <p className="notice err" role="alert">Un evento Finalizado no se puede editar.</p>}
+          {finished && <Mensaje tono="aviso">Un evento Finalizado no se puede editar.</Mensaje>}
           {inProgress && (
-            <div className="ev-warn" role="note"><b>El evento está en ejecución.</b> Si cambia el alcance, los brigadistas deberán confirmar su zona y se avisará a los participantes nuevos.</div>
+            <Mensaje tono="aviso" compacto><b>El evento está en ejecución.</b> Si cambia el alcance, los brigadistas deberán confirmar su zona y se avisará a los participantes nuevos.</Mensaje>
           )}
           <div className="field">
             <label htmlFor="ev-name">Nombre del evento <span className="req">*</span></label>
@@ -230,9 +232,7 @@ export default function EventForm({ session, editId }: { session: Session; editI
               editLabel="Editar tipo" items={typeItems} selected={typeIds} onToggle={toggleType} error={errors.typeIds} loading={!typeItems.length && !typesError} />
           </div>
           {typesError && (
-            <p className="notice err" role="alert">
-              {typesError} <button type="button" className="plink" onClick={() => { setTypesError(''); setTypesAttempt((n) => n + 1); }}>Reintentar</button>
-            </p>
+            <Mensaje tono="error" compacto onReintentar={() => { setTypesError(''); setTypesAttempt((n) => n + 1); }}>{typesError}</Mensaje>
           )}
           <div className="fgroup">
             <span className="flabel">Alcance y participantes</span>
@@ -243,24 +243,16 @@ export default function EventForm({ session, editId }: { session: Session; editI
                 items={participantItems} selected={form.roles} onToggle={toggleRole} error={errors.participantRoles} loading={participantsLoading} />
             </div>
             {scopeError && (
-              <p className="notice err" role="alert">
-                {scopeError} <button type="button" className="plink" onClick={retryScope}>Reintentar</button>
-              </p>
+              <Mensaje tono="error" compacto onReintentar={retryScope}>{scopeError}</Mensaje>
             )}
             {participantsError && (
-              <p className="notice err" role="alert">
-                {participantsError} <button type="button" className="plink" onClick={retryParticipants}>Reintentar</button>
-              </p>
+              <Mensaje tono="error" compacto onReintentar={retryParticipants}>{participantsError}</Mensaje>
             )}
             {participantsNotice && (
-              <p className="notice" role="status">
-                {participantsNotice} <button type="button" className="plink" onClick={retryParticipants}>Reintentar</button>
-              </p>
+              <Mensaje tono="aviso" compacto onReintentar={retryParticipants}>{participantsNotice}</Mensaje>
             )}
           </div>
-          <div className="ev-info" role="note">
-            <span><b>Brigada:</b> no se asigna aquí. Cuando el evento quede Programado, los brigadistas reciben una alerta, se activan y eligen la zona donde apoyarán.</span>
-          </div>
+          <Mensaje tono="info" compacto><b>Brigada:</b> no se asigna aquí. Cuando el evento quede Programado, los brigadistas reciben una alerta, se activan y eligen la zona donde apoyarán.</Mensaje>
         </form>
         <aside className="ev-side">
           <div className="sum2">
@@ -282,9 +274,8 @@ export default function EventForm({ session, editId }: { session: Session; editI
             <div className="sep" />
             <div className="sum2-row"><small>{inProgress ? 'Sigue en' : 'Quedará como'}</small><span><span className={`st ${willBe}`}>{STATUS_LABEL[willBe]}</span></span></div>
           </div>
-          <div className="notice2"><Info /><div><b>Programar avisará a los brigadistas</b>
-            <p>Con fecha, alcance y participantes completos el evento queda Programado. Si falta alguno, se guarda como Borrador y no se envía ningún aviso.</p></div></div>
-          {message && <p className="notice err" role="alert">{message}</p>}
+          <Mensaje tono="info" titulo="Programar avisará a los brigadistas">Con fecha, alcance y participantes completos el evento queda Programado. Si falta alguno, se guarda como Borrador y no se envía ningún aviso.</Mensaje>
+          {message && <Mensaje tono="error">{message}</Mensaje>}
           <div className="actions">
             <button type="button" className="btn red" onClick={save} disabled={saving || finished}>{saving ? 'Guardando…' : editId ? 'Guardar cambios' : 'Guardar evento'}</button>
             <a className="btn white" href={editId ? `#/eventos/${editId}` : '#/eventos'}>Cancelar</a>
