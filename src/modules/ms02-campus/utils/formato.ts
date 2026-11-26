@@ -8,3 +8,9 @@ export function distancia(metros: number): string {
 export function duracion(segundos: number): string {
   return `${Math.max(1, Math.round(segundos / 60))} min`;
 }
+
+/** Dos textos dicen lo mismo aunque cambien mayúsculas, espacios o el punto final (para no repetir una frase). */
+export function mismaFrase(a?: string | null, b?: string | null): boolean {
+  const n = (t?: string | null) => (t ?? '').toLowerCase().replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
+  return n(a) !== '' && n(a) === n(b);
+}

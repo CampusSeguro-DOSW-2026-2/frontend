@@ -6,6 +6,8 @@ import { campus, CampusApiError, comoCampusError as comoError } from '../service
 import type { Edificio, Espacio, EstadoRuta, RutaConsultada } from '../types';
 import { Falla } from '../components/comun';
 import { GuiaDeRuta } from '../components/GuiaEvacuacion';
+import { RutasAgrupadas } from '../components/RutasAgrupadas';
+import { mismaFrase } from '../utils/formato';
 import '../styles/campus.css';
 
 type Tono = 'ok' | 'warn' | 'stop' | 'info';
@@ -49,7 +51,8 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
               {ruta.zonaSeguraUbicacion && <span>{ruta.zonaSeguraUbicacion}</span>}
             </div>
           </div>
-          {ruta.recorrido && <div className="sm"><small>Recorrido</small><p className="cs-recorrido">{ruta.recorrido}</p></div>}
+          {/* Si la guía dice lo mismo, la frase se muestra una sola vez (en la guía) */}
+          {ruta.recorrido && !mismaFrase(ruta.recorrido, ruta.guia?.indicacion) && <div className="sm"><small>Recorrido</small><p className="cs-recorrido">{ruta.recorrido}</p></div>}
           {ruta.motivo && <div className="sm"><small>Motivo</small><p>{ruta.motivo}</p></div>}
         </>
       )}
@@ -73,21 +76,6 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
       )}
     </article>
   );
-}
-
-function resumen(rutas: RutaConsultada[]) {
-  const contar = (f: (r: RutaConsultada) => boolean) => rutas.filter(f).length;
-  const partes = [
-    `${rutas.length} ${rutas.length === 1 ? 'espacio' : 'espacios'}`,
-    `${contar((r) => (r.estado === 'DISPONIBLE' && r.destinoActivo === true) || (!r.tieneRuta && conGuia(r)))} con ruta disponible`,
-  ];
-  const restringidas = contar((r) => r.estado === 'RESTRINGIDA');
-  const bloqueadas = contar((r) => r.estado === 'BLOQUEADA');
-  const sinRuta = contar((r) => !r.tieneRuta && !conGuia(r));
-  if (restringidas) partes.push(`${restringidas} ${restringidas === 1 ? 'restringida' : 'restringidas'}`);
-  if (bloqueadas) partes.push(`${bloqueadas} ${bloqueadas === 1 ? 'bloqueada' : 'bloqueadas'}`);
-  if (sinRuta) partes.push(`${sinRuta} sin ruta`);
-  return partes.join(' · ');
 }
 
 export default function RouteQuery() {
@@ -173,11 +161,12 @@ export default function RouteQuery() {
           <section className="cs-resultados" aria-live="polite">
             <div className="cs-cabecera">
               <h2 className="title sm22">{espacioId ? 'Ruta del espacio' : `Rutas de ${edificio?.nombre ?? 'el edificio'}`}</h2>
-              {!espacioId && rutas.length > 0 && <span className="cs-resumen">{resumen(rutas)}</span>}
             </div>
             {rutas.length === 0
               ? <Mensaje tono="info">Este edificio no tiene espacios disponibles para consultar.</Mensaje>
-              : <div className="cs-lista">{rutas.map((r) => <Resultado key={`${consulta}-${r.espacioId}`} ruta={r} />)}</div>}
+              : espacioId
+                ? <div className="cs-lista">{rutas.map((r) => <Resultado key={`${consulta}-${r.espacioId}`} ruta={r} />)}</div>
+                : <RutasAgrupadas key={consulta} rutas={rutas} fallback={(r) => <Resultado key={`${consulta}-${r.espacioId}`} ruta={r} />} />}
           </section>
         )}
       </main>

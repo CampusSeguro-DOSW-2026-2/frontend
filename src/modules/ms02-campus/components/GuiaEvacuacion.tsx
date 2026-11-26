@@ -5,6 +5,7 @@ import type { CampusApiError } from '../services/campus';
 import type { GuiaEvacuacion as Guia } from '../types';
 import { MapaRuta } from './MapaRuta';
 import { distancia, duracion } from '../utils/formato';
+import { textoEscaleras } from '../utils/escaleras';
 import { Falla } from './comun';
 import '../styles/guia.css';
 
@@ -13,24 +14,11 @@ const SIN_GUIA: Guia = {
   mensaje: 'No hay una guía de evacuación disponible para este espacio.',
 };
 
-// Una escalera recomendada por tramo (en orden) y las alternas entre paréntesis. Sin `tramo` (respuestas
-// antiguas) se listan todas como opciones.
-function textoEscaleras(escaleras: Guia['escaleras']): string {
-  if (escaleras.every((e) => e.tramo === undefined)) return escaleras.map((e) => e.nombre).join(' o ');
-  const tramos = new Map<number, Guia['escaleras']>();
-  escaleras.forEach((e) => tramos.set(e.tramo ?? 1, [...(tramos.get(e.tramo ?? 1) ?? []), e]));
-  return [...tramos.entries()]
-    .sort(([a], [b]) => a - b)
-    .map(([, lista]) => {
-      const [principal, ...alternas] = lista;
-      return alternas.length > 0
-        ? `${principal.nombre} (alterna: ${alternas.map((a) => a.nombre).join(', ')})`
-        : principal.nombre;
-    })
-    .join(' → ');
-}
-
-function GuiaDetalle({ guia }: { guia: Guia }) {
+/**
+ * Detalle de la guía. En una ruta compartida por varios espacios (RutasAgrupadas) la escalera y la indicación cambian
+ * de un espacio a otro: `compartida` las quita de aquí y cada espacio las muestra en su línea.
+ */
+export function GuiaDetalle({ guia, compartida = false }: { guia: Guia; compartida?: boolean }) {
   // Sin salida o sin escalera utilizable el backend solo manda el aviso.
   if (!guia.salida) {
     return (
@@ -48,12 +36,14 @@ function GuiaDetalle({ guia }: { guia: Guia }) {
   return (
     <section className="cs-guia" aria-label="Guía de evacuación">
       <h4>Guía de evacuación</h4>
-      {guia.indicacion && <p className="cs-guia-indicacion">{guia.indicacion}</p>}
+      {!compartida && guia.indicacion && <p className="cs-guia-indicacion">{guia.indicacion}</p>}
       <dl className="cs-guia-datos">
-        <div>
-          <dt>Escalera</dt>
-          <dd>{guia.requiereEscalera ? escalera : 'No necesita escalera: la salida está en su piso'}</dd>
-        </div>
+        {!compartida && (
+          <div>
+            <dt>Escalera</dt>
+            <dd>{guia.requiereEscalera ? escalera : 'No necesita escalera: la salida está en su piso'}</dd>
+          </div>
+        )}
         <div>
           <dt>Salida</dt>
           <dd>{guia.salida.nombre}</dd>
