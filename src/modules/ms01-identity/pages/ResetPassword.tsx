@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
 import { Campo } from '../../../shared/components/Campo';
 import { ApiError, errorMessage } from '../../../shared/services/http';
@@ -168,7 +169,7 @@ export default function ResetPassword() {
             maxLength={64}
           />
 
-          {serverError && <p className="notice err" role="alert">{serverError}</p>}
+          {serverError && <Mensaje tono="error">{serverError}</Mensaje>}
 
           <button type="submit" className="btn red" disabled={submitting}>
             {buttonLabel}

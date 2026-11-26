@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { Fragment, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { RoleChip } from '../components/Chips';
@@ -178,18 +179,18 @@ export default function ChangeRoles({ session, selected, onSelectedChange }: Pro
       <main className="content narrow">
         {selected.length === 0 && !done ? (
           <section className="panel">
-            <p className="notice" role="status">No hay usuarios seleccionados. Vuelva al listado y marque los que desea modificar.</p>
+            <Mensaje tono="info">No hay usuarios seleccionados. Vuelva al listado y marque los que desea modificar.</Mensaje>
             <a className="btn white" href="#/usuarios">Volver al listado</a>
           </section>
         ) : (
           <section className="panel wide-edit" aria-busy={submitting}>
             {done ? (
               <>
-                <p className="notice" role="status">
+                <Mensaje tono="exito">
                   {changedCount > 0
                     ? `${changedCount} ${changedCount === 1 ? 'usuario cambió' : 'usuarios cambiaron'} sus roles. Su sesión se cerró para aplicarlos.`
                     : 'Ningún usuario cambió: ya tenían ese resultado.'}
-                </p>
+                </Mensaje>
                 <button type="button" className="btn red" onClick={backToList}>Volver al listado</button>
               </>
             ) : (
@@ -222,7 +223,7 @@ export default function ChangeRoles({ session, selected, onSelectedChange }: Pro
               </div>
             )}
 
-            {error && <p className="notice err" role="alert">{error}</p>}
+            {error && <Mensaje tono="error">{error}</Mensaje>}
 
             <h2>{done ? 'Resultado' : 'Usuarios seleccionados'}</h2>
             <div className="tablewrap">

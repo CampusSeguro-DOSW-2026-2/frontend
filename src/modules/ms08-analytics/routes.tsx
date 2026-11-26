@@ -1,3 +1,4 @@
+import { Mensaje } from '../../shared/components/Mensaje';
 import type { ReactNode } from 'react';
 import { PERMISSION } from '../../shared/permissions';
 import { hasPermission } from '../../shared/services/session';
@@ -9,7 +10,7 @@ import Ubicaciones from './pages/Ubicaciones';
 import { MAX_EVENTS, MIN_COMPARE } from './types';
 import { isUuid } from './utils/format';
 
-const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
+const NO_ACCESS = <main className="page"><Mensaje tono="error">No tiene permisos para ver esta sección.</Mensaje></main>;
 
 /**
  * Permisos de MS08 que dan acceso a cada pantalla, leídos del claim `permissions` del JWT (nunca del rol). Basta uno
@@ -36,7 +37,7 @@ export function analyticsRoutes(route: string, session: Session | null): ReactNo
       // Ids distintos y con formato UUID, hasta 10 (MS08 valida lo mismo)
       const ids = [...new Set(decodeURIComponent(multi[2]).split(',').map((id) => id.trim().toLowerCase()).filter(isUuid))].slice(0, MAX_EVENTS);
       const min = multi[1] === 'comparar' ? MIN_COMPARE : 1;
-      if (ids.length < min) return <main className="page"><p className="notice err" role="alert">Seleccione {min === 1 ? 'al menos un evento' : `al menos ${min} eventos`} en <a href="#/indicadores">Indicadores</a>.</p></main>;
+      if (ids.length < min) return <main className="page"><Mensaje tono="aviso" acciones={<a className="plink" href="#/indicadores">Ir a Indicadores</a>}>Seleccione {min === 1 ? 'al menos un evento' : `al menos ${min} eventos`} en Indicadores.</Mensaje></main>;
       return multi[1] === 'comparar'
         ? <Comparacion key={ids.join(',')} session={session} ids={ids} />
         : <Ubicaciones key={ids.join(',')} session={session} ids={ids} />;

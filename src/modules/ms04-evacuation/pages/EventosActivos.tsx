@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Cargando } from '../../../shared/components/Cargando';
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
@@ -9,7 +12,7 @@ import { fechaHora, textoEscenario, tipoEvento } from '../utils/labels';
 import '../styles/checkin.css';
 
 /** Mensaje de la pantalla inicial cuando no hay evento activo que le aplique al usuario (RNF-MS04-07). */
-export const SIN_EVENTO_ACTIVO = 'No hay ningún evento activo.';
+export const SIN_EVENTO_ACTIVO = 'No hay ningún evento activo';
 
 type Carga =
   | { estado: 'cargando' }
@@ -38,7 +41,9 @@ export default function EventosActivos({ session }: { session: Session }) {
           window.location.replace(`#/checkin/${encodeURIComponent(eventos[0].evento_id)}`);
           return;
         }
-        setCarga({ estado: 'listo', eventos });
+        // Del más reciente al más antiguo (los que no tienen fecha de inicio, al final)
+        const inicio = (e: Evento) => (e.fecha_inicio ? new Date(e.fecha_inicio).getTime() : 0);
+        setCarga({ estado: 'listo', eventos: [...eventos].sort((a, b) => inicio(b) - inicio(a)) });
       })
       .catch((err: unknown) => { if (vigente) setCarga({ estado: 'error', mensaje: errorMessage(err) }); });
     return () => { vigente = false; };
@@ -53,37 +58,38 @@ export default function EventosActivos({ session }: { session: Session }) {
     <>
       <PageHeader badge="CHECK-IN" title="Reportar mi estado" subtitle="Eventos activos que le aplican" />
       <main className="content">
-        {carga.estado === 'cargando' && <p className="notice" role="status">Consultando los eventos activos…</p>}
+        {carga.estado === 'cargando' && <Cargando texto="Consultando los eventos activos…" />}
 
-        {carga.estado === 'error' && (
-          <>
-            <p className="notice err" role="alert">{carga.mensaje}</p>
-            <button type="button" className="btn white chk-retry" onClick={reintentar}>Intentar de nuevo</button>
-          </>
-        )}
+        {carga.estado === 'error' && <Mensaje tono="error" onReintentar={reintentar}>{carga.mensaje}</Mensaje>}
 
         {carga.estado === 'listo' && carga.eventos.length === 0 && (
-          <p className="notice" role="status">{SIN_EVENTO_ACTIVO}</p>
+          <EstadoVacio titulo={SIN_EVENTO_ACTIVO}>
+            Cuando empiece un simulacro o una emergencia que lo convoque, podrá reportar su estado aquí.
+          </EstadoVacio>
         )}
 
         {carga.estado === 'listo' && carga.eventos.length > 0 && (
           <ul className="chk-eventos" aria-label="Eventos activos">
-            {carga.eventos.map((evento) => (
+            {carga.eventos.map((evento) => {
+              // Solo nombres: si MS02 no conoce ningún lugar del evento, el dato se omite (nunca un UUID)
+              const edificios = textoEscenario(evento.escenario.edificios, catalog);
+              const zonas = textoEscenario(evento.escenario.zonas, catalog);
+              return (
               <li key={evento.evento_id} className="chk-evento">
                 <span className="tag">{tipoEvento(evento.simulacro).toUpperCase()}</span>
                 <h3>{evento.nombre}</h3>
                 <div className="chk-meta">
                   {evento.fecha_inicio && <span>Iniciado: <b>{fechaHora(evento.fecha_inicio)}</b></span>}
-                  {evento.escenario.edificios.length > 0 && (
-                    <span>Edificios: <b>{textoEscenario(evento.escenario.edificios, catalog)}</b></span>
-                  )}
-                  {evento.escenario.zonas.length > 0 && <span>Zonas: <b>{textoEscenario(evento.escenario.zonas, catalog)}</b></span>}
+                  {edificios && <span>Edificios: <b>{edificios}</b></span>}
+                  {zonas && <span>Zonas: <b>{zonas}</b></span>}
                 </div>
-                <a className="btn red chk-ir" href={`#/checkin/${encodeURIComponent(evento.evento_id)}`}>
-                  Abrir evento
+                <a className="btn red chk-ir" href={`#/checkin/${encodeURIComponent(evento.evento_id)}`}
+                  aria-label={`Reportar mi estado en ${evento.nombre}`}>
+                  Reportar mi estado
                 </a>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </main>

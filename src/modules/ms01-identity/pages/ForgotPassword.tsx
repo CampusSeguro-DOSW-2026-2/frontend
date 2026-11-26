@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
 import { CodeInput } from '../components/CodeInput';
 import { Campo } from '../../../shared/components/Campo';
@@ -174,7 +175,7 @@ export default function ForgotPassword() {
             void submit();
           }}
         >
-          {info && <p className="notice" role="status">{info}</p>}
+          {info && <Mensaje tono="info">{info}</Mensaje>}
 
           <Campo
             id="email"
@@ -199,7 +200,7 @@ export default function ForgotPassword() {
             />
           )}
 
-          {serverError && <p className="notice err" role="alert">{serverError}</p>}
+          {serverError && <Mensaje tono="error">{serverError}</Mensaje>}
 
           <button type="submit" className="btn red" disabled={submitting}>
             {buttonLabel}

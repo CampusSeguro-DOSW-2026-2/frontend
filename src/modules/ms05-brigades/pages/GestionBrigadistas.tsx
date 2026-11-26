@@ -1,3 +1,6 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh';
 import { Search } from '../../../shared/components/Icons';
@@ -150,9 +153,9 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
         </div>
       </header>
       <main className="ev-main">
-        {eventos === null && <p className="notice" role="status">Cargando eventos…</p>}
+        {eventos === null && <Cargando texto="Cargando eventos…" />}
         {eventos && eventos.length === 0 && !error && (
-          <div className="ev-empty">No hay {eventKinds} programados ni en ejecución. Cuando se programe uno, aquí podrá gestionar a sus brigadistas.</div>
+          <EstadoVacio titulo={`No hay ${eventKinds} programados ni en ejecución`}>Cuando se programe uno, aquí podrá gestionar a sus brigadistas.</EstadoVacio>
         )}
 
         {eventos && eventos.length > 1 && (
@@ -174,7 +177,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
               <span className="help">{evento.simulacro ? 'Simulacro' : 'Evento real'} · {evento.edificios.length} edificio(s) en el evento</span>
             </div>
             {!evento.permiteReasignar && (
-              <p className="ev-info">Este evento ya no admite cambios de asignación.</p>
+              <Mensaje tono="info" compacto>Este evento ya no admite cambios de asignación.</Mensaje>
             )}
           </section>
         )}
@@ -192,12 +195,12 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
           </div>
         )}
 
-        {error && <p className="notice err" role="alert">{error} {eventoId && <button type="button" className="plink" onClick={cargar}>Reintentar</button>}</p>}
-        {message && <p className="notice" role="status">{message}</p>}
-        {loading && <p className="notice" role="status">Cargando brigadistas…</p>}
+        {error && <Mensaje tono="error" onReintentar={eventoId ? cargar : undefined}>{error}</Mensaje>}
+        {message && <Mensaje tono="exito">{message}</Mensaje>}
+        {loading && <Cargando texto="Cargando brigadistas…" />}
 
         {panel && !loading && visibles.length === 0 && (
-          <div className="ev-empty">{panel.brigadistas.length === 0 ? 'No hay brigadistas registrados.' : 'No hay brigadistas que coincidan con la búsqueda.'}</div>
+          <EstadoVacio titulo={panel.brigadistas.length === 0 ? 'No hay brigadistas registrados' : 'Ningún brigadista coincide con la búsqueda'} />
         )}
 
         {panel && !loading && grupos.map((g) => (
@@ -236,9 +239,9 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
 
         {evento?.estado === 'EN_EJECUCION' && (
           // Los incidentes del evento se siguen en un solo lugar: «Ver en vivo» de Eventos (MS06), con el check-in de MS04
-          <p className="notice" role="status">
+          <Mensaje tono="info">
             El evento está en ejecución. Siga sus incidentes y el estado de las personas en <a className="plink" href={`#/eventos/${encodeURIComponent(evento.eventoId)}`}>Ver en vivo</a>.
-          </p>
+          </Mensaje>
         )}
       </main>
 
@@ -298,7 +301,7 @@ function CambiarAsignacion({ session, evento, brigadista, onClose, onDone }: {
       <div className="ev-modal" role="dialog" aria-modal="true" aria-labelledby="cambio-titulo" onClick={(e) => e.stopPropagation()}>
         <h2 id="cambio-titulo">Cambiar asignación</h2>
         <p className="help">{brigadista.nombre} · actualmente en <b>{brigadista.nombreUbicacion ?? 'ningún edificio'}</b>. Un edificio no puede quedar sin brigadistas.</p>
-        {evento.edificios.length === 0 && <p className="notice err">El evento no tiene edificios registrados.</p>}
+        {evento.edificios.length === 0 && <Mensaje tono="error">El evento no tiene edificios registrados.</Mensaje>}
         <div className="bg-opts" role="radiogroup" aria-label="Edificios del evento">
           {evento.edificios.map((e) => (
             <label key={e.ubicacionId} className="bg-opt">
@@ -307,7 +310,7 @@ function CambiarAsignacion({ session, evento, brigadista, onClose, onDone }: {
             </label>
           ))}
         </div>
-        {error && <p className="notice err" role="alert">{error}</p>}
+        {error && <Mensaje tono="error">{error}</Mensaje>}
         <div className="row2">
           <button type="button" className="btn white" onClick={onClose} disabled={saving}>Cancelar</button>
           <button type="button" className="btn red" onClick={aceptar} disabled={saving || !seleccion}>{saving ? 'Guardando…' : 'Cambiar de edificio'}</button>

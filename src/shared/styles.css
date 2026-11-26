@@ -149,9 +149,6 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .plink:hover{text-decoration:underline;text-underline-offset:3px}
 .plink:disabled{color:var(--mut);cursor:not-allowed;text-decoration:none}
 .plink .ico{width:12px;height:12px}
-/* Avisos heredados (.notice): mismo aspecto que el componente Mensaje mientras los módulos migran */
-.notice{background:var(--info-bg);border:1px solid var(--info-line);color:var(--info);padding:12px 16px;border-radius:12px;font-size:14px;line-height:150%}
-.notice.err{background:var(--err-bg);border-color:var(--err-line);color:var(--err)}
 .title{font:700 24px/30px 'Outfit',sans-serif}
 .title.sm22{font-size:22px;line-height:28px}
 /* pantalla 2 */
@@ -198,7 +195,7 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .chip2 button{border:0;background:none;color:inherit;padding:14px;margin:-14px -12px -14px -4px;cursor:pointer;display:grid}
 .opts{display:flex;flex-direction:column;gap:6px}.opts small{color:var(--mut);font-size:12px}
 .sidecol{margin-top:0;display:flex;flex-direction:column;gap:24px;align-self:start}
-.sidecol>.notice2,.sidecol>.foot{margin:0}
+.sidecol>.foot{margin:0}
 .sum2{display:flex;flex-direction:column;gap:24px;background:var(--cream);border:1px solid var(--red);border-radius:16px;padding:24px}
 .sum2-head{display:flex;flex-direction:column;gap:8px}.sum2-head h2{font:700 20px/25px 'Outfit',sans-serif}
 .unsent{display:inline-flex;align-items:center;gap:6px;color:var(--red);font:600 12px/16px 'Geist',sans-serif}
@@ -206,9 +203,6 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .sum2-msg strong{font:700 20px/130% 'Outfit',sans-serif;overflow-wrap:anywhere}
 .sum2-msg p{font-size:13px;line-height:150%;color:var(--mut)}.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .sum2-row{display:flex;flex-direction:column;gap:6px}.sum2-row span{font-weight:500;font-size:13px;line-height:150%}
-/* Aviso informativo con título (antes .notice2): tono info, nunca rojo, porque no es un error */
-.notice2{display:flex;gap:12px;padding:14px 16px;border:1px solid var(--info-line);border-radius:12px;background:var(--info-bg);color:var(--info)}.notice2 .ico{color:var(--info);flex:none;margin-top:1px}
-.notice2 b{font:700 14px/18px 'Outfit',sans-serif}.notice2 p{margin-top:6px;font-size:13px;line-height:150%;color:var(--info)}
 .foot{font-size:12px;line-height:150%;color:var(--mut)}
 .list-head{display:flex;align-items:center;gap:32px;background:var(--red);color:var(--on-color);padding:32px 48px;min-height:132px}
 .list-head>div{flex:1}.list-head h1{font:800 32px/120% 'Outfit',sans-serif}.list-head p{font-size:16px;line-height:150%;opacity:.9;margin-top:6px}
@@ -237,8 +231,6 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .filter-dd-opt input{width:18px;height:18px;accent-color:var(--red);cursor:pointer}
 .filter-dd-foot{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--line);margin-top:4px;padding:8px 10px 2px}
 .alist{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.alist.empty{min-height:667px;display:flex;flex-direction:column;align-items:center;gap:81px;padding:65px 48px 48px}.empty-logo{color:var(--ink)}
-.alist.empty h2{font:700 40px/120% 'Outfit',sans-serif;text-align:center}
 .arow{position:relative;border-top:5px solid}
 .abody{padding:20px 150px 20px 24px;display:flex;flex-direction:column;gap:6px}
 .abody h3{font:700 20px/120% 'Outfit',sans-serif}.adesc{font-size:14px;line-height:150%;color:var(--mut)}.al{font-size:13px;line-height:150%;font-weight:400}.al b{font-weight:600}
@@ -251,7 +243,7 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 /* ===== Listados: estándar de todos los módulos =====
  * Encabezado rojo (.ev-head) con la acción principal (.btn.light.cta), pestañas por estado (.ev-tabs/.ev-tab), tabla
  * (.ev-table, título .t y subtítulo .s), acciones visibles por fila (.ev-acts: .ev-icon para editar, .btn.white para
- * cambiar el estado), estados (.st.<CÓDIGO>), vacío (.ev-empty) y paginación (.ev-pager). Lo que está en ejecución o
+ * cambiar el estado), estados (.st.<CÓDIGO>), vacío (EstadoVacio) y paginación (.ev-pager). Lo que está en ejecución o
  * activo se resalta en amarillo: la fila con .live y el estado con .st.IN_PROGRESS o .st.ACTIVE.
  */
 .ev-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;background:var(--red);color:var(--on-color);padding:32px 48px;min-height:166px}
@@ -280,13 +272,11 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .st.SCHEDULED{background:var(--info-bg);color:var(--info);border:1px solid var(--info-line)}
 .st.IN_PROGRESS,.st.ACTIVE{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-line)}
 .st.FINISHED,.st.ARCHIVED{background:var(--ink);color:var(--on-color)}
-.ev-empty{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:48px;text-align:center;color:var(--mut)}
 .ev-pager{display:flex;justify-content:space-between;align-items:center;color:var(--mut);font-size:13px}
 .ev-pager div{display:flex;gap:8px}
 .ev-acts .btn.white:hover{border-color:var(--red);color:var(--red)}
 .ev-table .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;color:var(--mut);margin-top:4px}
 @media(max-width:760px){.ev-head,.ev-main{padding-left:16px;padding-right:16px}.ev-head{min-height:0;padding-top:20px;padding-bottom:24px}.ev-head h1{font-size:26px}.ev-head p{font-size:15px}.ev-table[data-tabla=fija]{display:block;overflow-x:auto}}
-.ev-empty .empty-logo{display:block;margin:0 auto 16px;max-width:160px;height:auto}
 /* Crear alerta: Inicio y Tipo comparten fila para no dejar espacios vacíos */
 .af .two>*{flex:1;min-width:0}.af-row{align-items:flex-start}
 
@@ -317,6 +307,7 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .msj>svg.i{width:20px;height:20px;margin-top:1px}
 .msj-cuerpo{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
 .msj-titulo{font:700 15px/20px 'Outfit',sans-serif}
+.msj-cuerpo small{display:block;font-size:12px;opacity:.85}
 .msj-soporte{font-size:12px;opacity:.85}
 .msj-acciones{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:6px}
 .msj .plink{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px}
@@ -333,6 +324,34 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .vacio h2{font:700 20px/26px 'Outfit',sans-serif;color:var(--ink);text-wrap:balance}
 .vacio p{max-width:52ch;color:var(--mut);font-size:14px;line-height:150%}
 .vacio-accion{margin-top:12px}
+/* Alerta activa (Inicio y pantalla de la alerta): instrucciones numeradas y «Confirmar recepción» como acción principal */
+.alerta-activa{display:flex;flex-direction:column;gap:16px;padding:20px;background:var(--surface);border:1.5px solid var(--red);border-radius:16px}
+.alerta-activa-cab{display:flex;align-items:flex-start;gap:14px}
+.alerta-activa-ico{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:12px;background:var(--err-bg);color:var(--red)}
+.alerta-activa-ico svg.i{width:22px;height:22px}
+.alerta-activa-tag{display:inline-block;margin-bottom:4px;font:700 12px/16px 'Outfit',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--red)}
+.alerta-activa h2{font:700 20px/26px 'Outfit',sans-serif;color:var(--ink);text-wrap:balance}
+.alerta-activa-meta{margin-top:4px;font-size:13px;color:var(--mut)}
+.alerta-activa-sub{font:700 16px/22px 'Outfit',sans-serif}
+.alerta-activa-pasos{margin:0;padding:0;list-style:none;counter-reset:paso;display:flex;flex-direction:column;gap:10px}
+.alerta-activa-pasos li{counter-increment:paso;display:flex;align-items:flex-start;gap:12px;font-size:16px;line-height:150%;font-weight:600}
+.alerta-activa-pasos li::before{content:counter(paso);display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:999px;background:var(--warn-bg);color:var(--warn);font:800 14px/1 'Outfit',sans-serif}
+.alerta-activa-btn{align-self:flex-start;min-width:240px}
+@media(max-width:600px){.alerta-activa{padding:16px}.alerta-activa-btn{align-self:stretch;min-width:0}}
+/* Alerta ya confirmada: una sola línea (título y «Recepción confirmada») que se abre para ver las instrucciones */
+.alerta-activa.confirmada{gap:0;padding:0;border:1px solid var(--ok-line);background:var(--ok-bg)}
+.alerta-activa.confirmada summary{display:flex;align-items:center;gap:12px;min-height:var(--tap);padding:10px 16px;list-style:none;cursor:pointer;border-radius:16px}
+.alerta-activa.confirmada summary::-webkit-details-marker{display:none}
+.alerta-activa.confirmada summary::after{content:'';flex:none;width:10px;height:10px;margin-left:auto;border-right:2px solid var(--ok);border-bottom:2px solid var(--ok);transform:rotate(45deg);transition:transform var(--dur-ui) var(--ease-out)}
+.alerta-activa.confirmada[open] summary::after{transform:rotate(-135deg)}
+.alerta-activa-ok{display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:999px;background:var(--ok);color:var(--on-color)}
+.alerta-activa-ok svg.i{width:16px;height:16px}
+.alerta-activa-linea{display:flex;flex-direction:column;min-width:0}
+.alerta-activa-linea b{font:700 15px/20px 'Outfit',sans-serif;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alerta-activa-linea small{font-size:13px;line-height:18px;color:var(--ok)}
+.alerta-activa-detalle{display:flex;flex-direction:column;gap:12px;padding:4px 16px 16px;border-top:1px solid var(--ok-line);background:var(--surface);border-radius:0 0 16px 16px}
+.alerta-activa-detalle .alerta-activa-meta{margin-top:12px}
+@media(prefers-reduced-motion:reduce){.alerta-activa.confirmada summary::after{transition:none}}
 
 /* ===== Carga (shared/components/Cargando.tsx) ===== */
 .cargando{display:flex;align-items:center;gap:10px;padding:12px 0;color:var(--mut);font-size:14px}

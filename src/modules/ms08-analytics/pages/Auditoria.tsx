@@ -1,3 +1,6 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
 import { etiquetaCodigo, textoLegible } from '../../../shared/utils/etiquetas';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
@@ -8,7 +11,6 @@ import { isTechnicalId, withoutIds } from '../../../shared/utils/text';
 import { PERMISSION as MS01_PERMISSION } from '../../ms01-identity/utils/permissions';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { eventsApi } from '../../ms06-drills/services/events';
-import ErrorNotice from '../components/ErrorNotice';
 import FiltroBusqueda, { type Opcion } from '../components/FiltroBusqueda';
 import { useEventNames } from '../hooks/useEventNames';
 import { useUserNames } from '../hooks/useUserNames';
@@ -255,11 +257,13 @@ export default function Auditoria({ session }: { session: Session }) {
         </form>
         <p className="help">Las fechas y horas se muestran en hora de Bogotá.</p>
 
-        {error !== null && <ErrorNotice error={error} onRetry={load} />}
-        {(loading || buscando) && <p className="notice" role="status">{buscando ? 'Buscando…' : 'Cargando registros de auditoría…'}</p>}
+        {error !== null && <Mensaje error={error} onReintentar={load} />}
+        {(loading || buscando) && <Cargando texto={buscando ? 'Buscando…' : 'Cargando registros de auditoría…'} />}
 
         {!loading && error === null && data && items.length === 0 && (
-          <div className="ev-empty">{anyFilter ? 'No hay registros que coincidan con los filtros.' : 'Todavía no hay registros de auditoría.'}</div>
+          anyFilter
+            ? <EstadoVacio titulo="Ningún registro coincide con los filtros">Quite algún filtro para ver más registros.</EstadoVacio>
+            : <EstadoVacio titulo="Todavía no hay registros de auditoría" />
         )}
 
         {items.length > 0 && (

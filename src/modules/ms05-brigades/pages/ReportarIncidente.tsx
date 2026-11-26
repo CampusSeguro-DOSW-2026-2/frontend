@@ -1,5 +1,8 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
-import { Info, Send } from '../../../shared/components/Icons';
+import { Send } from '../../../shared/components/Icons';
 import { PageHeader } from '../../../shared/components/Layout';
 import { ApiError, errorMessage, type FieldErrors } from '../../../shared/services/http';
 import { hasPermission } from '../../../shared/services/session';
@@ -167,9 +170,9 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
           ? <button type="button" className="rs-back" onClick={() => setPaso('prioridad')}>← Volver a seleccionar prioridad</button>
           : <a className="rs-back" href={back}>← {forOther ? 'Volver al panel brigadista' : 'Volver al evento'}</a>}
 
-        {event === undefined && <p className="notice" role="status">Cargando…</p>}
-        {event === null && !message && <div className="rs-card rs-empty">No hay un evento en ejecución. Las solicitudes de ayuda se habilitan cuando inicia un evento.</div>}
-        {message && <p className="notice err" role="alert">{message}</p>}
+        {event === undefined && <Cargando texto="Cargando…" />}
+        {event === null && !message && <EstadoVacio titulo="No hay un evento en ejecución">Las solicitudes de ayuda se habilitan cuando inicia un evento.</EstadoVacio>}
+        {message && <Mensaje tono="error">{message}</Mensaje>}
 
         {done && (
           <section className="rs-card" role="status">
@@ -265,7 +268,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
                 <p className="rs-sub">La solicitud aún no se ha enviado. Al enviarla, estará disponible para su atención por la brigada.</p>
                 <button type="submit" className="btn red rs-btn" disabled={saving}><Send />{saving ? 'Enviando…' : forOther ? 'Reportar incidente' : 'Enviar solicitud'}</button>
               </section>
-              <p className="rs-info"><Info /> La zona es necesaria. La descripción y la evidencia son opcionales y no impiden el envío.</p>
+              <Mensaje tono="info" compacto>La zona es necesaria. La descripción y la evidencia son opcionales y no impiden el envío.</Mensaje>
             </aside>
           </form>
         )}

@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useCallback, useEffect, useState } from 'react';
 import { Building } from '../../../shared/components/Icons';
 import { confirmar } from '../../../shared/services/feedback';
@@ -180,9 +182,9 @@ export default function GaleriaImagenes({
         )}
       </div>
 
-      {error && <p className="cs-alert warn" role="alert">{error}</p>}
+      {error && <Mensaje tono="aviso">{error}</Mensaje>}
       {cargando ? (
-        <p className="cs-vacio">Cargando fotografías…</p>
+        <Cargando texto="Cargando fotografías…" />
       ) : fotos.length === 0 ? (
         <SinFoto nombre={nombre} />
       ) : (

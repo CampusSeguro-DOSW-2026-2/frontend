@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Session } from '../../shared/types';
+import { Mensaje } from '../../shared/components/Mensaje';
 import { PERMISSION } from '../../shared/permissions';
 import { hasPermission } from '../../shared/services/session';
 import EventosActivos from './pages/EventosActivos';
@@ -8,7 +9,7 @@ import CentroEvento from './pages/CentroEvento';
 import PanelEvento from './pages/PanelEvento';
 import Inicio from './pages/Inicio';
 
-const SIN_ACCESO = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
+const SIN_ACCESO = <main className="page"><Mensaje tono="error">No tiene permisos para ver esta sección.</Mensaje></main>;
 
 /** Rutas de MS04. Devuelve undefined si la ruta no es de este módulo. */
 export function evacuationRoutes(route: string, session: Session | null): ReactNode | undefined {

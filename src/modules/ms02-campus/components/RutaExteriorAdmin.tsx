@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useRef, useState } from 'react';
 import { campus, comoCampusError } from '../services/campus';
@@ -24,7 +25,7 @@ function Recorrido({ ruta, zona }: { ruta: RutaExterior; zona?: string }) {
         {ruta.duracionSegundos != null && ` · unos ${duracion(ruta.duracionSegundos)}`}
         <span className="cs-sub">Calculada el {fecha(ruta.calculadaEn)}</span>
       </p>
-      {ruta.motivo && <p className="cs-alert warn">{ruta.motivo}</p>}
+      {ruta.motivo && <Mensaje tono="aviso">{ruta.motivo}</Mensaje>}
       {ruta.pasos.length > 0 && (
         <details className="cs-guia-pasos">
           <summary>Pasos del recorrido ({ruta.pasos.length})</summary>
@@ -86,7 +87,7 @@ function GeneradorRutas() {
         </button>
       </div>
       {resumen && (
-        <p className={`cs-alert ${resumen.interrumpida ? 'warn' : 'info'}`} role="status">
+        <Mensaje tono={resumen.interrumpida ? 'aviso' : 'info'}>
           {resumen.interrumpida
             ? 'El servicio de mapas dejó de responder y se detuvo la generación. Vuelva a intentarlo en unos minutos; solo se calcularán las que falten.'
             : resumen.generadas === 0 && resumen.omitidas === 0
@@ -97,13 +98,13 @@ function GeneradorRutas() {
               {plural(resumen.omitidas, 'ruta omitida', 'rutas omitidas')}: no hay recorrido a pie, o la salida o la zona no están disponibles.
             </small>
           )}
-        </p>
+        </Mensaje>
       )}
       {error && (seCortoLaEspera(error)
-        ? <p className="cs-alert info" role="status">
+        ? <Mensaje tono="info">
             La generación puede seguir en segundo plano aunque la respuesta tardó demasiado. Revise las rutas guardadas de
             una salida en un momento.
-          </p>
+          </Mensaje>
         : <Falla error={error} />)}
     </div>
   );

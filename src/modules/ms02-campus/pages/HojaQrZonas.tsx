@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError, descargarQr } from '../services/campus';
@@ -73,7 +74,7 @@ export default function HojaQrZonas({ zonaId }: { zonaId?: string }) {
           </div>
         )}
         {tarjetas?.length === 0 && (
-          <p className="cs-alert info">{zonaId ? 'Esta zona no existe o no está activa.' : 'No hay zonas seguras activas para imprimir.'}</p>
+          <Mensaje tono="info">{zonaId ? 'Esta zona no existe o no está activa.' : 'No hay zonas seguras activas para imprimir.'}</Mensaje>
         )}
         {tarjetas && tarjetas.length > 0 && (
           <ul className="qr-hoja">

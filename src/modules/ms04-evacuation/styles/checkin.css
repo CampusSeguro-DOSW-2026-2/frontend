@@ -5,7 +5,6 @@
 .chk-evento h3{font:700 22px/28px 'Outfit',sans-serif}
 .chk-meta{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:14px;color:var(--mut)}
 .chk-meta b{font-weight:600;color:var(--ink)}
-.chk-retry{align-self:flex-start}
 .chk-ir{align-self:flex-start;text-decoration:none;margin-top:4px}
 /* Reporte de estado (F-01) */
 .chk-actual{display:flex;flex-direction:column;gap:4px;background:var(--cream);border:1px solid var(--red);border-radius:16px;padding:20px 24px}
@@ -25,7 +24,6 @@
 .chk-punto:hover:not(:disabled){border-color:var(--red)}
 .chk-punto[aria-pressed=true]{background:var(--cream);border-color:var(--red)}
 .chk-punto:disabled{cursor:default;opacity:.6}
-.notice.chk-ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--ok)}
 /* Lista de eventos (F-07) */
 .chk-tabs{display:flex;gap:8px;flex-wrap:wrap}
 .chk-tab{height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px 'Outfit',sans-serif;cursor:pointer}
@@ -40,7 +38,6 @@
 .chk-st.FINALIZADO{background:var(--ink);color:var(--on-color)}
 .chk-habilitado{align-self:flex-start;font-size:13px;color:var(--mut)}
 .chk-habilitado.si{color:var(--ok);font-weight:600}
-.chk-vacio{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:48px;text-align:center;color:var(--mut)}
 .chk-pager{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:var(--mut);font-size:13px}
 .chk-pager div{display:flex;gap:8px}
 @media(max-width:900px){.chk-opciones{grid-template-columns:1fr}}
@@ -66,7 +63,6 @@
 .chk-estado:disabled{cursor:default;opacity:.7}
 .chk-paso{font:700 18px/24px 'Outfit',sans-serif}
 .chk-checkin .chk-puntos{border-top:1px solid var(--line);padding-top:20px}
-.chk-info{display:flex;align-items:flex-start;gap:10px;background:var(--neutral-bg);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--mut)}
 .chk-nota{margin-top:12px;font-size:13px;color:var(--mut)}
 
 /* Panel del evento para el personal */
@@ -75,7 +71,6 @@
 .chk-tarjeta-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .chk-actualizar{height:44px;border-color:var(--red);color:var(--red)}
 .chk-seccion{display:flex;flex-direction:column;gap:16px}
-.chk-error{display:flex;flex-direction:column;gap:12px}
 .chk-segmentos{display:flex;gap:4px;flex-wrap:wrap;padding:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;align-self:flex-start}
 .chk-segmento{height:var(--tap);padding:0 16px;border:0;border-radius:8px;background:none;color:var(--mut);font:700 14px 'Outfit',sans-serif;cursor:pointer}
 .chk-segmento[aria-selected=true]{background:var(--surface);color:var(--red);box-shadow:var(--shadow-sm)}

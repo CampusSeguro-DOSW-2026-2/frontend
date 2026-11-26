@@ -15,6 +15,7 @@ usa estas piezas en vez de crear las suyas.
 | Avisar que algo salió bien (con «Deshacer» opcional) | `avisar()` de `shared/services/feedback.ts` | `avisar({ tono: 'exito', texto: 'Edificio inactivado.', deshacer: () => reactivar(id) })` |
 | Campo de formulario | `shared/components/Campo.tsx` | Etiqueta, ayuda, error, opcional y contraseña con `aria-invalid` y `aria-describedby` |
 | Fecha y hora | `shared/components/DateTimeField.tsx` | Formato `es-CO` («12 oct 2026 · 10:05 a. m.») |
+| Alerta activa con instrucciones y «Confirmar recepción» | `shared/components/AlertaActiva.tsx` | `<AlertaActiva alerta={…} onConfirmar={() => activeAlertApi.confirmAlert(id)} />` (Inicio y pantalla de la alerta) |
 
 `window.confirm` y `window.alert` no se usan.
 

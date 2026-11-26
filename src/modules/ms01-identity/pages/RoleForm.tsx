@@ -1,3 +1,5 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PermissionPicker } from '../components/PermissionPicker';
@@ -129,7 +131,7 @@ export default function RoleForm({ session, mode, role }: Props) {
         <PageHeader volver={{ href: '#/roles', texto: 'Roles' }} badge="ADMINISTRACIÓN" title="Editar rol" subtitle="Cambie el nombre, la descripción o los permisos del rol." />
         <main className="content narrow">
           <section className="panel">
-            <p className="notice" role="status">No hay un rol elegido. Vuelva a la lista de roles y elija uno.</p>
+            <Mensaje tono="info">No hay un rol elegido. Vuelva a la lista de roles y elija uno.</Mensaje>
             <a className="btn white" href="#/roles">Volver a los roles</a>
           </section>
         </main>
@@ -164,11 +166,11 @@ export default function RoleForm({ session, mode, role }: Props) {
 
           {catalogError && (
             <>
-              <p className="notice err" role="alert">{catalogError}</p>
+              <Mensaje tono="error">{catalogError}</Mensaje>
               <button type="button" className="btn white rolesbar" onClick={() => setAttempt((n) => n + 1)}>Reintentar</button>
             </>
           )}
-          {!catalogError && !catalog && <p className="notice" role="status">Cargando los permisos…</p>}
+          {!catalogError && !catalog && <Cargando texto="Cargando los permisos…" />}
           {catalog && (
             <PermissionPicker id="permissions" catalog={catalog} value={form.permissions}
               onChange={(permissions) => set('permissions', permissions)}
@@ -177,9 +179,9 @@ export default function RoleForm({ session, mode, role }: Props) {
           )}
 
           {!creating && ((infoChanged && form.name.trim().toUpperCase() !== saved?.role) || permissionsChanged) && (
-            <p className="notice" role="status">Se cerrará la sesión de los usuarios que tienen este rol.</p>
+            <Mensaje tono="info">Se cerrará la sesión de los usuarios que tienen este rol.</Mensaje>
           )}
-          {serverError && <p className="notice err" role="alert">{serverError}</p>}
+          {serverError && <Mensaje tono="error">{serverError}</Mensaje>}
 
           <div className="actions">
             <button type="submit" className="btn red" disabled={submitting || !catalog || nothingChanged}>

@@ -1,3 +1,7 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { confirmar } from '../../../shared/services/feedback';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh';
 import { PERMISSION } from '../../../shared/permissions';
@@ -28,6 +32,8 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
   const [eventoId, setEventoId] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  // Error de una acción (activarse, finalizar, quitar la zona); el de la carga va en `error`, con «Reintentar»
+  const [fallo, setFallo] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [editandoZona, setEditandoZona] = useState(false);
@@ -70,12 +76,13 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
   const disponible = async () => {
     setBusy(true);
     setNotice('');
+    setFallo('');
     try {
       await brigadesApi.cambiarEstado(session, 'ACTIVO');
       await cargar();
       setNotice('Quedó disponible. Ahora elija el evento y su zona para atender.');
     } catch (err) {
-      setNotice(errorMessage(err));
+      setFallo(errorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -83,16 +90,22 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
 
   // "Finalizar": el brigadista deja de estar disponible (queda INACTIVO) hasta que se active de nuevo.
   const finalizar = async () => {
-    if (!window.confirm('¿Finalizar su turno? Quedará como no disponible y no recibirá nuevas asignaciones.')) return;
+    if (!(await confirmar({
+      titulo: '¿Finalizar su turno?',
+      texto: 'Quedará como no disponible y no recibirá nuevas asignaciones hasta que vuelva a activarse.',
+      accion: 'Finalizar mi turno',
+      peligro: true,
+    }))) return;
     setBusy(true);
     setNotice('');
+    setFallo('');
     try {
       await brigadesApi.cambiarEstado(session, 'INACTIVO');
       await cargar();
       setEditandoZona(false);
       setNotice('Finalizó su turno: quedó como no disponible.');
     } catch (err) {
-      setNotice(errorMessage(err));
+      setFallo(errorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -100,16 +113,22 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
 
   const quitarZona = async () => {
     if (!actual?.ubicacionId) return;
-    if (!window.confirm(`¿Quitar su asignación de ${miZona || 'su edificio'}?`)) return;
+    if (!(await confirmar({
+      titulo: `¿Quitar su asignación de ${miZona || 'su edificio'}?`,
+      texto: 'Dejará de recibir los incidentes de esa zona. Puede elegir otra cuando quiera.',
+      accion: 'Quitar mi asignación',
+      peligro: true,
+    }))) return;
     setBusy(true);
     setNotice('');
+    setFallo('');
     try {
       await brigadesApi.quitarEdificio(session, actual.evento.eventoId);
       await cargar();
       setEditandoZona(false);
       setNotice('Quitó su asignación. Puede elegir otro edificio cuando quiera.');
     } catch (err) {
-      setNotice(errorMessage(err));
+      setFallo(errorMessage(err));
     } finally {
       setBusy(false);
     }
@@ -130,14 +149,13 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
         </div>
       </header>
       <main className="ev-main">
-        {notice && <p className="notice" role="status">{notice}</p>}
-        {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={() => void cargar()}>Reintentar</button></p>}
-        {loading && <p className="notice" role="status">Cargando…</p>}
+        {notice && <Mensaje tono="exito">{notice}</Mensaje>}
+        {fallo && <Mensaje tono="error">{fallo}</Mensaje>}
+        {error && <Mensaje tono="error" onReintentar={() => void cargar()}>{error}</Mensaje>}
+        {loading && <Cargando texto="Cargando…" />}
 
         {!loading && eventos.length === 0 && (
-          <div className="ev-empty">
-            No hay eventos programados ni en ejecución. Cuando se programe uno, aquí podrá elegir su zona y atender incidentes.
-          </div>
+          <EstadoVacio titulo="No hay eventos programados ni en ejecución">Cuando se programe uno, aquí podrá elegir su zona y atender incidentes.</EstadoVacio>
         )}
 
         {eventos.length > 1 && (
@@ -166,7 +184,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
         )}
 
         {actual && !activo && (
-          <p className="notice" role="status">Actívese para elegir su zona y atender incidentes.</p>
+          <Mensaje tono="info">Actívese para elegir su zona y atender incidentes.</Mensaje>
         )}
 
         {actual && activo && (
@@ -220,7 +238,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
                     <IncidentesEvento session={session} eventoId={actual.evento.eventoId} modo="brigadista" refresco={tick} />
                   </>
                 )
-              : <div className="ev-empty">El evento aún no está en ejecución. Cuando inicie, aquí verá los incidentes de su zona.</div>}
+              : <EstadoVacio titulo="El evento aún no está en ejecución">Cuando inicie, aquí verá los incidentes de su zona.</EstadoVacio>}
           </section>
         )}
       </main>

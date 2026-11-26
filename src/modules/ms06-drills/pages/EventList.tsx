@@ -1,3 +1,6 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useCallback, useEffect, useState } from 'react';
 import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh';
 import { Edit, Plus, Search } from '../../../shared/components/Icons';
@@ -69,11 +72,13 @@ export default function EventList({ session, canManage }: { session: Session; ca
           </form>
         </div>
 
-        {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
-        {loading && !data && <p className="notice" role="status">Cargando eventos…</p>}
+        {error && <Mensaje tono="error" onReintentar={load}>{error}</Mensaje>}
+        {loading && !data && <Cargando texto="Cargando eventos…" />}
 
         {data && items.length === 0 && (
-          <div className="ev-empty">{query || status ? 'No hay eventos que coincidan con la búsqueda.' : 'Todavía no hay eventos.'}</div>
+          query || status
+            ? <EstadoVacio titulo="Ningún evento coincide con la búsqueda">Pruebe con otras palabras o cambie el estado elegido.</EstadoVacio>
+            : <EstadoVacio titulo="Todavía no hay eventos" />
         )}
 
         {items.length > 0 && (

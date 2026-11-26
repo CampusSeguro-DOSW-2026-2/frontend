@@ -1,3 +1,6 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
@@ -80,7 +83,7 @@ export default function AdminEvaluaciones({ session }: { session: Session }) {
     <>
       <PageHeader badge="ADMINISTRACIÓN" title="Evaluaciones" subtitle="Cree las evaluaciones cortas de cada categoría" />
       <main className="content">
-        {aviso && <p className="notice err" role="alert">{aviso}</p>}
+        {aviso && <Mensaje tono="error">{aviso}</Mensaje>}
 
         {edicion ? (
           <EditorEvaluacion key={edicion.tipo === 'modificar' ? edicion.evaluacion.id : 'nueva'}
@@ -94,10 +97,10 @@ export default function AdminEvaluaciones({ session }: { session: Session }) {
           </div>
         )}
 
-        {errorCarga && <p className="notice err" role="alert">{errorCarga}</p>}
-        {!evaluaciones && !errorCarga && <p className="notice" role="status">Cargando las evaluaciones…</p>}
+        {errorCarga && <Mensaje tono="error">{errorCarga}</Mensaje>}
+        {!evaluaciones && !errorCarga && <Cargando texto="Cargando las evaluaciones…" />}
         {evaluaciones && evaluaciones.length === 0 && (
-          <div className="evl-vacio" role="status">Todavía no hay evaluaciones. Cree la primera.</div>
+          <EstadoVacio titulo="Todavía no hay evaluaciones">Cree la primera.</EstadoVacio>
         )}
 
         {evaluaciones && evaluaciones.length > 0 && (

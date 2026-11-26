@@ -1,3 +1,5 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { etiquetaRol } from '../../../shared/utils/etiquetas';
 import { useCallback, useEffect, useState } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
@@ -25,7 +27,7 @@ const INFO_ONLY = ['NO_CHECKINS', 'NO_INCIDENTS', 'NO_BRIGADIERS', 'NO_RECORDS']
 function Warnings({ items }: { items: EventWarning[] }) {
   const shown = items.filter((w) => !INFO_ONLY.includes(w.code));
   if (!shown.length) return null;
-  return <>{shown.map((w) => <div key={w.code + w.message} className="ev-warn" role="status">{warningText(w)}</div>)}</>;
+  return <>{shown.map((w) => <Mensaje key={w.code + w.message} tono="aviso" compacto>{warningText(w)}</Mensaje>)}</>;
 }
 
 /** Convocados y reportados según MS04 (sus resultados traen la población objetivo); null si no se pueden consultar. */
@@ -85,10 +87,10 @@ function Live({ m, catalog, turnout }: { m: Monitoring; catalog: ScopeCatalog | 
 }
 
 function Results({ e, names, turnout }: { e: Evaluation; names: Record<string, string>; turnout: Turnout | null }) {
-  if (e.noRecords) return <p className="notice">Todavía no hay registros de check-in, solicitudes de ayuda ni incidentes para este evento.</p>;
+  if (e.noRecords) return <Mensaje tono="info">Todavía no hay registros de check-in, solicitudes de ayuda ni incidentes para este evento.</Mensaje>;
   return (
     <>
-      {!e.complete && <div className="ev-warn" role="status">Algunas cifras aún no llegan de check-in o de brigadistas; se completan solas en unos minutos.</div>}
+      {!e.complete && <Mensaje tono="aviso" compacto>Algunas cifras aún no llegan de check-in o de brigadistas; se completan solas en unos minutos.</Mensaje>}
       <section className="ev-kpis" aria-label="Resultados">
         <div className="ev-kpi"><small>Participación en check-in</small><b>{pct(participationText(e.checkinParticipationPct, turnout).value)}</b><span>{participationText(e.checkinParticipationPct, turnout).detail || `${e.totalCheckins ?? '—'} check-ins`}</span></div>
         <div className="ev-kpi"><small>Incidentes</small><b>{e.totalIncidents ?? '—'}</b><span>{e.casesResolved ?? 0} resueltos</span></div>
@@ -212,7 +214,7 @@ export default function EventDetail({ session, id }: { session: Session; id: str
   };
 
   if (!data) {
-    return <main className="ev-main">{error ? <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p> : <p className="notice" role="status">Cargando evento…</p>}</main>;
+    return <main className="ev-main">{error ? <Mensaje tono="error" onReintentar={load}>{error}</Mensaje> : <Cargando texto="Cargando evento…" />}</main>;
   }
   const ev = data.event;
   const editable = canManageEvent(session, ev.simulacro) && ev.status !== 'FINISHED';
@@ -236,11 +238,11 @@ export default function EventDetail({ session, id }: { session: Session; id: str
         </div>
       </header>
       <main className="ev-main">
-        {error && <p className="notice err" role="alert">{error}</p>}
+        {error && <Mensaje tono="error">{error}</Mensaje>}
         <Warnings items={[...ev.warnings, ...finishWarnings, ...(data.monitoring?.messages ?? [])]} />
 
         {live && data.monitoring && <Live m={data.monitoring} catalog={catalog} turnout={turnout} />}
-        {live && !data.monitoring && <p className="notice">Por ahora no se pueden mostrar los indicadores en vivo. El seguimiento de abajo sigue disponible.</p>}
+        {live && !data.monitoring && <Mensaje tono="info">Por ahora no se pueden mostrar los indicadores en vivo. El seguimiento de abajo sigue disponible.</Mensaje>}
         {live && <p className="help">La información se actualiza sola cada {REFRESH_MS / 1000} segundos.</p>}
         {ev.status === 'FINISHED' && data.evaluation && <Results e={data.evaluation} names={brigadierNames} turnout={turnout} />}
         {finishedOrLive && <Tracking session={session} id={id} refresh={tick} names={brigadierNames}

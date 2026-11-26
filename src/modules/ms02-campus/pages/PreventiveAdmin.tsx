@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
@@ -191,7 +193,7 @@ export default function PreventiveAdmin() {
         {errorCarga && <Falla error={errorCarga} />}
         {aviso && <Falla error={aviso} />}
         {recomendaciones === null ? (
-          !errorCarga && <p className="cs-resumen">Cargando recomendaciones…</p>
+          !errorCarga && <Cargando texto="Cargando recomendaciones…" />
         ) : (
           <>
             <div className="cs-barra">
@@ -213,7 +215,7 @@ export default function PreventiveAdmin() {
             )}
 
             {recomendaciones.length === 0 && edicion?.tipo !== 'nueva' && (
-              <p className="cs-alert info">Aún no hay recomendaciones. Las que agregue aparecerán en la tarjeta de cada ruta.</p>
+              <Mensaje tono="info">Aún no hay recomendaciones. Las que agregue aparecerán en la tarjeta de cada ruta.</Mensaje>
             )}
 
             {porEdificio.length > 0 && (

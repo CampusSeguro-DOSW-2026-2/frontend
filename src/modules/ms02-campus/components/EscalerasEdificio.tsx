@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useCallback, useEffect, useState } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
 import {
@@ -223,8 +224,8 @@ export default function EscalerasEdificio({
         )}
       </div>
 
-      {error && <p className="cs-alert error" role="alert">{error}</p>}
-      {mensaje && <p className="cs-alert info" role="status">{mensaje}</p>}
+      {error && <Mensaje tono="error">{error}</Mensaje>}
+      {mensaje && <Mensaje tono="info">{mensaje}</Mensaje>}
 
       {mostrarFormulario && puedeGestionar && (
         <form className="cs-editor" onSubmit={crear}>
@@ -291,7 +292,7 @@ export default function EscalerasEdificio({
       {cargando ? (
         <p>Cargando escaleras…</p>
       ) : escaleras.length === 0 ? (
-        <p className="cs-alert info">Este edificio todavía no tiene escaleras registradas.</p>
+        <Mensaje tono="info">Este edificio todavía no tiene escaleras registradas.</Mensaje>
       ) : (
         <div className="cs-lista">
           {escaleras.map((escalera) => (

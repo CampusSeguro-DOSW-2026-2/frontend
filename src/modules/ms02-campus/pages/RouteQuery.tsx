@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useRef, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { MapIcon } from '../../../shared/components/Icons';
@@ -52,7 +53,8 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
           {ruta.motivo && <div className="sm"><small>Motivo</small><p>{ruta.motivo}</p></div>}
         </>
       )}
-      {ruta.mensaje && !soloGuia && <p className={`cs-alert ${tono}`}>{ruta.mensaje}</p>}
+      {/* Con la ruta disponible el mensaje sobra (antes .cs-alert.ok quedaba oculto) */}
+      {ruta.mensaje && !soloGuia && tono !== 'ok' && <Mensaje tono={tono === 'stop' ? 'error' : tono === 'warn' ? 'aviso' : 'info'}>{ruta.mensaje}</Mensaje>}
       <GuiaDeRuta espacioId={ruta.espacioId} inicial={ruta.guia} />
       {recomendaciones.length > 0 && (
         <section className="cs-preventivas" aria-label="Recomendaciones preventivas">
@@ -163,7 +165,7 @@ export default function RouteQuery() {
           </button>
         </form>
 
-        {edificios?.length === 0 && !error && <p className="cs-alert info">Aún no hay edificios activos registrados.</p>}
+        {edificios?.length === 0 && !error && <Mensaje tono="info">Aún no hay edificios activos registrados.</Mensaje>}
         {error && <Falla error={error} />}
 
         {rutas && (
@@ -173,7 +175,7 @@ export default function RouteQuery() {
               {!espacioId && rutas.length > 0 && <span className="cs-resumen">{resumen(rutas)}</span>}
             </div>
             {rutas.length === 0
-              ? <p className="cs-alert info">Este edificio no tiene espacios disponibles para consultar.</p>
+              ? <Mensaje tono="info">Este edificio no tiene espacios disponibles para consultar.</Mensaje>
               : <div className="cs-lista">{rutas.map((r) => <Resultado key={`${consulta}-${r.espacioId}`} ruta={r} />)}</div>}
           </section>
         )}

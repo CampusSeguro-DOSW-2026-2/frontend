@@ -6,7 +6,10 @@ import { PERMISSION } from '../../../shared/permissions';
 import { errorMessage } from '../../../shared/services/http';
 import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
+import { AlertaActiva } from '../../../shared/components/AlertaActiva';
 import { USE_MS03, activeAlertApi, type ActiveAlert } from '../../ms03-alerts/services/activeAlert';
+import { OPERATIONAL_TYPE, scopeText } from '../../ms03-alerts/services/catalog';
+import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { AccionesEvento } from '../components/AccionesEvento';
 import { OtrosEventos } from '../components/OtrosEventos';
 import { eventsApi } from '../../ms06-drills/services/events';
@@ -37,7 +40,8 @@ const fechaDe = (e: Evento) => (e.fecha_inicio ? new Date(e.fecha_inicio).getTim
  * Pantalla de inicio: muestra lo que está ocurriendo en este momento y se actualiza sola cada 10 s (y al volver a la
  * pestaña). Con un evento en ejecución es el Centro del evento (nombre, accesos rápidos y check-in); si hay varios,
  * muestra el más reciente y una tarjeta con los demás para cambiar a cualquiera de ellos sin salir de Inicio (si el
- * elegido termina, vuelve al más reciente). Sin evento, la alerta activa de MS03 con los accesos. Sin nada, el aviso
+ * elegido termina, vuelve al más reciente). La alerta activa de MS03 (instrucciones y «Confirmar recepción») va primero
+ * en todas las variantes; con un evento, encima del check-in. Sin evento ni alerta, el aviso
  * de que el campus está seguro y los accesos. Cada fuente se consulta solo con su permiso.
  */
 export default function Inicio({ session }: { session: Session }) {
@@ -53,6 +57,8 @@ export default function Inicio({ session }: { session: Session }) {
   const puedeVerEnVivo = hasPermission(session, PERMISSION.MS06_DRILL_READ, PERMISSION.MS06_REAL_EVENT_READ,
     PERMISSION.MS06_DRILL_MANAGE, PERMISSION.MS06_REAL_EVENT_MANAGE);
   const puedeVerPanel = hasPermission(session, PERMISSION.MS04_DASHBOARD_READ);
+  // Nombres de edificios y zonas (MS02) para el alcance de la alerta; solo se consultan si se pueden ver alertas
+  const { catalog } = useScopeCatalog(puedeVerAlertas);
 
   const enSeguimiento = useCallback(async (): Promise<EnSeguimiento[]> => {
     if (puedeVerEnVivo) {
@@ -106,6 +112,27 @@ export default function Inicio({ session }: { session: Session }) {
     return <main className="content"><Cargando texto="Consultando si hay un evento o una alerta en curso…" /></main>;
   }
 
+  // Alerta activa de MS03 con sus instrucciones y «Confirmar recepción» (confirmAlert de MS03). Va primero en todas las
+  // variantes de Inicio; con un evento en curso, encima del check-in
+  const { alerta } = enCurso;
+  const tarjetaAlerta = (mostrarTitulo: boolean) => alerta && (
+    <AlertaActiva key={alerta.id} mostrarTitulo={mostrarTitulo}
+      alerta={{
+        titulo: alerta.title,
+        instrucciones: alerta.instructions,
+        alcance: scopeText(alerta.scope, catalog, alerta.scopes),
+        iniciada: fechaHora(alerta.startedAt),
+        operativa: alerta.types.length === 1 && alerta.types[0] === OPERATIONAL_TYPE,
+        confirmada: alerta.confirmed,
+      }}
+      onConfirmar={async () => {
+        await activeAlertApi.confirmAlert(alerta.id);
+        setEnCurso((previo) => (previo?.alerta?.id === alerta.id
+          ? { ...previo, alerta: { ...previo.alerta, confirmed: true } }
+          : previo));
+      }} />
+  );
+
   // El evento elegido mientras siga en curso; si no, el más reciente
   const evento = enCurso.eventos.find((e) => e.evento_id === elegidoId) ?? enCurso.eventos[0];
   if (evento) {
@@ -119,7 +146,7 @@ export default function Inicio({ session }: { session: Session }) {
     if (puedeReportar) {
       return (
         <CentroEvento key={evento.evento_id} session={session} eventoId={evento.evento_id} eventoActual={evento}
-          aviso={aviso} despues={otrosEventos} />
+          alerta={tarjetaAlerta(true)} aviso={aviso} despues={otrosEventos} />
       );
     }
     return (
@@ -130,7 +157,7 @@ export default function Inicio({ session }: { session: Session }) {
           subtitle="Evacuación del campus en curso"
           context={evento.fecha_inicio ? `Iniciado: ${fechaHora(evento.fecha_inicio)}` : undefined}
         />
-        <main className="content">{aviso}<AccionesEvento session={session} />{otrosEventos}</main>
+        <main className="content">{tarjetaAlerta(true)}{aviso}<AccionesEvento session={session} />{otrosEventos}</main>
       </>
     );
   }
@@ -143,6 +170,7 @@ export default function Inicio({ session }: { session: Session }) {
         <PageHeader badge="EVENTOS EN CURSO" title={n === 1 ? 'Hay 1 evento en ejecución' : `Hay ${n} eventos en ejecución`}
           subtitle="Siga el estado de las personas y los incidentes de cada evento." />
         <main className="content">
+          {tarjetaAlerta(true)}
           {aviso}
           <AccionesEvento session={session} />
           <section className="chk-otros" aria-label="Eventos en ejecución">
@@ -164,7 +192,6 @@ export default function Inicio({ session }: { session: Session }) {
     );
   }
 
-  const { alerta } = enCurso;
   // «El campus está seguro» solo lo dice quien puede ver eventos o alertas; otro rol ve un inicio neutro
   const puedeSaber = puedeVerEventos || puedeVerAlertas || puedeVerEnVivo || puedeVerPanel;
   return (
@@ -175,7 +202,7 @@ export default function Inicio({ session }: { session: Session }) {
         : puedeSaber
           ? <PageHeader badge="SIN EVENTOS EN CURSO" title="El campus está seguro" subtitle="No hay eventos ni alertas activas." />
           : <PageHeader badge="INICIO" title="Bienvenido a CampusSeguro" subtitle="Use el menú para ir a las secciones que administra." />}
-      <main className="content">{aviso}<AccionesEvento session={session} /></main>
+      <main className="content">{tarjetaAlerta(false)}{aviso}<AccionesEvento session={session} /></main>
     </>
   );
 }

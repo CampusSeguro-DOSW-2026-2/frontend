@@ -63,12 +63,13 @@ type Vigente =
  * formulario, que registra aquí el estado y deja en MS05 la prioridad, la descripción y la evidencia. Sin ese permiso
  * se pide solo el lugar, como antes.
  *
- * La pantalla de inicio la usa con el evento que ya consultó (`eventoActual`), así no lo vuelve a pedir, con un aviso
- * (`aviso`) que va arriba y con lo que va después del check-in y los accesos (`despues`: los otros eventos en curso).
- * En celular, el check-in y el estado actual quedan visibles sin desplazarse.
+ * La pantalla de inicio la usa con el evento que ya consultó (`eventoActual`), así no lo vuelve a pedir; con la alerta
+ * activa de MS03 (`alerta`), que va encima del check-in; con un aviso (`aviso`, p. ej. un servicio que no responde) que
+ * va debajo del check-in, y con lo que va después de los accesos (`despues`: los otros eventos en curso). En celular,
+ * el check-in y el estado actual quedan visibles sin desplazarse.
  */
-export default function CentroEvento({ session, eventoId, eventoActual, aviso, despues }: {
-  session: Session; eventoId: string; eventoActual?: Evento; aviso?: ReactNode; despues?: ReactNode;
+export default function CentroEvento({ session, eventoId, eventoActual, alerta, aviso, despues }: {
+  session: Session; eventoId: string; eventoActual?: Evento; alerta?: ReactNode; aviso?: ReactNode; despues?: ReactNode;
 }) {
   const [eventoConsultado, setEventoConsultado] = useState<Evento | null>(null);
   const evento = eventoActual ?? eventoConsultado;
@@ -209,7 +210,7 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso, d
         context={evento?.fecha_inicio ? `Iniciado: ${fechaHora(evento.fecha_inicio)}` : undefined}
       />
       <main className="content">
-        {aviso}
+        {alerta}
 
         <section className="chk-checkin" aria-labelledby="chk-estado-titulo">
           <div className="chk-checkin-cab">
@@ -303,6 +304,9 @@ export default function CentroEvento({ session, eventoId, eventoActual, aviso, d
           {error && !errorCampo && <Mensaje tono="error">{error}</Mensaje>}
           {confirmado && actual && <Mensaje tono="exito">{mensajeExito(actual)}</Mensaje>}
         </section>
+
+        {/* Un servicio que no responde no debe empujar el check-in hacia abajo: el aviso va después */}
+        {aviso}
 
         <AccionesEvento session={session} />
         {despues}

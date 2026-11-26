@@ -1,3 +1,7 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { confirmar } from '../../../shared/services/feedback';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
@@ -42,6 +46,7 @@ export default function IncidentesEvento({ session, eventoId, modo, nombresBriga
   const [elegido, setElegido] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [aviso, setAviso] = useState('');
+  const [fallo, setFallo] = useState('');
   const [data, setData] = useState<Pagina<IncidenteResumen> | null>(null);
   const [page, setPage] = useState(0);
   const [error, setError] = useState('');
@@ -63,13 +68,14 @@ export default function IncidentesEvento({ session, eventoId, modo, nombresBriga
   const ejecutar = async (accion: () => Promise<unknown>, exito: string) => {
     setOcupado(true);
     setAviso('');
+    setFallo('');
     try {
       await accion();
       setAviso(exito);
       setAsignando(null);
       load();
     } catch (err) {
-      setAviso(errorMessage(err));
+      setFallo(errorMessage(err));
     } finally {
       setOcupado(false);
     }
@@ -79,11 +85,12 @@ export default function IncidentesEvento({ session, eventoId, modo, nombresBriga
 
   return (
     <>
-      {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
-      {!error && data === null && <p className="notice" role="status">Cargando incidentes…</p>}
-      {aviso && <p className="notice" role="status">{aviso}</p>}
+      {error && <Mensaje tono="error" onReintentar={load}>{error}</Mensaje>}
+      {!error && data === null && <Cargando texto="Cargando incidentes…" />}
+      {aviso && <Mensaje tono="exito">{aviso}</Mensaje>}
+      {fallo && <Mensaje tono="error">{fallo}</Mensaje>}
       {data && incidentes.length === 0 && (
-        <div className="ev-empty">{modo === 'brigadista' ? 'No tiene incidentes en este evento.' : 'No hay incidentes reportados en este evento.'}</div>
+        <EstadoVacio titulo={modo === 'brigadista' ? 'No tiene incidentes en este evento' : 'No hay incidentes reportados en este evento'} />
       )}
       {incidentes.length > 0 && (
         <table className="ev-table">
@@ -143,7 +150,8 @@ export default function IncidentesEvento({ session, eventoId, modo, nombresBriga
                             )}
                             {i.estado === 'RESUELTO' && (
                               <button type="button" className="btn white" disabled={ocupado}
-                                onClick={() => { if (window.confirm('¿Cerrar este caso? Ya no se podrá modificar.')) void ejecutar(() => brigadesApi.cerrarIncidente(session, eventoId, i.incidenteId), 'El caso quedó cerrado.'); }}>
+                                onClick={async () => {
+                                  if (await confirmar({ titulo: '¿Cerrar este caso?', texto: 'Ya no se podrá modificar.', accion: 'Cerrar caso', peligro: true })) void ejecutar(() => brigadesApi.cerrarIncidente(session, eventoId, i.incidenteId), 'El caso quedó cerrado.'); }}>
                                 Cerrar caso
                               </button>
                             )}

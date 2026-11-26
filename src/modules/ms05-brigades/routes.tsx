@@ -1,3 +1,4 @@
+import { Mensaje } from '../../shared/components/Mensaje';
 import type { ReactNode } from 'react';
 import type { Session } from '../../shared/types';
 import { PERMISSION } from '../../shared/permissions';
@@ -9,7 +10,7 @@ import ReportarIncidente from './pages/ReportarIncidente';
 import MisIncidentes from './pages/MisIncidentes';
 import AtenderIncidente from './pages/AtenderIncidente';
 
-const NO_ACCESS = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
+const NO_ACCESS = <main className="page"><Mensaje tono="error">No tiene permisos para ver esta sección.</Mensaje></main>;
 
 /** Rutas de MS05 (Brigadistas e incidentes). Devuelve undefined si la ruta no es de este módulo. */
 export function brigadesRoutes(route: string, session: Session | null): ReactNode | undefined {

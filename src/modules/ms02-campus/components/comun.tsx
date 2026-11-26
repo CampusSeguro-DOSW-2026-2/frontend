@@ -1,11 +1,12 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import type { ReactNode } from 'react';
 import type { CampusApiError } from '../services/campus';
 
 export function Falla({ error }: { error: CampusApiError }) {
   return (
-    <p className="cs-alert stop" role="alert">
+    <Mensaje tono="error">
       {error.message}
-    </p>
+    </Mensaje>
   );
 }
 

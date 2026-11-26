@@ -10,7 +10,7 @@ src/
 │
 ├── shared/                   # Reutilizable por todos los módulos
 │   ├── assets/icons/         # Iconos oficiales (docs/mockups/icons)
-│   ├── components/           # Layout, Icons, Campo, DateTimeField, Mensaje, EstadoVacio, Cargando, Feedback
+│   ├── components/           # Layout, Icons, Campo, DateTimeField, Mensaje, EstadoVacio, Cargando, Feedback, AlertaActiva
 │   ├── services/             # http.ts (cliente del API Gateway), session.ts, localStore.ts, feedback.ts
 │   ├── styles.css            # Tokens y estilos globales
 │   └── types.ts              # Session, SessionUser

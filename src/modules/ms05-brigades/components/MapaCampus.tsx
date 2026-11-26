@@ -1,3 +1,5 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useMemo, useState } from 'react';
 import L from 'leaflet';
 import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
@@ -83,7 +85,7 @@ export default function MapaCampus({ edificios, miUbicacionId, deshabilitado, on
 
   return (
     <div className="aa-map">
-      {ubicados === null && <p className="notice" role="status">Cargando el mapa del campus…</p>}
+      {ubicados === null && <Cargando texto="Cargando el mapa del campus…" />}
       {ubicados !== null && enMapa.length > 0 && (
         <MapContainer className="aa-leaflet" center={enMapa[0].p} zoom={17} scrollWheelZoom={false}>
           <TileLayer
@@ -106,7 +108,7 @@ export default function MapaCampus({ edificios, miUbicacionId, deshabilitado, on
         </MapContainer>
       )}
       {ubicados !== null && enMapa.length === 0 && (
-        <p className="notice" role="status">Los lugares del evento todavía no tienen ubicación en el mapa del campus. Elija uno en la lista.</p>
+        <Mensaje tono="info">Los lugares del evento todavía no tienen ubicación en el mapa del campus. Elija uno en la lista.</Mensaje>
       )}
 
       <div className="aa-legend" aria-hidden="true">

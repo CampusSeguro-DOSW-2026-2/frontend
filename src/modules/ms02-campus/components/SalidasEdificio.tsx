@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import GaleriaImagenes from './GaleriaImagenes';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { campus, CampusApiError, comoCampusError as comoError } from '../services/campus';
@@ -147,13 +149,13 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
       )}
 
       {salidas === null ? (
-        !error && <p className="cs-vacio">Cargando salidas…</p>
+        !error && <Cargando texto="Cargando salidas…" />
       ) : visibles.length === 0 ? (
-        <p className="cs-alert info">
+        <Mensaje tono="info">
           {salidas.length === 0
             ? 'Este edificio todavía no tiene salidas. Sin una salida no se puede calcular la ruta exterior.'
             : 'Todas las salidas están inactivas. Marque «Mostrar inactivos» para verlas.'}
-        </p>
+        </Mensaje>
       ) : (
         <div className="cs-tabla">
           <table>

@@ -1,3 +1,6 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
@@ -66,12 +69,12 @@ export default function MiProgreso({ session }: { session: Session }) {
         <main className="content">
           {error ? (
             <>
-              <p className="notice err" role="alert">{error}</p>
+              <Mensaje tono="error">{error}</Mensaje>
               <button type="button" className="btn white" onClick={() => { setError(''); setIntento((n) => n + 1); }}>
                 Intentar de nuevo
               </button>
             </>
-          ) : <p className="notice" role="status">Consultando su progreso…</p>}
+          ) : <Cargando texto="Consultando su progreso…" />}
         </main>
       </>
     );
@@ -85,10 +88,7 @@ export default function MiProgreso({ session }: { session: Session }) {
       {cabecera}
       <main className="content">
         {sinProgreso ? (
-          <div className="pr-vacio" role="status">
-            <p>Todavía no hay progreso.</p>
-            <p>Consulte un contenido en <a href="#/aprendizaje">Aprendizaje</a> o presente una <a href="#/evaluaciones">evaluación</a>.</p>
-          </div>
+          <EstadoVacio titulo="Todavía no hay progreso">Consulte un contenido en <a href="#/aprendizaje">Aprendizaje</a> o presente una <a href="#/evaluaciones">evaluación</a>.</EstadoVacio>
         ) : (
           <>
             {avance.length > 0 && (

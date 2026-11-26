@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
 import { Cargando } from '../../../shared/components/Cargando';
 import { PageHeader } from '../../../shared/components/Layout';
@@ -86,7 +87,7 @@ export default function Profile({ session }: { session: Session }) {
       <main className="content narrow">
         {error && (
           <section className="panel">
-            <p className="notice err" role="alert">{error}</p>
+            <Mensaje tono="error">{error}</Mensaje>
             <button type="button" className="btn white" onClick={() => setAttempt((n) => n + 1)}>Reintentar</button>
           </section>
         )}
@@ -115,15 +116,15 @@ export default function Profile({ session }: { session: Session }) {
               <h2 id="perms-title">Roles y permisos</h2>
 
               {rolesChanged && (
-                <p className="notice" role="status">
+                <Mensaje tono="aviso">
                   Sus roles cambiaron (ahora: {profile.roles.map(roleLabel).join(', ')}).
                   Inicie sesión de nuevo para que se apliquen a su sesión.
-                </p>
+                </Mensaje>
               )}
 
               {rolesError && (
                 <>
-                  <p className="notice err" role="alert">{rolesError}</p>
+                  <Mensaje tono="error">{rolesError}</Mensaje>
                   <button type="button" className="btn white rolesbar" onClick={() => setRolesAttempt((n) => n + 1)}>Reintentar</button>
                 </>
               )}

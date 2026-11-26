@@ -52,18 +52,18 @@
 }
 
 .cs-mapa-punto.salida {
-  background: #16834a;
+  background: var(--ok);
 }
 
 .cs-mapa-punto.destino {
-  background: #d94841;
+  background: var(--red);
 }
 
 .cs-mapa-linea {
   width: 17px;
   height: 4px;
   border-radius: 2px;
-  background: #1769aa;
+  background: var(--blue);
   display: inline-block;
 }
 

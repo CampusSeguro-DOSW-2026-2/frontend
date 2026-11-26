@@ -1,4 +1,5 @@
 import { etiquetaCodigo, etiquetaRol } from '../../../shared/utils/etiquetas';
+import { isTechnicalId } from '../../../shared/utils/text';
 import type { ScopeCatalog } from '../../ms03-alerts/services/catalog';
 import type { EstadoCheckin, EstadoEvento } from '../types';
 
@@ -42,10 +43,14 @@ export function fechaHora(iso: string | null | undefined): string {
 
 /**
  * Edificios o zonas del escenario en texto. MS06 debe enviar los nombres de MS02 (RN-MS04-24), pero los eventos que
- * MS04 ya guardó con los ids de MS02 se traducen con el catálogo de MS02. Un texto que no es un id del catálogo (un
- * nombre) o que no se puede traducir porque MS02 no respondió se muestra tal cual.
+ * MS04 ya guardó con los ids de MS02 se traducen con el catálogo de MS02 (también los inactivos). Un texto que no es
+ * un id (un nombre) se muestra tal cual. Un id sin nombre (MS02 no lo conoce o no respondió) se omite: nunca se
+ * muestra un UUID. Si no queda ningún nombre devuelve '' y la pantalla omite el dato.
  */
 export function textoEscenario(valores: string[], catalog: ScopeCatalog | null): string {
   const items = catalog ? [...catalog.buildings, ...catalog.zones] : [];
-  return valores.map((v) => items.find((i) => i.id === v)?.label ?? v).join(', ');
+  return valores
+    .map((v) => items.find((i) => i.id === v)?.label ?? catalog?.names?.[v] ?? (isTechnicalId(v) ? '' : v.trim()))
+    .filter(Boolean)
+    .join(', ');
 }

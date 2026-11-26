@@ -1,8 +1,9 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useCallback, useEffect, useState } from 'react';
 import type { Session } from '../../../shared/types';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { scopeLabelIn } from '../../ms06-drills/utils/labels';
-import ErrorNotice from '../components/ErrorNotice';
 import { eventName, multiEventHref, useEventNames } from '../hooks/useEventNames';
 import { analyticsApi } from '../services/analytics';
 import type { LocationRow } from '../types';
@@ -57,10 +58,10 @@ export default function Ubicaciones({ session, ids }: { session: Session; ids: s
           : <a className="btn white" href={`#/indicadores/${ids[0]}`}>Ver indicadores del evento</a>}
       </header>
       <main className="ev-main">
-        {loading && <p className="notice" role="status">Calculando por ubicación…</p>}
-        {!loading && error !== null && <ErrorNotice error={error} onRetry={load} />}
+        {loading && <Mensaje tono="info">Calculando por ubicación…</Mensaje>}
+        {!loading && error !== null && <Mensaje error={error} onReintentar={load} />}
         {!loading && error === null && rows && rows.length === 0 && (
-          <div className="ev-empty">No hay incidentes ni solicitudes de asistencia registrados en {several ? 'estos eventos' : 'este evento'}.</div>
+          <EstadoVacio titulo={`No hay incidentes ni solicitudes de asistencia en ${several ? 'estos eventos' : 'este evento'}`} />
         )}
         {!loading && error === null && rows && rows.length > 0 && (
           <>

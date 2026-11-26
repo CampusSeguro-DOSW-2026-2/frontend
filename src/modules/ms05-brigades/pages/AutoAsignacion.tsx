@@ -1,3 +1,7 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { confirmar } from '../../../shared/services/feedback';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
@@ -66,7 +70,12 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
 
   const quitar = async () => {
     if (!actual?.ubicacionId) return;
-    if (!window.confirm(`¿Quitar su asignación de ${miEdificio || 'su edificio'}?`)) return;
+    if (!(await confirmar({
+      titulo: `¿Quitar su asignación de ${miEdificio || 'su edificio'}?`,
+      texto: 'Dejará de apoyar en ese edificio. Puede elegir otro cuando quiera.',
+      accion: 'Quitar mi asignación',
+      peligro: true,
+    }))) return;
     setBusy(true);
     setError('');
     try {
@@ -90,12 +99,12 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
         </div>
       </header>
       <main className="ev-main">
-        {!data && !error && <p className="notice" role="status">Cargando…</p>}
-        {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={cargar}>Reintentar</button></p>}
-        {notice && <p className="notice" role="status">{notice}</p>}
+        {!data && !error && <Cargando texto="Cargando…" />}
+        {error && <Mensaje tono="error" onReintentar={cargar}>{error}</Mensaje>}
+        {notice && <Mensaje tono="exito">{notice}</Mensaje>}
 
         {data && data.eventos.length === 0 && (
-          <div className="ev-empty">No hay eventos programados ni en ejecución. Cuando se programe uno, aquí podrá elegir su edificio.</div>
+          <EstadoVacio titulo="No hay eventos programados ni en ejecución">Cuando se programe uno, aquí podrá elegir su edificio.</EstadoVacio>
         )}
 
         {data && data.eventos.length > 1 && (

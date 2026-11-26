@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Cargando } from '../../../shared/components/Cargando';
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { PERMISSION } from '../../../shared/permissions';
 import { errorMessage } from '../../../shared/services/http';
 import { hasPermission } from '../../../shared/services/session';
@@ -51,10 +54,7 @@ function useCarga<T>(cargar: () => Promise<T>, refresco = 0) {
 
 function ErrorCarga({ mensaje, reintentar }: { mensaje: string; reintentar: () => void }) {
   return (
-    <div className="chk-error">
-      <p className="notice err" role="alert">{mensaje}</p>
-      <button type="button" className="btn white chk-retry" onClick={reintentar}>Intentar de nuevo</button>
-    </div>
+    <Mensaje tono="error" onReintentar={reintentar}>{mensaje}</Mensaje>
   );
 }
 
@@ -154,7 +154,7 @@ export default function SeguimientoEvento({ session, eventoId, refresco = 0 }: {
           </div>
           <button type="button" className="btn white chk-actualizar" onClick={consolidado.reintentar}>Actualizar</button>
         </div>
-        {consolidado.carga.estado === 'cargando' && <p className="notice" role="status">Consultando el consolidado…</p>}
+        {consolidado.carga.estado === 'cargando' && <Cargando texto="Consultando el consolidado…" />}
         {consolidado.carga.estado === 'error' && (
           <ErrorCarga mensaje={consolidado.carga.mensaje} reintentar={consolidado.reintentar} />
         )}
@@ -207,9 +207,9 @@ function Personas({ session, eventoId, refresco, nombrePunto }: Base & { nombreP
   return (
     <div className="chk-seccion">
       <FiltroEstado estado={estado} cambiar={(e) => { setEstado(e); setPage(0); }} />
-      {carga.estado === 'cargando' && <p className="notice" role="status">Consultando las personas…</p>}
+      {carga.estado === 'cargando' && <Cargando texto="Consultando las personas…" />}
       {carga.estado === 'error' && <ErrorCarga mensaje={carga.mensaje} reintentar={reintentar} />}
-      {carga.estado === 'listo' && carga.datos.contenido.length === 0 && <div className="chk-vacio" role="status">Nadie ha reportado con ese estado.</div>}
+      {carga.estado === 'listo' && carga.datos.contenido.length === 0 && <EstadoVacio titulo="Nadie ha reportado con ese estado" />}
       {carga.estado === 'listo' && carga.datos.contenido.length > 0 && (
         <>
           <div className="chk-tablawrap">
@@ -241,9 +241,9 @@ function Pendientes({ session, eventoId, refresco }: Base) {
   return (
     <div className="chk-seccion">
       <p className="chk-sub">Personas convocadas que todavía no han reportado su estado.</p>
-      {carga.estado === 'cargando' && <p className="notice" role="status">Consultando las personas pendientes…</p>}
+      {carga.estado === 'cargando' && <Cargando texto="Consultando las personas pendientes…" />}
       {carga.estado === 'error' && <ErrorCarga mensaje={carga.mensaje} reintentar={reintentar} />}
-      {carga.estado === 'listo' && carga.datos.contenido.length === 0 && <div className="chk-vacio" role="status">Todas las personas convocadas han reportado.</div>}
+      {carga.estado === 'listo' && carga.datos.contenido.length === 0 && <EstadoVacio titulo="Todas las personas convocadas han reportado" />}
       {carga.estado === 'listo' && carga.datos.contenido.length > 0 && (
         <>
           <div className="chk-tablawrap">
@@ -270,9 +270,9 @@ function Asistencia({ session, eventoId, refresco, lugar }: Base & { lugar: (u: 
   return (
     <div className="chk-seccion">
       <p className="chk-sub">La atención de las solicitudes la gestionan la coordinación y la brigada en la sección de incidentes.</p>
-      {carga.estado === 'cargando' && <p className="notice" role="status">Consultando quién requiere asistencia…</p>}
+      {carga.estado === 'cargando' && <Cargando texto="Consultando quién requiere asistencia…" />}
       {carga.estado === 'error' && <ErrorCarga mensaje={carga.mensaje} reintentar={reintentar} />}
-      {carga.estado === 'listo' && carga.datos.contenido.length === 0 && <div className="chk-vacio" role="status">Nadie requiere asistencia en este momento.</div>}
+      {carga.estado === 'listo' && carga.datos.contenido.length === 0 && <EstadoVacio titulo="Nadie requiere asistencia en este momento" />}
       {carga.estado === 'listo' && carga.datos.contenido.length > 0 && (
         <>
           <div className="chk-tablawrap">
@@ -310,9 +310,9 @@ function Historial({ session, eventoId, refresco, nombrePunto, lugar }: Base & {
   return (
     <div className="chk-seccion">
       <FiltroEstado estado={estado} cambiar={(e) => { setEstado(e); setPage(0); }} />
-      {carga.estado === 'cargando' && <p className="notice" role="status">Consultando el historial…</p>}
+      {carga.estado === 'cargando' && <Cargando texto="Consultando el historial…" />}
       {carga.estado === 'error' && <ErrorCarga mensaje={carga.mensaje} reintentar={reintentar} />}
-      {carga.estado === 'listo' && carga.datos.contenido.length === 0 && <div className="chk-vacio" role="status">No hay cambios de estado registrados.</div>}
+      {carga.estado === 'listo' && carga.datos.contenido.length === 0 && <EstadoVacio titulo="No hay cambios de estado registrados" />}
       {carga.estado === 'listo' && carga.datos.contenido.length > 0 && (
         <>
           <div className="chk-tablawrap">
@@ -340,12 +340,12 @@ function Historial({ session, eventoId, refresco, nombrePunto, lugar }: Base & {
 function ResultadosEvento({ session, eventoId, refresco, nombrePunto }: Base & { nombrePunto: (id: string | null) => string }) {
   const cargar = useCallback(() => checkinApi.resultados(session, eventoId), [session, eventoId]);
   const { carga, reintentar } = useCarga<Resultados>(cargar, refresco);
-  if (carga.estado === 'cargando') return <p className="notice" role="status">Consultando los resultados…</p>;
+  if (carga.estado === 'cargando') return <Cargando texto="Consultando los resultados…" />;
   if (carga.estado === 'error') return <ErrorCarga mensaje={carga.mensaje} reintentar={reintentar} />;
   const r = carga.datos;
   return (
     <div className="chk-seccion">
-      {!r.finales && <p className="notice" role="status">Resultados parciales: el evento aún no ha finalizado.</p>}
+      {!r.finales && <Mensaje tono="info" compacto>Resultados parciales: el evento aún no ha finalizado.</Mensaje>}
       <ul className="chk-resumen" aria-label="Resumen del evento">
         <li><small>Personas convocadas</small><b>{r.poblacion_objetivo ?? 'No disponible'}</b></li>
         <li><small>Sin reportar</small><b>{r.total_pendientes ?? 'No disponible'}</b></li>

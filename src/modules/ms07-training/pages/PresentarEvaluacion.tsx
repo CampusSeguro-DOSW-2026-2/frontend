@@ -1,3 +1,5 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
@@ -35,8 +37,8 @@ export default function PresentarEvaluacion({ session, id }: { session: Session;
         <PageHeader badge="APRENDIZAJE" title="Evaluación" subtitle="" context={volver} />
         <main className="content">
           {error
-            ? <p className="notice err" role="alert">{error}</p>
-            : <p className="notice" role="status">Cargando la evaluación…</p>}
+            ? <Mensaje tono="error">{error}</Mensaje>
+            : <Cargando texto="Cargando la evaluación…" />}
         </main>
       </>
     );
@@ -107,7 +109,7 @@ export default function PresentarEvaluacion({ session, id }: { session: Session;
             })}
           </ol>
 
-          {errorEnvio && <p className="notice err" role="alert">{errorEnvio}</p>}
+          {errorEnvio && <Mensaje tono="error">{errorEnvio}</Mensaje>}
 
           <div className="evl-acciones evl-enviar">
             {resultado ? (
@@ -120,7 +122,7 @@ export default function PresentarEvaluacion({ session, id }: { session: Session;
                 <button type="submit" className="btn red" disabled={faltan > 0 || enviando}>
                   {enviando ? 'Enviando…' : 'Enviar respuestas'}
                 </button>
-                {faltan > 0 && <p className="notice" role="status">Faltan {faltan} {faltan === 1 ? 'pregunta' : 'preguntas'} por responder.</p>}
+                {faltan > 0 && <Mensaje tono="aviso" compacto>Faltan {faltan} {faltan === 1 ? 'pregunta' : 'preguntas'} por responder.</Mensaje>}
               </>
             )}
           </div>

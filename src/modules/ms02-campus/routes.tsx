@@ -1,3 +1,4 @@
+import { Mensaje } from '../../shared/components/Mensaje';
 import type { ReactNode } from 'react';
 import BuildingDetail from './pages/BuildingDetail';
 import BuildingsAdmin from './pages/BuildingsAdmin';
@@ -15,7 +16,7 @@ import type { Session } from '../../shared/types';
 import { PERMISSION } from '../../shared/permissions';
 import { hasPermission } from '../../shared/services/session';
 
-const SIN_ACCESO = <main className="page"><p className="notice err" role="alert">No tiene permisos para ver esta sección.</p></main>;
+const SIN_ACCESO = <main className="page"><Mensaje tono="error">No tiene permisos para ver esta sección.</Mensaje></main>;
 
 /** Permisos que abren la administración del campus: cualquiera de escritura de MS02 (Matriz Rol–Permiso). */
 const PERMISOS_ADMIN = [

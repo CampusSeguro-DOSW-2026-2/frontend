@@ -1,3 +1,6 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
@@ -54,15 +57,17 @@ export default function Evaluaciones({ session }: { session: Session }) {
 
         {error && (
           <>
-            <p className="notice err" role="alert">{error}</p>
+            <Mensaje tono="error">{error}</Mensaje>
             <button type="button" className="btn white" onClick={() => { setIntento((n) => n + 1); iniciarCarga(); }}>
               Intentar de nuevo
             </button>
           </>
         )}
-        {cargando && !datos && !error && <p className="notice" role="status">Consultando las evaluaciones…</p>}
+        {cargando && !datos && !error && <Cargando texto="Consultando las evaluaciones…" />}
         {datos && !error && evaluaciones.length === 0 && (
-          <div className="evl-vacio" role="status">{categoria ? 'No hay evaluaciones en esta categoría. Elija otra o «Todas».' : 'Todavía no hay evaluaciones disponibles.'}</div>
+          categoria
+          ? <EstadoVacio titulo="No hay evaluaciones en esta categoría">Elija otra o «Todas».</EstadoVacio>
+          : <EstadoVacio titulo="Todavía no hay evaluaciones disponibles" />
         )}
 
         {!error && evaluaciones.length > 0 && (
