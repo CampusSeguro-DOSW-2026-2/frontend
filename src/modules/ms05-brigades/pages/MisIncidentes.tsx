@@ -1,6 +1,8 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useCallback, useEffect, useState } from 'react';
 import { useAutoRefresh } from '../../../shared/hooks/useAutoRefresh';
-import { Info } from '../../../shared/components/Icons';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
@@ -50,17 +52,17 @@ export default function MisIncidentes({ session }: { session: Session }) {
       <PageHeader badge="INCIDENTES" title="Mis incidentes" subtitle="Revise el estado de las solicitudes de ayuda que envió." />
       <main className="rs-main">
         <a className="rs-back" href="#/checkin">← Volver al evento</a>
-        {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={() => void load()}>Reintentar</button></p>}
-        {grupos === null && <p className="notice" role="status">Cargando…</p>}
-        {grupos?.length === 0 && !error && <div className="rs-card rs-empty">No hay un evento en ejecución.</div>}
+        {error && <Mensaje tono="error" onReintentar={() => void load()}>{error}</Mensaje>}
+        {grupos === null && <Cargando texto="Cargando…" />}
+        {grupos?.length === 0 && !error && <EstadoVacio titulo="No hay un evento en ejecución" />}
         {grupos?.map(({ evento, incidentes, error: err }) => (
           <section key={evento.id} className="rs-evento">
             <div style={{ padding: '16px 20px' }}>
               <h2 className="title sm22" style={{ fontSize: 18 }}>{evento.name}</h2>
               <small className="rs-sub">Inició {formatDate(evento.startedAt)}</small>
             </div>
-            {err && <p className="notice err" role="alert" style={{ margin: '0 20px 16px' }}>{err}</p>}
-            {!err && incidentes.length === 0 && <div className="rs-empty">No ha enviado solicitudes en este evento. <a className="plink" href="#/ayuda">Solicitar ayuda</a></div>}
+            {err && <div style={{ margin: '0 20px 16px' }}><Mensaje tono="error">{err}</Mensaje></div>}
+            {!err && incidentes.length === 0 && <EstadoVacio titulo="No ha enviado solicitudes en este evento" accion={<a className="btn white sm" href="#/ayuda">Solicitar ayuda</a>} />}
             {incidentes.length > 0 && (
               <table className="rs-table">
                 <thead><tr><th>Prioridad</th><th>Ubicación</th><th>Reportado</th><th>Estado</th></tr></thead>
@@ -82,7 +84,7 @@ export default function MisIncidentes({ session }: { session: Session }) {
             )}
           </section>
         ))}
-        <p className="rs-info"><Info /> Si su situación cambia, envíe una nueva solicitud desde «Necesito ayuda». La brigada actualiza el estado a medida que lo atiende.</p>
+        <Mensaje tono="info" compacto>Si su situación cambia, envíe una nueva solicitud desde «Necesito ayuda». La brigada actualiza el estado a medida que lo atiende.</Mensaje>
       </main>
     </>
   );

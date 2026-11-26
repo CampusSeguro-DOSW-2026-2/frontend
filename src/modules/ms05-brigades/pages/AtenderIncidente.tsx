@@ -1,5 +1,6 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useCallback, useEffect, useState } from 'react';
-import { Info } from '../../../shared/components/Icons';
 import { withoutIds } from '../../../shared/utils/text';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
@@ -105,8 +106,8 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
       <PageHeader badge="BRIGADISTA" title="Atender incidente" subtitle="Revise la información del caso y registre el resultado de la atención." context="Respuesta oficial" />
       <main className="rs-main">
         <a className="rs-back" href="#/brigadista">← Volver al panel brigadista</a>
-        {error && <p className="notice err" role="alert">{error} <button type="button" className="plink" onClick={load}>Reintentar</button></p>}
-        {!inc && !error && <p className="notice" role="status">Cargando incidente…</p>}
+        {error && <Mensaje tono="error" onReintentar={load}>{error}</Mensaje>}
+        {!inc && !error && <Cargando texto="Cargando incidente…" />}
 
         {inc && p && st && (
           <div className="rs-grid">
@@ -163,7 +164,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
 
                 {propio && inc.estado === 'ASIGNADO' && canAttend && (
                   <>
-                    <p className="notice" role="status">La atención aún no ha iniciado.</p>
+                    <Mensaje tono="info">La atención aún no ha iniciado.</Mensaje>
                     <button type="button" className="btn red rs-btn" disabled={busy} onClick={() => void iniciar()}>{busy ? 'Iniciando…' : 'Iniciar atención'}</button>
                   </>
                 )}
@@ -191,14 +192,14 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                 {!resultado && puedeFinalizar && <span className="rs-sub">Seleccione una opción para continuar.</span>}
                 {!propio && <span className="rs-sub">Solo el brigadista asignado puede registrar el resultado.</span>}
                 {propio && !enAtencion && inc.estado !== 'ASIGNADO' && !finalizado && <span className="rs-sub">El incidente está {st.texto.toLowerCase()}.</span>}
-                {notice && <p className="notice err" role="alert">{notice}</p>}
-                {finalizado && <p className="notice chk-ok" role="status">Incidente marcado como resuelto.</p>}
+                {notice && <Mensaje tono="error">{notice}</Mensaje>}
+                {finalizado && <Mensaje tono="exito">Incidente marcado como resuelto.</Mensaje>}
 
                 <button type="submit" className={`btn rs-btn ${puedeFinalizar && resultado ? 'red' : 'off'}`} disabled={!puedeFinalizar || !resultado || busy}>
                   {busy && enAtencion ? 'Finalizando…' : 'Finalizar atención'}
                 </button>
               </form>
-              <p className="rs-info"><Info /> Volver al panel no finaliza el incidente. El caso permanece en atención mientras no registre un resultado.</p>
+              <Mensaje tono="info" compacto>Volver al panel no finaliza el incidente. El caso permanece en atención mientras no registre un resultado.</Mensaje>
             </aside>
           </div>
         )}

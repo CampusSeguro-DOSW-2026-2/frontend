@@ -24,7 +24,6 @@
 .chk-punto:hover:not(:disabled){border-color:var(--red)}
 .chk-punto[aria-pressed=true]{background:var(--cream);border-color:var(--red)}
 .chk-punto:disabled{cursor:default;opacity:.6}
-.notice.chk-ok{background:var(--ok-bg);border-color:var(--ok-line);color:var(--ok)}
 /* Lista de eventos (F-07) */
 .chk-tabs{display:flex;gap:8px;flex-wrap:wrap}
 .chk-tab{height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px 'Outfit',sans-serif;cursor:pointer}

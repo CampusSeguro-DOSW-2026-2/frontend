@@ -1,3 +1,5 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useState } from 'react';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
@@ -52,13 +54,13 @@ export default function SelectorZonaEvento({ session, eventoId, edificios, miUbi
   };
 
   if (edificios.length === 0) {
-    return <div className="ev-empty">El evento todavía no tiene edificios registrados.</div>;
+    return <EstadoVacio titulo="El evento todavía no tiene edificios registrados" />;
   }
 
   return (
     <>
-      {notice && <p className="notice" role="status">{notice}</p>}
-      {error && <p className="notice err" role="alert">{error}</p>}
+      {notice && <Mensaje tono="info">{notice}</Mensaje>}
+      {error && <Mensaje tono="error">{error}</Mensaje>}
       <MapaCampus edificios={edificios} miUbicacionId={miUbicacionId} deshabilitado={!activo || busy} onElegir={elegir} />
 
       {confirmar && (
