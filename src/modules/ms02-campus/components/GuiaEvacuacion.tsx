@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useState } from 'react';
 import { campus, comoCampusError } from '../services/campus';
 import type { CampusApiError } from '../services/campus';
@@ -35,7 +36,7 @@ function GuiaDetalle({ guia }: { guia: Guia }) {
     return (
       <section className="cs-guia" aria-label="Guía de evacuación">
         <h4>Guía de evacuación</h4>
-        <p className="cs-alert warn">{guia.mensaje ?? 'No hay una guía de evacuación disponible para este espacio.'}</p>
+        <Mensaje tono="aviso">{guia.mensaje ?? 'No hay una guía de evacuación disponible para este espacio.'}</Mensaje>
       </section>
     );
   }

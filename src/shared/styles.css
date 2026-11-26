@@ -317,6 +317,7 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .msj>svg.i{width:20px;height:20px;margin-top:1px}
 .msj-cuerpo{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
 .msj-titulo{font:700 15px/20px 'Outfit',sans-serif}
+.msj-cuerpo small{display:block;font-size:12px;opacity:.85}
 .msj-soporte{font-size:12px;opacity:.85}
 .msj-acciones{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:6px}
 .msj .plink{color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px}

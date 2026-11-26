@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { campus, CampusApiError, comoCampusError as comoError, descargarQr, type ElementoQr } from '../services/campus';
@@ -91,7 +92,7 @@ export default function HojaQr({ edificioId }: { edificioId: string }) {
           </div>
         )}
         {tarjetas?.length === 0 && (
-          <p className="cs-alert info">Este edificio no tiene espacios ni salidas disponibles para imprimir.</p>
+          <Mensaje tono="info">Este edificio no tiene espacios ni salidas disponibles para imprimir.</Mensaje>
         )}
         {tarjetas && tarjetas.length > 0 && (
           <ul className="qr-hoja">

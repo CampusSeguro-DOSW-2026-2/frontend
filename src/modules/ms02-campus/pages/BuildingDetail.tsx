@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import GaleriaImagenes from '../components/GaleriaImagenes';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
@@ -163,7 +165,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
       <>
         <PageHeader badge="ADMINISTRACIÓN" title="Detalle de edificio" subtitle="Pisos y espacios del edificio." />
         <main className="content">
-          {errorCarga ? <Falla error={errorCarga} /> : <p className="cs-resumen">Cargando edificio…</p>}
+          {errorCarga ? <Falla error={errorCarga} /> : <Cargando texto="Cargando edificio…" />}
         </main>
       </>
     );
@@ -182,7 +184,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
         context={<a className="cs-volver" href="#/admin/edificios">← Edificios</a>} />
       <main className="content">
         {edificio.estado === 'INACTIVO' && (
-          <p className="cs-alert warn">Este edificio está inactivo, así que sus pisos y espacios no están disponibles para rutas. Reactívelo desde Edificios para poder modificarlos.</p>
+          <Mensaje tono="aviso">Este edificio está inactivo, así que sus pisos y espacios no están disponibles para rutas. Reactívelo desde Edificios para poder modificarlos.</Mensaje>
         )}
         {errorCarga && <Falla error={errorCarga} />}
 
@@ -217,9 +219,9 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
         )}
 
         {pisosVisibles.length === 0 && edicion?.tipo !== 'nuevo-piso' && (
-          <p className="cs-alert info">
+          <Mensaje tono="info">
             {pisos.length === 0 ? 'Este edificio todavía no tiene pisos. Agregue el primero para registrar sus espacios.' : 'Todos los pisos están inactivos. Marque «Mostrar inactivos» para verlos.'}
-          </p>
+          </Mensaje>
         )}
 
         {pisosVisibles.map((piso) => {

@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
@@ -130,7 +132,7 @@ export default function BuildingsAdmin() {
       <>
         {cabecera}
         <main className="content">
-          {errorCarga ? <Falla error={errorCarga} /> : <p className="cs-resumen">Cargando edificios…</p>}
+          {errorCarga ? <Falla error={errorCarga} /> : <Cargando texto="Cargando edificios…" />}
         </main>
       </>
     );
@@ -149,14 +151,14 @@ export default function BuildingsAdmin() {
         {errorCarga && <Falla error={errorCarga} />}
         {aviso && <Falla error={aviso} />}
         {errorCampus && (
-          <p className="cs-alert stop" role="alert">
+          <Mensaje tono="error">
             No se pudieron cargar los campus, así que no puede crear ni modificar edificios. {errorCampus.message}
-          </p>
+          </Mensaje>
         )}
         {puedeGestionar && campuses && !hayCampusActivo && (
-          <p className="cs-alert info">
+          <Mensaje tono="info">
             Para crear edificios, primero registre un campus activo en <a href="#/admin/campus">Campus y zonas abiertas</a>.
-          </p>
+          </Mensaje>
         )}
 
         <div className="cs-barra">
@@ -188,11 +190,11 @@ export default function BuildingsAdmin() {
         )}
 
         {visibles.length === 0 && edicion?.tipo !== 'nuevo' ? (
-          <p className="cs-alert info">
+          <Mensaje tono="info">
             {edificios.length === 0
               ? 'Todavía no hay edificios registrados.'
               : 'No hay edificios con este filtro. Pruebe con «Todos».'}
-          </p>
+          </Mensaje>
         ) : visibles.length > 0 && (
           <div className="cs-tabla">
             <table>

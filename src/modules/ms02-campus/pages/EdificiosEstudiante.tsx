@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import GaleriaImagenes from '../components/GaleriaImagenes';
@@ -81,7 +83,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
       <>
         <PageHeader badge="CAMPUS" title="Edificios" subtitle="Consulte los edificios y sus espacios." />
         <main className="content">
-          <p className="cs-alert stop">Su rol no tiene permiso para consultar el campus.</p>
+          <Mensaje tono="error">Su rol no tiene permiso para consultar el campus.</Mensaje>
         </main>
       </>
     );
@@ -92,7 +94,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
       <>
         <PageHeader badge="CAMPUS" title="Edificios" subtitle="Consulte los edificios y sus espacios." />
         <main className="content">
-          <p className="cs-resumen">Cargando información…</p>
+          <Cargando texto="Cargando información…" />
         </main>
       </>
     );
@@ -108,7 +110,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
           context={edificioId ? <a className="cs-volver" href="#/edificios">← Edificios</a> : undefined}
         />
         <main className="content">
-          <p className="cs-alert warn" role="alert">{error}</p>
+          <Mensaje tono="aviso">{error}</Mensaje>
         </main>
       </>
     );
@@ -125,7 +127,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
 
         <main className="content">
           {edificios.length === 0 ? (
-            <p className="cs-alert info">Todavía no hay edificios activos para consultar.</p>
+            <Mensaje tono="info">Todavía no hay edificios activos para consultar.</Mensaje>
           ) : (
             <div className="cs-estudiante-edificios">
               {edificios.map((item) => (
@@ -176,7 +178,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
             </div>
 
             {pisos.length === 0 ? (
-              <p className="cs-alert info">Este edificio todavía no tiene pisos activos.</p>
+              <Mensaje tono="info">Este edificio todavía no tiene pisos activos.</Mensaje>
             ) : (
               <div className="cs-estudiante-pisos">
                 {pisos.map((piso) => {

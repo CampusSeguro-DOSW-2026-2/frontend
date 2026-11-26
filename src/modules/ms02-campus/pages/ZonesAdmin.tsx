@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import GaleriaImagenes from '../components/GaleriaImagenes';
 import { Fragment, useCallback, useEffect, useState } from 'react';
@@ -190,7 +192,7 @@ export default function ZonesAdmin() {
       <>
         {cabecera}
         <main className="content">
-          {errorCarga ? <Falla error={errorCarga} /> : <p className="cs-resumen">Cargando zonas seguras…</p>}
+          {errorCarga ? <Falla error={errorCarga} /> : <Cargando texto="Cargando zonas seguras…" />}
         </main>
       </>
     );
@@ -210,10 +212,10 @@ export default function ZonesAdmin() {
         {errorCarga && <Falla error={errorCarga} />}
         {aviso && <Falla error={aviso} />}
         {sinCoordenadas > 0 && (
-          <p className="cs-alert warn">
+          <Mensaje tono="aviso">
             {sinCoordenadas === 1 ? '1 zona activa no tiene coordenadas' : `${sinCoordenadas} zonas activas no tienen coordenadas`}:
             {' '}no pueden ser destino de una ruta exterior.
-          </p>
+          </Mensaje>
         )}
 
         <div className="cs-barra">
@@ -245,11 +247,11 @@ export default function ZonesAdmin() {
         )}
 
         {visibles.length === 0 && edicion?.tipo !== 'nueva' ? (
-          <p className="cs-alert info">
+          <Mensaje tono="info">
             {zonas.length === 0
               ? 'Todavía no hay zonas seguras registradas.'
               : 'No hay zonas con este filtro. Pruebe con «Todas».'}
-          </p>
+          </Mensaje>
         ) : visibles.length > 0 && (
           <div className="cs-tabla">
             <table>

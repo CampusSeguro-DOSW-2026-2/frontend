@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
@@ -239,7 +241,7 @@ export default function RoutesAdmin() {
     return (
       <>
         {encabezado}
-        <main className="content">{errorCarga ? <Falla error={errorCarga} /> : <p className="cs-resumen">Cargando rutas…</p>}</main>
+        <main className="content">{errorCarga ? <Falla error={errorCarga} /> : <Cargando texto="Cargando rutas…" />}</main>
       </>
     );
   }
@@ -308,7 +310,7 @@ export default function RoutesAdmin() {
         </div>
 
         {visibles.length === 0 ? (
-          <p className="cs-alert info">{datos.rutas.length === 0 ? 'Aún no hay rutas registradas.' : 'Ninguna ruta coincide con los filtros.'}</p>
+          <Mensaje tono="info">{datos.rutas.length === 0 ? 'Aún no hay rutas registradas.' : 'Ninguna ruta coincide con los filtros.'}</Mensaje>
         ) : (
           <div className="cs-tabla">
             <table>

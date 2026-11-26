@@ -1,3 +1,5 @@
+import { Cargando } from '../../../shared/components/Cargando';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
@@ -172,7 +174,7 @@ export default function CampusAdmin() {
     return (
       <>
         {cabecera}
-        <main className="content">{errorCarga ? <Falla error={errorCarga} /> : <p className="cs-resumen">Cargando campus…</p>}</main>
+        <main className="content">{errorCarga ? <Falla error={errorCarga} /> : <Cargando texto="Cargando campus…" />}</main>
       </>
     );
   }
@@ -199,7 +201,7 @@ export default function CampusAdmin() {
           </section>
         )}
 
-        {datos.campuses.length === 0 && edicion?.tipo !== 'campus-nuevo' && <p className="cs-alert info">Todavía no hay campus registrados.</p>}
+        {datos.campuses.length === 0 && edicion?.tipo !== 'campus-nuevo' && <Mensaje tono="info">Todavía no hay campus registrados.</Mensaje>}
 
         {datos.campuses.map((c) => {
           const activo = c.estado === 'ACTIVO';
