@@ -338,6 +338,20 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .alerta-activa-pasos li::before{content:counter(paso);display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:999px;background:var(--warn-bg);color:var(--warn);font:800 14px/1 'Outfit',sans-serif}
 .alerta-activa-btn{align-self:flex-start;min-width:240px}
 @media(max-width:600px){.alerta-activa{padding:16px}.alerta-activa-btn{align-self:stretch;min-width:0}}
+/* Alerta ya confirmada: una sola línea (título y «Recepción confirmada») que se abre para ver las instrucciones */
+.alerta-activa.confirmada{gap:0;padding:0;border:1px solid var(--ok-line);background:var(--ok-bg)}
+.alerta-activa.confirmada summary{display:flex;align-items:center;gap:12px;min-height:var(--tap);padding:10px 16px;list-style:none;cursor:pointer;border-radius:16px}
+.alerta-activa.confirmada summary::-webkit-details-marker{display:none}
+.alerta-activa.confirmada summary::after{content:'';flex:none;width:10px;height:10px;margin-left:auto;border-right:2px solid var(--ok);border-bottom:2px solid var(--ok);transform:rotate(45deg);transition:transform var(--dur-ui) var(--ease-out)}
+.alerta-activa.confirmada[open] summary::after{transform:rotate(-135deg)}
+.alerta-activa-ok{display:grid;place-items:center;width:28px;height:28px;flex:none;border-radius:999px;background:var(--ok);color:var(--on-color)}
+.alerta-activa-ok svg.i{width:16px;height:16px}
+.alerta-activa-linea{display:flex;flex-direction:column;min-width:0}
+.alerta-activa-linea b{font:700 15px/20px 'Outfit',sans-serif;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.alerta-activa-linea small{font-size:13px;line-height:18px;color:var(--ok)}
+.alerta-activa-detalle{display:flex;flex-direction:column;gap:12px;padding:4px 16px 16px;border-top:1px solid var(--ok-line);background:var(--surface);border-radius:0 0 16px 16px}
+.alerta-activa-detalle .alerta-activa-meta{margin-top:12px}
+@media(prefers-reduced-motion:reduce){.alerta-activa.confirmada summary::after{transition:none}}
 
 /* ===== Carga (shared/components/Cargando.tsx) ===== */
 .cargando{display:flex;align-items:center;gap:10px;padding:12px 0;color:var(--mut);font-size:14px}
