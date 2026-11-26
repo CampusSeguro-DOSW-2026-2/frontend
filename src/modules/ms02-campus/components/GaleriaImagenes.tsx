@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Building } from '../../../shared/components/Icons';
 import { confirmar } from '../../../shared/services/feedback';
 import {
   imagenesApi,
@@ -17,6 +18,21 @@ interface Props {
   editable?: boolean;
   /** Fotos grandes, una debajo de otra (vista de detalle). */
   grande?: boolean;
+  /** Solo la primera foto, como portada de una tarjeta (consulta de la comunidad). */
+  portada?: boolean;
+  /** Nombre del elemento: texto alternativo de la foto y del respaldo visual cuando no hay foto. */
+  nombre?: string;
+}
+
+/** Respaldo visual cuando no hay foto o no se pudo cargar: icono y nombre, nunca una caja vacía. */
+function SinFoto({ nombre }: { nombre?: string }) {
+  return (
+    <div className="cs-sin-foto" role="img" aria-label={nombre ? `${nombre}: sin fotografía disponible` : 'Sin fotografía disponible'}>
+      <Building />
+      {nombre && <b aria-hidden="true">{nombre}</b>}
+      <small aria-hidden="true">Sin fotografía disponible</small>
+    </div>
+  );
 }
 
 export default function GaleriaImagenes({
@@ -24,7 +40,11 @@ export default function GaleriaImagenes({
   elementoId,
   editable = true,
   grande = false,
+  portada = false,
+  nombre,
 }: Props) {
+  // Fotos que el navegador no pudo mostrar (archivo dañado o enlace vencido): se ocultan y, si no queda ninguna, se ve el respaldo
+  const [rotas, setRotas] = useState<string[]>([]);
   const [fotos, setFotos] = useState<FotoCargada[]>([]);
   const [cargando, setCargando] = useState(true);
   const [subiendo, setSubiendo] = useState(false);
@@ -43,16 +63,19 @@ export default function GaleriaImagenes({
       setError('');
       try {
         const lista = await imagenesApi.listar(tipoElemento, elementoId);
-        const archivos = await Promise.all(
+        // Si un archivo falla, se muestran los demás: una foto que no carga no debe ocultar las que sí existen
+        const resultados = await Promise.allSettled(
           lista.map(async (imagen) => ({
             imagen,
             blob: await imagenesApi.obtenerArchivo(imagen.id),
           })),
         );
+        const archivos = resultados.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []));
 
         if (!vigente) return;
 
         urls = archivos.map(({ blob }) => URL.createObjectURL(blob));
+        setRotas([]);
         setFotos(archivos.map(({ imagen }, indice) => ({
           imagen,
           url: urls[indice],
@@ -116,6 +139,26 @@ export default function GaleriaImagenes({
     }
   };
 
+  const visibles = fotos.filter((f) => !rotas.includes(f.imagen.id));
+  const marcarRota = (id: string) => setRotas((previas) => (previas.includes(id) ? previas : [...previas, id]));
+
+  // Consulta (sin edición): la foto se muestra siempre que exista; si no hay o falla, el respaldo visual
+  if (!editable) {
+    if (cargando) return <div className={`cs-portada cargando${grande ? ' grande' : ''}`} aria-hidden="true" />;
+    if (visibles.length === 0) return <div className={`cs-portada${grande ? ' grande' : ''}`}><SinFoto nombre={nombre} /></div>;
+    const mostradas = portada ? visibles.slice(0, 1) : visibles;
+    return (
+      <div className={`cs-portada-lista${grande ? ' grande' : ''}`}>
+        {mostradas.map(({ imagen, url }) => (
+          <figure className={`cs-portada${grande ? ' grande' : ''}`} key={imagen.id}>
+            <img src={url} alt={nombre ? `Fotografía de ${nombre}` : imagen.nombreOriginal} loading="lazy"
+              onError={() => marcarRota(imagen.id)} />
+          </figure>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <section className={`cs-galeria${grande ? ' cs-galeria-grande' : ''}`} aria-label="Fotografías del elemento">
       <div className="cs-galeria-cabecera">
@@ -141,7 +184,7 @@ export default function GaleriaImagenes({
       {cargando ? (
         <p className="cs-vacio">Cargando fotografías…</p>
       ) : fotos.length === 0 ? (
-        <p className="cs-galeria-sin-foto">Sin foto</p>
+        <SinFoto nombre={nombre} />
       ) : (
         <div className="cs-galeria-lista">
           {fotos.map(({ imagen, url }) => (
