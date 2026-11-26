@@ -186,7 +186,7 @@ export default function AlertList() {
                       <div className="clamp2">{a.instructions}</div>
                       <div className="s">{[a.origin === 'SIMULATION' ? 'Simulacro' : null, typeText(a.types)].filter(Boolean).join(' · ')}</div>
                     </td>
-                    <td className="al-alcance">{scopeText(a.scope, catalog, a.scopes)}<div className="s">{recipientsText(a.recipients) || 'Sin destinatarios'}</div></td>
+                    <td className="al-alcance"><div className="al-lugar">{scopeText(a.scope, catalog, a.scopes)}</div><div className="s">{recipientsText(a.recipients) || 'Sin destinatarios'}</div></td>
                     <td className="al-fecha">{formatDate(a.createdAt)}</td>
                     <td className="al-estado"><span className={`st ${s.css}`}>{s.label}</span></td>
                     <td className="al-acts">
