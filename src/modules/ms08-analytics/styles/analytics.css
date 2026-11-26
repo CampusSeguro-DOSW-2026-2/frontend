@@ -30,3 +30,6 @@
 .an-options button:hover,.an-options button:focus-visible{background:var(--bg)}
 .an-options small{color:var(--mut);font-size:12px}
 .an-options .help{padding:8px 10px}
+
+/* Áreas táctiles de 44 px en celular y escritorio (docs/PATRONES-UI.md) */
+.ev-table input[type=checkbox]{width:24px;height:24px}

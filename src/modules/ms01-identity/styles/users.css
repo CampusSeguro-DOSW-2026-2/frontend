@@ -154,7 +154,7 @@
 .panel.role-panel{max-width:1120px}
 .role-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:24px;align-items:start}
 .role-panel .perm-groups.picker{max-height:640px;padding:20px}
-.role-panel .perm-groups.picker .perm-group ul{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;margin-top:12px}
+.role-panel .perm-groups.picker .perm-group ul{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:10px;margin-top:12px}
 .role-panel .perm-groups.picker li{flex-direction:column;align-items:stretch;justify-content:flex-start;gap:6px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;transition:border-color .15s,background .15s}
 .role-panel .perm-groups.picker li:has(input:checked){border-color:var(--red);background:var(--cream)}
 .role-panel .perm-groups.picker li label{align-items:flex-start;flex-wrap:nowrap;line-height:20px}
@@ -179,7 +179,7 @@
 .wide-edit .general-head h2{flex:none}
 .wide-edit .general-summary{flex:1;color:var(--mut);font-size:14px}
 .wide-edit .general-head .linkbtn{align-self:auto}
-.wide-edit .role-checklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:0;border:0;background:none}
+.wide-edit .role-checklist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(250px,100%),1fr));gap:10px;padding:0;border:0;background:none}
 .wide-edit .role-checklist li{flex-direction:column;align-items:flex-start;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:#fff}
 .wide-edit .role-checklist li:last-child{border-bottom:1px solid var(--line)}
 .wide-edit .role-checklist li.changed{border-color:var(--red);background:var(--cream)}
@@ -195,3 +195,8 @@
 .utable input[type=checkbox]:indeterminate::after,.role-checklist input[type=checkbox]:indeterminate::after{content:'';width:10px;height:2px;border:0;background:var(--red);transform:none}
 .utable input[type=checkbox]:disabled,.role-checklist input[type=checkbox]:disabled{cursor:default;opacity:.55}
 .utable input[type=checkbox]:focus-visible,.role-checklist input[type=checkbox]:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+/* Áreas táctiles de 44 px en celular y escritorio (docs/PATRONES-UI.md) */
+.linkbtn,.picker-toggle{min-height:var(--tap);padding:12px 4px;margin:-12px -4px}
+button.login-forgot,.login-forgot{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 6px}
+.utable input[type=checkbox],.role-checklist input[type=checkbox]{width:24px;height:24px}

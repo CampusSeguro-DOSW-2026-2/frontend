@@ -30,3 +30,4 @@
 /* Seguimiento de participantes (panel de MS04) dentro del detalle del evento */
 .ev-track{display:flex;flex-direction:column;gap:16px}
 .ev-track>h2{font:700 20px/1.2 'Outfit',sans-serif}
+@media(max-width:480px){.ev-grid2{grid-template-columns:1fr;gap:2px}.ev-grid2 dd{margin-bottom:10px}}

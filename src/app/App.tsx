@@ -3,6 +3,7 @@ import { ErrorBoundary } from '../shared/components/ErrorBoundary';
 import { FeedbackHost } from '../shared/components/Feedback';
 import { Mensaje } from '../shared/components/Mensaje';
 import { Navbar } from '../shared/components/Layout';
+import { useTablasEnTarjetas } from '../shared/hooks/useTablasEnTarjetas';
 import { getSession, HOME_ROUTE, setSessionNotice, syncRememberedSession } from '../shared/services/session';
 import { logoutUser } from '../modules/ms01-identity/services/identity';
 import { PUBLIC_ROUTES, useIdentityRoutes } from '../modules/ms01-identity/routes';
@@ -32,6 +33,8 @@ export default function App() {
   const [route, setRoute] = useState(path());
   const [session, setSession] = useState(getSession);
   const identityRoutes = useIdentityRoutes(session);
+  // En celular, las tablas se muestran como tarjetas, sin desplazamiento horizontal
+  useTablasEnTarjetas();
   // Cierra la sesión en cuanto el Gateway rechaza el token (cambio de roles, permisos o estado: RF-MS01-11)
   useSessionGuard(session, route);
 

@@ -7,7 +7,7 @@
 .cs-resultados{display:flex;flex-direction:column;gap:20px}
 .cs-cabecera{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px}
 .cs-resumen{font-size:14px;color:var(--mut)}
-.cs-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;align-items:start}
+.cs-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr));gap:24px;align-items:start}
 .cs-ruta{display:flex;flex-direction:column;gap:20px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px}
 .cs-ruta.stop{border:1.5px solid var(--red)}
 .cs-ruta .ctop{gap:16px;align-items:flex-start}
@@ -164,3 +164,7 @@
   color: var(--text-muted, #697386);
   font-size: 13px;
 }
+
+/* Áreas táctiles de 44 px en celular y escritorio (docs/PATRONES-UI.md) */
+.cs-mini,.cs-pildora{min-height:var(--tap);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.cs-guia-pasos summary,.qr-detalle summary{min-height:var(--tap);display:flex;align-items:center}

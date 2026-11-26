@@ -2,7 +2,7 @@
 .pr-seccion{display:flex;flex-direction:column;gap:16px}
 .pr-vacio{display:flex;flex-direction:column;gap:6px;padding:32px;text-align:center;color:var(--mut);background:#fff;border:1px dashed var(--line);border-radius:16px}
 .pr-nota{color:var(--mut)}
-.pr-categorias{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin:0;padding:0;list-style:none}
+.pr-categorias{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(240px,100%),1fr));gap:16px;margin:0;padding:0;list-style:none}
 .pr-categoria{display:flex;flex-direction:column;gap:8px;padding:20px;background:#fff;border:1px solid var(--line);border-radius:16px}
 .pr-categoria h3{font:700 16px/22px 'Outfit',sans-serif}
 .pr-categoria p{color:var(--mut);font-size:13px}

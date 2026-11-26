@@ -32,7 +32,8 @@ usa estas piezas en vez de crear las suyas.
 1. **Encabezado** `ev-head`: título, una línea de contexto y **una sola** acción principal (`.btn.light.cta`).
 2. **Herramientas** `ev-tools`: pestañas por estado (`ev-tabs`/`ev-tab`) y búsqueda.
 3. **Tabla** `ev-table`, con un título (`.t`) y un subtítulo (`.s`) por fila. Las acciones van en `ev-acts`, con botones `.btn.sm`.
-   - **En celular:** se agrega la clase `tarjetas` a la tabla, `data-label="Columna"` a cada `<td>` y `data-primera` a la celda de acciones. Así cada fila se vuelve una tarjeta con la acción arriba, sin desplazamiento horizontal.
+   - **En celular:** toda tabla con `<thead>` se vuelve tarjetas automáticamente (`useTablasEnTarjetas`, montado en App). Cada celda muestra encima el nombre de su columna y no hay desplazamiento horizontal. Una tabla que deba conservar sus columnas lleva `data-tabla="fija"`.
+   - Las rejillas usan `minmax(min(Npx, 100%), 1fr)` para no desbordarse en pantallas angostas.
 4. Estado vacío con `EstadoVacio`. Paginación con `ev-pager`.
 5. Estados con `.st.<CÓDIGO>`: en curso = aviso (ámbar), programado = información (azul), borrador = neutro, finalizado = oscuro.
 

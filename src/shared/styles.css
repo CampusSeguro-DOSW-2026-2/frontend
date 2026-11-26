@@ -282,24 +282,31 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .ev-pager div{display:flex;gap:8px}
 .ev-acts .btn.white:hover{border-color:var(--red);color:var(--red)}
 .ev-table .clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13px;color:var(--mut);margin-top:4px}
-@media(max-width:760px){.ev-head,.ev-main{padding-left:16px;padding-right:16px}.ev-head{min-height:0;padding-top:20px;padding-bottom:24px}.ev-head h1{font-size:26px}.ev-head p{font-size:15px}.ev-table:not(.tarjetas){display:block;overflow-x:auto}}
+@media(max-width:760px){.ev-head,.ev-main{padding-left:16px;padding-right:16px}.ev-head{min-height:0;padding-top:20px;padding-bottom:24px}.ev-head h1{font-size:26px}.ev-head p{font-size:15px}.ev-table[data-tabla=fija]{display:block;overflow-x:auto}}
 .ev-empty .empty-logo{display:block;margin:0 auto 16px;max-width:160px;height:auto}
 /* Crear alerta: Inicio y Tipo comparten fila para no dejar espacios vacíos */
 .af .two>*{flex:1;min-width:0}.af-row{align-items:flex-start}
 
-/* ===== Tablas en celular (opcional): con .tarjetas cada fila se vuelve una tarjeta =====
- * Cada <td> lleva data-label con el nombre de su columna; la celda con data-primera (las acciones) sube al principio
- * para que la acción principal quede visible sin desplazamiento horizontal. */
+/* ===== Tablas en celular: cada fila se vuelve una tarjeta, sin desplazamiento horizontal =====
+ * useTablasEnTarjetas (shared/hooks) marca las tablas con .tarjetas y pone en cada celda data-label con el nombre de su
+ * columna. La clase se repite (.tarjetas.tarjetas) para ganar a los estilos de tabla de cada módulo.
+ * Una tabla que deba conservar sus columnas lleva data-tabla="fija". */
 @media(max-width:760px){
-  .ev-table.tarjetas,.ev-table.tarjetas tbody,.ev-table.tarjetas tr,.ev-table.tarjetas td{display:block;width:100%}
-  .ev-table.tarjetas{background:none;border:0;border-radius:0}
-  .ev-table.tarjetas thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
-  .ev-table.tarjetas tr{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
-  .ev-table.tarjetas tr.live{background:var(--live-bg);border-color:var(--warn-line)}
-  .ev-table.tarjetas td{padding:0;border:0}
-  .ev-table.tarjetas td[data-label]:not([data-label=""])::before{content:attr(data-label);display:block;margin-bottom:2px;font:600 12px/16px 'Geist',sans-serif;color:var(--mut)}
-  .ev-table.tarjetas td[data-primera]{order:-1}
-  .ev-table.tarjetas .ev-acts{justify-content:flex-start;flex-wrap:wrap}
+  table.tarjetas.tarjetas,table.tarjetas.tarjetas>tbody,table.tarjetas.tarjetas>tbody>tr,table.tarjetas.tarjetas>tbody>tr>td{display:block;width:100%;min-width:0}
+  table.tarjetas.tarjetas{background:none;border:0;border-radius:0;overflow:visible}
+  table.tarjetas.tarjetas>thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+  table.tarjetas.tarjetas>tbody>tr{display:flex;flex-direction:column;gap:12px;margin-bottom:12px;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+  table.tarjetas.tarjetas>tbody>tr.live{background:var(--live-bg);border-color:var(--warn-line)}
+  table.tarjetas.tarjetas>tbody>tr>td{padding:0;border:0;text-align:left;white-space:normal;overflow-wrap:anywhere}
+  table.tarjetas.tarjetas>tbody>tr>td:empty{display:none}
+  table.tarjetas.tarjetas>tbody>tr>td[data-label]:not([data-label=""])::before{content:attr(data-label);display:block;margin-bottom:2px;font:600 12px/16px 'Geist',sans-serif;color:var(--mut);text-transform:none;letter-spacing:0}
+  table.tarjetas.tarjetas td *{min-width:0;max-width:100%}
+  table.tarjetas.tarjetas td .chips,table.tarjetas.tarjetas td .mail{white-space:normal}
+  /* Las acciones de la fila quedan a lo ancho, visibles y con área táctil completa */
+  table.tarjetas.tarjetas .ev-acts{justify-content:flex-start;flex-wrap:wrap}
+  /* Los contenedores con desplazamiento horizontal ya no lo necesitan */
+  .tablewrap,.cs-tabla,.chk-tablawrap,.ap-scroll{overflow:visible;border:0;background:none;border-radius:0}
+  .cs-tabla table,.evl-tabla,.pr-tabla,.ev-table{min-width:0}
 }
 
 /* ===== Mensaje: un solo componente para éxito, error, aviso e información (shared/components/Mensaje.tsx) ===== */
