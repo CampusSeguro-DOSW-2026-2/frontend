@@ -177,7 +177,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
               <span className="help">{evento.simulacro ? 'Simulacro' : 'Evento real'} · {evento.edificios.length} edificio(s) en el evento</span>
             </div>
             {!evento.permiteReasignar && (
-              <p className="ev-info">Este evento ya no admite cambios de asignación.</p>
+              <Mensaje tono="info" compacto>Este evento ya no admite cambios de asignación.</Mensaje>
             )}
           </section>
         )}
