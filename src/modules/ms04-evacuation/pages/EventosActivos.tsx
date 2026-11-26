@@ -41,7 +41,9 @@ export default function EventosActivos({ session }: { session: Session }) {
           window.location.replace(`#/checkin/${encodeURIComponent(eventos[0].evento_id)}`);
           return;
         }
-        setCarga({ estado: 'listo', eventos });
+        // Del más reciente al más antiguo (los que no tienen fecha de inicio, al final)
+        const inicio = (e: Evento) => (e.fecha_inicio ? new Date(e.fecha_inicio).getTime() : 0);
+        setCarga({ estado: 'listo', eventos: [...eventos].sort((a, b) => inicio(b) - inicio(a)) });
       })
       .catch((err: unknown) => { if (vigente) setCarga({ estado: 'error', mensaje: errorMessage(err) }); });
     return () => { vigente = false; };
@@ -81,8 +83,9 @@ export default function EventosActivos({ session }: { session: Session }) {
                   {edificios && <span>Edificios: <b>{edificios}</b></span>}
                   {zonas && <span>Zonas: <b>{zonas}</b></span>}
                 </div>
-                <a className="btn red chk-ir" href={`#/checkin/${encodeURIComponent(evento.evento_id)}`}>
-                  Abrir evento
+                <a className="btn red chk-ir" href={`#/checkin/${encodeURIComponent(evento.evento_id)}`}
+                  aria-label={`Reportar mi estado en ${evento.nombre}`}>
+                  Reportar mi estado
                 </a>
               </li>
               );
