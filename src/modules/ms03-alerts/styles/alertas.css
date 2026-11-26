@@ -1,0 +1,19 @@
+/* MS03 · Listado de alertas. Usa el estándar de listados (.ev-table) de shared/styles.css.
+ * En celular cada alerta es una tarjeta compacta (useTablasEnTarjetas): título y estado arriba, la fecha debajo, el
+ * alcance y los destinatarios en una sola línea y las acciones al final, sin etiquetas de columna. */
+@media (max-width:760px){
+  table.al-tabla.tarjetas.tarjetas>tbody>tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-alerta{grid-column:1;grid-row:1}
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-estado{grid-column:2;grid-row:1;align-self:start}
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-fecha{grid-column:1 / -1;grid-row:2;font-size:13px;color:var(--mut)}
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-alcance{grid-column:1 / -1;grid-row:3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;font-size:13px}
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-acts{grid-column:1 / -1;grid-row:4;margin-top:6px}
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-alcance .s{display:inline;margin:0}
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-alcance .s::before{content:" · "}
+  table.al-tabla.tarjetas.tarjetas .al-alerta .clamp2{-webkit-line-clamp:1}
+  /* Sin etiquetas de columna: el título, el estado y la fecha se explican solos; «Creada» va en línea */
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-alerta[data-label]::before,
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-estado[data-label]::before,
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-alcance[data-label]::before{display:none}
+  table.al-tabla.tarjetas.tarjetas>tbody>tr>td.al-fecha[data-label]::before{display:inline;content:"Creada ";margin:0;font:inherit;color:inherit}
+}

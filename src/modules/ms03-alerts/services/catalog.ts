@@ -1,5 +1,6 @@
 import type { AlertType, Recipient, Scope } from './alerts';
 import { isTechnicalId } from '../../../shared/utils/text';
+import { etiquetaRol } from '../../../shared/utils/etiquetas';
 
 export interface CatalogItem { id: string; label: string; group: string }
 
@@ -20,7 +21,8 @@ export const CAMPUS_ITEM: CatalogItem = { id: 'CAMPUS', label: 'Todo el campus',
 // Opción de destinatario para un rol de MS01: se muestra con su nombre original, el mismo que guarda MS01. La lista de
 // roles que reciben alertas no se declara aquí: sale de MS01 (`services/recipients.ts`), que incluye los roles que cree
 // o edite el administrador.
-export const roleItem = (rol: string): CatalogItem => ({ id: rol, label: rol, group: 'Roles' });
+// El id es el código del rol (lo que se envía a MS03); la etiqueta, su nombre legible («Brigadista», no «BRIGADISTA»).
+export const roleItem = (rol: string): CatalogItem => ({ id: rol, label: etiquetaRol(rol), group: 'Roles' });
 
 // OPERATIVA (logística o administrativa) es el único tipo local de MS03: el resto sale del catálogo de MS06.
 // Es exclusiva: no se combina con los de emergencia.
@@ -48,13 +50,13 @@ export const labelOf = (items: CatalogItem[], id: string) =>
   items.find((i) => i.id === id)?.label ?? (isTechnicalId(id) ? 'No disponible' : id);
 export const scopeIdsOf = (s: { type: string; ids?: string[] }) => (s.type === 'CAMPUS' ? ['CAMPUS'] : s.ids ?? []);
 export const listEs = (xs: string[]) => {
-  // Los nombres en mayúsculas (los roles de MS01) se muestran tal cual
+  // Los nombres en mayúsculas (siglas) se muestran tal cual
   const l = xs.map((x, i) => (i === 0 || x === x.toUpperCase() ? x : x.charAt(0).toLowerCase() + x.slice(1)));
   return l.length > 1 ? `${l.slice(0, -1).join(', ')} y ${l[l.length - 1]}` : l[0] ?? '';
 };
 /** Destinatarios en texto: los roles por nombre y los usuarios individuales como un conteo. */
 export const recipientsText = (recipients: Recipient[]) => {
-  const names = recipients.filter((r) => r.type === 'ROLE').map((r) => r.id);
+  const names = recipients.filter((r) => r.type === 'ROLE').map((r) => etiquetaRol(r.id));
   const users = recipients.filter((r) => r.type === 'USER').length;
   if (users) names.push(users === 1 ? '1 usuario' : `${users} usuarios`);
   return listEs(names);
