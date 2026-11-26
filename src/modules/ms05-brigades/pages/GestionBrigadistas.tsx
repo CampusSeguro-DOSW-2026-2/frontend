@@ -145,7 +145,7 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
           <h1>Gestión de brigadistas</h1>
           <p>
             {eventKindsTitle}: primero los brigadistas activos, por edificio; después los inactivos.
-            {' '}Despliega a cada uno para ver sus incidentes y cambiar su edificio.
+            {' '}Abra a cada uno para ver sus incidentes y cambiar su edificio.
           </p>
         </div>
       </header>

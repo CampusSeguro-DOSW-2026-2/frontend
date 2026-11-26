@@ -90,7 +90,7 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
     const e: Errores = {};
     if (!espacioId) e.espacioOrigenId = 'Seleccione el espacio de origen.';
     if (!zonaId) e.zonaSeguraDestinoId = 'Seleccione la zona segura de destino.';
-    if (!descripcion.trim()) e.descripcion = 'Describe el recorrido.';
+    if (!descripcion.trim()) e.descripcion = 'Describa el recorrido.';
     else if (descripcion.trim().length > 1000) e.descripcion = 'El recorrido no puede superar 1000 caracteres.';
     validarMotivo(estado, motivo, e);
     return e;
@@ -125,7 +125,7 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
         </Campo>
       </div>
       <Campo id="ruta-descripcion-nueva" etiqueta="Recorrido" error={errores.descripcion}>
-        <textarea id="ruta-descripcion-nueva" rows={3} value={descripcion} placeholder="Sal por la puerta principal, gira a la derecha y baja por la escalera norte." onChange={(e) => setDescripcion(e.target.value)} />
+        <textarea id="ruta-descripcion-nueva" rows={3} value={descripcion} placeholder="Salga por la puerta principal, gire a la derecha y baje por la escalera norte." onChange={(e) => setDescripcion(e.target.value)} />
       </Campo>
       <div className="cs-campos">
         <CamposEstado id="nueva" estado={estado} motivo={motivo} errores={errores} onEstado={setEstado} onMotivo={setMotivo} />
@@ -147,7 +147,7 @@ function ModificarRuta({ ruta, zonas, onGuardar, onCancelar }: {
   const validar = () => {
     const e: Errores = {};
     if (!zonaId) e.zonaSeguraDestinoId = 'Seleccione la zona segura de destino.';
-    if (!descripcion.trim()) e.descripcion = 'Describe el recorrido.';
+    if (!descripcion.trim()) e.descripcion = 'Describa el recorrido.';
     else if (descripcion.trim().length > 1000) e.descripcion = 'El recorrido no puede superar 1000 caracteres.';
     return e;
   };

@@ -1,3 +1,4 @@
+import { etiquetaCodigo, textoLegible } from '../../../shared/utils/etiquetas';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
 import { ApiError } from '../../../shared/services/http';
@@ -273,10 +274,10 @@ export default function Auditoria({ session }: { session: Session }) {
                     <div className="s">{r.tipoEvento ? KIND_LABEL[r.tipoEvento] : 'Administrativo'}</div>
                     {r.eventoId && <div className="s">{eventNames[r.eventoId] ?? UNKNOWN_EVENT}</div>}
                   </td>
-                  <td><span className={`st ${r.resultado}`}>{RESULT_LABEL[r.resultado] ?? r.resultado}</span></td>
+                  <td><span className={`st ${r.resultado}`}>{RESULT_LABEL[r.resultado] ?? etiquetaCodigo(r.resultado)}</span></td>
                   <td>{userText(r.usuarioId)}</td>
                   <td>{resourceText(r.recursoAfectado)}</td>
-                  <td>{r.detalle ? withoutIds(r.detalle) || '—' : '—'}</td>
+                  <td>{r.detalle ? textoLegible(withoutIds(r.detalle)) || '—' : '—'}</td>
                 </tr>
               ))}
             </tbody>

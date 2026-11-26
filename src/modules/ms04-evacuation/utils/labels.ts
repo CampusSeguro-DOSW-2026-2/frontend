@@ -1,3 +1,4 @@
+import { etiquetaCodigo, etiquetaRol } from '../../../shared/utils/etiquetas';
 import type { ScopeCatalog } from '../../ms03-alerts/services/catalog';
 import type { EstadoCheckin, EstadoEvento } from '../types';
 
@@ -11,10 +12,10 @@ export const ESTADOS_EVENTO: { codigo: EstadoEvento | ''; texto: string }[] = [
 ];
 
 export const textoEstadoEvento = (codigo: EstadoEvento): string =>
-  ESTADOS_EVENTO.find((e) => e.codigo === codigo)?.texto ?? codigo;
+  ESTADOS_EVENTO.find((e) => e.codigo === codigo)?.texto ?? etiquetaCodigo(codigo);
 
-/** Rol convocado con su nombre original de MS01: los roles son dinámicos y no se traducen en el front. */
-export const textoRol = (rol: string): string => rol;
+/** Rol convocado con su nombre legible (los roles son dinámicos: los nuevos se muestran como frase con tildes). */
+export const textoRol = (rol: string): string => etiquetaRol(rol);
 
 /** Texto que ve el usuario para cada estado, en el orden en que se muestran (F-01, RN-MS04-03). */
 export const ESTADOS: { codigo: EstadoCheckin; texto: string }[] = [

@@ -1,3 +1,4 @@
+import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import GaleriaImagenes from '../components/GaleriaImagenes';
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
@@ -182,7 +183,7 @@ export default function ZonesAdmin() {
     }
   };
 
-  const cabecera = <PageHeader badge="ADMINISTRACIÓN" title="Zonas seguras" subtitle="Gestiona los puntos de encuentro del campus y su código." />;
+  const cabecera = <PageHeader badge="ADMINISTRACIÓN" title="Zonas seguras" subtitle="Gestione los puntos de encuentro del campus y su código." />;
 
   if (!zonas) {
     return (
@@ -247,7 +248,7 @@ export default function ZonesAdmin() {
           <p className="cs-alert info">
             {zonas.length === 0
               ? 'Todavía no hay zonas seguras registradas.'
-              : 'No hay zonas con este filtro. Prueba con «Todas».'}
+              : 'No hay zonas con este filtro. Pruebe con «Todas».'}
           </p>
         ) : visibles.length > 0 && (
           <div className="cs-tabla">
@@ -294,7 +295,7 @@ export default function ZonesAdmin() {
                         )}
                       </td>
                       <td>{zona.capacidad}</td>
-                      <td><span className={`cs-estado ${activa ? 'ok' : 'info'}`}>{zona.estado}</span></td>
+                      <td><span className={`cs-estado ${activa ? 'ok' : 'info'}`}>{etiquetaCodigo(zona.estado)}</span></td>
                       <td>
                         {puedeGestionar && (
                           <div className="cs-acciones">

@@ -213,7 +213,7 @@ export default function PreventiveAdmin() {
             )}
 
             {recomendaciones.length === 0 && edicion?.tipo !== 'nueva' && (
-              <p className="cs-alert info">Aún no hay recomendaciones. Las que agregues aparecerán en la tarjeta de cada ruta.</p>
+              <p className="cs-alert info">Aún no hay recomendaciones. Las que agregue aparecerán en la tarjeta de cada ruta.</p>
             )}
 
             {porEdificio.length > 0 && (

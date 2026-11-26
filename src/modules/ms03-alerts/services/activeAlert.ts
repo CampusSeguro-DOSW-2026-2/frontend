@@ -20,9 +20,9 @@ export const localApi: ActiveAlertApi = {
     return {
       id: 'demo', types: ['SISMO'], title: 'Simulacro Sísmico Nacional', scope: { type: 'CAMPUS' },
       instructions: [
-        'Agáchate, cúbrete debajo de una mesa y sostente.',
+        'Agáchese, cúbrase debajo de una mesa y sujétese.',
         'Evacúe ordenadamente por las salidas indicadas.',
-        'Diríjase al Punto de Encuentro X.',
+        'Diríjase al punto de encuentro indicado.',
       ].join('\n'),
       startedAt: read('cs.startedAt', ago(3)),
       confirmed: read('cs.alertConfirmed', false),

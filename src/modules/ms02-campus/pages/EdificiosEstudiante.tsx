@@ -30,7 +30,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
       setError('');
 
       if (!puedeConsultar) {
-        setError('Tu rol no tiene permiso para consultar el campus.');
+        setError('Su rol no tiene permiso para consultar el campus.');
         setCargando(false);
         return;
       }
@@ -81,7 +81,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
       <>
         <PageHeader badge="CAMPUS" title="Edificios" subtitle="Consulte los edificios y sus espacios." />
         <main className="content">
-          <p className="cs-alert stop">Tu rol no tiene permiso para consultar el campus.</p>
+          <p className="cs-alert stop">Su rol no tiene permiso para consultar el campus.</p>
         </main>
       </>
     );
@@ -120,7 +120,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
         <PageHeader
           badge="CAMPUS"
           title="Edificios"
-          subtitle="Explora los edificios del campus, sus fotografías y los espacios disponibles."
+          subtitle="Explore los edificios del campus, sus fotografías y los espacios disponibles."
         />
 
         <main className="content">

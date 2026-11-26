@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { confirmar } from '../../../shared/services/feedback';
 import {
   imagenesApi,
   type ImagenCampus,
@@ -101,7 +102,7 @@ export default function GaleriaImagenes({
   };
 
   const eliminar = async (id: string) => {
-    if (!window.confirm('¿Seguro que deseas eliminar esta imagen?')) return;
+    if (!(await confirmar({ titulo: '¿Eliminar esta fotografía?', texto: 'La fotografía se borra de forma permanente.', accion: 'Eliminar fotografía', peligro: true }))) return;
 
     setEliminando(id);
     setError('');

@@ -1,3 +1,4 @@
+import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
@@ -165,7 +166,7 @@ export default function CampusAdmin() {
     }
   };
 
-  const cabecera = <PageHeader badge="ADMINISTRACIÓN" title="Campus y zonas abiertas" subtitle="Gestiona los campus y sus zonas abiertas: zonas verdes, plazoletas, canchas y parqueaderos." />;
+  const cabecera = <PageHeader badge="ADMINISTRACIÓN" title="Campus y zonas abiertas" subtitle="Gestione los campus y sus zonas abiertas: zonas verdes, plazoletas, canchas y parqueaderos." />;
 
   if (!datos) {
     return (
@@ -211,7 +212,7 @@ export default function CampusAdmin() {
                 <div className="cs-piso-cabecera">
                   <h3 className="cs-piso-titulo">
                     {c.nombre}
-                    <span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{c.estado}</span>
+                    <span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{etiquetaCodigo(c.estado)}</span>
                     {c.descripcion && <span>{c.descripcion}</span>}
                   </h3>
                   {puedeGestionar && (
@@ -262,7 +263,7 @@ export default function CampusAdmin() {
                                 </>
                               ) : '—'}
                             </td>
-                            <td><span className={`cs-estado ${zonaActiva ? 'ok' : 'info'}`}>{z.estado}</span></td>
+                            <td><span className={`cs-estado ${zonaActiva ? 'ok' : 'info'}`}>{etiquetaCodigo(z.estado)}</span></td>
                             <td>
                               {puedeGestionar && (
                                 <div className="cs-acciones">

@@ -1,32 +1,24 @@
+import { etiquetaRol } from '../../../shared/utils/etiquetas';
 // Textos visibles de los códigos que devuelve MS01
 export const STATE_LABEL: Record<string, string> = {
   ACTIVO: 'Activo',
   INACTIVO: 'Inactivo',
 };
 
-export const ROLE_LABEL: Record<string, string> = {
-  ESTUDIANTE: 'Estudiante',
-  PROFESOR: 'Profesor',
-  ADMINISTRATIVO: 'Administrativo',
-  BRIGADISTA: 'Brigadista',
-  COORDINADOR: 'Coordinador',
-  ORGANIZADOR: 'Organizador',
-  ADMIN: 'Administrador',
-  AUDITOR: 'Auditor',
-};
+// Los nombres visibles salen de shared/utils/etiquetas, el mismo que usa la barra superior
+export const ROLE_LABEL: Record<string, string> = Object.fromEntries(
+  ['ESTUDIANTE', 'PROFESOR', 'ADMINISTRATIVO', 'BRIGADISTA', 'COORDINADOR', 'ORGANIZADOR', 'ADMIN', 'AUDITOR']
+    .map((r) => [r, etiquetaRol(r)]),
+);
 
 export const ROLE_OPTIONS = Object.entries(ROLE_LABEL).map(([value, label]) => ({ value, label }));
 
 /**
  * Nombre visible de un rol: el de los roles iniciales y, para los que crea el administrador (que MS01 guarda en
- * MAYÚSCULAS con guion bajo), el mismo nombre en minúsculas con la primera letra en mayúscula, p. ej.
- * MONITOR_EVACUACION → Monitor evacuacion. El código del rol no cambia: solo cómo se muestra.
+ * MAYÚSCULAS con guion bajo), el mismo nombre como frase y con tildes, p. ej. MONITOR_EVACUACION → Monitor evacuación.
+ * El código del rol no cambia: solo cómo se muestra.
  */
-export function roleLabel(role: string): string {
-  if (ROLE_LABEL[role]) return ROLE_LABEL[role];
-  const text = role.replace(/_+/g, ' ').trim().toLowerCase();
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
+export const roleLabel = etiquetaRol;
 
 // Módulo al que pertenece cada permiso (primer segmento del código ms:recurso:acción)
 export const MODULE_LABEL: Record<string, string> = {

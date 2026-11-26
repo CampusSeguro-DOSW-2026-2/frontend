@@ -182,7 +182,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
         context={<a className="cs-volver" href="#/admin/edificios">← Edificios</a>} />
       <main className="content">
         {edificio.estado === 'INACTIVO' && (
-          <p className="cs-alert warn">Este edificio está inactivo, así que sus pisos y espacios no están disponibles para rutas. Reactívalo desde Edificios para poder modificarlos.</p>
+          <p className="cs-alert warn">Este edificio está inactivo, así que sus pisos y espacios no están disponibles para rutas. Reactívelo desde Edificios para poder modificarlos.</p>
         )}
         {errorCarga && <Falla error={errorCarga} />}
 

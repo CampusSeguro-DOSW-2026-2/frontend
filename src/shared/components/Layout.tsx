@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { Session } from '../types';
 import { PERMISSION } from '../permissions';
 import { sessionPermissions } from '../services/session';
+import { etiquetaRol } from '../utils/etiquetas';
 import {
   BarChart, BellIcon, BookOpen, Building, CalendarIcon, CalendarPlus, ChatIcon, ClipboardCheck, ClipboardList, CloseIcon,
   FilePen, FileText, HardHat, HomeIcon, KeyRound, LifeBuoy, ListChecks, LogOut, MapLine, MapPin, Megaphone, MenuIcon,
@@ -12,16 +13,8 @@ import {
 interface MenuItem { href: string; icon: ReactNode; label: string }
 interface MenuSection { title?: string; items: MenuItem[] }
 
-const ROLE_LABEL: Record<string, string> = {
-  ESTUDIANTE: 'Estudiante', PROFESOR: 'Profesor', ADMINISTRATIVO: 'Personal administrativo', BRIGADISTA: 'Brigadista',
-  COORDINADOR: 'Coordinador de emergencias', ORGANIZADOR: 'Organizador de simulacros', ADMIN: 'Administrador', AUDITOR: 'Auditor',
-};
-
-/** Nombre visible de un rol: los iniciales con su nombre; los creados por el administrador, sin mayúsculas ni guion bajo. */
-const roleName = (role: string) => {
-  const text = role.replace(/_+/g, ' ').trim().toLowerCase();
-  return ROLE_LABEL[role] ?? text.charAt(0).toUpperCase() + text.slice(1);
-};
+/** Nombre visible de un rol, con tildes también en los creados por el administrador (shared/utils/etiquetas). */
+const roleName = etiquetaRol;
 
 /**
  * Main menu built from the permissions of the token (design "Menú hamburguesa": community, brigade and administrative

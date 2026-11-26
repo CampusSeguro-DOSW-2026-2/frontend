@@ -1,3 +1,4 @@
+import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PickerBox } from '../components/PickerBox';
@@ -161,7 +162,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
 
   const scopeText = scopeIds.map((i) => labelOf(scopeItems, i)).join(' · ');
   const rolesText = listEs(roles.map((r) => labelOf(roleItems, r)));
-  const badge = !alert ? 'BORRADOR' : scheduled ? 'PROGRAMADA' : alert.status === 'DRAFT' ? 'BORRADOR' : alert.status;
+  const badge = (!alert ? 'Borrador' : scheduled ? 'Programada' : etiquetaCodigo(alert.status)).toUpperCase();
   const star = (on: boolean) => on && <span className="req"> *</span>;
 
   if (loading) return <main className="page"><p className="notice">Cargando alerta…</p></main>;
