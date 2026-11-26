@@ -420,3 +420,11 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
   .spin,.btn[aria-busy=true]::before{animation-duration:1.6s}
   .actualizando[aria-busy=true]::after{animation:none;background:var(--red);opacity:.4}
 }
+
+/* ===== Mapas (Leaflet). Colores por token (utils/mapa.ts) y marcadores de 44 px (components/MarcadorMapa.tsx) =====
+ * La leyenda es visible y legible por lectores de pantalla. En celular el mapa se mueve con dos dedos: el aviso
+ * .mapa-gesto solo aparece con puntero táctil. */
+.mapa-leyenda{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0;padding:0;list-style:none;font-size:13px;color:var(--ink)}
+.mapa-leyenda li{display:inline-flex;align-items:center;gap:6px}
+.mapa-gesto{display:none;font-size:13px;color:var(--mut)}
+@media (pointer:coarse){.mapa-gesto{display:block}}

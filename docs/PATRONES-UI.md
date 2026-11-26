@@ -16,6 +16,7 @@ usa estas piezas en vez de crear las suyas.
 | Campo de formulario | `shared/components/Campo.tsx` | Etiqueta, ayuda, error, opcional y contraseña con `aria-invalid` y `aria-describedby` |
 | Fecha y hora | `shared/components/DateTimeField.tsx` | Formato `es-CO` («12 oct 2026 · 10:05 a. m.») |
 | Alerta activa con instrucciones y «Confirmar recepción» | `shared/components/AlertaActiva.tsx` | `<AlertaActiva alerta={…} onConfirmar={() => activeAlertApi.confirmAlert(id)} />` (Inicio y pantalla de la alerta) |
+| Mapa Leaflet | `shared/utils/mapa.ts` y `shared/components/MarcadorMapa.tsx` | `<MapContainer {...opcionesMapa()}>` (en celular se mueve con dos dedos) y `<MarcadorMapa centro={p} relleno="--red" onClick={…} />` (colores por token, área táctil de 44 px). Leyenda visible con `.mapa-leyenda` y el aviso `.mapa-gesto` |
 
 `window.confirm` y `window.alert` no se usan.
 
