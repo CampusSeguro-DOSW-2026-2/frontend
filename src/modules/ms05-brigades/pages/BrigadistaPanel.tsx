@@ -180,62 +180,71 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
                 {actual.evento.simulacro ? 'Simulacro' : 'Evento real'}{inicio ? ` · Inició ${formatDate(inicio)}` : ''}
               </span>
             </div>
-          </section>
-        )}
-
-        {actual && !activo && (
-          <Mensaje tono="info">Actívese para elegir su zona y atender incidentes.</Mensaje>
-        )}
-
-        {actual && activo && (
-          <section className="ev-card">
-            <div className="ev-zone">
-              <span>Mi zona</span>
-              <b>{miZona || 'Sin asignar'}</b>
-            </div>
-            {actual.ubicacionId && !editandoZona && (
+            {activo && (
               <>
-                <p className="help">Puede cambiar de edificio o quitar su asignación, salvo que sea el único brigadista del suyo.</p>
-                <div className="row2" style={{ justifyContent: 'flex-start' }}>
-                  <button type="button" className="btn white" disabled={busy} onClick={() => setEditandoZona(true)}>Cambiar edificio</button>
-                  <button type="button" className="btn ghost" disabled={busy} onClick={() => void quitarZona()}>Quitar asignación</button>
+                <div className="ev-zone">
+                  <span>Mi zona</span>
+                  <b>{miZona || 'Sin asignar'}</b>
                 </div>
-              </>
-            )}
-            {(!actual.ubicacionId || editandoZona) && (
-              <>
-                <p className="help">Toque en el mapa el edificio donde va a apoyar durante el evento.</p>
-                <SelectorZonaEvento
-                  session={session}
-                  eventoId={actual.evento.eventoId}
-                  edificios={edificios}
-                  miUbicacionId={actual.ubicacionId}
-                  activo
-                  onAsignado={async (nombre) => {
-                    await cargar();
-                    setEditandoZona(false);
-                    setNotice(`Quedó asignado a ${nombre}.`);
-                  }}
-                />
-                {editandoZona && (
-                  <button type="button" className="btn ghost" disabled={busy} onClick={() => setEditandoZona(false)}>Cancelar cambio</button>
+                {!editandoZona && (
+                  <div className="bp-zona-acts">
+                    <button type="button" className={`btn sm ${actual.ubicacionId ? 'white' : 'red'}`} disabled={busy}
+                      onClick={() => setEditandoZona(true)}>
+                      {actual.ubicacionId ? 'Cambiar zona' : 'Elegir mi zona'}
+                    </button>
+                    {actual.ubicacionId && (
+                      <button type="button" className="btn ghost sm" disabled={busy} onClick={() => void quitarZona()}>Quitar mi asignación</button>
+                    )}
+                  </div>
                 )}
               </>
             )}
           </section>
         )}
 
+        {actual && !activo && (
+          <Mensaje tono="info">Marque «Estoy disponible» para elegir su zona y atender incidentes.</Mensaje>
+        )}
+
+        {actual && activo && editandoZona && (
+          <section className="ev-card" id="bp-mapa" aria-labelledby="bp-mapa-titulo">
+            <h2 id="bp-mapa-titulo">{actual.ubicacionId ? 'Cambiar zona' : 'Elegir mi zona'}</h2>
+            <p className="help">
+              Toque en el mapa o en la lista el edificio donde va a apoyar durante el evento.
+              {actual.ubicacionId ? ' Puede cambiar de zona salvo que sea el único brigadista de la suya.' : ''}
+            </p>
+            <SelectorZonaEvento
+              session={session}
+              eventoId={actual.evento.eventoId}
+              edificios={edificios}
+              miUbicacionId={actual.ubicacionId}
+              activo
+              onAsignado={async (nombre) => {
+                await cargar();
+                setEditandoZona(false);
+                setNotice(`Quedó asignado a ${nombre}.`);
+              }}
+            />
+            <button type="button" className="btn white sm" style={{ alignSelf: 'flex-start' }} disabled={busy} onClick={() => setEditandoZona(false)}>
+              {actual.ubicacionId ? 'Cancelar el cambio' : 'Cerrar el mapa'}
+            </button>
+          </section>
+        )}
+
         {actual && (
-          <section className="ev-card">
-            <h2>Incidentes · {actual.evento.nombre}</h2>
+          <section className="ev-card" aria-labelledby="bp-incidentes">
+            <h2 id="bp-incidentes">Incidentes</h2>
             {actual.evento.estado === 'EN_EJECUCION'
               ? (
                   <>
-                    <p className="help">Los que reportó, los que tiene asignados y los de su zona. Abra uno para iniciar la atención y registrar el resultado.</p>
-                    {canRegisterAssistance && (
-                      <a className="btn red" style={{ alignSelf: 'flex-start' }} href={`#/brigadista/reportar/${actual.evento.eventoId}`}>Reportar incidente</a>
+                    <p className="help">Los que reportó, los que tiene asignados y los de su zona. Toque «Atender» para iniciar la atención y registrar el resultado.</p>
+                    {activo && !actual.ubicacionId && (
+                      <Mensaje tono="aviso" compacto>Aún no tiene zona: elija una para recibir los incidentes de ese lugar.</Mensaje>
                     )}
                     <IncidentesEvento session={session} eventoId={actual.evento.eventoId} modo="brigadista" refresco={tick} />
+                    {canRegisterAssistance && (
+                      <a className="btn white sm" style={{ alignSelf: 'flex-start' }} href={`#/brigadista/reportar/${actual.evento.eventoId}`}>Reportar incidente</a>
+                    )}
                   </>
                 )
               : <EstadoVacio titulo="El evento aún no está en ejecución">Cuando inicie, aquí verá los incidentes de su zona.</EstadoVacio>}

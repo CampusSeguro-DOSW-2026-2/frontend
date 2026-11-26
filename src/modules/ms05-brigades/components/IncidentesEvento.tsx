@@ -8,8 +8,8 @@ import type { Session } from '../../../shared/types';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { formatDate, scopeLabelIn } from '../../ms06-drills/utils/labels';
 import { brigadesApi } from '../services/brigades';
-import { PRIORIDADES } from '../types';
 import type { IncidenteResumen, Pagina } from '../types';
+import PrioridadChip from './PrioridadChip';
 
 const ESTADOS: Record<string, { texto: string; clase: string }> = {
   REPORTADO: { texto: 'Reportado', clase: 'DRAFT' },
@@ -18,8 +18,6 @@ const ESTADOS: Record<string, { texto: string; clase: string }> = {
   RESUELTO: { texto: 'Resuelto', clase: 'FINISHED' },
   CERRADO: { texto: 'Cerrado', clase: 'FINISHED' },
 };
-
-const prioridadTexto = (codigo: string) => PRIORIDADES.find((p) => p.codigo === codigo)?.label ?? codigo;
 
 interface Props {
   session: Session;
@@ -93,7 +91,7 @@ export default function IncidentesEvento({ session, eventoId, modo, nombresBriga
         <EstadoVacio titulo={modo === 'brigadista' ? 'No tiene incidentes en este evento' : 'No hay incidentes reportados en este evento'} />
       )}
       {incidentes.length > 0 && (
-        <table className="ev-table">
+        <table className="ev-table inc-tabla">
           <thead>
             <tr>
               <th>Prioridad</th><th>Estado</th><th>Ubicación</th><th>Reportado</th><th>Responsable</th>
@@ -105,18 +103,18 @@ export default function IncidentesEvento({ session, eventoId, modo, nombresBriga
               const estado = ESTADOS[i.estado] ?? { texto: i.estado, clase: 'DRAFT' };
               return (
                 <tr key={i.incidenteId}>
-                  <td><div className="t">{prioridadTexto(i.prioridad)}</div></td>
+                  <td className="inc-prio"><PrioridadChip codigo={i.prioridad} /></td>
                   <td><span className={`st ${estado.clase}`}>{estado.texto}</span></td>
-                  <td>{scopeLabelIn(i.zonaId, catalog)}</td>
+                  <td className="inc-lugar"><div className="t">{scopeLabelIn(i.zonaId, catalog)}</div></td>
                   <td>{formatDate(i.reportadoEn)}</td>
                   <td>{i.brigadistaResponsableId
                     ? (propio(i) ? 'Usted' : nombresBrigadistas[i.brigadistaResponsableId] ?? 'Otro brigadista')
                     : <span className="help">Sin asignar</span>}</td>
                   {modo === 'brigadista' && (
-                    <td>
+                    <td className="inc-acts">
                       <div className="ev-acts">
                         {propio(i) && (i.estado === 'ASIGNADO' || i.estado === 'EN_ATENCION') && (
-                          <a className="btn white" href={`#/brigadista/incidentes/${encodeURIComponent(eventoId)}/${encodeURIComponent(i.incidenteId)}`}>
+                          <a className={`btn ${i.estado === 'ASIGNADO' ? 'red' : 'white'}`} href={`#/brigadista/incidentes/${encodeURIComponent(eventoId)}/${encodeURIComponent(i.incidenteId)}`}>
                             {i.estado === 'ASIGNADO' ? 'Atender' : 'Continuar atención'}
                           </a>
                         )}
@@ -124,7 +122,7 @@ export default function IncidentesEvento({ session, eventoId, modo, nombresBriga
                     </td>
                   )}
                   {gestion && modo === 'monitoreo' && (
-                    <td>
+                    <td className="inc-acts">
                       <div className="ev-acts">
                         {asignando === i.incidenteId ? (
                           <>

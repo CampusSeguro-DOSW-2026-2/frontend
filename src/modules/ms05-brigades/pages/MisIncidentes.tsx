@@ -12,7 +12,8 @@ import type { EventSummary } from '../../ms06-drills/types';
 import { formatDate, scopeLabelIn } from '../../ms06-drills/utils/labels';
 import { brigadesApi } from '../services/brigades';
 import type { IncidenteResumen } from '../types';
-import { estadoIncidente, prioridadDe } from '../utils/incidentes';
+import PrioridadChip from '../components/PrioridadChip';
+import { estadoIncidente } from '../utils/incidentes';
 import '../styles/respuesta.css';
 
 interface Grupo { evento: EventSummary; incidentes: IncidenteResumen[]; error: string }
@@ -68,11 +69,10 @@ export default function MisIncidentes({ session }: { session: Session }) {
                 <thead><tr><th>Prioridad</th><th>Ubicación</th><th>Reportado</th><th>Estado</th></tr></thead>
                 <tbody>
                   {incidentes.map((i) => {
-                    const p = prioridadDe(i.prioridad);
                     const st = estadoIncidente(i.estado);
                     return (
                       <tr key={i.incidenteId}>
-                        <td><span className={`rs-prio ${p.codigo}`}>{p.label}</span></td>
+                        <td><PrioridadChip codigo={i.prioridad} /></td>
                         <td className="rs-loc">{scopeLabelIn(i.zonaId, catalog)}</td>
                         <td className="rs-rep">{formatDate(i.reportadoEn)}</td>
                         <td><span className={`rs-st ${st.clase}`}>{st.texto}</span></td>

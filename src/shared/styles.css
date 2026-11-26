@@ -297,6 +297,9 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
   table.tarjetas.tarjetas td .chips,table.tarjetas.tarjetas td .mail{white-space:normal}
   /* Las acciones de la fila quedan a lo ancho, visibles y con área táctil completa */
   table.tarjetas.tarjetas .ev-acts{justify-content:flex-start;flex-wrap:wrap}
+  /* La celda de acciones no lleva la etiqueta «Acciones» encima, y si no tiene botones no ocupa espacio */
+  table.tarjetas.tarjetas>tbody>tr>td[data-label]:has(>.ev-acts)::before{display:none}
+  table.tarjetas.tarjetas>tbody>tr>td:has(>.ev-acts:empty){display:none}
   /* Los contenedores con desplazamiento horizontal ya no lo necesitan */
   .tablewrap,.cs-tabla,.chk-tablawrap,.ap-scroll{overflow:visible;border:0;background:none;border-radius:0}
   .cs-tabla table,.evl-tabla,.pr-tabla,.ev-table{min-width:0}

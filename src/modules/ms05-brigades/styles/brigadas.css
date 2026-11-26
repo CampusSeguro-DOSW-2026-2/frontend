@@ -51,3 +51,7 @@
 
 /* Áreas táctiles de 44 px en celular y escritorio (docs/PATRONES-UI.md) */
 .bg-chev{flex:none}
+
+/* ---------- Panel del brigadista ---------- */
+.bp-zona-acts{display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:760px){.bp-zona-acts .btn{flex:1 1 auto}}

@@ -1,0 +1,19 @@
+/* MS05 · Chips compartidos de los incidentes (components/PrioridadChip). Se importan desde el componente, así también
+ * los ve el seguimiento del evento de MS06. */
+/* Prioridad */
+.rs-prio{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:4px 10px;border-radius:6px;font:800 12px/16px 'Outfit',sans-serif;white-space:nowrap}
+.rs-prio.EMERGENCIA{background:var(--err-bg);color:var(--red)}
+.rs-prio.EMERGENCIA.solid{background:var(--red);color:var(--on-color)}
+.rs-prio.URGENCIA_MODERADA{background:var(--pale);color:var(--warn)}
+.rs-prio.POCA_URGENCIA{background:var(--ok-bg);color:var(--ok)}
+
+/* Lista de incidentes (components/IncidentesEvento). En celular cada fila es una tarjeta (useTablasEnTarjetas): primero
+ * la prioridad y el lugar, luego «Atender» a lo ancho, y después el estado, la hora y el responsable. */
+@media (max-width:760px){
+  table.inc-tabla.tarjetas>tbody>tr>td.inc-prio{order:-3}
+  table.inc-tabla.tarjetas>tbody>tr>td.inc-lugar{order:-2}
+  table.inc-tabla.tarjetas>tbody>tr>td.inc-acts{order:-1}
+  table.inc-tabla.tarjetas.tarjetas>tbody>tr>td.inc-prio[data-label]::before,
+  table.inc-tabla.tarjetas.tarjetas>tbody>tr>td.inc-lugar[data-label]::before{display:none}
+  table.inc-tabla.tarjetas .inc-acts .ev-acts>.btn{flex:1 1 100%}
+}

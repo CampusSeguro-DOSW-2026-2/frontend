@@ -11,7 +11,8 @@ import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { formatDate, scopeLabelIn } from '../../ms06-drills/utils/labels';
 import { brigadesApi } from '../services/brigades';
 import type { IncidenteDetalle } from '../types';
-import { estadoIncidente, prioridadDe } from '../utils/incidentes';
+import { estadoIncidente } from '../utils/incidentes';
+import PrioridadChip from '../components/PrioridadChip';
 import '../styles/respuesta.css';
 
 type Resultado = 'TRANSFERIDO' | 'RESUELTO' | 'NO_SE_PUDO';
@@ -95,7 +96,6 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
     }
   };
 
-  const p = inc ? prioridadDe(inc.prioridad) : null;
   const st = inc ? estadoIncidente(inc.estado) : null;
   // Título del caso para la persona: la descripción (sin ids técnicos), nunca el id del incidente
   const descripcion = inc?.descripcion ? withoutIds(inc.descripcion) : '';
@@ -109,7 +109,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
         {error && <Mensaje tono="error" onReintentar={load}>{error}</Mensaje>}
         {!inc && !error && <Cargando texto="Cargando incidente…" />}
 
-        {inc && p && st && (
+        {inc && st && (
           <div className="rs-grid">
             <div className="rs-col">
               <section className="rs-card">
@@ -121,7 +121,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                   <small>Persona afectada</small>
                   <span className="rs-person">{inc.nombreAfectado || 'Sin nombre registrado'}</span>
                 </div>
-                <span className={`rs-prio ${p.codigo}`}>{p.label}</span>
+                <PrioridadChip codigo={inc.prioridad} />
                 <div className="rs-place">
                   <PinIcon />
                   <div>
