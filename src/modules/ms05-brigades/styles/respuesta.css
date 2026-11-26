@@ -26,7 +26,8 @@
 .rs-kv small{font-size:12px;color:var(--mut)}
 .rs-kv b{font:700 18px/24px 'Outfit',sans-serif}
 .rs-link{align-self:flex-start;background:none;border:0;padding:0;color:var(--red);font:600 12px 'Geist',sans-serif;text-decoration:underline;cursor:pointer}
-.rs-info{display:flex;align-items:flex-start;gap:10px;background:#F1F5F9;border-radius:12px;padding:14px 16px;font-size:12px;line-height:18px;color:var(--mut)}
+.rs-info{display:flex;align-items:flex-start;gap:10px;background:var(--info-bg);border:1px solid var(--info-line);border-radius:12px;padding:14px 16px;font-size:13px;line-height:18px;color:var(--info)}
+.rs-info .ico{color:var(--info);flex:none}
 .rs-btn{height:48px;border-radius:10px;font-size:15px}
 /* Prioridad */
 .rs-prio{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:4px 10px;border-radius:6px;font:800 12px/16px 'Outfit',sans-serif;white-space:nowrap}

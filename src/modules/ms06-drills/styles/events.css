@@ -4,8 +4,8 @@
 .ev-form{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:32px;padding:40px 48px 56px;align-items:start}
 .ev-fields{display:flex;flex-direction:column;gap:22px;min-width:0}
 .ev-box{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:12px}
-.ev-info{display:flex;gap:12px;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:14px 16px;color:#1E3A8A;font-size:14px;line-height:1.5}
-.ev-warn{display:flex;gap:12px;background:var(--pale);border:1px solid var(--amber);border-radius:12px;padding:14px 16px;color:#7C2D12;font-size:14px;line-height:1.5}
+.ev-info{display:flex;gap:12px;background:var(--info-bg);border:1px solid var(--info-line);border-radius:12px;padding:14px 16px;color:var(--info);font-size:14px;line-height:1.5}
+.ev-warn{display:flex;gap:12px;background:var(--warn-bg);border:1px solid var(--warn-line);border-radius:12px;padding:14px 16px;color:var(--warn);font-size:14px;line-height:1.5}
 .ev-sum{display:flex;flex-direction:column;gap:12px;background:var(--cream);border:1px solid var(--red);border-radius:16px;padding:24px}
 .ev-sum h2{font:700 20px 'Outfit',sans-serif}
 .ev-sum small{font-size:13px;color:var(--mut)}.ev-sum b{font-size:15px;font-weight:600}

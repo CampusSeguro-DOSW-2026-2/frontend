@@ -206,8 +206,9 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .sum2-msg strong{font:700 20px/130% 'Outfit',sans-serif;overflow-wrap:anywhere}
 .sum2-msg p{font-size:13px;line-height:150%;color:var(--mut)}.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .sum2-row{display:flex;flex-direction:column;gap:6px}.sum2-row span{font-weight:500;font-size:13px;line-height:150%}
-.notice2{display:flex;gap:12px}.notice2 .ico{color:var(--red)}
-.notice2 b{font:700 14px/18px 'Outfit',sans-serif}.notice2 p{margin-top:6px;font-size:13px;line-height:150%;color:var(--mut)}
+/* Aviso informativo con título (antes .notice2): tono info, nunca rojo, porque no es un error */
+.notice2{display:flex;gap:12px;padding:14px 16px;border:1px solid var(--info-line);border-radius:12px;background:var(--info-bg);color:var(--info)}.notice2 .ico{color:var(--info);flex:none;margin-top:1px}
+.notice2 b{font:700 14px/18px 'Outfit',sans-serif}.notice2 p{margin-top:6px;font-size:13px;line-height:150%;color:var(--info)}
 .foot{font-size:12px;line-height:150%;color:var(--mut)}
 .list-head{display:flex;align-items:center;gap:32px;background:var(--red);color:var(--on-color);padding:32px 48px;min-height:132px}
 .list-head>div{flex:1}.list-head h1{font:800 32px/120% 'Outfit',sans-serif}.list-head p{font-size:16px;line-height:150%;opacity:.9;margin-top:6px}
