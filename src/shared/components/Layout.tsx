@@ -4,8 +4,9 @@ import type { Session } from '../types';
 import { PERMISSION } from '../permissions';
 import { sessionPermissions } from '../services/session';
 import {
-  BellIcon, CalendarIcon, CalendarPlus, ChatIcon, ClipboardCheck, CloseIcon, FilePen, HomeIcon, LifeBuoy, LogOut, MapLine,
-  Megaphone, MenuIcon, ShieldCheck, UserIcon, Users,
+  BarChart, BellIcon, BookOpen, Building, CalendarIcon, CalendarPlus, ChatIcon, ClipboardCheck, ClipboardList, CloseIcon,
+  FilePen, FileText, HardHat, HomeIcon, KeyRound, LifeBuoy, ListChecks, LogOut, MapLine, MapPin, Megaphone, MenuIcon,
+  ShieldCheck, Sliders, TrendingUp, TriangleAlert, UserIcon, Users,
 } from './Icons';
 
 interface MenuItem { href: string; icon: ReactNode; label: string }
@@ -29,19 +30,9 @@ const roleName = (role: string) => {
  */
 function menuFor(permissions: string[]): MenuSection[] {
   const can = (...p: string[]) => p.some((x) => permissions.includes(x));
-  const sections: MenuSection[] = [{ items: [{ href: '#/simulacro', icon: <HomeIcon />, label: 'Inicio' }] }];
+  const sections: MenuSection[] = [];
 
-  if (can(PERMISSION.MS05_PANEL_READ_OWN)) {
-    sections.push({
-      title: 'Brigada',
-      items: [
-        { href: '#/brigadista', icon: <ClipboardCheck />, label: 'Panel de responsabilidades' },
-        // Self-assignment (RF-BEI-01, option 2): pick a building on the map for scheduled or running events
-        { href: '#/brigadista/autoasignacion', icon: <MapLine />, label: 'Auto asignación' },
-      ],
-    });
-  }
-
+  // Emergencia va primero: es lo que se busca con prisa durante un simulacro o un evento real
   const emergencyItems: MenuItem[] = [];
   if (can(PERMISSION.MS04_CHECKIN_WRITE)) {
     // MS04 check-in (RF-MS04-01 to 04): report the own status during an active event
@@ -51,10 +42,23 @@ function menuFor(permissions: string[]): MenuSection[] {
     emergencyItems.push({ href: '#/ayuda', icon: <LifeBuoy />, label: 'Necesito ayuda' });
   }
   if (can(PERMISSION.MS05_INCIDENT_MANAGE_OWN)) {
-    emergencyItems.push({ href: '#/mis-incidentes', icon: <ClipboardCheck />, label: 'Mis incidentes' });
+    emergencyItems.push({ href: '#/mis-incidentes', icon: <TriangleAlert />, label: 'Mis incidentes' });
   }
   if (emergencyItems.length > 0) {
     sections.push({ title: 'Emergencia', items: emergencyItems });
+  }
+
+  sections.push({ title: emergencyItems.length > 0 ? 'General' : undefined, items: [{ href: '#/simulacro', icon: <HomeIcon />, label: 'Inicio' }] });
+
+  if (can(PERMISSION.MS05_PANEL_READ_OWN)) {
+    sections.push({
+      title: 'Brigada',
+      items: [
+        { href: '#/brigadista', icon: <ClipboardList />, label: 'Panel de responsabilidades' },
+        // Self-assignment (RF-BEI-01, option 2): pick a building on the map for scheduled or running events
+        { href: '#/brigadista/autoasignacion', icon: <MapPin />, label: 'Auto asignación' },
+      ],
+    });
   }
 
   const canManageEvents = can(PERMISSION.MS06_DRILL_MANAGE, PERMISSION.MS06_REAL_EVENT_MANAGE);
@@ -83,36 +87,41 @@ function menuFor(permissions: string[]): MenuSection[] {
   }
 
   if (can(PERMISSION.MS05_BRIGADIER_ASSIGN_TO_REAL, PERMISSION.MS05_BRIGADIER_ASSIGN_TO_DRILL)) {
-    sections.push({ title: 'Brigada e incidentes', items: [{ href: '#/brigadistas', icon: <Users />, label: 'Gestión de brigadistas' }] });
+    sections.push({ title: 'Brigada e incidentes', items: [{ href: '#/brigadistas', icon: <HardHat />, label: 'Gestión de brigadistas' }] });
   }
 
   const campusItems: MenuItem[] = [];
   if (can(PERMISSION.MS02_CAMPUS_READ)) {
-    campusItems.push({ href: '#/edificios', icon: <HomeIcon />, label: 'Edificios y espacios' });
+    campusItems.push({ href: '#/edificios', icon: <Building />, label: 'Edificios y espacios' });
   }
   if (can(PERMISSION.MS02_ROUTE_READ)) {
     campusItems.push({ href: '#/rutas', icon: <MapLine />, label: 'Rutas de evacuación' });
   }
-  // MS07: tutor, learning center, evaluations and progress, each by its own permission
-  if (can(PERMISSION.MS07_TUTOR_USE)) {
-    campusItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor AI' });
-  }
-  if (can(PERMISSION.MS07_CONTENT_READ)) {
-    campusItems.push({ href: '#/aprendizaje', icon: <LifeBuoy />, label: 'Aprendizaje' });
-  }
-  if (can(PERMISSION.MS07_QUIZ_TAKE)) {
-    campusItems.push({ href: '#/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
-    campusItems.push({ href: '#/mi-progreso', icon: <ClipboardCheck />, label: 'Mi progreso' });
-  }
   if (campusItems.length > 0) {
     sections.push({ title: 'Campus', items: campusItems });
+  }
+
+  // MS07: tutor, learning center, evaluations and progress, each by its own permission
+  const trainingItems: MenuItem[] = [];
+  if (can(PERMISSION.MS07_CONTENT_READ)) {
+    trainingItems.push({ href: '#/aprendizaje', icon: <BookOpen />, label: 'Aprendizaje' });
+  }
+  if (can(PERMISSION.MS07_QUIZ_TAKE)) {
+    trainingItems.push({ href: '#/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
+    trainingItems.push({ href: '#/mi-progreso', icon: <TrendingUp />, label: 'Mi progreso' });
+  }
+  if (can(PERMISSION.MS07_TUTOR_USE)) {
+    trainingItems.push({ href: '#/tutor', icon: <ChatIcon />, label: 'Tutor IA' });
+  }
+  if (trainingItems.length > 0) {
+    sections.push({ title: 'Formación', items: trainingItems });
   }
 
   // MS08: indicators and audit, of drills or real events (MS08 returns only the kind each permission allows)
   const analyticsItems: MenuItem[] = [];
   // Indicadores elige los eventos de la lista de MS06: sin poder leer eventos, la pantalla no sirve y no se muestra
   if (can(PERMISSION.MS08_INDICATORS_DRILL_READ, PERMISSION.MS08_INDICATORS_REAL_EVENT_READ) && canReadEvents) {
-    analyticsItems.push({ href: '#/indicadores', icon: <ClipboardCheck />, label: 'Indicadores' });
+    analyticsItems.push({ href: '#/indicadores', icon: <BarChart />, label: 'Indicadores' });
   }
   if (can(PERMISSION.MS08_AUDIT_DRILL_READ, PERMISSION.MS08_AUDIT_REAL_EVENT_READ)) {
     analyticsItems.push({ href: '#/auditoria', icon: <FilePen />, label: 'Auditoría' });
@@ -127,11 +136,11 @@ function menuFor(permissions: string[]): MenuSection[] {
     adminItems.push({ href: '#/usuarios', icon: <Users />, label: 'Usuarios' });
   }
   if (can('ms01:role:read_all', 'ms01:role:manage')) {
-    adminItems.push({ href: '#/roles', icon: <ShieldCheck />, label: 'Roles' });
+    adminItems.push({ href: '#/roles', icon: <KeyRound />, label: 'Roles' });
   }
   if (can(PERMISSION.MS07_CONTENT_MANAGE)) {
-    adminItems.push({ href: '#/admin/evaluaciones', icon: <ClipboardCheck />, label: 'Evaluaciones' });
-    adminItems.push({ href: '#/admin/aprendizaje', icon: <LifeBuoy />, label: 'Contenidos' });
+    adminItems.push({ href: '#/admin/aprendizaje', icon: <FileText />, label: 'Gestionar contenidos' });
+    adminItems.push({ href: '#/admin/evaluaciones', icon: <ListChecks />, label: 'Gestionar evaluaciones' });
   }
   if (adminItems.length > 0) {
     sections.push({ title: 'Administración', items: adminItems });
@@ -146,8 +155,8 @@ function menuFor(permissions: string[]): MenuSection[] {
   );
   if (canAdministerCampus) {
     sections.push({
-      title: 'Administración campus',
-      items: [{ href: '#/admin/edificios', icon: <HomeIcon />, label: 'Edificios, zonas y rutas' }],
+      title: 'Administración del campus',
+      items: [{ href: '#/admin/edificios', icon: <Sliders />, label: 'Edificios, zonas y rutas' }],
     });
   }
   return sections;
@@ -175,23 +184,35 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
   const sections = menuFor(sessionPermissions(session));
   const active = currentHref(current, sections);
 
-  // Se cierra al elegir una opción y con Escape; al abrir, el foco pasa al menú y al cerrar vuelve al botón
+  // Se cierra al elegir una opción y con Escape. Mientras está abierto, el foco no sale del menú (Tab da la vuelta), la
+  // página de fondo no se desplaza y al cerrar el foco vuelve al botón que lo abrió.
   useEffect(() => {
     if (!open) return undefined;
-    panel.current?.querySelector<HTMLElement>('a, button')?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); toggle.current?.focus(); } };
+    const box = panel.current;
+    box?.querySelector<HTMLElement>('a, button')?.focus();
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setOpen(false); toggle.current?.focus(); return; }
+      if (e.key !== 'Tab' || !box) return;
+      const items = Array.from(box.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'));
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = previousOverflow; };
   }, [open]);
 
-  // Menú de la cuenta (esquina superior derecha): se cierra con Escape, al hacer clic fuera y al cambiar de pantalla
+  // Menú de la cuenta (esquina superior derecha): se cierra con Escape, al tocar fuera y al cambiar de pantalla
   useEffect(() => {
     if (!userOpen) return undefined;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUserOpenAt(null); };
-    const onClick = (e: MouseEvent) => { if (!userBox.current?.contains(e.target as Node)) setUserOpenAt(null); };
+    const onPointer = (e: PointerEvent) => { if (!userBox.current?.contains(e.target as Node)) setUserOpenAt(null); };
     window.addEventListener('keydown', onKey);
-    document.addEventListener('mousedown', onClick);
-    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('mousedown', onClick); };
+    document.addEventListener('pointerdown', onPointer);
+    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onPointer); };
   }, [userOpen]);
 
   const role = roles.map(roleName).join(' · ');
