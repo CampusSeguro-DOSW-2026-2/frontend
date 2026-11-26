@@ -69,3 +69,8 @@
 .code-box:disabled{opacity:.7}
 button.login-forgot{padding:0;border:0;background:none;cursor:pointer}
 button.login-forgot:disabled{opacity:.6;cursor:default}
+
+/* Marca en las pantallas de acceso: el mismo logo y el nombre CampusSeguro */
+.auth-marca{display:flex;flex-direction:column;align-items:center;gap:6px}
+.reg:not(.login) .auth-marca .login-logo{width:112px}
+.auth-nombre{font:800 24px/1.1 'Outfit',sans-serif;color:var(--red);letter-spacing:-.01em}

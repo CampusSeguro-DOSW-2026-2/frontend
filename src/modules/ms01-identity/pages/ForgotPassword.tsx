@@ -5,6 +5,7 @@ import { ApiError, errorMessage } from '../../../shared/services/http';
 import { requestPasswordCode } from '../services/password';
 import { clearRecovery, readRecovery, RESEND_SECONDS, saveRecovery } from '../services/recovery';
 import { codeError, emailFormatError } from '../utils/validation';
+import { Marca } from '../components/Marca';
 import '../styles/auth.css';
 
 // Ruta de la pantalla donde se escribe la nueva contraseña (F-05)
@@ -159,7 +160,7 @@ export default function ForgotPassword() {
   return (
     <div className="reg login">
       <main className="reg-main">
-        <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
+        <Marca />
 
         <h1>¿Olvidó su contraseña?</h1>
         <p className="reg-sub">Ingrese su correo institucional y le enviaremos un código para recuperar el acceso.</p>

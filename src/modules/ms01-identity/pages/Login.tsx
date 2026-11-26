@@ -6,6 +6,7 @@ import { clearRecovery } from '../services/recovery';
 import { HOME_ROUTE, saveSession, takeSessionNotice } from '../../../shared/services/session';
 import { emailFormatError, loginPasswordError } from '../utils/validation';
 import type { LoginDraft } from '../types';
+import { Marca } from '../components/Marca';
 import '../styles/auth.css';
 
 const EMPTY: LoginDraft = {
@@ -107,7 +108,7 @@ export default function Login() {
   return (
     <div className="reg login">
       <main className="reg-main">
-        <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
+        <Marca />
 
         <h1>¡Qué bueno verlo de nuevo!</h1>
         <p className="reg-sub">

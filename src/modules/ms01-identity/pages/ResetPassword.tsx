@@ -6,6 +6,7 @@ import { clearRecovery, readRecovery, saveRecovery } from '../services/recovery'
 import { setSessionNotice } from '../../../shared/services/session';
 import { confirmationError, MESSAGES, passwordPolicyError } from '../utils/validation';
 import type { PasswordResetDraft } from '../types';
+import { Marca } from '../components/Marca';
 import '../styles/auth.css';
 
 const EMPTY: PasswordResetDraft = { password: '', confirmPassword: '' };
@@ -129,7 +130,7 @@ export default function ResetPassword() {
   return (
     <div className="reg login">
       <main className="reg-main">
-        <img className="login-logo" src="/logo.svg" alt="CampusSeguro" />
+        <Marca />
 
         <h1>Cambie su contraseña</h1>
         <p className="reg-sub">Cree una nueva contraseña para proteger el acceso a su cuenta.</p>

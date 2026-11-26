@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CodeInput } from '../components/CodeInput';
-import { Logo } from '../components/Logo';
+import { Marca } from '../components/Marca';
 import { Campo } from '../../../shared/components/Campo';
 import {
   ApiError, REGISTRATION_RESEND_SECONDS, registerUser, resendRegistrationCode, verifyRegistration,
@@ -212,7 +212,7 @@ export default function Register() {
   return (
     <div className="reg">
       <main className="reg-main">
-        <Logo className="reg-logo" />
+        <Marca />
 
         {step === 'done' && (
           <section className="reg-done" role="status">
@@ -261,7 +261,7 @@ export default function Register() {
 
         {step === 'form' && (
           <>
-            <h1>Bienvenido a CampusSeguro</h1>
+            <h1>Cree su cuenta</h1>
             <p className="reg-sub">¿Ya tiene una cuenta? <a href="#/login">Inicie sesión</a></p>
 
             <form
