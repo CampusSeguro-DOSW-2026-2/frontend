@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { PageHeader } from '../../../shared/components/Layout';
+import { Cargando } from '../../../shared/components/Cargando';
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { checkinApi } from '../services/checkin';
@@ -12,6 +14,11 @@ import '../styles/checkin.css';
 export const SIN_EVENTOS = 'No hay eventos.';
 
 const TAMANO_PAGINA = 20;
+
+/** Clase del estado con los colores del estándar de listados (.st): en ejecución se resalta en ámbar. */
+const CLASE_ESTADO: Partial<Record<EstadoEvento, string>> = {
+  BORRADOR: 'DRAFT', PROGRAMADO: 'SCHEDULED', EN_EJECUCION: 'IN_PROGRESS', FINALIZADO: 'FINISHED',
+};
 
 /**
  * RF-MS04-13 Consultar eventos (F-07): lista de solo lectura para BRIGADISTA, COORDINADOR, ORGANIZADOR y AUDITOR
@@ -27,6 +34,7 @@ export default function ListaEventos({ session }: { session: Session }) {
   // Nombres de MS02 para los eventos guardados con ids; si MS02 no responde, se muestra el texto de MS04
   const { catalog } = useScopeCatalog();
   const [intento, setIntento] = useState(0);
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     let vigente = true;
@@ -40,72 +48,96 @@ export default function ListaEventos({ session }: { session: Session }) {
   // Se marca la carga al cambiar el filtro, la página o al reintentar, no dentro del efecto
   const iniciarCarga = () => { setCargando(true); setError(''); };
 
-  const eventos = datos?.contenido ?? [];
+  const todos = datos?.contenido ?? [];
+  // MS04 no filtra por nombre: la búsqueda se hace sobre los eventos de la página cargada y la pantalla lo dice
+  const termino = busqueda.trim().toLowerCase();
+  const eventos = termino ? todos.filter((e) => e.nombre.toLowerCase().includes(termino)) : todos;
+  const variasPaginas = !!datos && datos.total_paginas > 1;
 
   return (
     <>
-      <PageHeader badge="EVACUACIÓN" title="Eventos" subtitle="Simulacros y emergencias en cualquier estado" />
-      <main className="content">
-        <div className="chk-tabs" role="group" aria-label="Filtrar por estado">
-          {ESTADOS_EVENTO.map((e) => (
-            <button key={e.codigo || 'todos'} type="button" className="chk-tab" aria-pressed={estado === e.codigo}
-              onClick={() => { setEstado(e.codigo); setPagina(0); iniciarCarga(); }}>
-              {e.texto}
-            </button>
-          ))}
+      <header className="ev-head">
+        <div>
+          <h1>Eventos de evacuación</h1>
+          <p>Simulacros y emergencias en cualquier estado. Abra el panel para seguir el estado de las personas.</p>
         </div>
-
-        {error && (
-          <>
-            <p className="notice err" role="alert">{error}</p>
-            <button type="button" className="btn white chk-retry" onClick={() => { setIntento((n) => n + 1); iniciarCarga(); }}>
-              Intentar de nuevo
-            </button>
-          </>
+      </header>
+      <main className="ev-main">
+        <div className="ev-tools">
+          <div className="ev-tabs" role="group" aria-label="Filtrar por estado">
+            {ESTADOS_EVENTO.map((e) => (
+              <button key={e.codigo || 'todos'} type="button" className="ev-tab" aria-pressed={estado === e.codigo}
+                onClick={() => { setEstado(e.codigo); setPagina(0); iniciarCarga(); }}>
+                {e.texto}
+              </button>
+            ))}
+          </div>
+          <div className="searchbar" role="search">
+            <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)}
+              placeholder={variasPaginas ? 'Buscar en esta página' : 'Buscar por nombre'} aria-label="Buscar evento por nombre" />
+          </div>
+        </div>
+        {termino && variasPaginas && (
+          <p className="help">La búsqueda cubre los {todos.length} eventos de esta página. Cambie de página para buscar en los demás.</p>
         )}
-        {cargando && !datos && !error && <p className="notice" role="status">Consultando los eventos…</p>}
 
-        {datos && !error && eventos.length === 0 && <div className="chk-vacio" role="status">{SIN_EVENTOS}</div>}
+        {error && <Mensaje tono="error" onReintentar={() => { setIntento((n) => n + 1); iniciarCarga(); }}>{error}</Mensaje>}
+        {cargando && !datos && !error && <Cargando texto="Consultando los eventos…" />}
+
+        {datos && !error && eventos.length === 0 && (
+          <EstadoVacio titulo={termino ? 'Ningún evento coincide con la búsqueda' : SIN_EVENTOS}>
+            {termino ? 'Revise el nombre o borre la búsqueda.' : estado ? 'Pruebe con otro estado o con «Todos».' : 'Cuando se cree un simulacro o una emergencia, aparecerá aquí.'}
+          </EstadoVacio>
+        )}
 
         {!error && eventos.length > 0 && (
-          <ul className="chk-eventos" aria-label="Eventos" aria-busy={cargando}>
-            {eventos.map((evento) => (
-              <li key={evento.evento_id} className={`chk-evento${evento.estado === 'EN_EJECUCION' ? ' vivo' : ''}`}>
-                <div className="chk-evento-cab">
-                  <span className="tag">{tipoEvento(evento.simulacro).toUpperCase()}</span>
-                  <span className={`chk-st ${evento.estado}`}>{textoEstadoEvento(evento.estado)}</span>
-                </div>
-                <h3>{evento.nombre}</h3>
-                <div className="chk-meta">
-                  <span>Inicio: <b>{fechaHora(evento.fecha_inicio) || 'Sin fecha'}</b></span>
-                  {evento.fecha_cierre && <span>Cierre: <b>{fechaHora(evento.fecha_cierre)}</b></span>}
-                  {evento.escenario.edificios.length > 0 && (
-                    <span>Edificios: <b>{textoEscenario(evento.escenario.edificios, catalog)}</b></span>
-                  )}
-                  {evento.escenario.zonas.length > 0 && <span>Zonas: <b>{textoEscenario(evento.escenario.zonas, catalog)}</b></span>}
-                  {evento.roles_convocados.length > 0 && (
-                    <span>Convocados: <b>{evento.roles_convocados.map(textoRol).join(', ')}</b></span>
-                  )}
-                </div>
-                <span className={`chk-habilitado${evento.checkin_habilitado ? ' si' : ''}`}>
-                  {evento.checkin_habilitado ? 'Check-in habilitado' : 'Check-in deshabilitado'}
-                </span>
-                <a className="btn white chk-ir" href={`#/evacuacion/eventos/${encodeURIComponent(evento.evento_id)}`}>
-                  Abrir panel
-                </a>
-              </li>
-            ))}
-          </ul>
+          <div className="actualizando" aria-busy={cargando}>
+            <table className="ev-table">
+              <thead>
+                <tr><th>Evento</th><th>Estado</th><th>Inicio</th><th>Check-in</th><th><span className="sr-only">Acciones</span></th></tr>
+              </thead>
+              <tbody>
+                {eventos.map((evento) => (
+                  <tr key={evento.evento_id} className={evento.estado === 'EN_EJECUCION' ? 'live' : undefined}>
+                    <td>
+                      <div className="t">{evento.nombre}</div>
+                      <div className="s">
+                        {[
+                          tipoEvento(evento.simulacro),
+                          evento.escenario.edificios.length > 0 ? textoEscenario(evento.escenario.edificios, catalog) : '',
+                          evento.escenario.zonas.length > 0 ? textoEscenario(evento.escenario.zonas, catalog) : '',
+                          evento.roles_convocados.length > 0 ? `Convocados: ${evento.roles_convocados.map(textoRol).join(', ')}` : '',
+                        ].filter(Boolean).join(' · ')}
+                      </div>
+                    </td>
+                    <td><span className={`st ${CLASE_ESTADO[evento.estado] ?? ''}`}>{textoEstadoEvento(evento.estado)}</span></td>
+                    <td>
+                      {fechaHora(evento.fecha_inicio) || 'Sin fecha'}
+                      {evento.fecha_cierre && <div className="s">Cierre: {fechaHora(evento.fecha_cierre)}</div>}
+                    </td>
+                    <td>{evento.checkin_habilitado ? 'Habilitado' : 'Deshabilitado'}</td>
+                    <td>
+                      <div className="ev-acts">
+                        <a className="btn white sm" href={`#/evacuacion/eventos/${encodeURIComponent(evento.evento_id)}`}>
+                          Abrir panel
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
 
-        {!error && datos && datos.total_paginas > 1 && (
-          <div className="chk-pager">
+        {!error && datos && variasPaginas && (
+          <div className="ev-pager">
             <span>Página {datos.page + 1} de {datos.total_paginas} · {datos.total_elementos} eventos</span>
             <div>
-              <button type="button" className="chk-tab" disabled={cargando || pagina === 0}
-                onClick={() => { setPagina((p) => p - 1); iniciarCarga(); }}>Anterior</button>
-              <button type="button" className="chk-tab" disabled={cargando || pagina + 1 >= datos.total_paginas}
-                onClick={() => { setPagina((p) => p + 1); iniciarCarga(); }}>Siguiente</button>
+              <button type="button" className="ev-tab" disabled={cargando || pagina === 0}
+                onClick={() => { setPagina((p) => p - 1); setBusqueda(''); iniciarCarga(); }}>Anterior</button>
+              <button type="button" className="ev-tab" disabled={cargando || pagina + 1 >= datos.total_paginas}
+                onClick={() => { setPagina((p) => p + 1); setBusqueda(''); iniciarCarga(); }}>Siguiente</button>
             </div>
           </div>
         )}
