@@ -48,3 +48,8 @@
 /* Áreas táctiles de 44 px en celular y escritorio (docs/PATRONES-UI.md) */
 .ap-mini{min-height:var(--tap)}
 .ap-volver{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--on-color)}
+
+/* Filtro de categorías agrupado: Momento (antes, durante, después) y Lugar */
+.ap-filtro{display:flex;flex-direction:column;gap:12px}
+.ap-filtro-grupo{display:flex;flex-direction:column;gap:6px}
+.ap-filtro-titulo{font:700 12px/16px 'Outfit',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
