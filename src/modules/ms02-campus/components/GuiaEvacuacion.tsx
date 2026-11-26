@@ -1,5 +1,5 @@
 import { Mensaje } from '../../../shared/components/Mensaje';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { campus, comoCampusError } from '../services/campus';
 import type { CampusApiError } from '../services/campus';
 import type { GuiaEvacuacion as Guia } from '../types';
@@ -98,13 +98,16 @@ function GuiaDetalle({ guia }: { guia: Guia }) {
 }
 
 /**
- * Guía de una tarjeta de ruta. Al consultar un espacio la guía ya viene en la respuesta; al consultar
- * todo el edificio el backend no la calcula, así que se pide al abrirla para no hacer una consulta por espacio.
+ * Guía de una tarjeta de ruta. Al consultar un espacio la guía ya viene en la respuesta y se muestra de una vez. Al
+ * consultar todo el edificio el backend no la calcula: con `automatica` (el espacio ya tiene su ruta calculada) se pide
+ * sola cuando la tarjeta aparece en pantalla, sin el toque extra y sin pedir todas a la vez; si no, queda el botón.
  */
-export function GuiaDeRuta({ espacioId, inicial }: { espacioId: string; inicial?: Guia | null }) {
+export function GuiaDeRuta({ espacioId, inicial, automatica = false }: { espacioId: string; inicial?: Guia | null; automatica?: boolean }) {
   const [guia, setGuia] = useState<Guia | null>(inicial ?? null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<CampusApiError | null>(null);
+  const caja = useRef<HTMLDivElement>(null);
+  const pedida = useRef(false);
 
   const cargar = async () => {
     setCargando(true);
@@ -119,12 +122,31 @@ export function GuiaDeRuta({ espacioId, inicial }: { espacioId: string; inicial?
     }
   };
 
+  useEffect(() => {
+    const nodo = caja.current;
+    if (!automatica || guia || !nodo || typeof IntersectionObserver === 'undefined') return undefined;
+    const observador = new IntersectionObserver((entradas) => {
+      if (entradas.some((e) => e.isIntersecting) && !pedida.current) {
+        pedida.current = true;
+        observador.disconnect();
+        void cargar();
+      }
+    }, { rootMargin: '200px 0px' });
+    observador.observe(nodo);
+    return () => observador.disconnect();
+    // cargar solo depende del espacio
+  }, [automatica, guia, espacioId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (guia) return <GuiaDetalle guia={guia} />;
   return (
-    <div className="cs-guia-pedir">
-      <button type="button" className="cs-mini" onClick={cargar} disabled={cargando}>
-        {cargando ? 'Calculando guía…' : 'Ver guía de evacuación'}
-      </button>
+    <div className="cs-guia-pedir" ref={caja} aria-busy={cargando || undefined}>
+      {cargando
+        ? <p className="cs-sub" role="status">Calculando la guía de evacuación…</p>
+        : (
+            <button type="button" className="btn white sm" onClick={() => void cargar()}>
+              {error ? 'Intentar de nuevo' : 'Ver guía de evacuación'}
+            </button>
+          )}
       {error && <Falla error={error} />}
     </div>
   );

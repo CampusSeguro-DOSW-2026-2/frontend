@@ -11,9 +11,9 @@ import '../styles/campus.css';
 type Tono = 'ok' | 'warn' | 'stop' | 'info';
 
 const ESTADOS: Record<EstadoRuta, { texto: string; tono: Tono }> = {
-  DISPONIBLE: { texto: 'DISPONIBLE', tono: 'ok' },
-  RESTRINGIDA: { texto: 'RESTRINGIDA', tono: 'warn' },
-  BLOQUEADA: { texto: 'BLOQUEADA', tono: 'stop' },
+  DISPONIBLE: { texto: 'Disponible', tono: 'ok' },
+  RESTRINGIDA: { texto: 'Restringida', tono: 'warn' },
+  BLOQUEADA: { texto: 'Bloqueada', tono: 'stop' },
 };
 
 // La guía de evacuación se arma sola con las escaleras, salidas y rutas exteriores: un espacio puede no
@@ -36,8 +36,8 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
       <div className="ctop">
         <h3>{ruta.espacioNombre}</h3>
         {estado ? <span className={`cs-estado ${estado.tono}`}>{estado.texto}</span> : soloGuia
-          ? <span className="cs-estado ok">GUÍA DISPONIBLE</span>
-          : <span className="cs-estado info">SIN RUTA</span>}
+          ? <span className="cs-estado ok">Guía disponible</span>
+          : <span className="cs-estado info">Sin ruta</span>}
       </div>
       {ruta.tieneRuta && (
         <>
@@ -55,7 +55,8 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
       )}
       {/* Con la ruta disponible el mensaje sobra (antes .cs-alert.ok quedaba oculto) */}
       {ruta.mensaje && !soloGuia && tono !== 'ok' && <Mensaje tono={tono === 'stop' ? 'error' : tono === 'warn' ? 'aviso' : 'info'}>{ruta.mensaje}</Mensaje>}
-      <GuiaDeRuta espacioId={ruta.espacioId} inicial={ruta.guia} />
+      {/* Con la ruta ya calculada y habilitada, la guía se muestra sin tocar «Ver guía» */}
+      <GuiaDeRuta espacioId={ruta.espacioId} inicial={ruta.guia} automatica={ruta.tieneRuta && ruta.destinoActivo === true && ruta.estado !== 'BLOQUEADA'} />
       {recomendaciones.length > 0 && (
         <section className="cs-preventivas" aria-label="Recomendaciones preventivas">
           <h4>Recomendaciones preventivas</h4>
