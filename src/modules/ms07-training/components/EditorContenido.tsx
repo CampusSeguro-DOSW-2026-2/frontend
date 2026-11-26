@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { ApiError, errorMessage } from '../../../shared/services/http';
@@ -61,7 +62,7 @@ export default function EditorContenido({ inicial, categorias, onGuardar, onCanc
   return (
     <form className="ap-form" onSubmit={enviar} noValidate aria-label={inicial ? 'Editar contenido' : 'Nuevo contenido'}>
       <h2>{inicial ? 'Editar contenido' : 'Nuevo contenido'}</h2>
-      {errorGeneral && <p className="notice err" role="alert">{errorGeneral}</p>}
+      {errorGeneral && <Mensaje tono="error">{errorGeneral}</Mensaje>}
 
       <div className="ap-campo">
         <label htmlFor="ap-titulo">Título</label>

@@ -1,3 +1,4 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { ApiError, errorMessage } from '../../../shared/services/http';
@@ -174,7 +175,7 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
       )}
       {errores.questions && <span className="error">{errores.questions}</span>}
 
-      {general && <p className="notice err" role="alert">{general}</p>}
+      {general && <Mensaje tono="error">{general}</Mensaje>}
       <div className="evl-acciones">
         <button type="submit" className="btn red" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar evaluación'}</button>
         <button type="button" className="btn white" onClick={onCancelar} disabled={guardando}>Cancelar</button>

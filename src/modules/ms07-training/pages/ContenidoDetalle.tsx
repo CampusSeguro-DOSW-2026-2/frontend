@@ -1,3 +1,5 @@
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
@@ -43,8 +45,8 @@ export default function ContenidoDetalle({ session, id }: { session: Session; id
         <PageHeader badge="APRENDIZAJE" title="Contenido" subtitle="" context={volver} />
         <main className="content">
           {error
-            ? <p className="notice err" role="alert">{error}</p>
-            : <p className="notice" role="status">Cargando el contenido…</p>}
+            ? <Mensaje tono="error">{error}</Mensaje>
+            : <Cargando texto="Cargando el contenido…" />}
         </main>
       </>
     );
@@ -58,7 +60,7 @@ export default function ContenidoDetalle({ session, id }: { session: Session; id
       <main className="content">
         <article className="ap-articulo">
           {contenido.status === 'INACTIVO' && (
-            <p className="notice" role="status">Este contenido está inactivo: solo lo ve quien administra.</p>
+            <Mensaje tono="info">Este contenido está inactivo: solo lo ve quien administra.</Mensaje>
           )}
           <div className="ap-cuerpo">{contenido.body}</div>
           <p className="ap-fecha">Actualizado el {fechaCorta(contenido.updatedAt)}</p>

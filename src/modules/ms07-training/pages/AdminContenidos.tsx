@@ -1,3 +1,6 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
@@ -143,7 +146,7 @@ export default function AdminContenidos({ session }: { session: Session }) {
             onClick={() => cambiarPestana('categorias')}>Categorías</button>
         </div>
 
-        {aviso && <p className="notice err" role="alert">{aviso}</p>}
+        {aviso && <Mensaje tono="error">{aviso}</Mensaje>}
 
         {pestana === 'contenidos' && (
           <>
@@ -159,10 +162,10 @@ export default function AdminContenidos({ session }: { session: Session }) {
               </div>
             )}
 
-            {errorCarga && <p className="notice err" role="alert">{errorCarga}</p>}
-            {!contenidos && !errorCarga && <p className="notice" role="status">Cargando los contenidos…</p>}
+            {errorCarga && <Mensaje tono="error">{errorCarga}</Mensaje>}
+            {!contenidos && !errorCarga && <Cargando texto="Cargando los contenidos…" />}
             {contenidos && lista.length === 0 && (
-              <div className="ap-vacio" role="status">Todavía no hay contenidos. Cree el primero.</div>
+              <EstadoVacio titulo="Todavía no hay contenidos">Cree el primero.</EstadoVacio>
             )}
 
             {contenidos && lista.length > 0 && (
@@ -202,9 +205,9 @@ export default function AdminContenidos({ session }: { session: Session }) {
                   </table>
                 </div>
                 {contenidos.total_elementos > MAXIMO && (
-                  <p className="notice" role="status">
+                  <Mensaje tono="info" compacto>
                     Se muestran los primeros {MAXIMO} de {contenidos.total_elementos} contenidos.
-                  </p>
+                  </Mensaje>
                 )}
               </>
             )}
@@ -225,9 +228,9 @@ export default function AdminContenidos({ session }: { session: Session }) {
               </div>
             )}
 
-            {!categorias && !aviso && <p className="notice" role="status">Cargando las categorías…</p>}
+            {!categorias && !aviso && <Cargando texto="Cargando las categorías…" />}
             {categorias && categorias.length === 0 && (
-              <div className="ap-vacio" role="status">Todavía no hay categorías. Cree la primera.</div>
+              <EstadoVacio titulo="Todavía no hay categorías">Cree la primera.</EstadoVacio>
             )}
 
             {categorias && categorias.length > 0 && (

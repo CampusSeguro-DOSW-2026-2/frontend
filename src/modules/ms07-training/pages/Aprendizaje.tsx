@@ -1,3 +1,6 @@
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { errorMessage } from '../../../shared/services/http';
@@ -63,15 +66,17 @@ export default function Aprendizaje({ session }: { session: Session }) {
 
         {error && (
           <>
-            <p className="notice err" role="alert">{error}</p>
+            <Mensaje tono="error">{error}</Mensaje>
             <button type="button" className="btn white" onClick={() => { setIntento((n) => n + 1); iniciarCarga(); }}>
               Intentar de nuevo
             </button>
           </>
         )}
-        {cargando && !datos && !error && <p className="notice" role="status">Consultando los contenidos…</p>}
+        {cargando && !datos && !error && <Cargando texto="Consultando los contenidos…" />}
         {datos && !error && contenidos.length === 0 && (
-          <div className="ap-vacio" role="status">{categoria ? 'No hay contenidos en esta categoría. Elija otra o «Todas».' : 'Todavía no hay contenidos disponibles.'}</div>
+          categoria
+          ? <EstadoVacio titulo="No hay contenidos en esta categoría">Elija otra o «Todas».</EstadoVacio>
+          : <EstadoVacio titulo="Todavía no hay contenidos disponibles" />
         )}
 
         {!error && contenidos.length > 0 && (
