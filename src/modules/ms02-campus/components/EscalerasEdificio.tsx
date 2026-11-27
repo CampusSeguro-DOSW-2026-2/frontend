@@ -2,7 +2,8 @@ import { Mensaje } from '../../../shared/components/Mensaje';
 import { Cargando } from '../../../shared/components/Cargando';
 import { Campo } from './comun';
 import { avisar } from '../../../shared/services/feedback';
-import { useCallback, useEffect, useState } from 'react';
+import { abrirEn, type Abrible } from '../utils/verificacion';
+import { useCallback, useEffect, useImperativeHandle, useState, type Ref } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
 import {
   campus,
@@ -21,6 +22,10 @@ interface Props {
   edificio: Edificio;
   pisos: Piso[];
   mostrarInactivos: boolean;
+  /** `abrir()` muestra el formulario de nueva escalera y lleva a él. */
+  ref?: Ref<Abrible>;
+  /** Se llama después de cada cambio, para que el detalle recalcule la lista de verificación. */
+  onCambio?: () => void;
 }
 
 const DISPONIBILIDADES: { valor: DisponibilidadEscalera; etiqueta: string }[] = [
@@ -36,6 +41,8 @@ export default function EscalerasEdificio({
   edificio,
   pisos,
   mostrarInactivos,
+  ref,
+  onCambio,
 }: Props) {
   const [escaleras, setEscaleras] = useState<Escalera[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -78,6 +85,13 @@ export default function EscalerasEdificio({
     void cargar();
   }, [cargar]);
 
+  useImperativeHandle(ref, () => ({
+    abrir: () => {
+      setMostrarFormulario(true);
+      abrirEn('escaleras-titulo', `esc-nombre-${edificio.id}`);
+    },
+  }), [edificio.id]);
+
   const alternarPiso = (id: string) => {
     setPisoIds((actuales) =>
       actuales.includes(id)
@@ -119,6 +133,7 @@ export default function EscalerasEdificio({
       setMostrarFormulario(false);
       setMensaje('Escalera registrada correctamente.');
       await cargar();
+      onCambio?.();
     } catch (e) {
       setError(comoCampusError(e).message);
     } finally {
@@ -149,6 +164,7 @@ export default function EscalerasEdificio({
       setMotivo('');
       setMensaje('Disponibilidad actualizada correctamente.');
       await cargar();
+      onCambio?.();
     } catch (e) {
       setError(comoCampusError(e).message);
     } finally {
@@ -171,6 +187,7 @@ export default function EscalerasEdificio({
       setPrioridadEditarId(null);
       setMensaje('Prioridad actualizada correctamente.');
       await cargar();
+      onCambio?.();
     } catch (err) {
       setError(comoCampusError(err).message);
     } finally {
@@ -186,12 +203,14 @@ export default function EscalerasEdificio({
       const activa = escalera.estado === 'ACTIVO';
       await (activa ? campus.escaleras.inactivar(escalera.id) : campus.escaleras.reactivar(escalera.id));
       await cargar();
+      onCambio?.();
       avisar({
         tono: 'exito',
         texto: `Se ${activa ? 'inactivó' : 'reactivó'} la escalera «${escalera.nombre}».`,
         deshacer: async () => {
           await (activa ? campus.escaleras.reactivar(escalera.id) : campus.escaleras.inactivar(escalera.id));
           await cargar();
+          onCambio?.();
         },
       });
     } catch (e) {
@@ -210,10 +229,10 @@ export default function EscalerasEdificio({
   const faltanPisos = pisoIds.length < 2;
 
   return (
-    <section className="cs-piso">
+    <section className="cs-piso" aria-labelledby="escaleras-titulo">
       <div className="cs-piso-cabecera">
         <div>
-          <h2>Escaleras del edificio</h2>
+          <h2 id="escaleras-titulo">Escaleras del edificio</h2>
           <p>
             Conexiones entre los pisos para la evacuación. Si hay más de una, la prioridad 1 es la principal
             y la guía de evacuación nombra las demás como alternas.

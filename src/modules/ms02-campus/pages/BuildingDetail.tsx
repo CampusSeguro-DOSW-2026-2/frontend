@@ -2,9 +2,9 @@ import { Cargando } from '../../../shared/components/Cargando';
 import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import GaleriaImagenes from '../components/GaleriaImagenes';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { campus, CampusApiError, comoCampusError as comoError } from '../services/campus';
+import { campus, CampusApiError, comoCampusError as comoError, currentPermissions } from '../services/campus';
 import type { Edificio, Espacio, EspacioRequest, Piso, PisoRequest, TipoEspacio } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
 import { TIPOS } from '../types';
@@ -12,6 +12,10 @@ import { useEnvio, type Errores } from '../hooks/useEnvio';
 import SalidasEdificio from '../components/SalidasEdificio';
 import EscalerasEdificio from '../components/EscalerasEdificio';
 import { BotonQr } from '../components/BotonQr';
+import { VerificacionRutas } from '../components/VerificacionRutas';
+import { useEstadoRutas } from '../hooks/useEstadoRutas';
+import { PERMISSION } from '../../../shared/permissions';
+import { abrirEn, type Abrible } from '../utils/verificacion';
 import '../styles/campus.css';
 
 type Edicion =
@@ -116,6 +120,13 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
   const [edicion, setEdicion] = useState<Edicion>(null);
   const [aviso, setAviso] = useState<{ pisoId: string; error: CampusApiError } | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  // Cada cambio en el edificio sube la versión y la lista de verificación se recalcula
+  const [version, setVersion] = useState(0);
+  const salidasRef = useRef<Abrible>(null);
+  const escalerasRef = useRef<Abrible>(null);
+  const refrescar = useCallback(() => setVersion((v) => v + 1), []);
+  const rutas = useEstadoRutas(edificioId, edificio?.estado === 'ACTIVO', version);
+  const puedeEscaleras = currentPermissions().includes(PERMISSION.MS02_BUILDING_WRITE);
 
   const aplicar = useCallback(([e, p, s]: Datos) => {
     setEdificio(e);
@@ -138,6 +149,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
     } catch (e) {
       setErrorCarga(comoError(e));
     }
+    refrescar();
   };
 
   const editar = (e: Edicion) => { setEdicion(e); setAviso(null); };
@@ -190,6 +202,18 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
   const espaciosActivos = espacios.filter((s) => s.estado === 'ACTIVO').length;
   const inactivos = pisos.length - pisosActivos + espacios.length - espaciosActivos;
 
+  const accionesVerificacion = {
+    agregarPiso: () => { editar({ tipo: 'nuevo-piso' }); abrirEn('pisos-titulo', 'piso-numero-nuevo'); },
+    agregarEspacio: () => {
+      const primero = pisos.filter((p) => p.estado === 'ACTIVO').sort((a, b) => a.numero - b.numero)[0];
+      if (!primero) return;
+      editar({ tipo: 'nuevo-espacio', pisoId: primero.id });
+      abrirEn(`piso-${primero.id}`, 'espacio-nombre-nuevo');
+    },
+    agregarSalida: () => salidasRef.current?.abrir(),
+    registrarEscalera: puedeEscaleras ? () => escalerasRef.current?.abrir() : undefined,
+  };
+
   return (
     <>
       <PageHeader badge="ADMINISTRACIÓN" title={edificio.nombre}
@@ -201,12 +225,17 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
         )}
         {errorCarga && <Falla error={errorCarga} />}
 
+        {edificio.estado === 'ACTIVO' && (
+          <VerificacionRutas pisos={pisos} espacios={espacios} estado={rutas.estado} error={rutas.error}
+            actualizando={rutas.actualizando} acciones={accionesVerificacion} onReintentar={refrescar} />
+        )}
+
         <GaleriaImagenes tipoElemento="EDIFICIO" elementoId={edificio.id}
           editable={edificio.estado === 'ACTIVO'} />
 
         <div className="cs-barra">
           <div className="cs-barra-titulo">
-            <h2 className="title sm22">Pisos y espacios</h2>
+            <h2 className="title sm22" id="pisos-titulo">Pisos y espacios</h2>
             <span className="cs-resumen">
               {pisosActivos} {pisosActivos === 1 ? 'piso activo' : 'pisos activos'} · {espaciosActivos} {espaciosActivos === 1 ? 'espacio activo' : 'espacios activos'}
             </span>
@@ -322,8 +351,10 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
           );
         })}
 
-        <SalidasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos} />
-        <EscalerasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos} />
+        <SalidasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos}
+          ref={salidasRef} onCambio={refrescar} />
+        <EscalerasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos}
+          ref={escalerasRef} onCambio={refrescar} />
       </main>
     </>
   );

@@ -170,3 +170,19 @@
 .cs-casilla{display:flex;align-items:center;gap:10px;min-height:var(--tap);padding:0 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;font-size:14px}
 .cs-casilla:has(input:checked){border-color:var(--red);background:var(--cream)}
 .cs-casilla input{width:20px;height:20px;margin:0;accent-color:var(--red);flex:none}
+
+/* Lista de verificación de rutas en el detalle del edificio */
+.cs-verif{gap:12px}
+.cs-verif-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.cs-verif-lista li{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.cs-verif-lista li.falta{border-color:var(--err-line);background:var(--err-bg)}
+.cs-verif-marca{flex:none;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font:800 15px/1 'Outfit',sans-serif;background:var(--ok-bg);color:var(--ok)}
+.cs-verif-lista li.falta .cs-verif-marca{background:var(--surface);color:var(--err)}
+.cs-verif-texto{flex:1 1 220px;display:flex;flex-direction:column;gap:2px;font-size:14px;line-height:20px}
+.cs-verif-texto span{color:var(--mut)}
+.cs-verif-lista li.falta .cs-verif-texto span{color:var(--ink)}
+.cs-verif-ayuda summary{min-height:var(--tap);display:flex;align-items:center;cursor:pointer;font:600 14px/20px 'Geist',sans-serif;color:var(--mut)}
+.cs-verif-pasos{margin:4px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:14px}
+.cs-verif-pasos li{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+.cs-verif-pasos li span{color:var(--mut)}
+.cs-verif-pasos li+li::before{content:'→';margin-right:6px;color:var(--mut)}
