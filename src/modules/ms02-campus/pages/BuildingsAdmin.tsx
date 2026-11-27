@@ -131,7 +131,7 @@ export default function BuildingsAdmin() {
         : n === 1
           ? 'Su espacio dejará de tener ruta de evacuación.'
           : `Sus ${n} espacios dejarán de tener ruta de evacuación.`;
-    return confirmar({ titulo: `¿Inactivar el edificio ${edificio.nombre}?`, texto, accion: 'Inactivar edificio', peligro: true });
+    return confirmar({ titulo: `¿Inactivar «${edificio.nombre}»?`, texto, accion: 'Inactivar edificio', peligro: true });
   };
 
   // El backend responde 422 con las rutas que impiden inactivar: se muestra tal cual.

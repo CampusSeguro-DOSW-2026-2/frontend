@@ -3,6 +3,7 @@ import { Building } from '../../../shared/components/Icons';
 import { campus } from '../services/campus';
 import { imagenesApi } from '../services/imagenes';
 import type { Edificio } from '../types';
+import { normalizar } from '../utils/formato';
 import '../styles/edificios.css';
 
 /** Miniatura de 56 px: la primera foto del edificio o, si no hay (o no carga), el icono del edificio. */
@@ -74,6 +75,8 @@ export function TarjetaEdificio({ edificio, href, chips, revisarEscaleras = fals
 }) {
   const { pisos, faltaEscalera } = useResumen(edificio.id, revisarEscaleras);
   const inactivo = edificio.estado !== 'ACTIVO';
+  // Si la descripción ya habla de los pisos («Tres pisos de aulas»), el conteo sobra
+  const descripcionConPisos = /\bpisos?\b/.test(normalizar(edificio.descripcion ?? ''));
 
   return (
     <article className={`cs-edif${inactivo ? ' inactivo' : ''}`}>
@@ -82,7 +85,7 @@ export function TarjetaEdificio({ edificio, href, chips, revisarEscaleras = fals
         <h3><a className="cs-edif-enlace" href={href}>{edificio.nombre}</a></h3>
         <p className="cs-edif-desc" title={edificio.descripcion || undefined}>{edificio.descripcion || descripcionVacia}</p>
         <div className="cs-edif-meta">
-          {pisos !== null && <span>{pisos} {pisos === 1 ? 'piso' : 'pisos'}</span>}
+          {pisos !== null && !descripcionConPisos && <span>{pisos} {pisos === 1 ? 'piso' : 'pisos'}</span>}
           {chips}
           {faltaEscalera && <span className="cs-estado warn">Falta escalera</span>}
         </div>
