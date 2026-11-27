@@ -14,3 +14,6 @@ export function mismaFrase(a?: string | null, b?: string | null): boolean {
   const n = (t?: string | null) => (t ?? '').toLowerCase().replace(/\s+/g, ' ').replace(/[.\s]+$/, '').trim();
   return n(a) !== '' && n(a) === n(b);
 }
+
+/** Quita tildes y mayúsculas para buscar por nombre. */
+export const normalizar = (texto: string) => texto.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().trim();

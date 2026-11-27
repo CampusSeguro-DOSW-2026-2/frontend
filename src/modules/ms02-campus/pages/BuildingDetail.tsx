@@ -2,9 +2,9 @@ import { Cargando } from '../../../shared/components/Cargando';
 import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import GaleriaImagenes from '../components/GaleriaImagenes';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
-import { campus, CampusApiError, comoCampusError as comoError } from '../services/campus';
+import { campus, CampusApiError, comoCampusError as comoError, currentPermissions } from '../services/campus';
 import type { Edificio, Espacio, EspacioRequest, Piso, PisoRequest, TipoEspacio } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
 import { TIPOS } from '../types';
@@ -12,6 +12,13 @@ import { useEnvio, type Errores } from '../hooks/useEnvio';
 import SalidasEdificio from '../components/SalidasEdificio';
 import EscalerasEdificio from '../components/EscalerasEdificio';
 import { BotonQr } from '../components/BotonQr';
+import { VerificacionRutas } from '../components/VerificacionRutas';
+import { useEstadoRutas } from '../hooks/useEstadoRutas';
+import { PERMISSION } from '../../../shared/permissions';
+import {
+  abrirEn, confirmarInactivar, espaciosAfectados, espaciosPorPiso, pisosSinEscalera, TEXTO_ESCALERA_PRINCIPAL,
+  type Abrible, type ManejoEscaleras,
+} from '../utils/verificacion';
 import '../styles/campus.css';
 
 type Edicion =
@@ -116,6 +123,14 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
   const [edicion, setEdicion] = useState<Edicion>(null);
   const [aviso, setAviso] = useState<{ pisoId: string; error: CampusApiError } | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
+  // Cada cambio en el edificio sube la versión y la lista de verificación se recalcula
+  const [version, setVersion] = useState(0);
+  const salidasRef = useRef<Abrible>(null);
+  const escalerasRef = useRef<ManejoEscaleras>(null);
+  const refrescar = useCallback(() => setVersion((v) => v + 1), []);
+  const rutas = useEstadoRutas(edificioId, edificio?.estado === 'ACTIVO', version);
+  const puedeEscaleras = currentPermissions().includes(PERMISSION.MS02_BUILDING_WRITE);
+  const [creandoEscalera, setCreandoEscalera] = useState(false);
 
   const aplicar = useCallback(([e, p, s]: Datos) => {
     setEdificio(e);
@@ -138,9 +153,22 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
     } catch (e) {
       setErrorCarga(comoError(e));
     }
+    refrescar();
   };
 
   const editar = (e: Edicion) => { setEdicion(e); setAviso(null); };
+
+  // Cuántos espacios perderían la ruta si se quita algo, con lo ya cargado (solo cuentan las salidas que llegan a una zona segura)
+  const impacto = (quitar: Parameters<typeof espaciosAfectados>[4]) => {
+    const e = rutas.estado;
+    if (!e) return null;
+    return espaciosAfectados(pisos, espacios, e.escaleras, e.salidas.filter((s) => e.salidasConZona.has(s.id)), quitar);
+  };
+
+  const crearEscaleraPrincipal = async () => {
+    setCreandoEscalera(true);
+    try { await escalerasRef.current?.crearPrincipal(); } finally { setCreandoEscalera(false); }
+  };
 
   // Crear o modificar: al guardar se cierra el formulario y un aviso confirma el cambio (docs/PATRONES-UI.md)
   const guardar = async (exito: string, accion: () => Promise<unknown>) => {
@@ -152,7 +180,8 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
 
   type Servicio = { inactivar: (id: string) => Promise<unknown>; reactivar: (id: string) => Promise<unknown> };
   // Inactivar y reactivar no piden confirmación: se hacen de una vez y el aviso ofrece «Deshacer» (docs/PATRONES-UI.md)
-  const cambiarEstado = async (clave: string, pisoId: string, activo: boolean, servicio: Servicio, que: string) => {
+  const cambiarEstado = async (clave: string, pisoId: string, activo: boolean, servicio: Servicio, que: string, confirmarAntes = false) => {
+    if (confirmarAntes && activo && !(await confirmarInactivar(que, 'Inactivar piso', impacto({ pisoId: clave })))) return;
     setOcupado(clave);
     setAviso(null);
     try {
@@ -190,6 +219,26 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
   const espaciosActivos = espacios.filter((s) => s.estado === 'ACTIVO').length;
   const inactivos = pisos.length - pisosActivos + espacios.length - espaciosActivos;
 
+  const accionesVerificacion = {
+    agregarPiso: () => { editar({ tipo: 'nuevo-piso' }); abrirEn('pisos-titulo', 'piso-numero-nuevo'); },
+    agregarEspacio: () => {
+      const primero = pisos.filter((p) => p.estado === 'ACTIVO').sort((a, b) => a.numero - b.numero)[0];
+      if (!primero) return;
+      editar({ tipo: 'nuevo-espacio', pisoId: primero.id });
+      abrirEn(`piso-${primero.id}`, 'espacio-nombre-nuevo');
+    },
+    agregarSalida: () => salidasRef.current?.abrir(),
+    registrarEscalera: puedeEscaleras ? () => escalerasRef.current?.abrir() : undefined,
+    crearEscaleraPrincipal: puedeEscaleras ? async () => { await escalerasRef.current?.crearPrincipal(); } : undefined,
+  };
+
+  // Pisos con espacios que ninguna escalera conecta con la salida (solo si el edificio tiene más de un piso)
+  const sinEscalera = new Set(rutas.estado && edificio.estado === 'ACTIVO'
+    ? pisosSinEscalera(pisos, espacios, rutas.estado.escaleras, rutas.estado.salidas).map((p) => p.id)
+    : []);
+  const espaciosDelPiso = espaciosPorPiso(espacios);
+  const hayEscaleraActiva = rutas.estado?.escaleras.some((e) => e.estado === 'ACTIVO') ?? false;
+
   return (
     <>
       <PageHeader badge="ADMINISTRACIÓN" title={edificio.nombre}
@@ -201,12 +250,17 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
         )}
         {errorCarga && <Falla error={errorCarga} />}
 
+        {edificio.estado === 'ACTIVO' && (
+          <VerificacionRutas pisos={pisos} espacios={espacios} estado={rutas.estado} error={rutas.error}
+            actualizando={rutas.actualizando} acciones={accionesVerificacion} onReintentar={refrescar} />
+        )}
+
         <GaleriaImagenes tipoElemento="EDIFICIO" elementoId={edificio.id}
           editable={edificio.estado === 'ACTIVO'} />
 
         <div className="cs-barra">
           <div className="cs-barra-titulo">
-            <h2 className="title sm22">Pisos y espacios</h2>
+            <h2 className="title sm22" id="pisos-titulo">Pisos y espacios</h2>
             <span className="cs-resumen">
               {pisosActivos} {pisosActivos === 1 ? 'piso activo' : 'pisos activos'} · {espaciosActivos} {espaciosActivos === 1 ? 'espacio activo' : 'espacios activos'}
             </span>
@@ -260,7 +314,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
                     )}
                     {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'piso', id: piso.id })}>Editar</button>}
                     <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === piso.id}
-                      onClick={() => cambiarEstado(piso.id, piso.id, activo, campus.pisos, `el piso ${piso.numero}`)}>
+                      onClick={() => cambiarEstado(piso.id, piso.id, activo, campus.pisos, `el piso ${piso.numero}`, true)}>
                       {ocupado === piso.id ? (activo ? 'Inactivando…' : 'Reactivando…') : activo ? 'Inactivar' : 'Reactivar'}
                     </button>
                   </div>
@@ -268,6 +322,21 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
               )}
 
               {aviso?.pisoId === piso.id && <Falla error={aviso.error} />}
+
+              {sinEscalera.has(piso.id) && (
+                <Mensaje tono="aviso" compacto acciones={!puedeEscaleras ? undefined : hayEscaleraActiva ? (
+                  <button type="button" className="plink" onClick={accionesVerificacion.registrarEscalera}>Registrar escalera</button>
+                ) : (
+                  <button type="button" className="cs-mini primario cs-envolver" disabled={creandoEscalera}
+                    aria-busy={creandoEscalera || undefined} onClick={() => void crearEscaleraPrincipal()}>
+                    {creandoEscalera ? 'Creando escalera…' : TEXTO_ESCALERA_PRINCIPAL}
+                  </button>
+                )}>
+                  {(espaciosDelPiso.get(piso.id) ?? 0) === 1
+                    ? 'El espacio de este piso no tiene ruta'
+                    : `Los ${espaciosDelPiso.get(piso.id) ?? 0} espacios de este piso no tienen ruta`}: falta una escalera que lo conecte.
+                </Mensaje>
+              )}
 
               {edicion?.tipo === 'nuevo-espacio' && edicion.pisoId === piso.id && (
                 <div className="cs-subeditor">
@@ -322,8 +391,10 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
           );
         })}
 
-        <SalidasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos} />
-        <EscalerasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos} />
+        <SalidasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos}
+          ref={salidasRef} onCambio={refrescar} afectados={(salidaId) => impacto({ salidaId })} />
+        <EscalerasEdificio edificio={edificio} pisos={pisos} mostrarInactivos={mostrarInactivos}
+          ref={escalerasRef} onCambio={refrescar} afectados={(escaleraId) => impacto({ escaleraId })} />
       </main>
     </>
   );

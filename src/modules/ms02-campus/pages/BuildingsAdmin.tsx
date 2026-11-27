@@ -1,14 +1,17 @@
 import { Cargando } from '../../../shared/components/Cargando';
-import { avisar } from '../../../shared/services/feedback';
+import { avisar, confirmar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
 import { campus, CampusApiError, comoCampusError as comoError, currentPermissions } from '../services/campus';
 import type { Campus, Edificio, EdificioRequest } from '../types';
 import { Botones, Campo, Falla } from '../components/comun';
-import GaleriaImagenes from '../components/GaleriaImagenes';
+import { TarjetaEdificio } from '../components/TarjetaEdificio';
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Search } from '../../../shared/components/Icons';
+import { normalizar } from '../utils/formato';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import '../styles/campus.css';
 import '../styles/admin.css';
@@ -68,6 +71,7 @@ export default function BuildingsAdmin() {
   const [edificios, setEdificios] = useState<Edificio[] | null>(null);
   const [errorCarga, setErrorCarga] = useState<CampusApiError | null>(null);
   const [filtro, setFiltro] = useState<Filtro>('ACTIVO');
+  const [busqueda, setBusqueda] = useState('');
   const [edicion, setEdicion] = useState<Edicion>(null);
   const [aviso, setAviso] = useState<CampusApiError | null>(null);
   const [ocupado, setOcupado] = useState<string | null>(null);
@@ -114,12 +118,29 @@ export default function BuildingsAdmin() {
     avisar({ tono: 'exito', texto: exito });
   };
 
+  // Igual que pisos, salidas y escaleras: antes de inactivar se dice cuántos espacios pierden la ruta. Si no se pueden
+  // contar, el diálogo sale sin el número.
+  const confirmarInactivarEdificio = async (edificio: Edificio) => {
+    const n = await campus.espacios.listarPorEdificio(edificio.id)
+      .then((lista) => lista.filter((s) => s.estado === 'ACTIVO').length)
+      .catch(() => null);
+    const texto = n === null
+      ? 'Sus espacios dejarán de tener ruta de evacuación.'
+      : n === 0
+        ? 'No tiene espacios activos, así que ninguna ruta de evacuación se ve afectada.'
+        : n === 1
+          ? 'Su espacio dejará de tener ruta de evacuación.'
+          : `Sus ${n} espacios dejarán de tener ruta de evacuación.`;
+    return confirmar({ titulo: `¿Inactivar «${edificio.nombre}»?`, texto, accion: 'Inactivar edificio', peligro: true });
+  };
+
   // El backend responde 422 con las rutas que impiden inactivar: se muestra tal cual.
   const cambiarEstado = async (edificio: Edificio) => {
+    const activo = edificio.estado === 'ACTIVO';
+    if (activo && !(await confirmarInactivarEdificio(edificio))) return;
     setOcupado(edificio.id);
     setAviso(null);
     try {
-      const activo = edificio.estado === 'ACTIVO';
       await (activo ? campus.edificios.inactivar(edificio.id) : campus.edificios.reactivar(edificio.id));
       await recargar();
       avisar({
@@ -153,7 +174,10 @@ export default function BuildingsAdmin() {
   const activos = edificios.filter((e) => e.estado === 'ACTIVO').length;
   const inactivos = edificios.length - activos;
   const conteo: Record<Filtro, number> = { TODOS: edificios.length, ACTIVO: activos, INACTIVO: inactivos };
-  const visibles = edificios.filter((e) => filtro === 'TODOS' || e.estado === filtro);
+  const texto = normalizar(busqueda);
+  const visibles = edificios
+    .filter((e) => filtro === 'TODOS' || e.estado === filtro)
+    .filter((e) => !texto || normalizar(e.nombre).includes(texto));
   const hayCampusActivo = !!campuses?.some((c) => c.estado === 'ACTIVO');
 
   return (
@@ -180,6 +204,13 @@ export default function BuildingsAdmin() {
               {activos} {activos === 1 ? 'activo' : 'activos'} · {inactivos} {inactivos === 1 ? 'inactivo' : 'inactivos'}
             </span>
           </div>
+          <a className="cs-mini" href="#/admin/campus">Campus y zonas abiertas</a>
+          {puedeGestionar && (
+            <button type="button" className="btn red cs-agregar" disabled={!hayCampusActivo} onClick={() => editar({ tipo: 'nuevo' })}>Crear edificio</button>
+          )}
+        </div>
+
+        <div className="ev-tools cs-edif-herramientas">
           <div className="cs-filtro-estado" role="group" aria-label="Filtrar por estado">
             {FILTROS.map((f) => (
               <button key={f.valor} type="button" className="cs-pildora" aria-pressed={filtro === f.valor} onClick={() => setFiltro(f.valor)}>
@@ -187,10 +218,10 @@ export default function BuildingsAdmin() {
               </button>
             ))}
           </div>
-          <a className="cs-mini" href="#/admin/campus">Campus y zonas abiertas</a>
-          {puedeGestionar && (
-            <button type="button" className="btn red cs-agregar" disabled={!hayCampusActivo} onClick={() => editar({ tipo: 'nuevo' })}>Crear edificio</button>
-          )}
+          <div className="searchbar">
+            <Search /><input type="search" aria-label="Buscar edificios por nombre" placeholder="Buscar por nombre"
+              value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+          </div>
         </div>
 
         {edicion?.tipo === 'nuevo' && campuses && (
@@ -202,61 +233,46 @@ export default function BuildingsAdmin() {
         )}
 
         {visibles.length === 0 && edicion?.tipo !== 'nuevo' ? (
-          <Mensaje tono="info">
-            {edificios.length === 0
-              ? 'Todavía no hay edificios registrados.'
-              : 'No hay edificios con este filtro. Pruebe con «Todos».'}
-          </Mensaje>
+          busqueda.trim() && edificios.length > 0 ? (
+            <EstadoVacio titulo={`Ningún edificio coincide con «${busqueda.trim()}»`}>Pruebe con otro nombre o con el filtro «Todos».</EstadoVacio>
+          ) : (
+            <Mensaje tono="info">
+              {edificios.length === 0
+                ? 'Todavía no hay edificios registrados.'
+                : 'No hay edificios con este filtro. Pruebe con «Todos».'}
+            </Mensaje>
+          )
         ) : visibles.length > 0 && (
-          <div className="cs-tabla">
-            <table>
-              <thead>
-                <tr><th>Nombre</th><th>Campus</th><th>Descripción</th><th>Estado</th><th><span className="cs-oculto">Acciones</span></th></tr>
-              </thead>
-              <tbody>
-                {visibles.map((edificio) => {
-                  const activo = edificio.estado === 'ACTIVO';
-                  if (edicion?.tipo === 'edificio' && edicion.id === edificio.id) {
-                    return (
-                      <tr key={edificio.id}><td colSpan={5}>
-                        <EdificioForm inicial={edificio} campuses={campuses ?? []} onCancelar={() => editar(null)}
-                          onGuardar={(datos) => guardar('Cambios del edificio guardados.', () => campus.edificios.modificar(edificio.id, { nombre: datos.nombre, descripcion: datos.descripcion, campusId: datos.campusId }))} />
-                      </td></tr>
-                    );
-                  }
-                  return (
-                    <Fragment key={edificio.id}>
-                    <tr className={activo ? '' : 'inactivo'}>
-                      <td className="cs-codigo">{edificio.nombre}</td>
-                      <td>{campuses?.find((c) => c.id === edificio.campusId)?.nombre ?? '—'}</td>
-                      <td className="cs-descripcion">{edificio.descripcion || '—'}</td>
-                      <td><span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{etiquetaCodigo(edificio.estado)}</span></td>
-                      <td>
-                        <div className="cs-acciones">
-                          <a className="cs-mini" href={`#/admin/edificios/${edificio.id}`}>Pisos y espacios</a>
-                          {puedeGestionar && activo && campuses && (
-                            <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'edificio', id: edificio.id })}>Editar</button>
-                          )}
-                          {puedeGestionar && (
-                            <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === edificio.id}
-                              onClick={() => cambiarEstado(edificio)}>
-                              {ocupado === edificio.id ? (activo ? 'Inactivando…' : 'Reactivando…') : activo ? 'Inactivar' : 'Reactivar'}
-                            </button>
-                          )}
-                        </div>
-                        </td>
-                    </tr>
-                    <tr>
-                      <td colSpan={5}>
-                        <GaleriaImagenes tipoElemento="EDIFICIO" elementoId={edificio.id}
-                          editable={activo && puedeGestionar} />
-                      </td>
-                    </tr>
-                    </Fragment>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="cs-edificios">
+            {visibles.map((edificio) => {
+              const activo = edificio.estado === 'ACTIVO';
+              if (edicion?.tipo === 'edificio' && edicion.id === edificio.id) {
+                return (
+                  <section key={edificio.id} className="cs-piso cs-edif-form">
+                    <h3 className="cs-piso-titulo">Editar «{edificio.nombre}»</h3>
+                    <EdificioForm inicial={edificio} campuses={campuses ?? []} onCancelar={() => editar(null)}
+                      onGuardar={(datos) => guardar('Cambios del edificio guardados.', () => campus.edificios.modificar(edificio.id, { nombre: datos.nombre, descripcion: datos.descripcion, campusId: datos.campusId }))} />
+                  </section>
+                );
+              }
+              return (
+                <TarjetaEdificio key={edificio.id} edificio={edificio} href={`#/admin/edificios/${edificio.id}`}
+                  descripcionVacia="Sin descripción" revisarEscaleras={activo}
+                  chips={<span className={`cs-estado ${activo ? 'ok' : 'info'}`}>{etiquetaCodigo(edificio.estado)}</span>}
+                  acciones={puedeGestionar && (
+                    <>
+                      {activo && campuses && (
+                        <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'edificio', id: edificio.id })}
+                          aria-label={`Editar ${edificio.nombre}`}>Editar</button>
+                      )}
+                      <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === edificio.id}
+                        aria-label={`${activo ? 'Inactivar' : 'Reactivar'} ${edificio.nombre}`} onClick={() => cambiarEstado(edificio)}>
+                        {ocupado === edificio.id ? (activo ? 'Inactivando…' : 'Reactivando…') : activo ? 'Inactivar' : 'Reactivar'}
+                      </button>
+                    </>
+                  )} />
+              );
+            })}
           </div>
         )}
       </main>

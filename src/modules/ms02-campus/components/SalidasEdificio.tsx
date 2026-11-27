@@ -2,13 +2,14 @@ import { Cargando } from '../../../shared/components/Cargando';
 import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import GaleriaImagenes from './GaleriaImagenes';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useImperativeHandle, useState, type Ref } from 'react';
 import { campus, CampusApiError, comoCampusError as comoError } from '../services/campus';
 import type { Edificio, Piso, Salida, SalidaRequest } from '../types';
 import { useEnvio, type Errores } from '../hooks/useEnvio';
 import { Botones, Campo, Falla } from './comun';
 import { AyudaCoordenadas } from './AyudaCoordenadas';
 import { BotonQr } from './BotonQr';
+import { abrirEn, confirmarInactivar, type Abrible } from '../utils/verificacion';
 
 type Edicion = { tipo: 'nueva' } | { tipo: 'modificar'; id: string } | null;
 
@@ -80,8 +81,14 @@ function estado(s: Salida) {
   return <span className="cs-estado ok">ACTIVA</span>;
 }
 
-export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
+export default function SalidasEdificio({ edificio, pisos, mostrarInactivos, ref, onCambio, afectados }: {
   edificio: Edificio; pisos: Piso[]; mostrarInactivos: boolean;
+  /** `abrir()` muestra el formulario de nueva salida y lleva a él. */
+  ref?: Ref<Abrible>;
+  /** Se llama después de cada cambio, para que el detalle recalcule la lista de verificación. */
+  onCambio?: () => void;
+  /** Espacios que se quedarían sin ruta si se inactiva la salida (null si no se puede calcular). */
+  afectados?: (salidaId: string) => number | null;
 }) {
   const [salidas, setSalidas] = useState<Salida[] | null>(null);
   const [error, setError] = useState<CampusApiError | null>(null);
@@ -99,7 +106,17 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
     return () => { vigente = false; };
   }, [edificio.id, edificio.estado, estadoPisos, aplicar]);
 
-  const recargar = async () => aplicar(await campus.salidas.listarPorEdificio(edificio.id, true));
+  useImperativeHandle(ref, () => ({
+    abrir: () => {
+      setEdicion({ tipo: 'nueva' });
+      abrirEn('salidas-titulo', 'salida-piso-nueva');
+    },
+  }), []);
+
+  const recargar = async () => {
+    aplicar(await campus.salidas.listarPorEdificio(edificio.id, true));
+    onCambio?.();
+  };
 
   // Crear o modificar: al guardar se cierra el formulario y un aviso confirma el cambio (docs/PATRONES-UI.md)
   const guardar = async (exito: string, accion: () => Promise<unknown>) => {
@@ -110,10 +127,11 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos }: {
   };
 
   const cambiarEstado = async (s: Salida) => {
+    const activa = s.estado === 'ACTIVO';
+    if (activa && !(await confirmarInactivar(`la salida «${s.nombre}»`, 'Inactivar salida', afectados?.(s.id) ?? null))) return;
     setOcupado(s.id);
     setError(null);
     try {
-      const activa = s.estado === 'ACTIVO';
       await (activa ? campus.salidas.inactivar(s.id) : campus.salidas.reactivar(s.id));
       await recargar();
       avisar({

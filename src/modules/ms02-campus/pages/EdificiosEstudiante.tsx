@@ -1,6 +1,10 @@
 import { Cargando } from '../../../shared/components/Cargando';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { useEffect, useState } from 'react';
+import { EstadoVacio } from '../../../shared/components/EstadoVacio';
+import { Search } from '../../../shared/components/Icons';
+import { TarjetaEdificio } from '../components/TarjetaEdificio';
+import { normalizar } from '../utils/formato';
 import { PageHeader } from '../../../shared/components/Layout';
 import GaleriaImagenes from '../components/GaleriaImagenes';
 import { PERMISSION } from '../../../shared/permissions';
@@ -23,6 +27,7 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
   const [espacios, setEspacios] = useState<Espacio[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     let vigente = true;
@@ -117,6 +122,8 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
   }
 
   if (!edificioId) {
+    const texto = normalizar(busqueda);
+    const visibles = edificios.filter((e) => !texto || normalizar(e.nombre).includes(texto));
     return (
       <>
         <PageHeader
@@ -129,27 +136,27 @@ export default function EdificiosEstudiante({ edificioId }: Props) {
           {edificios.length === 0 ? (
             <Mensaje tono="info">Todavía no hay edificios activos para consultar.</Mensaje>
           ) : (
-            <div className="cs-estudiante-edificios">
-              {edificios.map((item) => (
-                <article className="cs-estudiante-edificio" key={item.id}>
-                  <GaleriaImagenes
-                    tipoElemento="EDIFICIO"
-                    elementoId={item.id}
-                    editable={false}
-                    portada
-                    nombre={item.nombre}
-                  />
-
-                  <div className="cs-estudiante-edificio-info">
-                    <h2>{item.nombre}</h2>
-                    <p>{item.descripcion || 'Consulte sus pisos, espacios y rutas de evacuación.'}</p>
-                    <a className="btn white sm cs-estudiante-ir" href={`#/edificios/${item.id}`}>
-                      Ver pisos y espacios
-                    </a>
-                  </div>
-                </article>
-              ))}
-            </div>
+            <>
+              <div className="ev-tools cs-edif-herramientas">
+                <span className="cs-resumen">
+                  {edificios.length} {edificios.length === 1 ? 'edificio' : 'edificios'}
+                </span>
+                <div className="searchbar">
+                  <Search /><input type="search" aria-label="Buscar edificios por nombre" placeholder="Buscar por nombre"
+                    value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+                </div>
+              </div>
+              {visibles.length === 0 ? (
+                <EstadoVacio titulo={`Ningún edificio coincide con «${busqueda.trim()}»`}>Pruebe con otro nombre.</EstadoVacio>
+              ) : (
+                <div className="cs-edificios">
+                  {visibles.map((item) => (
+                    <TarjetaEdificio key={item.id} edificio={item} href={`#/edificios/${item.id}`}
+                      descripcionVacia="Consulte sus pisos, espacios y rutas de evacuación." />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </main>
       </>
