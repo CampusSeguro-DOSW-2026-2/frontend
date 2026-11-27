@@ -1,39 +1,3 @@
-.cs-estudiante-edificios {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
-  gap: 24px;
-  align-items: start;
-}
-
-.cs-estudiante-edificio {
-  min-width: 0;
-  padding: 20px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-}
-
-.cs-estudiante-edificio-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.cs-estudiante-edificio-info h2 {
-  font: 700 20px/26px 'Outfit', sans-serif;
-}
-
-.cs-estudiante-edificio-info p {
-  font-size: 14px;
-  line-height: 150%;
-  color: var(--mut);
-}
-
-.cs-estudiante-edificio .cs-galeria {
-  margin-top: 20px;
-}
-
 .cs-estudiante-resumen {
   display: flex;
   align-items: baseline;
@@ -153,20 +117,12 @@
 }
 
 @media (max-width: 700px) {
-  .cs-estudiante-edificios,
   .cs-estudiante-espacios {
     grid-template-columns: 1fr;
   }
-
-  .cs-estudiante-edificio {
-    padding: 16px;
-  }
 }
 
-/* Tarjeta de edificio: la foto como portada arriba y, sin foto, un respaldo visual claro (nunca una caja vacía) */
-.cs-estudiante-edificio{padding:0;overflow:hidden;display:flex;flex-direction:column;background:var(--surface)}
-.cs-estudiante-edificio .cs-estudiante-edificio-info{padding:18px 20px 20px}
-.cs-estudiante-ir{align-self:stretch;margin-top:4px}
+/* Portada de las fotos (detalle del edificio) y respaldo visual cuando no hay foto */
 .cs-portada-lista{display:flex;flex-direction:column;gap:16px}
 .cs-portada{position:relative;margin:0;aspect-ratio:16/9;overflow:hidden;background:var(--cream)}
 .cs-portada img{display:block;width:100%;height:100%;object-fit:cover}
