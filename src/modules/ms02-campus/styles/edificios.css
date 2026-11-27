@@ -1,0 +1,29 @@
+/* Listas de edificios (administración y comunidad): tarjetas compactas en cuadrícula, 3 / 2 / 1 columnas */
+.cs-edificios{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}
+@media(min-width:700px){.cs-edificios{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:1100px){.cs-edificios{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.cs-edificios>.cs-edif-form{grid-column:1/-1}
+
+.cs-edif{position:relative;display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px 14px;align-items:start;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:16px;transition:border-color var(--dur-ui) var(--ease-out)}
+.cs-edif.inactivo{background:var(--bg)}
+.cs-edif:has(.cs-edif-enlace:hover){border-color:var(--ink)}
+.cs-edif:has(.cs-edif-enlace:focus-visible){outline:3px solid var(--blue);outline-offset:2px}
+
+.cs-edif-mini{width:56px;height:56px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--cream);color:var(--red)}
+.cs-edif-mini img{width:100%;height:100%;object-fit:cover;display:block}
+.cs-edif-mini svg.i{width:28px;height:28px}
+
+.cs-edif-info{min-width:0;display:flex;flex-direction:column;gap:4px}
+.cs-edif-info h3{font:700 17px/22px 'Outfit',sans-serif;overflow-wrap:anywhere}
+/* Toda la tarjeta es el enlace: el ::after cubre la tarjeta y las acciones quedan encima */
+.cs-edif-enlace{color:var(--ink);text-decoration:none;outline:none}
+.cs-edif-enlace::after{content:'';position:absolute;inset:0;border-radius:inherit}
+.cs-edif-desc{font-size:13px;line-height:18px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cs-edif-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:4px;font-size:13px;color:var(--mut)}
+.cs-edif-meta .cs-estado{padding:4px 8px}
+
+.cs-edif-acciones{grid-column:1/-1;position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+
+.cs-edif-herramientas{margin-bottom:16px}
+.cs-edif-herramientas .searchbar{width:320px}
+@media(max-width:700px){.cs-edif-herramientas .searchbar{width:100%}}
