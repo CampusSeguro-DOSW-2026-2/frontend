@@ -234,7 +234,7 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
           <ul className="nav-rapidos" aria-label="Accesos rápidos">
             {accesos.map((a) => (
               <li key={a.href}>
-                <a href={a.href} aria-current={accesoActivo === a.href ? 'page' : undefined}>
+                <a href={a.href} title={a.label} aria-current={accesoActivo === a.href ? 'page' : undefined}>
                   {a.icon}<span>{a.label}</span>
                 </a>
               </li>

@@ -441,7 +441,8 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .nav-rapidos a[aria-current=page]{background:var(--bg);color:var(--red)}
 .nav-rapidos a[aria-current=page] svg.i{color:var(--red)}
 @media(hover:hover){.nav-rapidos a:hover{background:var(--bg)}}
-@media(max-width:1100px){.nav-rapidos span{display:none}.nav-rapidos a{padding:0 12px}}
+/* En pantallas medianas solo el icono; el texto queda para lectores de pantalla */
+@media(max-width:1100px){.nav-rapidos span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.nav-rapidos a{padding:0 12px}}
 /* Tutor IA: botón flotante abajo a la derecha (en el celular, encima de la barra inferior) */
 .tutor-flotante{position:fixed;right:24px;bottom:24px;z-index:24;display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--red);color:var(--on-color);box-shadow:0 6px 18px color-mix(in srgb,var(--red) 35%,transparent);text-decoration:none;transition:transform var(--dur-ui) var(--ease-out)}
 .tutor-flotante svg.i{width:26px;height:26px}
@@ -473,3 +474,5 @@ body:has(.tutor-flotante){padding-bottom:88px}
   /* Espacio extra al final para que el contenido suba por encima del botón flotante */
   body:has(.tutor-flotante){padding-bottom:calc(var(--barra-inferior,0px) + 72px)}
 }
+/* Celulares angostos: la marca y el menú caben en la barra superior */
+@media(max-width:380px){.nav-left{gap:10px}.brand{font-size:19px;gap:8px}.brand img{width:24px}.nav-burger{width:44px;height:44px}}
