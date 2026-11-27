@@ -2,7 +2,7 @@ import { EstadoVacio } from '../../../shared/components/EstadoVacio';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useState } from 'react';
-import { Send } from '../../../shared/components/Icons';
+import { CircleCheck, Plus, Send } from '../../../shared/components/Icons';
 import { PageHeader } from '../../../shared/components/Layout';
 import { ApiError, errorMessage, type FieldErrors } from '../../../shared/services/http';
 import { hasPermission } from '../../../shared/services/session';
@@ -36,6 +36,13 @@ const ESTADO_TEXTO: Record<string, string> = {
 
 /** La solicitud quedó en MS04 a la espera de MS05: la brigada la recibe en cuanto el servicio responda. */
 const PENDIENTE_TEXTO = 'Su estado quedó registrado. La solicitud de ayuda llegará a la brigada en cuanto el servicio esté disponible. Permanezca en un lugar seguro.';
+
+/** Lo que implica cada urgencia, en palabras de quien pide ayuda. */
+const IMPLICA: Record<string, string> = {
+  EMERGENCIA: 'Hay riesgo para la vida o una lesión grave. La brigada acude de inmediato.',
+  URGENCIA_MODERADA: 'Necesita ayuda pronto, pero sin riesgo inmediato para la vida.',
+  POCA_URGENCIA: 'Puede esperar a que la brigada llegue.',
+};
 
 type Resultado = { incidente: Incidente | null; fallidas: string[]; aviso?: string };
 
@@ -166,29 +173,34 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
 
   const back = forOther ? '#/brigadista' : eventId ? `#/checkin/${encodeURIComponent(eventId)}` : '#/checkin';
   const enZona = paso === 'zona' && prioridad !== null;
-  const header = enZona
-    ? { badge: 'ZONA Y DETALLES', title: forOther ? '¿Dónde está la persona?' : '¿Dónde necesita ayuda?', subtitle: forOther ? 'Seleccione la zona donde está la persona afectada.' : 'Seleccione su zona. Puede enviar la solicitud sin descripción ni evidencia.' }
-    : { badge: 'PRIORIDAD', title: forOther ? 'Reportar incidente' : '¿Qué tan urgente es?', subtitle: forOther ? 'Para una persona que no puede pedir ayuda por sí misma.' : 'Seleccione la prioridad. La solicitud llega a la brigada de su zona.' };
+  const textoVolver = forOther ? 'Volver al panel brigadista' : 'Volver al evento';
 
   return (
     <>
-      <PageHeader badge={header.badge} title={header.title} subtitle={header.subtitle} context={event ? event.name : undefined} />
-      <main className="rs-main">
-        {enZona
-          ? <button type="button" className="rs-back" onClick={() => setPaso('prioridad')}>← Volver a seleccionar prioridad</button>
-          : <a className="rs-back" href={back}>← {forOther ? 'Volver al panel brigadista' : 'Volver al evento'}</a>}
-
+      {/* El encabezado no cambia entre pasos: es la misma solicitud; el paso se indica dentro de la tarjeta */}
+      <PageHeader
+        volver={{ href: back, texto: textoVolver }}
+        badge={forOther ? 'REPORTAR INCIDENTE' : 'NECESITO AYUDA'}
+        title={forOther ? 'Reportar un incidente' : 'Pedir asistencia a la brigada'}
+        subtitle={forOther
+          ? 'Para una persona que no puede pedir ayuda por sí misma. La brigada de la zona recibe el reporte.'
+          : 'La brigada de su zona recibe su solicitud y acude a usted.'}
+        context={event ? `${tipoEvento(event.simulacro)} · ${event.name}` : undefined}
+      />
+      <main className="content na-main">
         {event === undefined && !opciones && !message && <Cargando texto="Consultando los eventos en ejecución…" />}
         {event === undefined && opciones && opciones.length > 1 && (
-          <section className="rs-card" aria-labelledby="rs-evento-titulo">
-            <h2 id="rs-evento-titulo">¿En qué evento necesita ayuda?</h2>
-            <p className="rs-sub">Hay {opciones.length} eventos en ejecución. Elija aquel en el que está participando.</p>
-            <div className="rs-prios" role="group" aria-label="Evento">
+          <section className="na-card" aria-labelledby="na-evento-titulo">
+            <h2 id="na-evento-titulo" className="na-titulo">¿En qué evento necesita ayuda?</h2>
+            <p className="na-sub">Hay {opciones.length} eventos en ejecución. Elija aquel en el que está participando.</p>
+            <div className="na-opciones" role="group" aria-label="Evento">
               {opciones.map((e) => (
-                <button key={e.id} type="button" className="rs-prio-card" onClick={() => setEvent(e)}>
-                  <span className="tag">{tipoEvento(e.simulacro).toUpperCase()}</span>
-                  <b>{e.name}</b>
-                  {(e.startedAt ?? e.startDate) && <span>Iniciado: {fechaHora(e.startedAt ?? e.startDate)}</span>}
+                <button key={e.id} type="button" className="na-opcion" onClick={() => setEvent(e)}>
+                  <span className="na-opcion-txt">
+                    <b>{e.name}</b>
+                    <small>{tipoEvento(e.simulacro)}{(e.startedAt ?? e.startDate) && ` · Iniciado: ${fechaHora(e.startedAt ?? e.startDate)}`}</small>
+                  </span>
+                  <span className="na-opcion-ir" aria-hidden="true">›</span>
                 </button>
               ))}
             </div>
@@ -198,30 +210,41 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
         {message && <Mensaje tono="error">{message}</Mensaje>}
 
         {done && (
-          <section className="rs-card" role="status">
-            <h2>{forOther ? 'Incidente reportado' : 'Solicitud enviada'}</h2>
-            {done.incidente?.estado && <p>{forOther
+          <section className="na-card" role="status" aria-labelledby="na-listo-titulo">
+            <span className="na-listo-ico" aria-hidden="true"><CircleCheck /></span>
+            <h2 id="na-listo-titulo" className="na-titulo">{forOther ? 'Incidente reportado' : 'Solicitud enviada'}</h2>
+            {done.incidente?.estado && <p className="na-texto">{forOther
               ? `Incidente registrado para ${done.incidente.nombreAfectado} (${done.incidente.estado === 'ASIGNADO' ? 'asignado a la brigada de la zona' : 'pendiente de asignar'}).`
               : ESTADO_TEXTO[done.incidente.estado] ?? 'Su solicitud quedó registrada. Permanezca en un lugar seguro.'}</p>}
-            {done.aviso && <p>{done.aviso}</p>}
-            {done.fallidas.length > 0 && <p className="error">No se pudieron adjuntar: {done.fallidas.join(', ')}. Puede intentarlo de nuevo desde «Mis incidentes».</p>}
-            <div className="rs-detail-acts" style={{ justifyContent: 'flex-start' }}>
-              {!forOther && hasPermission(session, PERMISSION.MS05_INCIDENT_MANAGE_OWN) && <a className="btn red rs-btn rs-report" href="#/mis-incidentes">Ver mis incidentes</a>}
-              <a className="btn white rs-btn rs-report" href={back}>Volver</a>
+            {done.aviso && <p className="na-texto">{done.aviso}</p>}
+            {done.fallidas.length > 0 && <Mensaje tono="aviso">No se pudieron adjuntar: {done.fallidas.join(', ')}. Puede intentarlo de nuevo desde «Mis incidentes».</Mensaje>}
+            {!forOther && (
+              <ul className="na-pasos">
+                <li>Permanezca en un lugar seguro y, si puede, visible.</li>
+                <li>La brigada llega a la zona que indicó.</li>
+                <li>Puede seguir el estado de su solicitud en «Mis incidentes».</li>
+              </ul>
+            )}
+            <div className="na-acciones">
+              {!forOther && hasPermission(session, PERMISSION.MS05_INCIDENT_MANAGE_OWN) && <a className="btn red" href="#/mis-incidentes">Ver mis incidentes</a>}
+              <a className="btn white" href={back}>{textoVolver}</a>
             </div>
           </section>
         )}
 
         {event && !done && !enZona && (
-          <section className="rs-card" aria-labelledby="rs-prio-titulo">
-            <h2 id="rs-prio-titulo">Prioridad</h2>
-            <p className="rs-sub">Elija la opción que mejor describe la situación.</p>
-            <div className="rs-prios" role="group" aria-label="Prioridad">
+          <section className="na-card" aria-labelledby="na-prio-titulo">
+            <span className="na-paso">Paso 1 de 2</span>
+            <h2 id="na-prio-titulo" className="na-titulo">¿Qué tan urgente es?</h2>
+            <p className="na-sub">Elija la opción que mejor describe la situación{forOther ? ' de la persona' : ''}.</p>
+            <div className="na-opciones" role="group" aria-label="Urgencia">
               {PRIORIDADES.map((p) => (
-                <button key={p.id} type="button" className="rs-prio-card" aria-pressed={prioridad?.id === p.id} onClick={() => elegirPrioridad(p)}>
-                  <PrioridadChip codigo={p.codigo} />
-                  <b>{p.label}</b>
-                  <span>{p.help}</span>
+                <button key={p.id} type="button" className={`na-opcion na-prio ${p.codigo}`} aria-pressed={prioridad?.id === p.id} onClick={() => elegirPrioridad(p)}>
+                  <span className="na-opcion-txt">
+                    <b>{p.label}</b>
+                    <small>{IMPLICA[p.codigo]}</small>
+                  </span>
+                  <span className="na-opcion-ir" aria-hidden="true">›</span>
                 </button>
               ))}
             </div>
@@ -230,69 +253,60 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
         )}
 
         {event && !done && enZona && prioridad && (
-          <form className="rs-grid" noValidate onSubmit={(e) => { e.preventDefault(); void enviar(); }}>
-            <section className="rs-card rs-col">
-              {forOther && (
-                <div className="rs-sec">
-                  <h3><label htmlFor="afectado">Persona afectada</label></h3>
-                  <div className={`input${errors.nombreAfectado ? ' bad' : ''}`}><input id="afectado" maxLength={150} value={afectado} onChange={(e) => setAfectado(e.target.value)} /></div>
-                  {errors.nombreAfectado && <span className="error" role="alert">{errors.nombreAfectado}</span>}
-                </div>
-              )}
-              <div className="rs-sec">
-                <h3 id="rs-zona-titulo">Zona del incidente</h3>
-                <p className="rs-sub">{forOther ? 'Seleccione el bloque donde está la persona.' : 'Seleccione el bloque donde se encuentra.'}</p>
-                <div className="rs-zonas" role="group" aria-labelledby="rs-zona-titulo">
-                  {event.scope.map((s) => (
-                    <button key={s.id} type="button" className="rs-zona" aria-pressed={ubicacion === s.id}
-                      onClick={() => { setUbicacion(s.id); setErrors((e) => ({ ...e, ubicacion: undefined })); }}>
-                      {nombre(s.id)}{ubicacion === s.id && ' ✓'}
-                    </button>
-                  ))}
-                </div>
-                {event.scope.length === 0 && <p className="rs-sub">El evento no tiene zonas definidas.</p>}
-                {errors.ubicacion
-                  ? <span className="error" role="alert">{errors.ubicacion}</span>
-                  : ubicacion && <span className="rs-ok">Zona seleccionada: {nombre(ubicacion)}</span>}
-              </div>
-              <div className="rs-sec">
-                <h3><label htmlFor="desc">Descripción</label> <span className="rs-opt">Opcional</span></h3>
-                <div className="input area"><textarea id="desc" rows={3} maxLength={viaCheckin ? 500 : 1000} placeholder="Describa qué ocurrió o indique el piso y un punto de referencia…" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} /></div>
-                {errors.descripcion && <span className="error" role="alert">{errors.descripcion}</span>}
-              </div>
-              <div className="rs-sec">
-                <h3>Evidencia <span className="rs-opt">Opcional</span></h3>
-                <label className="rs-drop">
-                  <input type="file" multiple accept={EVIDENCE_TYPES.join(',')} onChange={(e) => elegirArchivos(e.target.files)} />
-                  <span>
-                    <b>Adjuntar evidencia</b>
-                    <small>{archivos.length ? archivos.map((f) => f.name).join(', ') : 'Ningún archivo adjunto'}</small>
-                  </span>
-                  <span className="rs-plus" aria-hidden="true">+</span>
-                </label>
-                {errors.evidencias
-                  ? <span className="error" role="alert">{errors.evidencias}</span>
-                  : <span className="rs-sub">Adjunte un archivo solo si puede hacerlo sin ponerse en riesgo (hasta {MAX_EVIDENCES} archivos png, pdf o mp4).</span>}
-              </div>
-            </section>
+          <form className="na-card" noValidate onSubmit={(e) => { e.preventDefault(); void enviar(); }} aria-labelledby="na-zona-titulo">
+            <div className="na-resumen">
+              <span className="na-paso">Paso 2 de 2</span>
+              <span className="na-resumen-prio">Urgencia: <PrioridadChip codigo={prioridad.codigo} />
+                <button type="button" className="na-link" onClick={() => setPaso('prioridad')}>Cambiar</button>
+              </span>
+            </div>
 
-            <aside className="rs-side">
-              <section className="rs-card">
-                <h2>{forOther ? 'El reporte' : 'Su solicitud'}</h2>
-                <div className="rs-kv">
-                  <small>Prioridad seleccionada</small>
-                  <PrioridadChip codigo={prioridad.codigo} />
-                </div>
-                <button type="button" className="rs-link" onClick={() => setPaso('prioridad')}>Cambiar prioridad</button>
-                <div className="rs-kv">
-                  <small>Zona</small>
-                  <b>{ubicacion ? nombre(ubicacion) : 'Sin seleccionar'}</b>
-                </div>
-                <p className="rs-sub">La solicitud aún no se ha enviado. Al enviarla, estará disponible para su atención por la brigada.</p>
-                <button type="submit" className="btn red rs-btn" disabled={saving}><Send />{saving ? 'Enviando…' : forOther ? 'Reportar incidente' : 'Enviar solicitud'}</button>
-              </section>
-              <Mensaje tono="info" compacto>La zona es necesaria. La descripción y la evidencia son opcionales y no impiden el envío.</Mensaje>
-            </aside>
+            {forOther && (
+              <div className="na-sec">
+                <label className="na-etiqueta" htmlFor="afectado">Persona afectada</label>
+                <div className={`input${errors.nombreAfectado ? ' bad' : ''}`}><input id="afectado" maxLength={150} value={afectado} onChange={(e) => setAfectado(e.target.value)} placeholder="Nombre y apellido" /></div>
+                {errors.nombreAfectado && <span className="error" role="alert">{errors.nombreAfectado}</span>}
+              </div>
+            )}
+
+            <div className="na-sec">
+              <h2 id="na-zona-titulo" className="na-titulo">{forOther ? '¿Dónde está la persona?' : '¿Dónde está?'}</h2>
+              <p className="na-sub">Elija el edificio o punto de encuentro. La brigada de esa zona recibe la solicitud.</p>
+              <div className="na-zonas" role="group" aria-labelledby="na-zona-titulo">
+                {event.scope.map((z) => (
+                  <button key={z.id} type="button" className="na-zona" aria-pressed={ubicacion === z.id}
+                    onClick={() => { setUbicacion(z.id); setErrors((e) => ({ ...e, ubicacion: undefined })); }}>
+                    {nombre(z.id)}
+                  </button>
+                ))}
+              </div>
+              {event.scope.length === 0 && <p className="na-sub">El evento no tiene zonas definidas.</p>}
+              {errors.ubicacion && <span className="error" role="alert">{errors.ubicacion}</span>}
+            </div>
+
+            <div className="na-sec">
+              <label className="na-etiqueta" htmlFor="desc">Descripción <span className="na-opcional">Opcional</span></label>
+              <div className="input area"><textarea id="desc" rows={3} maxLength={viaCheckin ? 500 : 1000} placeholder="Qué ocurrió, el piso o un punto de referencia…" value={descripcion} onChange={(e) => setDescripcion(e.target.value)} /></div>
+              {errors.descripcion && <span className="error" role="alert">{errors.descripcion}</span>}
+            </div>
+
+            <div className="na-sec">
+              <span className="na-etiqueta">Evidencia <span className="na-opcional">Opcional</span></span>
+              <label className="na-adjuntar">
+                <input type="file" multiple accept={EVIDENCE_TYPES.join(',')} onChange={(e) => elegirArchivos(e.target.files)} />
+                <span className="na-adjuntar-ico" aria-hidden="true"><Plus /></span>
+                <span className="na-opcion-txt">
+                  <b>Adjuntar foto, video o PDF</b>
+                  <small>{archivos.length ? archivos.map((f) => f.name).join(', ') : `Solo si puede hacerlo sin ponerse en riesgo (hasta ${MAX_EVIDENCES} archivos).`}</small>
+                </span>
+              </label>
+              {errors.evidencias && <span className="error" role="alert">{errors.evidencias}</span>}
+            </div>
+
+            <div className="barra-accion na-enviar">
+              <button type="submit" className="btn red" disabled={saving}><Send />{saving ? 'Enviando…' : forOther ? 'Reportar incidente' : 'Enviar solicitud a la brigada'}</button>
+              <small className="na-sub">{forOther ? 'Al enviarlo, la brigada de la zona recibe el reporte.' : 'Al enviarla, la brigada de la zona la recibe y acude a usted.'}</small>
+            </div>
           </form>
         )}
       </main>
