@@ -1,3 +1,4 @@
+import { confirmar } from '../../../shared/services/feedback';
 import type { Escalera, Espacio, Piso, RutaConsultada, Salida } from '../types';
 
 /** Una escalera sirve para la ruta si está activa y disponible. */
@@ -50,6 +51,40 @@ export function pisosSinEscalera(pisos: Piso[], espacios: Espacio[], escaleras: 
   const conEspacios = espaciosPorPiso(espacios);
   const conectados = pisosConectados(pisos, escaleras, salidas);
   return activos.filter((p) => (conEspacios.get(p.id) ?? 0) > 0 && !conectados.has(p.id)).sort((a, b) => a.numero - b.numero);
+}
+
+/**
+ * Espacios activos que hoy llegan a una salida y dejarían de hacerlo si se quita un piso, una salida o una escalera.
+ * `salidas` deben ser las que ya tienen ruta exterior hasta una zona segura.
+ */
+export function espaciosAfectados(pisos: Piso[], espacios: Espacio[], escaleras: Escalera[], salidas: Salida[],
+  quitar: { pisoId?: string; salidaId?: string; escaleraId?: string }): number {
+  const conteo = espaciosPorPiso(espacios);
+  const antes = pisosConectados(pisos, escaleras, salidas, false);
+  const despues = pisosConectados(
+    pisos.filter((p) => p.id !== quitar.pisoId),
+    escaleras.filter((e) => e.id !== quitar.escaleraId),
+    salidas.filter((s) => s.id !== quitar.salidaId),
+    false,
+  );
+  let total = 0;
+  antes.forEach((id) => { if (!despues.has(id)) total += conteo.get(id) ?? 0; });
+  return total;
+}
+
+/** Confirmación antes de inactivar algo de lo que dependen rutas (piso, salida o escalera). */
+export function confirmarInactivar(que: string, accion: string, afectados: number | null): Promise<boolean> {
+  const cuantos = afectados === null
+    ? ''
+    : afectados === 0
+      ? ' Con los datos de esta pantalla, ningún espacio pierde su ruta.'
+      : ` Con los datos de esta pantalla, ${afectados === 1 ? '1 espacio se quedaría' : `${afectados} espacios se quedarían`} sin ruta.`;
+  return confirmar({
+    titulo: `¿Inactivar ${que}?`,
+    texto: `Los espacios que dependen de esto podrían quedarse sin ruta de evacuación.${cuantos} Puede reactivarlo después.`,
+    accion,
+    peligro: true,
+  });
 }
 
 /** «el piso 3», «los pisos 3 y 4», «los pisos 2, 3 y 4». */

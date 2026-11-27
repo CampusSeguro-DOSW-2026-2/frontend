@@ -2,7 +2,7 @@ import { Mensaje } from '../../../shared/components/Mensaje';
 import { Cargando } from '../../../shared/components/Cargando';
 import { Campo } from './comun';
 import { avisar } from '../../../shared/services/feedback';
-import { abrirEn, TEXTO_ESCALERA_PRINCIPAL, type ManejoEscaleras } from '../utils/verificacion';
+import { abrirEn, confirmarInactivar, TEXTO_ESCALERA_PRINCIPAL, type ManejoEscaleras } from '../utils/verificacion';
 import { useCallback, useEffect, useImperativeHandle, useState, type Ref } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
 import {
@@ -26,6 +26,8 @@ interface Props {
   ref?: Ref<ManejoEscaleras>;
   /** Se llama después de cada cambio, para que el detalle recalcule la lista de verificación. */
   onCambio?: () => void;
+  /** Espacios que se quedarían sin ruta si se inactiva la escalera (null si no se puede calcular). */
+  afectados?: (escaleraId: string) => number | null;
 }
 
 const DISPONIBILIDADES: { valor: DisponibilidadEscalera; etiqueta: string }[] = [
@@ -43,6 +45,7 @@ export default function EscalerasEdificio({
   mostrarInactivos,
   ref,
   onCambio,
+  afectados,
 }: Props) {
   const [escaleras, setEscaleras] = useState<Escalera[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -217,11 +220,12 @@ export default function EscalerasEdificio({
   };
 
   const cambiarEstado = async (escalera: Escalera) => {
+    const activa = escalera.estado === 'ACTIVO';
+    if (activa && !(await confirmarInactivar(`la escalera «${escalera.nombre}»`, 'Inactivar escalera', afectados?.(escalera.id) ?? null))) return;
     setError('');
     setMensaje('');
     setGuardando(true);
     try {
-      const activa = escalera.estado === 'ACTIVO';
       await (activa ? campus.escaleras.inactivar(escalera.id) : campus.escaleras.reactivar(escalera.id));
       await cargar();
       onCambio?.();

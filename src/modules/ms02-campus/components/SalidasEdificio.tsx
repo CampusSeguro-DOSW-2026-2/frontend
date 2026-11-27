@@ -9,7 +9,7 @@ import { useEnvio, type Errores } from '../hooks/useEnvio';
 import { Botones, Campo, Falla } from './comun';
 import { AyudaCoordenadas } from './AyudaCoordenadas';
 import { BotonQr } from './BotonQr';
-import { abrirEn, type Abrible } from '../utils/verificacion';
+import { abrirEn, confirmarInactivar, type Abrible } from '../utils/verificacion';
 
 type Edicion = { tipo: 'nueva' } | { tipo: 'modificar'; id: string } | null;
 
@@ -81,12 +81,14 @@ function estado(s: Salida) {
   return <span className="cs-estado ok">ACTIVA</span>;
 }
 
-export default function SalidasEdificio({ edificio, pisos, mostrarInactivos, ref, onCambio }: {
+export default function SalidasEdificio({ edificio, pisos, mostrarInactivos, ref, onCambio, afectados }: {
   edificio: Edificio; pisos: Piso[]; mostrarInactivos: boolean;
   /** `abrir()` muestra el formulario de nueva salida y lleva a él. */
   ref?: Ref<Abrible>;
   /** Se llama después de cada cambio, para que el detalle recalcule la lista de verificación. */
   onCambio?: () => void;
+  /** Espacios que se quedarían sin ruta si se inactiva la salida (null si no se puede calcular). */
+  afectados?: (salidaId: string) => number | null;
 }) {
   const [salidas, setSalidas] = useState<Salida[] | null>(null);
   const [error, setError] = useState<CampusApiError | null>(null);
@@ -125,10 +127,11 @@ export default function SalidasEdificio({ edificio, pisos, mostrarInactivos, ref
   };
 
   const cambiarEstado = async (s: Salida) => {
+    const activa = s.estado === 'ACTIVO';
+    if (activa && !(await confirmarInactivar(`la salida «${s.nombre}»`, 'Inactivar salida', afectados?.(s.id) ?? null))) return;
     setOcupado(s.id);
     setError(null);
     try {
-      const activa = s.estado === 'ACTIVO';
       await (activa ? campus.salidas.inactivar(s.id) : campus.salidas.reactivar(s.id));
       await recargar();
       avisar({
