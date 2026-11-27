@@ -118,7 +118,7 @@ export function MapaRuta({
       </MapContainer>
 
       <p className="mapa-gesto">Use dos dedos para mover o acercar el mapa.</p>
-      <ul className="cs-mapa-leyenda mapa-leyenda" aria-label="Leyenda del mapa">
+      <ul className="mapa-leyenda" aria-label="Leyenda del mapa">
         <li><i className="cs-mapa-punto salida" aria-hidden="true" /> Salida</li>
         <li><i className="cs-mapa-punto destino" aria-hidden="true" /> Zona segura</li>
         <li><i className="cs-mapa-linea" aria-hidden="true" /> Recorrido peatonal</li>

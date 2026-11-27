@@ -162,3 +162,11 @@
 /* Áreas táctiles de 44 px en celular y escritorio (docs/PATRONES-UI.md) */
 .cs-mini,.cs-pildora{min-height:var(--tap);display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .cs-guia-pasos summary,.qr-detalle summary{min-height:var(--tap);display:flex;align-items:center}
+
+/* Casillas de selección múltiple (pisos de una escalera): cada opción es una fila de 44 px que se toca entera */
+.cs-casillas{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.cs-casillas legend{padding:0;margin-bottom:8px;font:600 14px/20px 'Geist',sans-serif;color:var(--ink)}
+.cs-casillas-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(180px,100%),1fr));gap:8px}
+.cs-casilla{display:flex;align-items:center;gap:10px;min-height:var(--tap);padding:0 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;font-size:14px}
+.cs-casilla:has(input:checked){border-color:var(--red);background:var(--cream)}
+.cs-casilla input{width:20px;height:20px;margin:0;accent-color:var(--red);flex:none}
