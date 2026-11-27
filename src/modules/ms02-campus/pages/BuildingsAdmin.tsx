@@ -1,5 +1,5 @@
 import { Cargando } from '../../../shared/components/Cargando';
-import { avisar } from '../../../shared/services/feedback';
+import { avisar, confirmar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useCallback, useEffect, useState } from 'react';
@@ -118,12 +118,29 @@ export default function BuildingsAdmin() {
     avisar({ tono: 'exito', texto: exito });
   };
 
+  // Igual que pisos, salidas y escaleras: antes de inactivar se dice cuántos espacios pierden la ruta. Si no se pueden
+  // contar, el diálogo sale sin el número.
+  const confirmarInactivarEdificio = async (edificio: Edificio) => {
+    const n = await campus.espacios.listarPorEdificio(edificio.id)
+      .then((lista) => lista.filter((s) => s.estado === 'ACTIVO').length)
+      .catch(() => null);
+    const texto = n === null
+      ? 'Sus espacios dejarán de tener ruta de evacuación.'
+      : n === 0
+        ? 'No tiene espacios activos, así que ninguna ruta de evacuación se ve afectada.'
+        : n === 1
+          ? 'Su espacio dejará de tener ruta de evacuación.'
+          : `Sus ${n} espacios dejarán de tener ruta de evacuación.`;
+    return confirmar({ titulo: `¿Inactivar el edificio ${edificio.nombre}?`, texto, accion: 'Inactivar edificio', peligro: true });
+  };
+
   // El backend responde 422 con las rutas que impiden inactivar: se muestra tal cual.
   const cambiarEstado = async (edificio: Edificio) => {
+    const activo = edificio.estado === 'ACTIVO';
+    if (activo && !(await confirmarInactivarEdificio(edificio))) return;
     setOcupado(edificio.id);
     setAviso(null);
     try {
-      const activo = edificio.estado === 'ACTIVO';
       await (activo ? campus.edificios.inactivar(edificio.id) : campus.edificios.reactivar(edificio.id));
       await recargar();
       avisar({
