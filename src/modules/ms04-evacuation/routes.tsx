@@ -13,7 +13,7 @@ const SIN_ACCESO = <main className="page"><Mensaje tono="error">No tiene permiso
 
 /** Rutas de MS04. Devuelve undefined si la ruta no es de este módulo. */
 export function evacuationRoutes(route: string, session: Session | null): ReactNode | undefined {
-  // Pantalla de inicio: el evento o la alerta en curso, con los accesos rápidos y el check-in
+  // Pantalla de inicio: el evento o la alerta en curso, con el check-in (los accesos rápidos van en la barra de navegación)
   if (route === '/simulacro') return session ? <Inicio session={session} /> : undefined;
   if (route === '/evacuacion/eventos') {
     if (!session) return undefined;

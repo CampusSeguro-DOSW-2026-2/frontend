@@ -1,3 +1,4 @@
+import { SelectorEvento } from '../../../shared/components/SelectorEvento';
 import { EstadoVacio } from '../../../shared/components/EstadoVacio';
 import { confirmar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
@@ -107,15 +108,10 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
           <EstadoVacio titulo="No hay eventos programados ni en ejecución">Cuando se programe uno, aquí podrá elegir su edificio.</EstadoVacio>
         )}
 
-        {data && data.eventos.length > 1 && (
-          <div className="ev-tabs" role="group" aria-label="Evento">
-            {data.eventos.map((e) => (
-              <button key={e.evento.eventoId} type="button" className="ev-tab" aria-pressed={e.evento.eventoId === eventoId}
-                onClick={() => { setEventoId(e.evento.eventoId); setNotice(''); }}>
-                {e.evento.nombre}{e.evento.simulacro ? ' · Simulacro' : ''}
-              </button>
-            ))}
-          </div>
+        {data && (
+          <SelectorEvento valor={eventoId}
+            eventos={data.eventos.map(({ evento: e }) => ({ id: e.eventoId, nombre: e.nombre, simulacro: e.simulacro, enCurso: e.estado === 'EN_EJECUCION' }))}
+            onElegir={(id) => { setEventoId(id); setNotice(''); }} />
         )}
 
         {data && actual && (

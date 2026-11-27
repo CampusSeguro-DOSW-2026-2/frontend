@@ -109,7 +109,6 @@ export default function Profile({ session }: { session: Session }) {
               <div><dt>Primer apellido</dt><dd>{profile.firstLastName}</dd></div>
               <div><dt>Segundo apellido</dt><dd>{profile.secondLastName || '—'}</dd></div>
               <div className="wide"><dt>Correo institucional</dt><dd>{profile.email}</dd></div>
-              <div className="wide"><dt>{profile.roles.length === 1 ? 'Rol' : `Roles (${profile.roles.length})`}</dt><dd>{profile.roles.map(roleLabel).join(', ') || 'Sin roles asignados'}</dd></div>
             </dl>
 
             <section className="perms" aria-labelledby="perms-title">
@@ -139,7 +138,8 @@ export default function Profile({ session }: { session: Session }) {
                       : `Sus roles conceden ${totalPermissions} ${permissionWord} en total; se suman los de cada rol.`}
                   </p>
                   <div className="role-list">
-                    {mine.map((item) => <RoleDetails key={item.role} item={item} open={mine.length === 1} />)}
+                    {/* Recogidos al entrar: cada rol se abre para ver el detalle de sus permisos */}
+                    {mine.map((item) => <RoleDetails key={item.role} item={item} />)}
                   </div>
                 </>
               )}

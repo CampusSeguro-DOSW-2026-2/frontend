@@ -10,6 +10,7 @@ import { PERMISSION } from '../../../shared/permissions';
 import type { Session } from '../../../shared/types';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { checkinApi } from '../../ms04-evacuation/services/checkin';
+import { fechaHora, tipoEvento } from '../../ms04-evacuation/utils/labels';
 import { eventsApi } from '../../ms06-drills/services/events';
 import type { EventSummary } from '../../ms06-drills/types';
 import { scopeLabelIn } from '../../ms06-drills/utils/labels';
@@ -20,7 +21,7 @@ import '../styles/respuesta.css';
 
 interface Props {
   session: Session;
-  /** Evento elegido desde el panel; sin él se usa el evento en ejecución. */
+  /** Evento elegido desde el panel o el check-in; sin él se usa el evento en ejecución (con varios, la persona elige). */
   eventId?: string;
   /** Brigadista reportando por otra persona (pide el nombre del afectado). */
   forOther?: boolean;
@@ -49,6 +50,8 @@ type Resultado = { incidente: Incidente | null; fallidas: string[]; aviso?: stri
  */
 export default function ReportarIncidente({ session, eventId, forOther = false }: Props) {
   const [event, setEvent] = useState<EventSummary | null | undefined>(undefined);
+  // Eventos en ejecución; con varios y sin evento en la ruta se pide elegir uno (no se envía al primero sin preguntar)
+  const [opciones, setOpciones] = useState<EventSummary[] | null>(null);
   const [paso, setPaso] = useState<'prioridad' | 'zona'>('prioridad');
   const [ubicacion, setUbicacion] = useState('');
   const [prioridad, setPrioridad] = useState<Prioridad | null>(null);
@@ -64,7 +67,11 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
 
   useEffect(() => {
     eventsApi.active(session)
-      .then((list) => setEvent((eventId ? list.find((e) => e.id === eventId) : list[0]) ?? null))
+      .then((list) => {
+        setOpciones(list);
+        if (eventId) setEvent(list.find((e) => e.id === eventId) ?? null);
+        else setEvent(list.length > 1 ? undefined : list[0] ?? null);
+      })
       .catch((err) => { setMessage(errorMessage(err)); setEvent(null); });
   }, [session, eventId]);
 
@@ -171,7 +178,22 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
           ? <button type="button" className="rs-back" onClick={() => setPaso('prioridad')}>← Volver a seleccionar prioridad</button>
           : <a className="rs-back" href={back}>← {forOther ? 'Volver al panel brigadista' : 'Volver al evento'}</a>}
 
-        {event === undefined && <Cargando texto="Cargando…" />}
+        {event === undefined && !opciones && !message && <Cargando texto="Consultando los eventos en ejecución…" />}
+        {event === undefined && opciones && opciones.length > 1 && (
+          <section className="rs-card" aria-labelledby="rs-evento-titulo">
+            <h2 id="rs-evento-titulo">¿En qué evento necesita ayuda?</h2>
+            <p className="rs-sub">Hay {opciones.length} eventos en ejecución. Elija aquel en el que está participando.</p>
+            <div className="rs-prios" role="group" aria-label="Evento">
+              {opciones.map((e) => (
+                <button key={e.id} type="button" className="rs-prio-card" onClick={() => setEvent(e)}>
+                  <span className="tag">{tipoEvento(e.simulacro).toUpperCase()}</span>
+                  <b>{e.name}</b>
+                  {(e.startedAt ?? e.startDate) && <span>Iniciado: {fechaHora(e.startedAt ?? e.startDate)}</span>}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
         {event === null && !message && <EstadoVacio titulo="No hay un evento en ejecución">Las solicitudes de ayuda se habilitan cuando inicia un evento.</EstadoVacio>}
         {message && <Mensaje tono="error">{message}</Mensaje>}
 

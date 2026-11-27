@@ -10,8 +10,9 @@ import { AlertaActiva } from '../../../shared/components/AlertaActiva';
 import { USE_MS03, activeAlertApi, type ActiveAlert } from '../../ms03-alerts/services/activeAlert';
 import { OPERATIONAL_TYPE, scopeText } from '../../ms03-alerts/services/catalog';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
-import { AccionesEvento } from '../components/AccionesEvento';
 import { OtrosEventos } from '../components/OtrosEventos';
+import { VerMas } from '../../../shared/components/VerMas';
+import { useVerMas } from '../../../shared/hooks/useVerMas';
 import { eventsApi } from '../../ms06-drills/services/events';
 import { checkinApi } from '../services/checkin';
 import type { Evento } from '../types';
@@ -38,11 +39,11 @@ const fechaDe = (e: Evento) => (e.fecha_inicio ? new Date(e.fecha_inicio).getTim
 
 /**
  * Pantalla de inicio: muestra lo que está ocurriendo en este momento y se actualiza sola cada 10 s (y al volver a la
- * pestaña). Con un evento en ejecución es el Centro del evento (nombre, accesos rápidos y check-in); si hay varios,
+ * pestaña). Con un evento en ejecución es el Centro del evento (nombre y check-in); si hay varios,
  * muestra el más reciente y una tarjeta con los demás para cambiar a cualquiera de ellos sin salir de Inicio (si el
  * elegido termina, vuelve al más reciente). La alerta activa de MS03 (instrucciones y «Confirmar recepción») va primero
  * en todas las variantes; con un evento, encima del check-in. Sin evento ni alerta, el aviso
- * de que el campus está seguro y los accesos. Cada fuente se consulta solo con su permiso.
+ * de que el campus está seguro. Cada fuente se consulta solo con su permiso.
  */
 export default function Inicio({ session }: { session: Session }) {
   const [enCurso, setEnCurso] = useState<EnCurso | null>(null);
@@ -59,6 +60,9 @@ export default function Inicio({ session }: { session: Session }) {
   const puedeVerPanel = hasPermission(session, PERMISSION.MS04_DASHBOARD_READ);
   // Nombres de edificios y zonas (MS02) para el alcance de la alerta; solo se consultan si se pueden ver alertas
   const { catalog } = useScopeCatalog(puedeVerAlertas);
+  // Eventos que sigue sin estar convocado: los más recientes primero y el resto se despliega (alto volumen)
+  const seguimiento = useVerMas([...(enCurso?.seguimiento ?? [])]
+    .sort((a, b) => (b.inicio ? Date.parse(b.inicio) : 0) - (a.inicio ? Date.parse(a.inicio) : 0)));
 
   const enSeguimiento = useCallback(async (): Promise<EnSeguimiento[]> => {
     if (puedeVerEnVivo) {
@@ -141,12 +145,13 @@ export default function Inicio({ session }: { session: Session }) {
       setElegidoId(id);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    // Los demás eventos en curso van después del check-in y de los accesos: lo primero es reportar el estado
-    const otrosEventos = <OtrosEventos eventos={otros} onElegir={elegir} />;
+    // Los demás eventos en curso van después del check-in: lo primero es reportar el estado
+    const otrosEventos = <OtrosEventos eventos={otros} onElegir={elegir} recienteId={enCurso.eventos[0].evento_id} />;
     if (puedeReportar) {
       return (
         <CentroEvento key={evento.evento_id} session={session} eventoId={evento.evento_id} eventoActual={evento}
-          alerta={tarjetaAlerta(true)} aviso={aviso} despues={otrosEventos} />
+          alerta={tarjetaAlerta(true)} aviso={aviso} despues={otrosEventos}
+          nota={otros.length > 0 && evento.evento_id === enCurso.eventos[0].evento_id ? 'Más reciente' : undefined} />
       );
     }
     return (
@@ -157,7 +162,7 @@ export default function Inicio({ session }: { session: Session }) {
           subtitle="Evacuación del campus en curso"
           context={evento.fecha_inicio ? `Iniciado: ${fechaHora(evento.fecha_inicio)}` : undefined}
         />
-        <main className="content">{tarjetaAlerta(true)}{aviso}<AccionesEvento session={session} />{otrosEventos}</main>
+        <main className="content">{tarjetaAlerta(true)}{aviso}{otrosEventos}</main>
       </>
     );
   }
@@ -172,10 +177,9 @@ export default function Inicio({ session }: { session: Session }) {
         <main className="content">
           {tarjetaAlerta(true)}
           {aviso}
-          <AccionesEvento session={session} />
           <section className="chk-otros" aria-label="Eventos en ejecución">
             <ul>
-              {enCurso.seguimiento.map((e) => (
+              {seguimiento.visibles.map((e) => (
                 <li key={e.id} className="chk-otro">
                   <span className="tag">{tipoEvento(e.simulacro).toUpperCase()}</span>
                   <div className="chk-otro-txt">
@@ -186,6 +190,7 @@ export default function Inicio({ session }: { session: Session }) {
                 </li>
               ))}
             </ul>
+            <VerMas restantes={seguimiento.restantes} onClick={seguimiento.verTodos} />
           </section>
         </main>
       </>
@@ -202,7 +207,7 @@ export default function Inicio({ session }: { session: Session }) {
         : puedeSaber
           ? <PageHeader badge="SIN EVENTOS EN CURSO" title="El campus está seguro" subtitle="No hay eventos ni alertas activas." />
           : <PageHeader badge="INICIO" title="Bienvenido a CampusSeguro" subtitle="Use el menú para ir a las secciones que administra." />}
-      <main className="content">{tarjetaAlerta(false)}{aviso}<AccionesEvento session={session} /></main>
+      <main className="content">{tarjetaAlerta(false)}{aviso}</main>
     </>
   );
 }

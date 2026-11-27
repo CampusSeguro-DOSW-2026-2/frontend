@@ -8,6 +8,7 @@ import { errorMessage, getMyProfile, updateMyProfile } from '../services/users';
 import { nameError } from '../utils/validation';
 import type { ProfileDraft } from '../types';
 import type { Session } from '../../../shared/types';
+import { avisarPerfilActualizado } from '../../../shared/hooks/useNombreUsuario';
 import '../styles/users.css';
 
 const EMPTY: ProfileDraft = { firstName: '', secondName: '', firstLastName: '', secondLastName: '' };
@@ -77,6 +78,7 @@ export default function EditProfile({ session }: { session: Session }) {
     setServerError('');
     try {
       await updateMyProfile(session, form);
+      avisarPerfilActualizado(session.user.id);
       window.location.hash = '#/perfil';
     } catch (err) {
       if (err instanceof ApiError) {

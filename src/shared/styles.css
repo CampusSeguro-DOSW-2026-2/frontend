@@ -42,13 +42,9 @@ svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .nav-user{position:relative;display:flex;align-items:center;gap:10px}
 /* Menú de la cuenta: el bloque del usuario (arriba a la derecha) abre Mi perfil, Cambiar contraseña y Cerrar sesión */
 .nav-user-btn{display:flex;align-items:center;gap:10px;min-height:var(--tap);padding:6px 8px;margin:-6px -8px;border:0;border-radius:12px;background:none;color:inherit;text-align:left;cursor:pointer}
-.nav-user-btn[aria-expanded="true"]{background:var(--bg)}
+.nav-user-btn{text-decoration:none}
+.nav-user-btn[aria-current=page]{background:var(--bg)}
 @media(hover:hover){.nav-user-btn:hover{background:var(--bg)}}
-.user-menu{position:absolute;top:calc(100% + 10px);right:0;z-index:20;min-width:230px;margin:0;padding:8px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-md);transform-origin:top right;transition:opacity var(--dur-ui) var(--ease-out),transform var(--dur-ui) var(--ease-out)}
-@starting-style{.user-menu{opacity:0;transform:scale(.97) translateY(-4px)}}
-.user-menu a,.user-menu button{display:flex;align-items:center;gap:10px;width:100%;min-height:var(--tap);padding:10px 12px;border:0;border-radius:8px;background:none;color:var(--ink);font:600 14px/18px 'Outfit',sans-serif;text-decoration:none;text-align:left;cursor:pointer}
-.user-menu a:hover,.user-menu button:hover,.user-menu a:focus-visible,.user-menu button:focus-visible{background:var(--cream);color:var(--red)}
-.user-menu svg.i{width:18px;height:18px}
 .nav-avatar{width:40px;height:40px;border-radius:999px;background:var(--cream);color:var(--red);display:grid;place-items:center;font:800 14px 'Outfit',sans-serif;flex:none}
 .nav-who{display:flex;flex-direction:column;font-size:14px;line-height:1.25;min-width:0}.nav-who b{font-weight:600;overflow-wrap:anywhere}.nav-who small{font-size:12px;color:var(--mut)}
 /* menú lateral */
@@ -174,7 +170,6 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .age{font-size:13px;line-height:17px;color:var(--mut)}
 .case h3{font:700 22px/28px 'Outfit',sans-serif}.case p.rep{font-size:15px;line-height:140%;color:var(--mut);margin-top:8px}
 .cbtn{display:flex;justify-content:flex-end}.cbtn .btn{width:240px}
-.demo-nav{text-align:center;font-size:12px;color:var(--mut);padding:24px}
 @media(max-width:900px){.navbar,.page-header,.content,.config,.page{padding-left:16px;padding-right:16px}.navbar{height:64px}.page-header{min-height:0;padding-top:20px;padding-bottom:24px;gap:8px}.page-header h1{font-size:26px}.page-header p{font-size:15px}.navbar .nav-who{display:none}.config,.two,.steps,.btns,.stats,.assign{flex-direction:column}.side,.zone{width:100%}}
 /* ===== Alertas ===== */
 .brand{display:flex;align-items:center;gap:16px}
@@ -258,6 +253,12 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .ev-tools{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
 .ev-tabs{display:flex;gap:8px;flex-wrap:wrap}
 .ev-tab{height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px 'Outfit',sans-serif;cursor:pointer}
+.ver-mas{align-self:flex-start;height:44px;padding:0 18px;font-size:14px}
+.selector-evento{display:flex;flex-direction:column;gap:6px;max-width:520px}
+.selector-evento label{font:700 14px/18px 'Outfit',sans-serif;color:var(--ink)}
+.selector-evento label small{font:400 13px 'Geist',sans-serif;color:var(--mut)}
+.selector-evento select{height:48px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:600 15px 'Outfit',sans-serif;cursor:pointer}
+.selector-evento select:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 .ev-tab[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--on-color)}
 .ev-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;font-size:14px}
 .ev-table th{text-align:left;font-weight:600;color:var(--mut);font-size:13px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--bg)}
@@ -415,7 +416,7 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 @media(prefers-reduced-motion:reduce){
   html{scroll-behavior:auto}
   .btn:active:not(:disabled){transform:none}
-  .drawer,.user-menu,.aviso{transition:opacity 150ms ease!important;transform:none!important}
+  .drawer,.aviso{transition:opacity 150ms ease!important;transform:none!important}
   .dialogo[open],.dialogo::backdrop{animation:fundido 150ms ease!important}
   .spin,.btn[aria-busy=true]::before{animation-duration:1.6s}
   .actualizando[aria-busy=true]::after{animation:none;background:var(--red);opacity:.4}
@@ -428,3 +429,49 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .mapa-leyenda li{display:inline-flex;align-items:center;gap:6px}
 .mapa-gesto{display:none;font-size:13px;color:var(--mut)}
 @media (pointer:coarse){.mapa-gesto{display:block}}
+
+/* Logo a la izquierda de CampusSeguro en la barra superior y en el menú */
+.brand img{width:34px;height:auto;flex:none}
+.brand{gap:10px}
+/* Accesos rápidos: en el computador, en la barra superior junto al usuario; en el celular, barra inferior fija */
+.nav-rapidos{display:flex;align-items:center;gap:6px;margin:0 16px 0 auto;padding:0;list-style:none}
+.nav-rapidos a{display:flex;align-items:center;gap:8px;min-height:var(--tap);padding:0 14px;border-radius:10px;color:var(--ink);font:600 14px 'Outfit',sans-serif;text-decoration:none}
+.nav-rapidos a svg.i{width:20px;height:20px;color:var(--mut)}
+.nav-rapidos a[aria-current=page]{background:var(--bg);color:var(--red)}
+.nav-rapidos a[aria-current=page] svg.i{color:var(--red)}
+@media(hover:hover){.nav-rapidos a:hover{background:var(--bg)}}
+/* En pantallas medianas solo el icono; el texto queda para lectores de pantalla */
+@media(max-width:1100px){.nav-rapidos span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}.nav-rapidos a{padding:0 12px}}
+/* Tutor IA: botón flotante abajo a la derecha (en el celular, encima de la barra inferior) */
+.tutor-flotante{position:fixed;right:24px;bottom:24px;z-index:24;display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:var(--red);color:var(--on-color);box-shadow:0 6px 18px color-mix(in srgb,var(--red) 35%,transparent);text-decoration:none;transition:transform var(--dur-ui) var(--ease-out)}
+.tutor-flotante svg.i{width:26px;height:26px}
+.tutor-flotante:active{transform:scale(.94)}
+@media(hover:hover){.tutor-flotante:hover{background:var(--dark)}}
+body:has(.tutor-flotante) .avisos{bottom:96px}
+body:has(.tutor-flotante){padding-bottom:88px}
+.nav-inferior{display:none}
+@media(max-width:700px){
+  .nav-rapidos{display:none}
+  .brand img{width:28px}
+  .brand{font-size:22px}
+  body:has(.nav-inferior){--barra-inferior:calc(64px + env(safe-area-inset-bottom));padding-bottom:var(--barra-inferior)}
+  .nav-inferior{display:block;position:fixed;left:0;right:0;bottom:0;z-index:24;padding-bottom:env(safe-area-inset-bottom);background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 16px color-mix(in srgb,var(--ink) 6%,transparent)}
+  .nav-inferior ul{display:flex;margin:0;padding:0;list-style:none}
+  .nav-inferior li{flex:1;min-width:0}
+  .nav-inferior a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;height:64px;color:var(--mut);font:600 11px/14px 'Outfit',sans-serif;text-decoration:none;white-space:nowrap}
+  .nav-inferior-ico{display:grid;place-items:center;width:32px;height:28px;border-radius:999px}
+  .nav-inferior a svg.i{width:22px;height:22px}
+  .nav-inferior a[aria-current=page]{color:var(--red)}
+  .nav-inferior a[aria-current=page] .nav-inferior-ico{background:var(--err-bg)}
+  /* Lo que va fijo abajo queda encima de la barra */
+  body:has(.nav-inferior) .barra-accion{bottom:var(--barra-inferior)}
+  body:has(.nav-inferior) .avisos{bottom:calc(var(--barra-inferior) + 12px)}
+  .tutor-flotante{right:16px;bottom:calc(var(--barra-inferior,0px) + 16px);width:52px;height:52px}
+  body:has(.tutor-flotante) .avisos{bottom:calc(var(--barra-inferior,0px) + 80px)}
+  /* En formularios con la barra de guardar fija, el botón flotante no tapa los botones */
+  body:has(.barra-accion) .tutor-flotante{display:none}
+  /* Espacio extra al final para que el contenido suba por encima del botón flotante */
+  body:has(.tutor-flotante){padding-bottom:calc(var(--barra-inferior,0px) + 72px)}
+}
+/* Celulares angostos: la marca y el menú caben en la barra superior */
+@media(max-width:380px){.nav-left{gap:10px}.brand{font-size:19px;gap:8px}.brand img{width:24px}.nav-burger{width:44px;height:44px}}

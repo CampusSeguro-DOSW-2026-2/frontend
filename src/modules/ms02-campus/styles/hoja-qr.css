@@ -6,7 +6,7 @@
 .qr-ficha small{font-size:12px;color:var(--mut)}
 .qr-espera{display:grid;place-items:center;width:180px;height:180px;background:var(--bg);border-radius:8px;font-size:13px;color:var(--mut);padding:8px}
 @media print{
-  .navbar,.demo-nav,.no-imprimir{display:none!important}
+  .navbar,.no-imprimir{display:none!important}
   body,.content{background:var(--surface)}
   .content{padding:0}
   .qr-hoja{grid-template-columns:repeat(3,1fr);gap:10px}

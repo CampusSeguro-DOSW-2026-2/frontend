@@ -4,10 +4,11 @@ import type { Session } from '../types';
 import { PERMISSION } from '../permissions';
 import { sessionPermissions } from '../services/session';
 import { etiquetaRol } from '../utils/etiquetas';
+import { useNombreUsuario } from '../hooks/useNombreUsuario';
 import {
   BarChart, BellIcon, BookOpen, Building, CalendarIcon, CalendarPlus, ChatIcon, ClipboardCheck, ClipboardList, CloseIcon,
-  FilePen, FileText, HardHat, HomeIcon, KeyRound, LifeBuoy, ListChecks, LogOut, MapLine, MapPin, Megaphone, MenuIcon,
-  ShieldCheck, Sliders, TrendingUp, TriangleAlert, UserIcon, Users,
+  FilePen, FileText, HardHat, HomeIcon, KeyRound, LifeBuoy, ListChecks, Logo, LogOut, MapLine, MapPin, Megaphone, MenuIcon,
+  ShieldCheck, Sliders, TrendingUp, TriangleAlert, Users,
 } from './Icons';
 
 interface MenuItem { href: string; icon: ReactNode; label: string }
@@ -155,6 +156,21 @@ function menuFor(permissions: string[]): MenuSection[] {
   return sections;
 }
 
+/**
+ * Accesos rápidos de una app de emergencias (en el celular, barra inferior; en el computador, barra superior junto al
+ * usuario), con los mismos iconos del menú: inicio, rutas de evacuación, reportar el estado (el check-in, desde donde
+ * se pide ayuda con el evento ya elegido) y alertas. Cada uno se muestra solo con el permiso de su pantalla. El perfil
+ * se abre tocando el usuario y el tutor, con el botón flotante.
+ */
+function accesosFor(permissions: string[]): MenuItem[] {
+  const can = (p: string) => permissions.includes(p);
+  const accesos: MenuItem[] = [{ href: '#/simulacro', icon: <HomeIcon />, label: 'Inicio' }];
+  if (can(PERMISSION.MS02_ROUTE_READ)) accesos.push({ href: '#/rutas', icon: <MapLine />, label: 'Rutas' });
+  if (can(PERMISSION.MS04_CHECKIN_WRITE)) accesos.push({ href: '#/checkin', icon: <ShieldCheck />, label: 'Reportar' });
+  if (can(PERMISSION.MS03_ALERT_READ_HISTORY)) accesos.push({ href: '#/alertas', icon: <BellIcon />, label: 'Alertas' });
+  return accesos;
+}
+
 // "Perfil" también queda activo en #/perfil/editar, "Eventos" en #/eventos/{id}, etc.; el más específico gana
 function currentHref(current: string, sections: MenuSection[]): string | undefined {
   const hrefs = sections.flatMap((s) => s.items.map((i) => i.href));
@@ -165,17 +181,16 @@ function currentHref(current: string, sections: MenuSection[]): string | undefin
 
 export function Navbar({ current, session, onLogout }: { current: string; session: Session | null; onLogout: () => void }) {
   const [open, setOpen] = useState(false);
-  // Ruta en la que se abrió el menú de la cuenta: al cambiar de pantalla queda cerrado sin otro efecto
-  const [userOpenAt, setUserOpenAt] = useState<string | null>(null);
-  const userOpen = userOpenAt === current;
-  const setUserOpen = (value: boolean | ((v: boolean) => boolean)) =>
-    setUserOpenAt((typeof value === 'function' ? value(userOpen) : value) ? current : null);
   const panel = useRef<HTMLElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
-  const userBox = useRef<HTMLDivElement>(null);
   const roles = session?.user.roles ?? [];
   const sections = menuFor(sessionPermissions(session));
   const active = currentHref(current, sections);
+  const accesos = accesosFor(sessionPermissions(session));
+  const accesoActivo = currentHref(current, [{ items: accesos }]);
+  // Botón flotante del tutor: con su permiso y fuera de la pantalla del tutor
+  const tutorFlotante = sessionPermissions(session).includes(PERMISSION.MS07_TUTOR_USE)
+    && current !== '/tutor' && !current.startsWith('/tutor/');
 
   // Se cierra al elegir una opción y con Escape. Mientras está abierto, el foco no sale del menú (Tab da la vuelta), la
   // página de fondo no se desplaza y al cerrar el foco vuelve al botón que lo abrió.
@@ -198,53 +213,69 @@ export function Navbar({ current, session, onLogout }: { current: string; sessio
     return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = previousOverflow; };
   }, [open]);
 
-  // Menú de la cuenta (esquina superior derecha): se cierra con Escape, al tocar fuera y al cambiar de pantalla
-  useEffect(() => {
-    if (!userOpen) return undefined;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setUserOpenAt(null); };
-    const onPointer = (e: PointerEvent) => { if (!userBox.current?.contains(e.target as Node)) setUserOpenAt(null); };
-    window.addEventListener('keydown', onKey);
-    document.addEventListener('pointerdown', onPointer);
-    return () => { window.removeEventListener('keydown', onKey); document.removeEventListener('pointerdown', onPointer); };
-  }, [userOpen]);
-
   // Con más de 3 roles se muestra el principal y «+N»; la lista completa queda en el título
   const allRoles = roles.map(roleName).join(' · ');
   const role = roles.length > 3 ? `${roleName(roles[0])} +${roles.length - 1}` : allRoles;
-  const initials = (session?.user.email ?? '?').slice(0, 2).toUpperCase();
+  // Nombre del usuario (MS01) en lugar del correo; mientras carga o si MS01 no responde, el correo
+  const nombre = useNombreUsuario(session);
+  const visible = nombre ?? session?.user.email ?? '';
+  const initials = nombre
+    ? nombre.split(' ').slice(0, 2).map((p) => p.charAt(0)).join('').toUpperCase()
+    : (session?.user.email ?? '?').slice(0, 2).toUpperCase();
 
   return (
     <>
       <nav className="navbar" aria-label="Barra principal">
         <div className="nav-left">
           <button ref={toggle} type="button" className="nav-burger" aria-label="Abrir menú" aria-expanded={open} aria-controls="main-menu" onClick={() => setOpen(true)}><MenuIcon /></button>
-          <a className="brand" href="#/simulacro">CampusSeguro</a>
+          <a className="brand" href="#/simulacro"><Logo />CampusSeguro</a>
         </div>
         {session && (
-          <div className="nav-user" ref={userBox}>
-            <button type="button" className="nav-user-btn" aria-haspopup="menu" aria-expanded={userOpen} aria-controls="user-menu"
-              onClick={() => setUserOpen((v) => !v)}>
+          <ul className="nav-rapidos" aria-label="Accesos rápidos">
+            {accesos.map((a) => (
+              <li key={a.href}>
+                <a href={a.href} title={a.label} aria-current={accesoActivo === a.href ? 'page' : undefined}>
+                  {a.icon}<span>{a.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        {session && (
+          <div className="nav-user">
+            {/* Tocar el usuario abre Mi perfil, donde están la contraseña, los roles y cerrar sesión */}
+            <a className="nav-user-btn" href="#/perfil" aria-label={`Mi perfil: ${visible}`}
+              aria-current={current === '/perfil' || current.startsWith('/perfil/') ? 'page' : undefined}>
               <span className="nav-avatar" aria-hidden="true">{initials}</span>
-              <span className="nav-who"><b>{session.user.email}</b><small title={allRoles}>{role}</small></span>
-            </button>
-            {userOpen && (
-              <ul id="user-menu" className="user-menu" role="menu" aria-label="Mi cuenta">
-                <li role="none"><a role="menuitem" href="#/perfil"><UserIcon />Mi perfil</a></li>
-                <li role="none"><a role="menuitem" href="#/perfil/contrasena"><ShieldCheck />Cambiar contraseña</a></li>
-                <li role="none"><button type="button" role="menuitem" onClick={() => { setUserOpen(false); onLogout(); }}><LogOut />Cerrar sesión</button></li>
-              </ul>
-            )}
+              <span className="nav-who"><b>{visible}</b><small title={allRoles}>{role}</small></span>
+            </a>
           </div>
         )}
       </nav>
+      {session && (
+        <nav className="nav-inferior" aria-label="Accesos rápidos">
+          <ul>
+            {accesos.map((a) => (
+              <li key={a.href}>
+                <a href={a.href} aria-current={accesoActivo === a.href ? 'page' : undefined}>
+                  <span className="nav-inferior-ico">{a.icon}</span>{a.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+      {session && tutorFlotante && (
+        <a className="tutor-flotante" href="#/tutor" aria-label="Abrir el Tutor IA" title="Tutor IA"><ChatIcon /></a>
+      )}
       {open && (
         <div className="drawer-bg" role="presentation" onClick={() => setOpen(false)}>
           <aside id="main-menu" ref={panel} className="drawer" role="dialog" aria-modal="true" aria-label="Menú principal" onClick={(e) => e.stopPropagation()}>
             <div className="drawer-head">
-              <span className="brand">CampusSeguro</span>
+              <span className="brand"><Logo />CampusSeguro</span>
               <button type="button" className="nav-burger" aria-label="Cerrar menú" onClick={() => { setOpen(false); toggle.current?.focus(); }}><CloseIcon /></button>
             </div>
-            {session && <div className="drawer-user"><span className="nav-avatar" aria-hidden="true">{initials}</span><span className="nav-who"><b>{session.user.email}</b><small title={allRoles}>{role}</small></span></div>}
+            {session && <div className="drawer-user"><span className="nav-avatar" aria-hidden="true">{initials}</span><span className="nav-who"><b>{visible}</b><small title={allRoles}>{role}</small></span></div>}
             <div className="drawer-items">
               {sections.map((s) => (
                 <div key={s.title ?? 'main'} className="drawer-sec">
