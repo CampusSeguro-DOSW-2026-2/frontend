@@ -1,3 +1,4 @@
+import { SelectorEvento } from '../../../shared/components/SelectorEvento';
 import { EstadoVacio } from '../../../shared/components/EstadoVacio';
 import { confirmar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
@@ -158,16 +159,9 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
           <EstadoVacio titulo="No hay eventos programados ni en ejecución">Cuando se programe uno, aquí podrá elegir su zona y atender incidentes.</EstadoVacio>
         )}
 
-        {eventos.length > 1 && (
-          <div className="ev-tabs" role="group" aria-label="Evento">
-            {eventos.map((e) => (
-              <button key={e.evento.eventoId} type="button" className="ev-tab" aria-pressed={e.evento.eventoId === actual?.evento.eventoId}
-                onClick={() => { setEventoId(e.evento.eventoId); setEditandoZona(false); setNotice(''); }}>
-                {e.evento.nombre}{e.evento.simulacro ? ' · Simulacro' : ''}
-              </button>
-            ))}
-          </div>
-        )}
+        <SelectorEvento valor={actual?.evento.eventoId}
+          eventos={eventos.map(({ evento: e }) => ({ id: e.eventoId, nombre: e.nombre, simulacro: e.simulacro, enCurso: e.estado === 'EN_EJECUCION' }))}
+          onElegir={(id) => { setEventoId(id); setEditandoZona(false); setNotice(''); }} />
 
         {actual && (
           <section className="ev-card bp-evento">

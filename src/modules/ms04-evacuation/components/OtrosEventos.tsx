@@ -1,4 +1,6 @@
 import { CalendarIcon } from '../../../shared/components/Icons';
+import { VerMas } from '../../../shared/components/VerMas';
+import { useVerMas } from '../../../shared/hooks/useVerMas';
 import type { Evento } from '../types';
 import { fechaHora, tipoEvento } from '../utils/labels';
 import '../styles/checkin.css';
@@ -12,6 +14,8 @@ export function OtrosEventos({ eventos, onElegir, recienteId }: {
   /** Evento en curso más reciente: si está en la lista, lleva la marca «Más reciente». */
   recienteId?: string;
 }) {
+  // Con muchos eventos en curso se ven los más recientes y el resto se despliega aquí mismo
+  const { visibles, restantes, verTodos } = useVerMas(eventos);
   if (eventos.length === 0) return null;
   const titulo = eventos.length === 1 ? 'Hay 1 evento más en curso' : `Hay ${eventos.length} eventos más en curso`;
   return (
@@ -24,7 +28,7 @@ export function OtrosEventos({ eventos, onElegir, recienteId }: {
         </div>
       </div>
       <ul aria-label="Otros eventos en curso">
-        {eventos.map((e) => (
+        {visibles.map((e) => (
           <li key={e.evento_id} className="chk-otro">
             <span className="tag">{tipoEvento(e.simulacro).toUpperCase()}</span>
             <div className="chk-otro-txt">
@@ -37,6 +41,7 @@ export function OtrosEventos({ eventos, onElegir, recienteId }: {
           </li>
         ))}
       </ul>
+      <VerMas restantes={restantes} onClick={verTodos} />
     </section>
   );
 }

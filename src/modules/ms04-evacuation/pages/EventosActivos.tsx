@@ -1,3 +1,5 @@
+import { VerMas } from '../../../shared/components/VerMas';
+import { useVerMas } from '../../../shared/hooks/useVerMas';
 import { useEffect, useState } from 'react';
 import { Cargando } from '../../../shared/components/Cargando';
 import { EstadoVacio } from '../../../shared/components/EstadoVacio';
@@ -29,6 +31,8 @@ export default function EventosActivos({ session }: { session: Session }) {
   const [intento, setIntento] = useState(0);
   // Nombres de MS02 para los eventos guardados con ids; si MS02 no responde, se muestra el texto de MS04
   const { catalog } = useScopeCatalog();
+  // Con muchos eventos activos se ven los más recientes y el resto se despliega aquí mismo
+  const lista = useVerMas(carga.estado === 'listo' ? carga.eventos : []);
 
   useEffect(() => {
     let vigente = true;
@@ -70,7 +74,7 @@ export default function EventosActivos({ session }: { session: Session }) {
 
         {carga.estado === 'listo' && carga.eventos.length > 0 && (
           <ul className="chk-eventos" aria-label="Eventos activos">
-            {carga.eventos.map((evento) => {
+            {lista.visibles.map((evento) => {
               // Solo nombres: si MS02 no conoce ningún lugar del evento, el dato se omite (nunca un UUID)
               const edificios = textoEscenario(evento.escenario.edificios, catalog);
               const zonas = textoEscenario(evento.escenario.zonas, catalog);
@@ -92,6 +96,7 @@ export default function EventosActivos({ session }: { session: Session }) {
             })}
           </ul>
         )}
+        <VerMas restantes={lista.restantes} onClick={lista.verTodos} />
       </main>
     </>
   );

@@ -1,3 +1,4 @@
+import { SelectorEvento } from '../../../shared/components/SelectorEvento';
 import { EstadoVacio } from '../../../shared/components/EstadoVacio';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { Cargando } from '../../../shared/components/Cargando';
@@ -159,15 +160,10 @@ export default function GestionBrigadistas({ session }: { session: Session }) {
           <EstadoVacio titulo={`No hay ${eventKinds} programados ni en ejecución`}>Cuando se programe uno, aquí podrá gestionar a sus brigadistas.</EstadoVacio>
         )}
 
-        {eventos && eventos.length > 1 && (
-          <div className="ev-tabs" role="group" aria-label="Evento">
-            {eventos.map((e) => (
-              <button key={e.eventoId} type="button" className="ev-tab" aria-pressed={e.eventoId === eventoId}
-                onClick={() => { setEventoId(e.eventoId); setAbierto(''); setMessage(''); }}>
-                {e.nombre}{e.simulacro ? ' · Simulacro' : ''}
-              </button>
-            ))}
-          </div>
+        {eventos && (
+          <SelectorEvento valor={eventoId}
+            eventos={eventos.map((e) => ({ id: e.eventoId, nombre: e.nombre, simulacro: e.simulacro, enCurso: e.estado === 'EN_EJECUCION' }))}
+            onElegir={(id) => { setEventoId(id); setAbierto(''); setMessage(''); }} />
         )}
 
         {evento && (

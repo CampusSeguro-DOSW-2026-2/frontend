@@ -11,6 +11,8 @@ import { USE_MS03, activeAlertApi, type ActiveAlert } from '../../ms03-alerts/se
 import { OPERATIONAL_TYPE, scopeText } from '../../ms03-alerts/services/catalog';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { OtrosEventos } from '../components/OtrosEventos';
+import { VerMas } from '../../../shared/components/VerMas';
+import { useVerMas } from '../../../shared/hooks/useVerMas';
 import { eventsApi } from '../../ms06-drills/services/events';
 import { checkinApi } from '../services/checkin';
 import type { Evento } from '../types';
@@ -58,6 +60,9 @@ export default function Inicio({ session }: { session: Session }) {
   const puedeVerPanel = hasPermission(session, PERMISSION.MS04_DASHBOARD_READ);
   // Nombres de edificios y zonas (MS02) para el alcance de la alerta; solo se consultan si se pueden ver alertas
   const { catalog } = useScopeCatalog(puedeVerAlertas);
+  // Eventos que sigue sin estar convocado: los más recientes primero y el resto se despliega (alto volumen)
+  const seguimiento = useVerMas([...(enCurso?.seguimiento ?? [])]
+    .sort((a, b) => (b.inicio ? Date.parse(b.inicio) : 0) - (a.inicio ? Date.parse(a.inicio) : 0)));
 
   const enSeguimiento = useCallback(async (): Promise<EnSeguimiento[]> => {
     if (puedeVerEnVivo) {
@@ -174,7 +179,7 @@ export default function Inicio({ session }: { session: Session }) {
           {aviso}
           <section className="chk-otros" aria-label="Eventos en ejecución">
             <ul>
-              {enCurso.seguimiento.map((e) => (
+              {seguimiento.visibles.map((e) => (
                 <li key={e.id} className="chk-otro">
                   <span className="tag">{tipoEvento(e.simulacro).toUpperCase()}</span>
                   <div className="chk-otro-txt">
@@ -185,6 +190,7 @@ export default function Inicio({ session }: { session: Session }) {
                 </li>
               ))}
             </ul>
+            <VerMas restantes={seguimiento.restantes} onClick={seguimiento.verTodos} />
           </section>
         </main>
       </>

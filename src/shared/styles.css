@@ -254,6 +254,12 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .ev-tools{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
 .ev-tabs{display:flex;gap:8px;flex-wrap:wrap}
 .ev-tab{height:44px;padding:0 18px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px 'Outfit',sans-serif;cursor:pointer}
+.ver-mas{align-self:flex-start;height:44px;padding:0 18px;font-size:14px}
+.selector-evento{display:flex;flex-direction:column;gap:6px;max-width:520px}
+.selector-evento label{font:700 14px/18px 'Outfit',sans-serif;color:var(--ink)}
+.selector-evento label small{font:400 13px 'Geist',sans-serif;color:var(--mut)}
+.selector-evento select{height:48px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);font:600 15px 'Outfit',sans-serif;cursor:pointer}
+.selector-evento select:focus-visible{outline:2px solid var(--red);outline-offset:2px}
 .ev-tab[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--on-color)}
 .ev-table{width:100%;border-collapse:collapse;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;font-size:14px}
 .ev-table th{text-align:left;font-weight:600;color:var(--mut);font-size:13px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--bg)}
