@@ -7,7 +7,6 @@ import { PERMISSION } from '../../../shared/permissions';
 import { ApiError, errorMessage } from '../../../shared/services/http';
 import { hasPermission } from '../../../shared/services/session';
 import type { Session } from '../../../shared/types';
-import { AccionesEvento } from '../components/AccionesEvento';
 import { campusApi } from '../services/campus';
 import { checkinApi } from '../services/checkin';
 import type {
@@ -53,8 +52,8 @@ type Vigente =
 
 /**
  * Centro del evento en curso (RF-MS04-01 a RF-MS04-05, F-01): reúne lo que la persona necesita mientras el evento está
- * en ejecución. El check-in es de MS04; las rutas (MS02) y los incidentes (MS05) son accesos a sus propias pantallas,
- * visibles solo con su permiso. El mismo formulario registra el primer check-in y lo actualiza, con las cuatro
+ * en ejecución. El check-in es de MS04; las rutas (MS02) y la ayuda (MS05) están en los accesos rápidos de la barra
+ * de navegación, visibles solo con su permiso. El mismo formulario registra el primer check-in y lo actualiza, con las cuatro
  * opciones siempre visibles. Elegir Estoy evacuando o No estoy en el campus envía el reporte; Estoy a salvo pide el
  * punto de encuentro y Requiero asistencia, el lugar (edificio o punto de encuentro de MS02), y elegirlo lo envía. Así
  * el reporte se completa en máximo 3 interacciones desde el menú (RNF-MS04-07).
@@ -66,7 +65,7 @@ type Vigente =
  * La pantalla de inicio la usa con el evento que ya consultó (`eventoActual`), así no lo vuelve a pedir; entonces el
  * encabezado es el de Inicio y el nombre del evento va dentro del recuadro del check-in; con la alerta
  * activa de MS03 (`alerta`), que va encima del check-in; con un aviso (`aviso`, p. ej. un servicio que no responde) que
- * va debajo del check-in, y con lo que va después de los accesos (`despues`: los otros eventos en curso). En celular,
+ * va debajo del check-in, y con lo que va después del check-in (`despues`: los otros eventos en curso). En celular,
  * el check-in y el estado actual quedan visibles sin desplazarse.
  */
 export default function CentroEvento({ session, eventoId, eventoActual, alerta, aviso, despues, nota }: {
@@ -327,7 +326,6 @@ export default function CentroEvento({ session, eventoId, eventoActual, alerta, 
         {/* Un servicio que no responde no debe empujar el check-in hacia abajo: el aviso va después */}
         {aviso}
 
-        <AccionesEvento session={session} />
         {despues}
 
         <Mensaje tono="info" compacto>

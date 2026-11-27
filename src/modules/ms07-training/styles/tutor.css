@@ -88,7 +88,7 @@
   /* En el celular el encabezado va sin subtítulo para que el chat quepa en la pantalla */
   body:has(.tu-chat) .page-header{min-height:0;padding-top:20px;padding-bottom:20px}
   body:has(.tu-chat) .page-header p{display:none}
-  .tu-chat{height:calc(100dvh - 248px);min-height:420px;border-radius:16px}
+  .tu-chat{height:calc(100dvh - 248px - var(--barra-inferior,0px));min-height:420px;border-radius:16px}
   .tu-barra{padding:12px 14px}
   .tu-quien small,.tu-nueva span{display:none}
   .tu-nueva{width:36px;padding:0;justify-content:center}
