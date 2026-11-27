@@ -186,3 +186,5 @@
 .cs-verif-pasos li{padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
 .cs-verif-pasos li span{color:var(--mut)}
 .cs-verif-pasos li+li::before{content:'→';margin-right:6px;color:var(--mut)}
+/* Botones con texto largo («Crear escalera principal que conecta todos los pisos»): pasan a dos líneas en celular */
+.cs-envolver{white-space:normal;height:auto;min-height:var(--tap);text-align:center;line-height:18px;padding-top:8px;padding-bottom:8px}

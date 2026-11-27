@@ -2,7 +2,7 @@ import { Mensaje } from '../../../shared/components/Mensaje';
 import { Cargando } from '../../../shared/components/Cargando';
 import { Campo } from './comun';
 import { avisar } from '../../../shared/services/feedback';
-import { abrirEn, type Abrible } from '../utils/verificacion';
+import { abrirEn, TEXTO_ESCALERA_PRINCIPAL, type ManejoEscaleras } from '../utils/verificacion';
 import { useCallback, useEffect, useImperativeHandle, useState, type Ref } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
 import {
@@ -22,8 +22,8 @@ interface Props {
   edificio: Edificio;
   pisos: Piso[];
   mostrarInactivos: boolean;
-  /** `abrir()` muestra el formulario de nueva escalera y lleva a él. */
-  ref?: Ref<Abrible>;
+  /** `abrir()` muestra el formulario de nueva escalera y lleva a él; `crearPrincipal()` crea la escalera principal. */
+  ref?: Ref<ManejoEscaleras>;
   /** Se llama después de cada cambio, para que el detalle recalcule la lista de verificación. */
   onCambio?: () => void;
 }
@@ -85,12 +85,33 @@ export default function EscalerasEdificio({
     void cargar();
   }, [cargar]);
 
+  // Escalera de un clic: «Escalera principal», prioridad 1, con todos los pisos activos
+  const crearPrincipal = async () => {
+    setError('');
+    setMensaje('');
+    setGuardando(true);
+    try {
+      const ids = [...pisosActivos].sort((a, b) => a.numero - b.numero).map((p) => p.id);
+      await campus.escaleras.crear(edificio.id, { nombre: 'Escalera principal', pisoIds: ids, prioridad: 1 });
+      await cargar();
+      onCambio?.();
+      avisar({ tono: 'exito', texto: `Se creó la «Escalera principal»: conecta los ${ids.length} pisos activos.` });
+    } catch (e) {
+      const texto = comoCampusError(e).message;
+      setError(texto);
+      avisar({ tono: 'error', texto: `No se pudo crear la escalera principal. ${texto}` });
+    } finally {
+      setGuardando(false);
+    }
+  };
+
   useImperativeHandle(ref, () => ({
     abrir: () => {
       setMostrarFormulario(true);
       abrirEn('escaleras-titulo', `esc-nombre-${edificio.id}`);
     },
-  }), [edificio.id]);
+    crearPrincipal,
+  }));
 
   const alternarPiso = (id: string) => {
     setPisoIds((actuales) =>
@@ -227,6 +248,7 @@ export default function EscalerasEdificio({
   };
 
   const faltanPisos = pisoIds.length < 2;
+  const sinEscaleraActiva = !cargando && pisosActivos.length > 1 && !escaleras.some((e) => e.estado === 'ACTIVO');
 
   return (
     <section className="cs-piso" aria-labelledby="escaleras-titulo">
@@ -249,6 +271,18 @@ export default function EscalerasEdificio({
 
       {error && <Mensaje tono="error">{error}</Mensaje>}
       {mensaje && <Mensaje tono="info">{mensaje}</Mensaje>}
+
+      {sinEscaleraActiva && (
+        <Mensaje tono="aviso" acciones={puedeGestionar ? (
+          <button type="button" className="btn red sm cs-envolver" disabled={guardando} aria-busy={guardando || undefined}
+            onClick={() => void crearPrincipal()}>
+            {guardando ? 'Creando escalera…' : TEXTO_ESCALERA_PRINCIPAL}
+          </button>
+        ) : undefined}>
+          El edificio tiene {pisosActivos.length} pisos activos y ninguna escalera activa, así que los espacios que no están
+          en el piso de la salida no tienen ruta de evacuación.
+        </Mensaje>
+      )}
 
       {mostrarFormulario && puedeGestionar && (
         <form className="cs-editor cs-subeditor" onSubmit={crear}>
@@ -315,7 +349,7 @@ export default function EscalerasEdificio({
       {cargando ? (
         <Cargando texto="Cargando escaleras…" />
       ) : escaleras.length === 0 ? (
-        <Mensaje tono="info">Este edificio todavía no tiene escaleras registradas.</Mensaje>
+        !sinEscaleraActiva && <Mensaje tono="info">Este edificio todavía no tiene escaleras registradas.</Mensaje>
       ) : (
         <div className="cs-lista">
           {escaleras.map((escalera) => (

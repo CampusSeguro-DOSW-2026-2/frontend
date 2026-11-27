@@ -15,7 +15,7 @@ import { BotonQr } from '../components/BotonQr';
 import { VerificacionRutas } from '../components/VerificacionRutas';
 import { useEstadoRutas } from '../hooks/useEstadoRutas';
 import { PERMISSION } from '../../../shared/permissions';
-import { abrirEn, type Abrible } from '../utils/verificacion';
+import { abrirEn, type Abrible, type ManejoEscaleras } from '../utils/verificacion';
 import '../styles/campus.css';
 
 type Edicion =
@@ -123,7 +123,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
   // Cada cambio en el edificio sube la versión y la lista de verificación se recalcula
   const [version, setVersion] = useState(0);
   const salidasRef = useRef<Abrible>(null);
-  const escalerasRef = useRef<Abrible>(null);
+  const escalerasRef = useRef<ManejoEscaleras>(null);
   const refrescar = useCallback(() => setVersion((v) => v + 1), []);
   const rutas = useEstadoRutas(edificioId, edificio?.estado === 'ACTIVO', version);
   const puedeEscaleras = currentPermissions().includes(PERMISSION.MS02_BUILDING_WRITE);
@@ -212,6 +212,7 @@ export default function BuildingDetail({ edificioId }: { edificioId: string }) {
     },
     agregarSalida: () => salidasRef.current?.abrir(),
     registrarEscalera: puedeEscaleras ? () => escalerasRef.current?.abrir() : undefined,
+    crearEscaleraPrincipal: puedeEscaleras ? async () => { await escalerasRef.current?.crearPrincipal(); } : undefined,
   };
 
   return (

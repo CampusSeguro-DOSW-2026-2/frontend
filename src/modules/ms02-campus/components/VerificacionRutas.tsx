@@ -1,10 +1,10 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Cargando } from '../../../shared/components/Cargando';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import type { CampusApiError } from '../services/campus';
 import type { EstadoRutas } from '../hooks/useEstadoRutas';
 import type { Espacio, Piso } from '../types';
-import { listaPisos, pisosSinEscalera, salidaUtil } from '../utils/verificacion';
+import { listaPisos, pisosSinEscalera, salidaUtil, TEXTO_ESCALERA_PRINCIPAL } from '../utils/verificacion';
 
 export interface AccionesVerificacion {
   agregarPiso: () => void;
@@ -12,6 +12,8 @@ export interface AccionesVerificacion {
   agregarSalida: () => void;
   /** Sin permiso para gestionar escaleras no se ofrece. */
   registrarEscalera?: () => void;
+  /** Crea la «Escalera principal» con todos los pisos activos. Sin permiso no se ofrece. */
+  crearEscaleraPrincipal?: () => Promise<void>;
 }
 
 interface Fila {
@@ -43,6 +45,8 @@ export function VerificacionRutas({ pisos, espacios, estado, error, actualizando
   acciones: AccionesVerificacion;
   onReintentar: () => void;
 }) {
+  const [creando, setCreando] = useState(false);
+
   if (!estado) {
     return (
       <section className="cs-piso cs-verif" aria-label="Rutas de este edificio">
@@ -106,9 +110,22 @@ export function VerificacionRutas({ pisos, espacios, estado, error, actualizando
         : escalerasActivas.length === 0
           ? `El edificio tiene ${pisosActivos.length} pisos y ninguna escalera activa.`
           : `${listaPisos(sinEscalera).replace(/^./, (c) => c.toUpperCase())} ${verbo} por una escalera disponible con el piso de la salida.`,
-      accion: acciones.registrarEscalera
-        ? <button type="button" className="cs-mini" onClick={acciones.registrarEscalera}>Registrar escalera</button>
-        : undefined,
+      accion: (
+        <>
+          {escalerasActivas.length === 0 && acciones.crearEscaleraPrincipal && (
+            <button type="button" className="cs-mini primario cs-envolver" disabled={creando} aria-busy={creando || undefined}
+              onClick={async () => {
+                setCreando(true);
+                try { await acciones.crearEscaleraPrincipal?.(); } finally { setCreando(false); }
+              }}>
+              {creando ? 'Creando escalera…' : TEXTO_ESCALERA_PRINCIPAL}
+            </button>
+          )}
+          {acciones.registrarEscalera && (
+            <button type="button" className="cs-mini" onClick={acciones.registrarEscalera}>Registrar escalera</button>
+          )}
+        </>
+      ),
     });
   }
 

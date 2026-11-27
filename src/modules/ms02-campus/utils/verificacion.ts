@@ -70,6 +70,11 @@ export function irA(id: string) {
 /** Sección del detalle que se puede abrir desde la lista de verificación. */
 export interface Abrible { abrir: () => void }
 
+/** La sección de escaleras, además, crea de un clic la escalera principal que conecta todos los pisos activos. */
+export interface ManejoEscaleras extends Abrible { crearPrincipal: () => Promise<void> }
+
+export const TEXTO_ESCALERA_PRINCIPAL = 'Crear escalera principal que conecta todos los pisos';
+
 /** Lleva a una sección y pone el foco en su primer campo cuando el formulario ya se dibujó. */
 export function abrirEn(seccionId: string, campoId?: string) {
   requestAnimationFrame(() => {
