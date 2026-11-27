@@ -131,7 +131,18 @@
 .chk-estados-col .chk-nota{margin-top:0;font-size:12px}
 
 /* Inicio en celular: el check-in y el estado actual primero, luego accesos rápidos y otros eventos, compactos */
-.chk-vigente{display:block;margin-top:8px;padding:10px 12px;border-radius:10px;background:var(--cream);color:var(--ink);font-size:14px}
+/* Evento elegido en Inicio: tarjeta debajo del título del check-in (el encabezado rojo es el de la sección) */
+.chk-titulo-fila{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.chk-ev-sel{display:flex;flex-direction:column;gap:4px;min-width:0;max-width:100%;padding:10px 16px;border:1px solid color-mix(in srgb,var(--red) 22%,var(--line));border-left:3px solid var(--red);border-radius:12px;background:color-mix(in srgb,var(--red) 4%,var(--surface))}
+.chk-ev-sel b{font:700 17px/22px 'Outfit',sans-serif;color:var(--ink);overflow-wrap:anywhere}
+.chk-ev-sel small{font-size:13px;line-height:18px;color:var(--mut)}
+.chk-ev-sel-tipo{font-weight:600}
+.chk-otro-nota{display:inline-block;margin-left:8px;vertical-align:2px}
+.chk-ev-sel-nota{align-self:flex-start;padding:2px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--mut);font:700 11px/15px 'Outfit',sans-serif}
+/* Emergencia real: el mismo recuadro con el rojo más marcado, para distinguirla del simulacro sin alarmar */
+.chk-ev-sel.real{border-color:color-mix(in srgb,var(--red) 45%,var(--line));border-left:4px solid var(--red);background:color-mix(in srgb,var(--red) 9%,var(--surface))}
+.chk-ev-sel.real .chk-ev-sel-tipo{color:var(--red);font-weight:700}
+.chk-vigente{display:block;margin-top:8px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font-size:14px}
 .chk-bloque-titulo{font:700 18px/24px 'Outfit',sans-serif}
 .chk-accesos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:12px}
 .chk-acceso{display:flex;align-items:center;gap:14px;min-height:64px;padding:12px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:var(--ink);text-decoration:none;transition:border-color var(--dur-ui) ease,transform var(--dur-press) var(--ease-out)}

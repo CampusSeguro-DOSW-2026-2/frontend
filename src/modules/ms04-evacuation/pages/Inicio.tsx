@@ -142,11 +142,12 @@ export default function Inicio({ session }: { session: Session }) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     // Los demás eventos en curso van después del check-in y de los accesos: lo primero es reportar el estado
-    const otrosEventos = <OtrosEventos eventos={otros} onElegir={elegir} />;
+    const otrosEventos = <OtrosEventos eventos={otros} onElegir={elegir} recienteId={enCurso.eventos[0].evento_id} />;
     if (puedeReportar) {
       return (
         <CentroEvento key={evento.evento_id} session={session} eventoId={evento.evento_id} eventoActual={evento}
-          alerta={tarjetaAlerta(true)} aviso={aviso} despues={otrosEventos} />
+          alerta={tarjetaAlerta(true)} aviso={aviso} despues={otrosEventos}
+          nota={otros.length > 0 && evento.evento_id === enCurso.eventos[0].evento_id ? 'Más reciente' : undefined} />
       );
     }
     return (

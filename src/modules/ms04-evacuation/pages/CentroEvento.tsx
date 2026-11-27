@@ -63,13 +63,16 @@ type Vigente =
  * formulario, que registra aquí el estado y deja en MS05 la prioridad, la descripción y la evidencia. Sin ese permiso
  * se pide solo el lugar, como antes.
  *
- * La pantalla de inicio la usa con el evento que ya consultó (`eventoActual`), así no lo vuelve a pedir; con la alerta
+ * La pantalla de inicio la usa con el evento que ya consultó (`eventoActual`), así no lo vuelve a pedir; entonces el
+ * encabezado es el de Inicio y el nombre del evento va dentro del recuadro del check-in; con la alerta
  * activa de MS03 (`alerta`), que va encima del check-in; con un aviso (`aviso`, p. ej. un servicio que no responde) que
  * va debajo del check-in, y con lo que va después de los accesos (`despues`: los otros eventos en curso). En celular,
  * el check-in y el estado actual quedan visibles sin desplazarse.
  */
-export default function CentroEvento({ session, eventoId, eventoActual, alerta, aviso, despues }: {
+export default function CentroEvento({ session, eventoId, eventoActual, alerta, aviso, despues, nota }: {
   session: Session; eventoId: string; eventoActual?: Evento; alerta?: ReactNode; aviso?: ReactNode; despues?: ReactNode;
+  /** En Inicio: mini mensaje del recuadro del evento (p. ej. «Más reciente» cuando hay varios en curso). */
+  nota?: string;
 }) {
   const [eventoConsultado, setEventoConsultado] = useState<Evento | null>(null);
   const evento = eventoActual ?? eventoConsultado;
@@ -203,19 +206,35 @@ export default function CentroEvento({ session, eventoId, eventoActual, alerta, 
 
   return (
     <>
-      <PageHeader volver={eventoActual ? undefined : { href: '#/simulacro', texto: 'Inicio' }}
-        badge={evento ? `${tipoEvento(evento.simulacro)} · ${textoEstadoEvento(evento.estado)}`.toUpperCase() : 'CHECK-IN'}
-        title={evento?.nombre ?? 'Reportar mi estado'}
-        subtitle={evento ? 'Evacuación del campus en curso' : 'Elija la opción que describe su situación.'}
-        context={evento?.fecha_inicio ? `Iniciado: ${fechaHora(evento.fecha_inicio)}` : undefined}
-      />
+      {/* En Inicio el encabezado es el de la sección y el evento va dentro del recuadro del check-in */}
+      {eventoActual
+        ? <PageHeader badge={evento ? `${tipoEvento(evento.simulacro)} en curso`.toUpperCase() : 'INICIO'}
+            title="Bienvenido a CampusSeguro" subtitle="Aquí verá las emergencias y simulacros en curso." />
+        : <PageHeader volver={{ href: '#/simulacro', texto: 'Inicio' }}
+            badge={evento ? `${tipoEvento(evento.simulacro)} · ${textoEstadoEvento(evento.estado)}`.toUpperCase() : 'CHECK-IN'}
+            title={evento?.nombre ?? 'Reportar mi estado'}
+            subtitle={evento ? 'Evacuación del campus en curso' : 'Elija la opción que describe su situación.'}
+            context={evento?.fecha_inicio ? `Iniciado: ${fechaHora(evento.fecha_inicio)}` : undefined}
+          />}
       <main className="content">
         {alerta}
 
         <section className="chk-checkin" aria-labelledby="chk-estado-titulo">
           <div className="chk-checkin-cab">
             <div>
-              <h2 id="chk-estado-titulo" className="title sm22">¿Cómo se encuentra?</h2>
+              <div className="chk-titulo-fila">
+                <h2 id="chk-estado-titulo" className="title sm22">¿Cómo se encuentra?</h2>
+                {eventoActual && evento && (
+                  <div className={`chk-ev-sel${evento.simulacro ? '' : ' real'}`} role="group" aria-label="Evento actual">
+                    {nota && <span className="chk-ev-sel-nota">{nota}</span>}
+                    <b>{evento.nombre}</b>
+                    <small>
+                      <span className="chk-ev-sel-tipo">{tipoEvento(evento.simulacro)}</span>
+                      {evento.fecha_inicio && ` · ${fechaHora(evento.fecha_inicio)}`}
+                    </small>
+                  </div>
+                )}
+              </div>
               {vigente.estado === 'cargando' && <Cargando texto="Consultando su estado actual…" />}
               {vigente.estado === 'listo' && (
                 <p className={`chk-sub${actual ? ' chk-vigente' : ''}`} role="status">
