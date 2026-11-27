@@ -116,3 +116,73 @@
 /* Áreas táctiles de 44 px en celular y escritorio (docs/PATRONES-UI.md) */
 .rs-back,.rs-link{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 4px;margin:0 -4px}
 .rs-toggle{width:var(--tap);height:var(--tap);margin-left:0}
+
+/* Necesito ayuda / Reportar incidente: el mismo estilo del recuadro «¿Cómo se encuentra?» del Inicio.
+   En el computador aprovecha el ancho (urgencias lado a lado, textos grandes); en el celular, apilado y compacto. */
+.na-main{display:flex;flex-direction:column;gap:24px;max-width:1120px;width:100%;margin:0 auto}
+.na-card{display:flex;flex-direction:column;gap:20px;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:36px 40px}
+.na-paso{font:700 13px/18px 'Outfit',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+.na-titulo{font:700 28px/34px 'Outfit',sans-serif;color:var(--ink)}
+.na-sub{font-size:16px;line-height:24px;color:var(--mut)}
+.na-texto{font-size:17px;line-height:26px;color:var(--ink)}
+.na-opciones{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.na-opcion{display:flex;align-items:center;gap:16px;width:100%;min-height:88px;padding:20px 22px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer;transition:border-color var(--dur-ui) ease,background-color var(--dur-ui) ease}
+.na-opcion-txt{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0}
+.na-opcion-txt b{font:700 21px/26px 'Outfit',sans-serif}
+.na-opcion-txt small{font-size:16px;line-height:23px;color:var(--mut)}
+.na-opcion-ir{flex:none;color:var(--mut);font:700 28px/1 'Outfit',sans-serif}
+@media(hover:hover){.na-opcion:hover{border-color:var(--red)}}
+.na-opcion:active{transform:scale(.99)}
+/* Cada urgencia con su franja de color (los mismos colores del chip de prioridad); en el computador, tarjetas altas */
+.na-prio{border-left-width:8px;align-items:flex-start;min-height:180px;padding:26px 24px}
+.na-prio .na-opcion-ir{align-self:flex-end}
+.na-prio.EMERGENCIA{border-left-color:var(--red)}
+.na-prio.EMERGENCIA b{color:var(--red)}
+.na-prio.URGENCIA_MODERADA{border-left-color:var(--amber)}
+.na-prio.POCA_URGENCIA{border-left-color:var(--ok)}
+.na-prio[aria-pressed=true]{background:var(--bg)}
+.na-resumen{display:flex;justify-content:space-between;align-items:center;gap:8px 16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.na-resumen-prio{display:flex;align-items:center;gap:10px;font-size:16px;color:var(--mut)}
+.na-link{min-height:var(--tap);padding:0 4px;border:0;background:none;color:var(--red);font:600 15px 'Geist',sans-serif;text-decoration:underline;cursor:pointer}
+.na-sec{display:flex;flex-direction:column;gap:12px}
+.na-etiqueta{display:flex;align-items:baseline;gap:8px;font:700 19px/24px 'Outfit',sans-serif;color:var(--ink)}
+.na-opcional{font:400 14px 'Geist',sans-serif;color:var(--mut)}
+.na-zonas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(190px,100%),1fr));gap:12px}
+.na-zona{min-height:60px;padding:10px 14px;border:1px solid var(--red);border-radius:12px;background:var(--surface);color:var(--red);font:700 17px/22px 'Outfit',sans-serif;cursor:pointer}
+.na-zona[aria-pressed=true]{background:var(--red);color:var(--on-color)}
+.na-adjuntar{position:relative;display:flex;align-items:center;gap:16px;min-height:76px;padding:14px 20px;border:1.5px dashed var(--line);border-radius:14px;cursor:pointer}
+.na-adjuntar:hover,.na-adjuntar:focus-within{border-color:var(--red)}
+.na-adjuntar input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.na-adjuntar-ico{display:grid;place-items:center;flex:none;width:44px;height:44px;border-radius:12px;background:var(--err-bg);color:var(--red)}
+.na-adjuntar b{font:600 17px/22px 'Outfit',sans-serif;color:var(--red)}
+.na-card .input textarea{font-size:16px}
+.na-enviar{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding-top:4px}
+.na-enviar .btn{min-width:min(420px,100%);height:60px;font-size:18px}
+.na-listo-ico{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--ok-bg);color:var(--ok)}
+.na-listo-ico svg.i{width:34px;height:34px}
+.na-pasos{display:flex;flex-direction:column;gap:10px;margin:0;padding-left:22px;font-size:17px;line-height:24px;color:var(--ink)}
+.na-acciones{display:flex;flex-wrap:wrap;gap:12px}
+/* Celular: una columna, opciones compactas pero con área táctil amplia, y el botón de enviar a lo ancho */
+@media(max-width:700px){
+  .na-main{gap:16px}
+  .na-card{padding:20px 16px;gap:14px;border-radius:16px}
+  .na-titulo{font-size:21px;line-height:27px}
+  .na-sub{font-size:14px;line-height:20px}
+  .na-texto{font-size:15px;line-height:22px}
+  .na-opciones{grid-template-columns:1fr;gap:10px}
+  .na-opcion{min-height:76px;padding:14px 16px;gap:12px}
+  .na-opcion-txt b{font-size:18px;line-height:23px}
+  .na-opcion-txt small{font-size:14px;line-height:19px}
+  .na-prio{min-height:76px;align-items:center;border-left-width:6px;padding:14px 16px}
+  .na-prio .na-opcion-ir{align-self:center}
+  .na-etiqueta{font-size:17px}
+  .na-zonas{grid-template-columns:repeat(auto-fill,minmax(min(140px,100%),1fr));gap:10px}
+  .na-zona{min-height:56px;font-size:16px}
+  .na-adjuntar{min-height:64px;padding:12px 14px}
+  .na-adjuntar b{font-size:15px}
+  .na-enviar{align-items:stretch}
+  .na-enviar .btn{min-width:0;width:100%;height:56px;font-size:17px}
+  .na-pasos{font-size:15px}
+  .na-acciones .btn{flex:1 1 100%}
+}
+@media(prefers-reduced-motion:reduce){.na-opcion{transition:none}.na-opcion:active{transform:none}}
