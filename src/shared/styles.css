@@ -170,7 +170,6 @@ label,.lbl{font:700 14px/18px 'Outfit',sans-serif}
 .age{font-size:13px;line-height:17px;color:var(--mut)}
 .case h3{font:700 22px/28px 'Outfit',sans-serif}.case p.rep{font-size:15px;line-height:140%;color:var(--mut);margin-top:8px}
 .cbtn{display:flex;justify-content:flex-end}.cbtn .btn{width:240px}
-.demo-nav{text-align:center;font-size:12px;color:var(--mut);padding:24px}
 @media(max-width:900px){.navbar,.page-header,.content,.config,.page{padding-left:16px;padding-right:16px}.navbar{height:64px}.page-header{min-height:0;padding-top:20px;padding-bottom:24px;gap:8px}.page-header h1{font-size:26px}.page-header p{font-size:15px}.navbar .nav-who{display:none}.config,.two,.steps,.btns,.stats,.assign{flex-direction:column}.side,.zone{width:100%}}
 /* ===== Alertas ===== */
 .brand{display:flex;align-items:center;gap:16px}
