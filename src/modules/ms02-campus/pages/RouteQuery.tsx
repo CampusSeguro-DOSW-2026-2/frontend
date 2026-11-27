@@ -6,14 +6,16 @@ import { campus, CampusApiError, comoCampusError as comoError } from '../service
 import type { Edificio, Espacio, EstadoRuta, RutaConsultada } from '../types';
 import { Falla } from '../components/comun';
 import { GuiaDeRuta } from '../components/GuiaEvacuacion';
+import { RutasAgrupadas } from '../components/RutasAgrupadas';
+import { mismaFrase } from '../utils/formato';
 import '../styles/campus.css';
 
 type Tono = 'ok' | 'warn' | 'stop' | 'info';
 
 const ESTADOS: Record<EstadoRuta, { texto: string; tono: Tono }> = {
-  DISPONIBLE: { texto: 'DISPONIBLE', tono: 'ok' },
-  RESTRINGIDA: { texto: 'RESTRINGIDA', tono: 'warn' },
-  BLOQUEADA: { texto: 'BLOQUEADA', tono: 'stop' },
+  DISPONIBLE: { texto: 'Disponible', tono: 'ok' },
+  RESTRINGIDA: { texto: 'Restringida', tono: 'warn' },
+  BLOQUEADA: { texto: 'Bloqueada', tono: 'stop' },
 };
 
 // La guía de evacuación se arma sola con las escaleras, salidas y rutas exteriores: un espacio puede no
@@ -36,8 +38,8 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
       <div className="ctop">
         <h3>{ruta.espacioNombre}</h3>
         {estado ? <span className={`cs-estado ${estado.tono}`}>{estado.texto}</span> : soloGuia
-          ? <span className="cs-estado ok">GUÍA DISPONIBLE</span>
-          : <span className="cs-estado info">SIN RUTA</span>}
+          ? <span className="cs-estado ok">Guía disponible</span>
+          : <span className="cs-estado info">Sin ruta</span>}
       </div>
       {ruta.tieneRuta && (
         <>
@@ -49,13 +51,15 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
               {ruta.zonaSeguraUbicacion && <span>{ruta.zonaSeguraUbicacion}</span>}
             </div>
           </div>
-          {ruta.recorrido && <div className="sm"><small>Recorrido</small><p className="cs-recorrido">{ruta.recorrido}</p></div>}
+          {/* Si la guía dice lo mismo, la frase se muestra una sola vez (en la guía) */}
+          {ruta.recorrido && !mismaFrase(ruta.recorrido, ruta.guia?.indicacion) && <div className="sm"><small>Recorrido</small><p className="cs-recorrido">{ruta.recorrido}</p></div>}
           {ruta.motivo && <div className="sm"><small>Motivo</small><p>{ruta.motivo}</p></div>}
         </>
       )}
       {/* Con la ruta disponible el mensaje sobra (antes .cs-alert.ok quedaba oculto) */}
       {ruta.mensaje && !soloGuia && tono !== 'ok' && <Mensaje tono={tono === 'stop' ? 'error' : tono === 'warn' ? 'aviso' : 'info'}>{ruta.mensaje}</Mensaje>}
-      <GuiaDeRuta espacioId={ruta.espacioId} inicial={ruta.guia} />
+      {/* Con la ruta ya calculada y habilitada, la guía se muestra sin tocar «Ver guía» */}
+      <GuiaDeRuta espacioId={ruta.espacioId} inicial={ruta.guia} automatica={ruta.tieneRuta && ruta.destinoActivo === true && ruta.estado !== 'BLOQUEADA'} />
       {recomendaciones.length > 0 && (
         <section className="cs-preventivas" aria-label="Recomendaciones preventivas">
           <h4>Recomendaciones preventivas</h4>
@@ -72,21 +76,6 @@ function Resultado({ ruta }: { ruta: RutaConsultada }) {
       )}
     </article>
   );
-}
-
-function resumen(rutas: RutaConsultada[]) {
-  const contar = (f: (r: RutaConsultada) => boolean) => rutas.filter(f).length;
-  const partes = [
-    `${rutas.length} ${rutas.length === 1 ? 'espacio' : 'espacios'}`,
-    `${contar((r) => (r.estado === 'DISPONIBLE' && r.destinoActivo === true) || (!r.tieneRuta && conGuia(r)))} con ruta disponible`,
-  ];
-  const restringidas = contar((r) => r.estado === 'RESTRINGIDA');
-  const bloqueadas = contar((r) => r.estado === 'BLOQUEADA');
-  const sinRuta = contar((r) => !r.tieneRuta && !conGuia(r));
-  if (restringidas) partes.push(`${restringidas} ${restringidas === 1 ? 'restringida' : 'restringidas'}`);
-  if (bloqueadas) partes.push(`${bloqueadas} ${bloqueadas === 1 ? 'bloqueada' : 'bloqueadas'}`);
-  if (sinRuta) partes.push(`${sinRuta} sin ruta`);
-  return partes.join(' · ');
 }
 
 export default function RouteQuery() {
@@ -172,11 +161,12 @@ export default function RouteQuery() {
           <section className="cs-resultados" aria-live="polite">
             <div className="cs-cabecera">
               <h2 className="title sm22">{espacioId ? 'Ruta del espacio' : `Rutas de ${edificio?.nombre ?? 'el edificio'}`}</h2>
-              {!espacioId && rutas.length > 0 && <span className="cs-resumen">{resumen(rutas)}</span>}
             </div>
             {rutas.length === 0
               ? <Mensaje tono="info">Este edificio no tiene espacios disponibles para consultar.</Mensaje>
-              : <div className="cs-lista">{rutas.map((r) => <Resultado key={`${consulta}-${r.espacioId}`} ruta={r} />)}</div>}
+              : espacioId
+                ? <div className="cs-lista">{rutas.map((r) => <Resultado key={`${consulta}-${r.espacioId}`} ruta={r} />)}</div>
+                : <RutasAgrupadas key={consulta} rutas={rutas} fallback={(r) => <Resultado key={`${consulta}-${r.espacioId}`} ruta={r} />} />}
           </section>
         )}
       </main>

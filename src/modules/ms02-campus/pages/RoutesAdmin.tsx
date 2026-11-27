@@ -1,4 +1,5 @@
 import { Cargando } from '../../../shared/components/Cargando';
+import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { useCallback, useEffect, useState } from 'react';
 import { PageHeader } from '../../../shared/components/Layout';
@@ -133,7 +134,7 @@ function NuevaRuta({ datos, onGuardar, onCancelar }: {
         <CamposEstado id="nueva" estado={estado} motivo={motivo} errores={errores} onEstado={setEstado} onMotivo={setMotivo} />
       </div>
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar ruta" />
     </form>
   );
 }
@@ -165,7 +166,7 @@ function ModificarRuta({ ruta, zonas, onGuardar, onCancelar }: {
         <textarea id={`ruta-descripcion-${ruta.id}`} rows={3} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
       </Campo>
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar ruta" />
     </form>
   );
 }
@@ -192,7 +193,7 @@ function CambiarEstado({ ruta, onGuardar, onCancelar }: {
         <CamposEstado id={ruta.id} estado={estado} motivo={motivo} errores={errores} onEstado={setEstado} onMotivo={setMotivo} />
       </div>
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar estado" />
     </form>
   );
 }
@@ -226,10 +227,12 @@ export default function RoutesAdmin() {
     }
   };
 
-  const guardar = async (accion: () => Promise<unknown>) => {
+  // Crear o modificar: al guardar se cierra el formulario y un aviso confirma el cambio (docs/PATRONES-UI.md)
+  const guardar = async (exito: string, accion: () => Promise<unknown>) => {
     await accion();
     await recargar();
     setEdicion(null);
+    avisar({ tono: 'exito', texto: exito });
   };
 
   const encabezado = (
@@ -288,7 +291,7 @@ export default function RoutesAdmin() {
         {edicion?.tipo === 'nueva' && (
           <section className="cs-piso">
             <h3 className="cs-piso-titulo">Nueva ruta</h3>
-            <NuevaRuta datos={datos} onCancelar={() => setEdicion(null)} onGuardar={(r) => guardar(() => campus.rutas.crear(r))} />
+            <NuevaRuta datos={datos} onCancelar={() => setEdicion(null)} onGuardar={(r) => guardar('Ruta creada.', () => campus.rutas.crear(r))} />
           </section>
         )}
 
@@ -324,10 +327,10 @@ export default function RoutesAdmin() {
                           <h4>{edicion.tipo === 'modificar' ? 'Editar ruta' : 'Cambiar estado'} de {espacio.get(r.espacioOrigenId)?.nombre ?? 'la ruta'}</h4>
                           {edicion.tipo === 'modificar' ? (
                             <ModificarRuta ruta={r} zonas={datos.zonas} onCancelar={() => setEdicion(null)}
-                              onGuardar={(zonaId, descripcion) => guardar(() => campus.rutas.actualizar(r.id, { zonaSeguraDestinoId: zonaId, descripcion }))} />
+                              onGuardar={(zonaId, descripcion) => guardar('Cambios de la ruta guardados.', () => campus.rutas.actualizar(r.id, { zonaSeguraDestinoId: zonaId, descripcion }))} />
                           ) : (
                             <CambiarEstado ruta={r} onCancelar={() => setEdicion(null)}
-                              onGuardar={(estado, motivo) => guardar(() => campus.rutas.cambiarEstado(r.id, { estado, motivo }))} />
+                              onGuardar={(estado, motivo) => guardar('Estado de la ruta actualizado.', () => campus.rutas.cambiarEstado(r.id, { estado, motivo }))} />
                           )}
                         </div>
                       </td></tr>

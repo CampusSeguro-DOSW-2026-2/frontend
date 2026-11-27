@@ -1,13 +1,14 @@
 import { useEffect, useMemo } from 'react';
 import L from 'leaflet';
 import {
-  CircleMarker,
   MapContainer,
   Popup,
   Polyline,
   TileLayer,
   useMap,
 } from 'react-leaflet';
+import { MarcadorMapa } from '../../../shared/components/MarcadorMapa';
+import { colorToken, opcionesMapa } from '../../../shared/utils/mapa';
 import type { RutaExterior, SalidaGuia } from '../types';
 import '../styles/mapa.css';
 import 'leaflet/dist/leaflet.css';
@@ -87,7 +88,7 @@ export function MapaRuta({
         className="cs-mapa-ruta"
         center={geometria[0]}
         zoom={17}
-        scrollWheelZoom={false}
+        {...opcionesMapa()}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -98,47 +99,30 @@ export function MapaRuta({
 
         <Polyline
           positions={geometria}
-          pathOptions={{ color: '#1769aa', weight: 6, opacity: 0.85 }}
+          pathOptions={{ color: colorToken('--blue'), weight: 6, opacity: 0.85 }}
         />
 
         {inicio && (
-          <CircleMarker
-            center={inicio}
-            radius={9}
-            pathOptions={{
-              color: '#ffffff',
-              weight: 3,
-              fillColor: '#16834a',
-              fillOpacity: 1,
-            }}
-          >
+          <MarcadorMapa centro={inicio} relleno="--ok">
             <Popup>Salida: {salida.nombre}</Popup>
-          </CircleMarker>
+          </MarcadorMapa>
         )}
 
         {destino && (
-          <CircleMarker
-            center={destino}
-            radius={9}
-            pathOptions={{
-              color: '#ffffff',
-              weight: 3,
-              fillColor: '#d94841',
-              fillOpacity: 1,
-            }}
-          >
+          <MarcadorMapa centro={destino} relleno="--red">
             <Popup>
               Zona segura: {zonaSeguraNombre ?? 'Destino de evacuación'}
             </Popup>
-          </CircleMarker>
+          </MarcadorMapa>
         )}
       </MapContainer>
 
-      <div className="cs-mapa-leyenda">
-        <span><i className="cs-mapa-punto salida" /> Salida</span>
-        <span><i className="cs-mapa-punto destino" /> Zona segura</span>
-        <span><i className="cs-mapa-linea" /> Recorrido peatonal</span>
-      </div>
+      <p className="mapa-gesto">Use dos dedos para mover o acercar el mapa.</p>
+      <ul className="mapa-leyenda" aria-label="Leyenda del mapa">
+        <li><i className="cs-mapa-punto salida" aria-hidden="true" /> Salida</li>
+        <li><i className="cs-mapa-punto destino" aria-hidden="true" /> Zona segura</li>
+        <li><i className="cs-mapa-linea" aria-hidden="true" /> Recorrido peatonal</li>
+      </ul>
     </section>
   );
 }

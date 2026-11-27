@@ -15,6 +15,7 @@ import type { EventSummary } from '../../ms06-drills/types';
 import { scopeLabelIn } from '../../ms06-drills/utils/labels';
 import { EVIDENCE_TYPES, MAX_EVIDENCES, brigadesApi, tipoDesdeAlcance } from '../services/brigades';
 import { PRIORIDADES, type Incidente } from '../types';
+import PrioridadChip from '../components/PrioridadChip';
 import '../styles/respuesta.css';
 
 interface Props {
@@ -196,7 +197,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
             <div className="rs-prios" role="group" aria-label="Prioridad">
               {PRIORIDADES.map((p) => (
                 <button key={p.id} type="button" className="rs-prio-card" aria-pressed={prioridad?.id === p.id} onClick={() => elegirPrioridad(p)}>
-                  <span className={`rs-prio ${p.codigo}`}>{p.label}</span>
+                  <PrioridadChip codigo={p.codigo} />
                   <b>{p.label}</b>
                   <span>{p.help}</span>
                 </button>
@@ -258,7 +259,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
                 <h2>{forOther ? 'El reporte' : 'Su solicitud'}</h2>
                 <div className="rs-kv">
                   <small>Prioridad seleccionada</small>
-                  <span className={`rs-prio ${prioridad.codigo}`}>{prioridad.label}</span>
+                  <PrioridadChip codigo={prioridad.codigo} />
                 </div>
                 <button type="button" className="rs-link" onClick={() => setPaso('prioridad')}>Cambiar prioridad</button>
                 <div className="rs-kv">

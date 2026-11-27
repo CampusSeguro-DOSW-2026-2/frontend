@@ -27,12 +27,6 @@
 .rs-kv b{font:700 18px/24px 'Outfit',sans-serif}
 .rs-link{align-self:flex-start;background:none;border:0;padding:0;color:var(--red);font:600 12px 'Geist',sans-serif;text-decoration:underline;cursor:pointer}
 .rs-btn{height:48px;border-radius:10px;font-size:15px}
-/* Prioridad */
-.rs-prio{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:4px 10px;border-radius:6px;font:800 12px/16px 'Outfit',sans-serif;white-space:nowrap}
-.rs-prio.EMERGENCIA{background:var(--err-bg);color:var(--red)}
-.rs-prio.EMERGENCIA.solid{background:var(--red);color:var(--on-color)}
-.rs-prio.URGENCIA_MODERADA{background:var(--pale);color:var(--warn)}
-.rs-prio.POCA_URGENCIA{background:var(--ok-bg);color:var(--ok)}
 .rs-prios{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:16px}
 .rs-prio-card{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:22px;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);text-align:left;cursor:pointer}
 .rs-prio-card b{font:700 20px/26px 'Outfit',sans-serif}
@@ -82,8 +76,15 @@
 .rs-detail-acts{display:flex;justify-content:flex-end;gap:12px;align-items:center}
 /* Atender incidente */
 .rs-inc-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.rs-inc-top b{font:700 14px 'Outfit',sans-serif}
-.rs-person{font:700 26px/32px 'Outfit',sans-serif}
+.rs-inc-top{flex-wrap:wrap;justify-content:flex-start}
+/* El caso manda: título grande; la persona afectada es un dato más */
+.rs-caso-titulo.rs-caso-titulo{font:800 24px/30px 'Outfit',sans-serif;overflow-wrap:anywhere}
+.rs-person{font:600 16px/22px 'Outfit',sans-serif}
+/* Escritorio: caso y evidencia a la izquierda, la acción fija a la derecha. Celular: caso, acción y luego evidencia */
+.rs-atender{grid-template-areas:"caso side" "evid side"}
+.rs-atender>.rs-caso{grid-area:caso;min-width:0}
+.rs-atender>.rs-evid{grid-area:evid;min-width:0}
+.rs-atender>.rs-side{grid-area:side}
 .rs-place{display:flex;gap:12px;align-items:flex-start;padding:16px;border-radius:12px;background:var(--neutral-bg)}
 .rs-place svg.i{color:var(--red)}
 .rs-place b{display:block;font:700 16px 'Outfit',sans-serif}
@@ -103,6 +104,8 @@
 .rs-btn.off{background:var(--line);border-color:var(--line);color:var(--mut)}
 @media(max-width:960px){
   .rs-grid{grid-template-columns:1fr}
+  .rs-atender{grid-template-areas:"caso" "side" "evid"}
+  .rs-caso-titulo.rs-caso-titulo{font-size:21px;line-height:27px}
   .rs-side{position:static}
   .rs-main{padding:20px 16px 32px}
   .rs-head{padding:24px 16px}

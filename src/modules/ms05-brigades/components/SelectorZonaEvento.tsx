@@ -5,6 +5,7 @@ import { errorMessage } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import { brigadesApi } from '../services/brigades';
 import type { EdificioEvento } from '../types';
+import Dialogo from './Dialogo';
 import MapaCampus from './MapaCampus';
 
 interface Props {
@@ -64,21 +65,26 @@ export default function SelectorZonaEvento({ session, eventoId, edificios, miUbi
       <MapaCampus edificios={edificios} miUbicacionId={miUbicacionId} deshabilitado={!activo || busy} onElegir={elegir} />
 
       {confirmar && (
-        <div className="ev-modal-bg" role="presentation" onClick={() => setConfirmar(null)}>
-          <div className="ev-modal" role="dialog" aria-modal="true" aria-labelledby="aa-confirmar" onClick={(e) => e.stopPropagation()}>
-            <h2 id="aa-confirmar">{miUbicacionId ? 'Cambiar de edificio' : 'Asignarme a este edificio'}</h2>
-            <p>
-              {miUbicacionId
-                ? <>Pasará de <b>{edificios.find((e) => e.ubicacionId === miUbicacionId)?.nombre ?? 'su edificio'}</b> a <b>{confirmar.nombre}</b>.</>
-                : <>Quedará asignado a <b>{confirmar.nombre}</b>.</>}
-            </p>
-            <p className="help">{confirmar.brigadistasAsignados === 1 ? 'Hay 1 brigadista' : `Hay ${confirmar.brigadistasAsignados} brigadistas`} en este edificio.</p>
-            <div className="row2">
+        <Dialogo
+          titulo={miUbicacionId ? `¿Cambiar su zona a ${confirmar.nombre}?` : `¿Asignarse a ${confirmar.nombre}?`}
+          onCerrar={() => setConfirmar(null)}
+          ocupado={busy}
+          botones={(
+            <>
+              <button type="button" className="btn red" data-foco onClick={() => void asignarse()} disabled={busy} aria-busy={busy || undefined}>
+                {busy ? 'Guardando…' : miUbicacionId ? 'Cambiar mi zona' : 'Asignarme aquí'}
+              </button>
               <button type="button" className="btn white" onClick={() => setConfirmar(null)} disabled={busy}>Cancelar</button>
-              <button type="button" className="btn red" onClick={() => void asignarse()} disabled={busy}>{busy ? 'Guardando…' : miUbicacionId ? 'Cambiar de edificio' : 'Asignarme aquí'}</button>
-            </div>
-          </div>
-        </div>
+            </>
+          )}
+        >
+          <p>
+            {miUbicacionId
+              ? <>Pasará de <b>{edificios.find((e) => e.ubicacionId === miUbicacionId)?.nombre ?? 'su zona'}</b> a <b>{confirmar.nombre}</b>.</>
+              : <>Recibirá los incidentes de <b>{confirmar.nombre}</b>.</>}
+            {' '}{confirmar.brigadistasAsignados === 1 ? 'Hay 1 brigadista' : `Hay ${confirmar.brigadistasAsignados} brigadistas`} en este lugar.
+          </p>
+        </Dialogo>
       )}
     </>
   );

@@ -13,3 +13,11 @@
 .cs-exterior{display:flex;flex-direction:column;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
 .cs-exterior-cabecera{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 16px}
 .cs-exterior p{font-size:14px;line-height:150%}
+
+/* Consultar ruta → «Todo el edificio» (components/RutasAgrupadas): espacios que comparten una ruta y los que no tienen */
+.cs-espacios-ruta{display:flex;flex-direction:column;gap:8px}
+.cs-espacios-ruta h4,.cs-sin-ruta h3{font:700 15px/20px 'Outfit',sans-serif}
+.cs-espacios-ruta ul,.cs-sin-ruta ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.cs-espacios-ruta li,.cs-sin-ruta li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 12px;font-size:14px;line-height:150%}
+.cs-espacios-ruta li span,.cs-sin-ruta li span{color:var(--mut)}
+.cs-sin-ruta,.cs-resultados>.cs-preventivas{display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 24px}

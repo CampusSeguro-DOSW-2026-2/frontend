@@ -2,7 +2,9 @@ import { Mensaje } from '../../../shared/components/Mensaje';
 import { Cargando } from '../../../shared/components/Cargando';
 import { useEffect, useMemo, useState } from 'react';
 import L from 'leaflet';
-import { CircleMarker, MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Tooltip, useMap } from 'react-leaflet';
+import { MarcadorMapa } from '../../../shared/components/MarcadorMapa';
+import { opcionesMapa } from '../../../shared/utils/mapa';
 import 'leaflet/dist/leaflet.css';
 import { campus } from '../../ms02-campus/services/campus';
 import type { EdificioEvento } from '../types';
@@ -57,8 +59,8 @@ interface Props {
 }
 
 const conteo = (n: number) => (n === 1 ? '1 brigadista' : `${n} brigadistas`);
-/** Rojo: su edificio. Ámbar: sin brigadistas (prioridad). Azul: los demás. */
-const color = (e: EdificioEvento, mio: boolean) => (mio ? '#990000' : e.brigadistasAsignados === 0 ? '#D97706' : '#2563EB');
+/** Rojo: su edificio. Ámbar: sin brigadistas (prioridad). Azul: los demás. Son tokens de shared/styles.css. */
+const color = (e: EdificioEvento, mio: boolean): `--${string}` => (mio ? '--red' : e.brigadistasAsignados === 0 ? '--amber' : '--blue');
 
 /**
  * Mapa del campus para la auto asignación: los edificios y zonas del evento sobre el mapa real (OpenStreetMap), en la
@@ -87,7 +89,7 @@ export default function MapaCampus({ edificios, miUbicacionId, deshabilitado, on
     <div className="aa-map">
       {ubicados === null && <Cargando texto="Cargando el mapa del campus…" />}
       {ubicados !== null && enMapa.length > 0 && (
-        <MapContainer className="aa-leaflet" center={enMapa[0].p} zoom={17} scrollWheelZoom={false}>
+        <MapContainer className="aa-leaflet" center={enMapa[0].p} zoom={17} {...opcionesMapa()}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -96,13 +98,12 @@ export default function MapaCampus({ edificios, miUbicacionId, deshabilitado, on
           {enMapa.map(({ e, p }) => {
             const mio = e.ubicacionId === miUbicacionId;
             return (
-              <CircleMarker key={e.ubicacionId} center={p} radius={mio ? 16 : 13}
-                pathOptions={{ color: '#fff', weight: 3, fillColor: color(e, mio), fillOpacity: deshabilitado ? 0.5 : 0.95 }}
-                eventHandlers={{ click: () => onElegir(e) }}>
-                <Tooltip permanent direction="top" offset={[0, -12]} className="aa-tip">
-                  <b>{e.nombre}</b> · {conteo(e.brigadistasAsignados)}{mio ? ' · su edificio' : ''}
+              <MarcadorMapa key={e.ubicacionId} centro={p} radio={mio ? 16 : 13} relleno={color(e, mio)}
+                borde={mio ? '--dark' : '--surface'} atenuado={deshabilitado} onClick={() => onElegir(e)}>
+                <Tooltip permanent direction="top" offset={[0, -18]} className="aa-tip">
+                  <b>{e.nombre}</b> · {conteo(e.brigadistasAsignados)}{mio ? ' · su zona' : ''}
                 </Tooltip>
-              </CircleMarker>
+              </MarcadorMapa>
             );
           })}
         </MapContainer>
@@ -111,11 +112,12 @@ export default function MapaCampus({ edificios, miUbicacionId, deshabilitado, on
         <Mensaje tono="info">Los lugares del evento todavía no tienen ubicación en el mapa del campus. Elija uno en la lista.</Mensaje>
       )}
 
-      <div className="aa-legend" aria-hidden="true">
-        <span><i className="l-mine" />Su edificio</span>
-        <span><i className="l-empty" />Sin brigadistas</span>
-        <span><i className="l-other" />Con brigadistas</span>
-      </div>
+      {enMapa.length > 0 && <p className="mapa-gesto">Use dos dedos para mover o acercar el mapa.</p>}
+      <ul className="aa-legend mapa-leyenda" aria-label="Leyenda del mapa">
+        <li><i className="l-mine" aria-hidden="true" />Su zona</li>
+        <li><i className="l-empty" aria-hidden="true" />Sin brigadistas</li>
+        <li><i className="l-other" aria-hidden="true" />Con brigadistas</li>
+      </ul>
 
       <p className="help aa-list-title">Lugares del evento{sinUbicar.length > 0 ? ' (los marcados con * aún no tienen ubicación en el mapa)' : ''}:</p>
       <div className="aa-extra" role="group" aria-label="Lugares del evento">

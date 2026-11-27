@@ -1,4 +1,7 @@
 import { Mensaje } from '../../../shared/components/Mensaje';
+import { Cargando } from '../../../shared/components/Cargando';
+import { Campo } from './comun';
+import { avisar } from '../../../shared/services/feedback';
 import { useCallback, useEffect, useState } from 'react';
 import { PERMISSION } from '../../../shared/permissions';
 import {
@@ -180,14 +183,17 @@ export default function EscalerasEdificio({
     setMensaje('');
     setGuardando(true);
     try {
-      if (escalera.estado === 'ACTIVO') {
-        await campus.escaleras.inactivar(escalera.id);
-        setMensaje('Escalera inactivada.');
-      } else {
-        await campus.escaleras.reactivar(escalera.id);
-        setMensaje('Escalera reactivada.');
-      }
+      const activa = escalera.estado === 'ACTIVO';
+      await (activa ? campus.escaleras.inactivar(escalera.id) : campus.escaleras.reactivar(escalera.id));
       await cargar();
+      avisar({
+        tono: 'exito',
+        texto: `Se ${activa ? 'inactivó' : 'reactivó'} la escalera «${escalera.nombre}».`,
+        deshacer: async () => {
+          await (activa ? campus.escaleras.reactivar(escalera.id) : campus.escaleras.inactivar(escalera.id));
+          await cargar();
+        },
+      });
     } catch (e) {
       const apiError = e instanceof CampusApiError ? e : comoCampusError(e);
       setError(apiError.message);
@@ -201,6 +207,8 @@ export default function EscalerasEdificio({
     return piso ? `${piso.nombre || `Piso ${piso.numero}`}` : 'Piso no disponible';
   };
 
+  const faltanPisos = pisoIds.length < 2;
+
   return (
     <section className="cs-piso">
       <div className="cs-piso-cabecera">
@@ -211,14 +219,10 @@ export default function EscalerasEdificio({
             y la guía de evacuación nombra las demás como alternas.
           </p>
         </div>
-        {puedeGestionar && (
+        {puedeGestionar && !mostrarFormulario && (
           <div className="cs-acciones">
-            <button
-              type="button"
-              className="cs-boton"
-              onClick={() => setMostrarFormulario((actual) => !actual)}
-            >
-              {mostrarFormulario ? 'Cancelar' : 'Registrar escalera'}
+            <button type="button" className="btn white sm" onClick={() => setMostrarFormulario(true)}>
+              Registrar escalera
             </button>
           </div>
         )}
@@ -228,40 +232,42 @@ export default function EscalerasEdificio({
       {mensaje && <Mensaje tono="info">{mensaje}</Mensaje>}
 
       {mostrarFormulario && puedeGestionar && (
-        <form className="cs-editor" onSubmit={crear}>
-          <h3>Nueva escalera</h3>
-          <label className="cs-campo">
-            Nombre
-            <input
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              maxLength={100}
-              required
-              placeholder="Ej. Escalera principal"
-            />
-          </label>
+        <form className="cs-editor cs-subeditor" onSubmit={crear}>
+          <h4>Nueva escalera</h4>
+          <div className="cs-campos">
+            <Campo id={`esc-nombre-${edificio.id}`} etiqueta="Nombre">
+              <input
+                id={`esc-nombre-${edificio.id}`}
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                maxLength={100}
+                required
+                placeholder="Ej. Escalera principal"
+              />
+            </Campo>
+            <Campo id={`esc-prioridad-${edificio.id}`} etiqueta="Prioridad (opcional)">
+              <input
+                id={`esc-prioridad-${edificio.id}`}
+                type="number"
+                min={1}
+                step={1}
+                inputMode="numeric"
+                value={prioridadNueva}
+                onChange={(e) => setPrioridadNueva(e.target.value)}
+                placeholder="1 es la principal"
+              />
+            </Campo>
+          </div>
+          <p className="cs-sub">Si deja la prioridad vacía, la escalera queda después de las demás.</p>
 
-          <label className="cs-campo">
-            Prioridad (opcional)
-            <input
-              type="number"
-              min={1}
-              step={1}
-              inputMode="numeric"
-              value={prioridadNueva}
-              onChange={(e) => setPrioridadNueva(e.target.value)}
-              placeholder="1 es la principal; vacío la deja después de las demás"
-            />
-          </label>
-
-          <fieldset>
-            <legend>Pisos que conecta (seleccione mínimo dos)</legend>
+          <fieldset className="cs-casillas">
+            <legend>Pisos que conecta</legend>
             {pisosActivos.length === 0 ? (
-              <p>No hay pisos activos disponibles.</p>
+              <Mensaje tono="aviso" compacto>No hay pisos activos disponibles.</Mensaje>
             ) : (
-              <div className="cs-acciones">
+              <div className="cs-casillas-lista">
                 {pisosActivos.map((piso) => (
-                  <label key={piso.id}>
+                  <label key={piso.id} className="cs-casilla">
                     <input
                       type="checkbox"
                       checked={pisoIds.includes(piso.id)}
@@ -274,23 +280,21 @@ export default function EscalerasEdificio({
             )}
           </fieldset>
 
-          <div className="cs-acciones">
-            <button type="submit" disabled={guardando || pisoIds.length < 2}>
+          <div className="cs-form-botones">
+            <button type="submit" className="btn red sm" disabled={guardando || faltanPisos}
+              aria-busy={guardando || undefined} aria-describedby={faltanPisos ? `esc-faltan-${edificio.id}` : undefined}>
               {guardando ? 'Guardando…' : 'Guardar escalera'}
             </button>
-            <button
-              type="button"
-              onClick={() => setMostrarFormulario(false)}
-              disabled={guardando}
-            >
+            <button type="button" className="btn white sm" onClick={() => setMostrarFormulario(false)} disabled={guardando}>
               Cancelar
             </button>
           </div>
+          {faltanPisos && <p className="cs-sub" id={`esc-faltan-${edificio.id}`}>Seleccione al menos dos pisos.</p>}
         </form>
       )}
 
       {cargando ? (
-        <p>Cargando escaleras…</p>
+        <Cargando texto="Cargando escaleras…" />
       ) : escaleras.length === 0 ? (
         <Mensaje tono="info">Este edificio todavía no tiene escaleras registradas.</Mensaje>
       ) : (
@@ -299,16 +303,16 @@ export default function EscalerasEdificio({
             <article className="cs-subeditor" key={escalera.id}>
               <div className="cs-piso-cabecera">
                 <div>
-                  <h3>{escalera.nombre}</h3>
-                  <p>
-                    <strong>{escalera.codigo}</strong>
+                  <h4>{escalera.nombre}</h4>
+                  <p className="cs-sub">
+                    {escalera.codigo}
                     {' · '}
                     {escalera.estado === 'ACTIVO' ? 'Activa' : 'Inactiva'}
                     {' · '}
                     {escalera.prioridad === 1 ? 'Principal' : `Prioridad ${escalera.prioridad}`}
                   </p>
                 </div>
-                <span className="cs-mini">
+                <span className={`cs-estado ${escalera.disponibilidad === 'DISPONIBLE' ? 'ok' : escalera.disponibilidad === 'BLOQUEADA' ? 'stop' : 'warn'}`}>
                   {etiquetaDisponibilidad(escalera.disponibilidad)}
                 </span>
               </div>
@@ -326,6 +330,8 @@ export default function EscalerasEdificio({
                 {puedeCambiarDisponibilidad && escalera.estado === 'ACTIVO' && (
                   <button
                     type="button"
+                    className="btn white sm"
+                    aria-expanded={editarId === escalera.id}
                     onClick={() => {
                       setEditarId(editarId === escalera.id ? null : escalera.id);
                       setDisponibilidad(escalera.disponibilidad);
@@ -340,6 +346,8 @@ export default function EscalerasEdificio({
                 {puedeGestionar && escalera.estado === 'ACTIVO' && (
                   <button
                     type="button"
+                    className="btn white sm"
+                    aria-expanded={prioridadEditarId === escalera.id}
                     onClick={() => {
                       setPrioridadEditarId(prioridadEditarId === escalera.id ? null : escalera.id);
                       setPrioridadEditar(String(escalera.prioridad));
@@ -353,6 +361,7 @@ export default function EscalerasEdificio({
                 {puedeGestionar && (
                   <button
                     type="button"
+                    className={`btn sm ${escalera.estado === 'ACTIVO' ? 'ghost' : 'white'}`}
                     disabled={guardando}
                     onClick={() => void cambiarEstado(escalera)}
                   >
@@ -362,65 +371,64 @@ export default function EscalerasEdificio({
               </div>
 
               {prioridadEditarId === escalera.id && (
-                <form
-                  className="cs-editor"
-                  onSubmit={(e) => void guardarPrioridad(e, escalera.id)}
-                >
-                  <label className="cs-campo">
-                    Prioridad (1 es la principal)
-                    <input
-                      type="number"
-                      min={1}
-                      step={1}
-                      inputMode="numeric"
-                      value={prioridadEditar}
-                      onChange={(e) => setPrioridadEditar(e.target.value)}
-                      required
-                    />
-                  </label>
-                  <button type="submit" disabled={guardando}>
-                    {guardando ? 'Guardando…' : 'Guardar prioridad'}
-                  </button>
+                <form className="cs-editor" onSubmit={(e) => void guardarPrioridad(e, escalera.id)}>
+                  <div className="cs-campos">
+                    <Campo id={`esc-prio-${escalera.id}`} etiqueta="Prioridad (1 es la principal)">
+                      <input
+                        id={`esc-prio-${escalera.id}`}
+                        type="number"
+                        min={1}
+                        step={1}
+                        inputMode="numeric"
+                        value={prioridadEditar}
+                        onChange={(e) => setPrioridadEditar(e.target.value)}
+                        required
+                      />
+                    </Campo>
+                  </div>
+                  <div className="cs-form-botones">
+                    <button type="submit" className="btn red sm" disabled={guardando} aria-busy={guardando || undefined}>
+                      {guardando ? 'Guardando…' : 'Guardar prioridad'}
+                    </button>
+                  </div>
                 </form>
               )}
 
               {editarId === escalera.id && (
-                <form
-                  className="cs-editor"
-                  onSubmit={(e) => void cambiarDisponibilidad(e, escalera.id)}
-                >
-                  <label className="cs-campo">
-                    Disponibilidad
-                    <select
-                      value={disponibilidad}
-                      onChange={(e) =>
-                        setDisponibilidad(e.target.value as DisponibilidadEscalera)
-                      }
-                    >
-                      {DISPONIBILIDADES.map((opcion) => (
-                        <option key={opcion.valor} value={opcion.valor}>
-                          {opcion.etiqueta}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                <form className="cs-editor" onSubmit={(e) => void cambiarDisponibilidad(e, escalera.id)}>
+                  <div className="cs-campos">
+                    <Campo id={`esc-disp-${escalera.id}`} etiqueta="Disponibilidad">
+                      <select
+                        id={`esc-disp-${escalera.id}`}
+                        value={disponibilidad}
+                        onChange={(e) => setDisponibilidad(e.target.value as DisponibilidadEscalera)}
+                      >
+                        {DISPONIBILIDADES.map((opcion) => (
+                          <option key={opcion.valor} value={opcion.valor}>
+                            {opcion.etiqueta}
+                          </option>
+                        ))}
+                      </select>
+                    </Campo>
 
-                  {disponibilidad !== 'DISPONIBLE' && (
-                    <label className="cs-campo">
-                      Motivo (obligatorio)
-                      <input
-                        value={motivo}
-                        onChange={(e) => setMotivo(e.target.value)}
-                        maxLength={255}
-                        required
-                        placeholder="Describa por qué no está disponible"
-                      />
-                    </label>
-                  )}
-
-                  <button type="submit" disabled={guardando}>
-                    {guardando ? 'Guardando…' : 'Guardar disponibilidad'}
-                  </button>
+                    {disponibilidad !== 'DISPONIBLE' && (
+                      <Campo id={`esc-motivo-${escalera.id}`} etiqueta="Motivo (obligatorio)">
+                        <input
+                          id={`esc-motivo-${escalera.id}`}
+                          value={motivo}
+                          onChange={(e) => setMotivo(e.target.value)}
+                          maxLength={255}
+                          required
+                          placeholder="Describa por qué no está disponible"
+                        />
+                      </Campo>
+                    )}
+                  </div>
+                  <div className="cs-form-botones">
+                    <button type="submit" className="btn red sm" disabled={guardando} aria-busy={guardando || undefined}>
+                      {guardando ? 'Guardando…' : 'Guardar disponibilidad'}
+                    </button>
+                  </div>
                 </form>
               )}
             </article>

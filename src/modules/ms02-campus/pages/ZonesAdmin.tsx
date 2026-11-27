@@ -1,4 +1,5 @@
 import { Cargando } from '../../../shared/components/Cargando';
+import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import GaleriaImagenes from '../components/GaleriaImagenes';
@@ -116,7 +117,7 @@ function ZonaForm({ inicial, zonasAbiertas, onGuardar, onCancelar }: {
         Sin coordenadas la zona no puede ser destino de una ruta exterior. Las coordenadas y la zona abierta ya guardadas se pueden cambiar, pero no borrar.
       </p>
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar zona segura" />
     </form>
   );
 }
@@ -165,10 +166,12 @@ export default function ZonesAdmin() {
 
   const editar = (e: Edicion) => { setEdicion(e); setAviso(null); };
 
-  const guardar = async (accion: () => Promise<unknown>) => {
+  // Crear o modificar: al guardar se cierra el formulario y un aviso confirma el cambio (docs/PATRONES-UI.md)
+  const guardar = async (exito: string, accion: () => Promise<unknown>) => {
     await accion();
     await recargar();
     setEdicion(null);
+    avisar({ tono: 'exito', texto: exito });
   };
 
   // El backend responde 422 con las rutas que impiden inactivar la zona: se muestra tal cual.
@@ -176,8 +179,17 @@ export default function ZonesAdmin() {
     setOcupado(zona.id);
     setAviso(null);
     try {
-      await (zona.estado === 'ACTIVO' ? campus.zonas.inactivar(zona.id) : campus.zonas.reactivar(zona.id));
+      const activa = zona.estado === 'ACTIVO';
+      await (activa ? campus.zonas.inactivar(zona.id) : campus.zonas.reactivar(zona.id));
       await recargar();
+      avisar({
+        tono: 'exito',
+        texto: `Se ${activa ? 'inactivó' : 'reactivó'} la zona segura «${zona.nombre}».`,
+        deshacer: async () => {
+          await (activa ? campus.zonas.reactivar(zona.id) : campus.zonas.inactivar(zona.id));
+          await recargar();
+        },
+      });
     } catch (e) {
       setAviso(comoError(e));
     } finally {
@@ -242,7 +254,7 @@ export default function ZonesAdmin() {
           <section className="cs-piso">
             <h3 className="cs-piso-titulo">Nueva zona segura</h3>
             <ZonaForm zonasAbiertas={zonasAbiertas} onCancelar={() => editar(null)}
-              onGuardar={(datos) => guardar(() => campus.zonas.crear(datos))} />
+              onGuardar={(datos) => guardar('Zona segura creada.', () => campus.zonas.crear(datos))} />
           </section>
         )}
 
@@ -265,7 +277,7 @@ export default function ZonesAdmin() {
                     return (
                       <tr key={zona.id}><td colSpan={7}>
                         <ZonaForm inicial={zona} zonasAbiertas={zonasAbiertas} onCancelar={() => editar(null)}
-                          onGuardar={(datos) => guardar(() => campus.zonas.modificar(zona.id, {
+                          onGuardar={(datos) => guardar('Cambios de la zona segura guardados.', () => campus.zonas.modificar(zona.id, {
                             nombre: datos.nombre, ubicacion: datos.ubicacion, descripcion: datos.descripcion, capacidad: datos.capacidad,
                             latitud: datos.latitud, longitud: datos.longitud, zonaAbiertaId: datos.zonaAbiertaId,
                             puntoEncuentro: datos.puntoEncuentro,
@@ -307,7 +319,7 @@ export default function ZonesAdmin() {
                             )}
                             <button type="button" className={`cs-mini${activa ? ' peligro' : ''}`} disabled={ocupado === zona.id}
                               onClick={() => cambiarEstado(zona)}>
-                              {ocupado === zona.id ? 'Guardando…' : activa ? 'Inactivar' : 'Reactivar'}
+                              {ocupado === zona.id ? (activa ? 'Inactivando…' : 'Reactivando…') : activa ? 'Inactivar' : 'Reactivar'}
                             </button>
                           </div>
                         )}

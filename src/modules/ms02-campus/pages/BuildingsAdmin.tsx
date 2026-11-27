@@ -1,4 +1,5 @@
 import { Cargando } from '../../../shared/components/Cargando';
+import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { Fragment, useCallback, useEffect, useState } from 'react';
@@ -58,7 +59,7 @@ function EdificioForm({ inicial, campuses, onGuardar, onCancelar }: {
         <textarea id={`edificio-descripcion-${id}`} value={descripcion} placeholder="Laboratorios y aulas de ingeniería" onChange={(e) => setDescripcion(e.target.value)} />
       </Campo>
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar edificio" />
     </form>
   );
 }
@@ -105,10 +106,12 @@ export default function BuildingsAdmin() {
 
   const editar = (e: Edicion) => { setEdicion(e); setAviso(null); };
 
-  const guardar = async (accion: () => Promise<unknown>) => {
+  // Crear o modificar: al guardar se cierra el formulario y un aviso confirma el cambio (docs/PATRONES-UI.md)
+  const guardar = async (exito: string, accion: () => Promise<unknown>) => {
     await accion();
     await recargar();
     setEdicion(null);
+    avisar({ tono: 'exito', texto: exito });
   };
 
   // El backend responde 422 con las rutas que impiden inactivar: se muestra tal cual.
@@ -116,8 +119,17 @@ export default function BuildingsAdmin() {
     setOcupado(edificio.id);
     setAviso(null);
     try {
-      await (edificio.estado === 'ACTIVO' ? campus.edificios.inactivar(edificio.id) : campus.edificios.reactivar(edificio.id));
+      const activo = edificio.estado === 'ACTIVO';
+      await (activo ? campus.edificios.inactivar(edificio.id) : campus.edificios.reactivar(edificio.id));
       await recargar();
+      avisar({
+        tono: 'exito',
+        texto: `Se ${activo ? 'inactivó' : 'reactivó'} el edificio «${edificio.nombre}».`,
+        deshacer: async () => {
+          await (activo ? campus.edificios.reactivar(edificio.id) : campus.edificios.inactivar(edificio.id));
+          await recargar();
+        },
+      });
     } catch (e) {
       setAviso(comoError(e));
     } finally {
@@ -185,7 +197,7 @@ export default function BuildingsAdmin() {
           <section className="cs-piso">
             <h3 className="cs-piso-titulo">Nuevo edificio</h3>
             <EdificioForm campuses={campuses} onCancelar={() => editar(null)}
-              onGuardar={(datos) => guardar(() => campus.edificios.crear(datos))} />
+              onGuardar={(datos) => guardar('Edificio creado.', () => campus.edificios.crear(datos))} />
           </section>
         )}
 
@@ -208,7 +220,7 @@ export default function BuildingsAdmin() {
                     return (
                       <tr key={edificio.id}><td colSpan={5}>
                         <EdificioForm inicial={edificio} campuses={campuses ?? []} onCancelar={() => editar(null)}
-                          onGuardar={(datos) => guardar(() => campus.edificios.modificar(edificio.id, { nombre: datos.nombre, descripcion: datos.descripcion, campusId: datos.campusId }))} />
+                          onGuardar={(datos) => guardar('Cambios del edificio guardados.', () => campus.edificios.modificar(edificio.id, { nombre: datos.nombre, descripcion: datos.descripcion, campusId: datos.campusId }))} />
                       </td></tr>
                     );
                   }
@@ -228,7 +240,7 @@ export default function BuildingsAdmin() {
                           {puedeGestionar && (
                             <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === edificio.id}
                               onClick={() => cambiarEstado(edificio)}>
-                              {ocupado === edificio.id ? 'Guardando…' : activo ? 'Inactivar' : 'Reactivar'}
+                              {ocupado === edificio.id ? (activo ? 'Inactivando…' : 'Reactivando…') : activo ? 'Inactivar' : 'Reactivar'}
                             </button>
                           )}
                         </div>

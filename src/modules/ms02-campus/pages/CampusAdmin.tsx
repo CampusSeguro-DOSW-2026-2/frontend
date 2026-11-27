@@ -1,4 +1,5 @@
 import { Cargando } from '../../../shared/components/Cargando';
+import { avisar } from '../../../shared/services/feedback';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { etiquetaCodigo } from '../../../shared/utils/etiquetas';
 import { useCallback, useEffect, useState } from 'react';
@@ -53,7 +54,7 @@ function CampusForm({ inicial, onGuardar, onCancelar }: {
         <textarea id={`campus-descripcion-${id}`} value={descripcion} onChange={(e) => setDescripcion(e.target.value)} />
       </Campo>
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar campus" />
     </form>
   );
 }
@@ -113,7 +114,7 @@ function ZonaAbiertaForm({ inicial, onGuardar, onCancelar }: {
       <AyudaCoordenadas latitud={latitud} longitud={longitud}
         onElegir={(la, lo) => { setLatitud(String(la)); setLongitud(String(lo)); }} />
       {general && <Falla error={general} />}
-      <Botones guardando={guardando} onCancelar={onCancelar} />
+      <Botones guardando={guardando} onCancelar={onCancelar} accion="Guardar zona abierta" />
     </form>
   );
 }
@@ -148,19 +149,29 @@ export default function CampusAdmin() {
 
   const editar = (e: Edicion) => { setEdicion(e); setAviso(null); };
 
-  const guardar = async (accion: () => Promise<unknown>) => {
+  // Crear o modificar: al guardar se cierra el formulario y un aviso confirma el cambio (docs/PATRONES-UI.md)
+  const guardar = async (exito: string, accion: () => Promise<unknown>) => {
     await accion();
     await recargar();
     setEdicion(null);
+    avisar({ tono: 'exito', texto: exito });
   };
 
   // El backend responde 422 cuando hay zonas activas que impiden inactivar: se muestra tal cual.
-  const cambiarEstado = async (id: string, activo: boolean, accion: { inactivar: () => Promise<unknown>; reactivar: () => Promise<unknown> }) => {
+  const cambiarEstado = async (id: string, activo: boolean, que: string, accion: { inactivar: () => Promise<unknown>; reactivar: () => Promise<unknown> }) => {
     setOcupado(id);
     setAviso(null);
     try {
       await (activo ? accion.inactivar() : accion.reactivar());
       await recargar();
+      avisar({
+        tono: 'exito',
+        texto: `Se ${activo ? 'inactivó' : 'reactivó'} ${que}.`,
+        deshacer: async () => {
+          await (activo ? accion.reactivar() : accion.inactivar());
+          await recargar();
+        },
+      });
     } catch (e) {
       setAviso(comoError(e));
     } finally {
@@ -197,7 +208,7 @@ export default function CampusAdmin() {
         {edicion?.tipo === 'campus-nuevo' && (
           <section className="cs-piso">
             <h3 className="cs-piso-titulo">Nuevo campus</h3>
-            <CampusForm onCancelar={() => editar(null)} onGuardar={(d) => guardar(() => campus.campuses.crear(d))} />
+            <CampusForm onCancelar={() => editar(null)} onGuardar={(d) => guardar('Campus creado.', () => campus.campuses.crear(d))} />
           </section>
         )}
 
@@ -209,7 +220,7 @@ export default function CampusAdmin() {
           return (
             <section key={c.id} className={`cs-piso${activo ? '' : ' inactivo'}`}>
               {edicion?.tipo === 'campus' && edicion.id === c.id ? (
-                <CampusForm inicial={c} onCancelar={() => editar(null)} onGuardar={(d) => guardar(() => campus.campuses.modificar(c.id, d))} />
+                <CampusForm inicial={c} onCancelar={() => editar(null)} onGuardar={(d) => guardar('Cambios del campus guardados.', () => campus.campuses.modificar(c.id, d))} />
               ) : (
                 <div className="cs-piso-cabecera">
                   <h3 className="cs-piso-titulo">
@@ -222,8 +233,8 @@ export default function CampusAdmin() {
                       {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'campus', id: c.id })}>Editar</button>}
                       {activo && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona-nueva', campusId: c.id })}>Agregar zona abierta</button>}
                       <button type="button" className={`cs-mini${activo ? ' peligro' : ''}`} disabled={ocupado === c.id}
-                        onClick={() => cambiarEstado(c.id, activo, { inactivar: () => campus.campuses.inactivar(c.id), reactivar: () => campus.campuses.reactivar(c.id) })}>
-                        {ocupado === c.id ? 'Guardando…' : activo ? 'Inactivar' : 'Reactivar'}
+                        onClick={() => cambiarEstado(c.id, activo, `el campus «${c.nombre}»`, { inactivar: () => campus.campuses.inactivar(c.id), reactivar: () => campus.campuses.reactivar(c.id) })}>
+                        {ocupado === c.id ? (activo ? 'Inactivando…' : 'Reactivando…') : activo ? 'Inactivar' : 'Reactivar'}
                       </button>
                     </div>
                   )}
@@ -233,7 +244,7 @@ export default function CampusAdmin() {
               {edicion?.tipo === 'zona-nueva' && edicion.campusId === c.id && (
                 <div className="cs-subeditor">
                   <h4>Nueva zona abierta en {c.nombre}</h4>
-                  <ZonaAbiertaForm onCancelar={() => editar(null)} onGuardar={(d) => guardar(() => campus.zonasAbiertas.crear(c.id, d))} />
+                  <ZonaAbiertaForm onCancelar={() => editar(null)} onGuardar={(d) => guardar('Zona abierta creada.', () => campus.zonasAbiertas.crear(c.id, d))} />
                 </div>
               )}
 
@@ -249,7 +260,7 @@ export default function CampusAdmin() {
                         if (edicion?.tipo === 'zona' && edicion.id === z.id) {
                           return (
                             <tr key={z.id}><td colSpan={5}>
-                              <ZonaAbiertaForm inicial={z} onCancelar={() => editar(null)} onGuardar={(d) => guardar(() => campus.zonasAbiertas.modificar(z.id, d))} />
+                              <ZonaAbiertaForm inicial={z} onCancelar={() => editar(null)} onGuardar={(d) => guardar('Cambios de la zona abierta guardados.', () => campus.zonasAbiertas.modificar(z.id, d))} />
                             </td></tr>
                           );
                         }
@@ -271,8 +282,8 @@ export default function CampusAdmin() {
                                 <div className="cs-acciones">
                                   {zonaActiva && <button type="button" className="cs-mini" onClick={() => editar({ tipo: 'zona', id: z.id })}>Editar</button>}
                                   <button type="button" className={`cs-mini${zonaActiva ? ' peligro' : ''}`} disabled={ocupado === z.id}
-                                    onClick={() => cambiarEstado(z.id, zonaActiva, { inactivar: () => campus.zonasAbiertas.inactivar(z.id), reactivar: () => campus.zonasAbiertas.reactivar(z.id) })}>
-                                    {ocupado === z.id ? 'Guardando…' : zonaActiva ? 'Inactivar' : 'Reactivar'}
+                                    onClick={() => cambiarEstado(z.id, zonaActiva, `la zona abierta «${z.nombre}»`, { inactivar: () => campus.zonasAbiertas.inactivar(z.id), reactivar: () => campus.zonasAbiertas.reactivar(z.id) })}>
+                                    {ocupado === z.id ? (zonaActiva ? 'Inactivando…' : 'Reactivando…') : zonaActiva ? 'Inactivar' : 'Reactivar'}
                                   </button>
                                 </div>
                               )}

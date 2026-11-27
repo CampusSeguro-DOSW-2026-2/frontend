@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { CircleMarker, MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, useMapEvents } from 'react-leaflet';
+import { MarcadorMapa } from '../../../shared/components/MarcadorMapa';
+import { opcionesMapa } from '../../../shared/utils/mapa';
 import { enlaceOsm, leerCoordenada } from '../utils/coordenadas';
 import '../styles/coordenadas.css';
 import 'leaflet/dist/leaflet.css';
@@ -63,20 +65,17 @@ export function AyudaCoordenadas({ latitud, longitud, onElegir }: {
 
       {onElegir && verMapa && (
         <>
-          <MapContainer className="cs-mapa-selector" center={[centro.latitud, centro.longitud]} zoom={18}>
+          <MapContainer className="cs-mapa-selector" center={[centro.latitud, centro.longitud]} zoom={18} {...opcionesMapa()}>
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <ClicEnMapa alElegir={alElegir} />
             {validas && (
-              <CircleMarker
-                center={[lat, lon]}
-                radius={9}
-                pathOptions={{ color: '#ffffff', weight: 3, fillColor: '#c0392b', fillOpacity: 1 }}
-              />
+              <MarcadorMapa centro={[lat, lon]} relleno="--red" />
             )}
           </MapContainer>
+          <p className="mapa-gesto">Use dos dedos para mover o acercar el mapa; toque una vez para elegir el punto.</p>
           <p className="cs-sub" role="status">
             {elegida
               ? `Coordenadas copiadas a los campos: ${elegida}. Haga clic en otro punto para cambiarlas.`
