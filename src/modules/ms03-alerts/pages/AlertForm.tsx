@@ -19,6 +19,10 @@ import { CAMPUS_ITEM, defaultAlertType, labelOf, listEs, roleItem, scopeIdsOf, t
 
 const toLocalInput = (iso: string) => { const d = new Date(iso); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 16); };
 const msg = errorMessage;
+const PAST_DATE = 'La fecha y hora ya pasaron. Elija una hora futura.';
+// La fecha elegida ya pasó: se revisa al validar y otra vez al confirmar, porque el reloj sigue mientras se decide.
+const isPast = (local: string) => new Date(local).getTime() <= Date.now();
+const sendText = (local: string) => `Se enviará el ${formatDate(new Date(local).toISOString())}.`;
 
 // Errores de MS03 junto a cada campo (details.field viene con nombres del contrato en inglés).
 const FIELD: Record<string, [string, string]> = {
@@ -30,7 +34,7 @@ const FIELD: Record<string, [string, string]> = {
   alcance: ['scope', 'Revise los edificios y zonas seleccionados.'],
   types: ['types', 'Seleccione al menos un tipo de alerta.'],
   tipos: ['types', 'Seleccione al menos un tipo de alerta.'],
-  activationAt: ['start', 'Debe ser una fecha futura'],
+  activationAt: ['start', PAST_DATE],
 };
 const fieldErrors = (e: ApiError) => {
   const out: Record<string, string> = {};
@@ -46,6 +50,8 @@ export default function AlertForm({ editId }: { editId?: string }) {
   const [title, setTitle] = useState('');
   const [instructions, setInstructions] = useState('');
   const [start, setStart] = useState('');
+  // Hora con la que la alerta ya está programada: solo se vuelve a programar si se cambia.
+  const [savedStart, setSavedStart] = useState('');
   // El alcance sale de MS02: MS03 valida esos mismos ids por UUID al crear la alerta.
   const { catalog, loading: scopeLoading, error: scopeError, retry: retryScope } = useScopeCatalog();
   const { items: loadedRoles, loading: rolesLoading, error: rolesError, notice: rolesNotice, retry: retryRoles } = useRecipientRoles();
@@ -89,7 +95,7 @@ export default function AlertForm({ editId }: { editId?: string }) {
       setScopeIds(first ? scopeIdsOf(first) : []);
       setRoles(a.recipients.filter((r) => r.type === 'ROLE').map((r) => r.id));
       setUsers(a.recipients.filter((r) => r.type === 'USER')); setTypes(a.types);
-      if (a.activationAt) setStart(toLocalInput(a.activationAt));
+      if (a.activationAt) { const local = toLocalInput(a.activationAt); setStart(local); setSavedStart(local); }
     }).catch((e) => setApiError(msg(e))).finally(() => setLoading(false));
   }, [editId]);
 
@@ -129,9 +135,11 @@ export default function AlertForm({ editId }: { editId?: string }) {
     if (!scopeIds.length) e.scope = 'Seleccione al menos un lugar.';
     if (!types.length) e.types = 'Seleccione al menos un tipo.';
     if (!roles.length && !users.length) e.roles = 'Seleccione al menos un grupo.';
-    if (start && !scheduled && new Date(start).getTime() <= Date.now()) e.start = 'Debe ser una fecha futura';
+    if (scheduled && !start) e.start = 'Una alerta programada necesita fecha y hora.';
+    else if (start && start !== savedStart && isPast(start)) e.start = PAST_DATE;
     return e;
   };
+  const dateChanged = !!start && start !== savedStart;
 
   const submit = async () => {
     const e = validate(); setErrors(e); setApiError('');
@@ -143,12 +151,14 @@ export default function AlertForm({ editId }: { editId?: string }) {
         <>
           <p><b>Edificios y zonas:</b> {scopeText}</p>
           <p><b>Destinatarios:</b> {rolesText}{users.length > 0 && ` y ${users.length} ${users.length === 1 ? 'persona' : 'personas'}`}</p>
-          <p>{start ? `Se enviará el ${formatDate(new Date(start).toISOString())}.` : 'Se enviará de inmediato y no se puede deshacer.'}</p>
+          <p>{start ? sendText(start) : 'Se enviará de inmediato y no se puede deshacer.'}</p>
         </>
       ),
       accion: 'Emitir alerta',
       peligro: true,
     }))) return;
+    // Mientras se confirmaba, la hora elegida pudo quedar en el pasado: no se envía.
+    if (dateChanged && isPast(start)) { setErrors({ start: PAST_DATE }); return; }
     setBusy(true);
     const t = scopeIds[0] === 'CAMPUS' ? 'CAMPUS' : scopeType ?? kindOf(scopeIds[0]);
     const payload: AlertInput = {
@@ -163,9 +173,11 @@ export default function AlertForm({ editId }: { editId?: string }) {
         await alertsApi.create(activationAt ? { ...payload, activationAt } : { ...payload, activateImmediately: true });
       } else {
         await alertsApi.update(editId, payload);
-        if (!scheduled && activationAt) {
+        // Programa un borrador o cambia la hora de una alerta ya programada (MS03 rechaza las horas pasadas).
+        if (activationAt && dateChanged) {
           try { await alertsApi.schedule(editId, activationAt); } catch (err) {
-            setApiError(`Los cambios se guardaron, pero la alerta no pudo programarse: ${msg(err)}`);
+            setApiError(`Los cambios se guardaron, pero la alerta no pudo programarse para la nueva hora: ${msg(err)}`);
+            if (err instanceof ApiError) setErrors(fieldErrors(err));
             return;
           }
         }
@@ -208,8 +220,11 @@ export default function AlertForm({ editId }: { editId?: string }) {
           <div className="two af-row">
             <div className="fgroup">
               <label className="plabel" htmlFor="start">Inicio</label>
-              <DateTimeField id="start" value={start} onChange={setStart} disabled={scheduled} invalid={!!errors.start} />
-              <span className="help">{scheduled ? 'La alerta ya está programada.' : 'Opcional. Si lo deja vacío, la alerta se emite de inmediato.'}</span>
+              <DateTimeField id="start" value={start} onChange={setStart} invalid={!!errors.start} />
+              <span className="help">
+                {start ? `${sendText(start)}${scheduled ? ' Puede cambiar la hora antes de que se envíe.' : ''}`
+                  : 'Opcional. Si lo deja vacío, la alerta se emite de inmediato.'}
+              </span>
               {errors.start && <span className="error" role="alert">{errors.start}</span>}
             </div>
             <div className="fgroup">
