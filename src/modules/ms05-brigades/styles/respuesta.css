@@ -93,6 +93,9 @@
 .rs-file-ico{display:grid;place-items:center;width:40px;height:40px;border-radius:10px;background:var(--neutral-bg);color:var(--mut);flex:none}
 .rs-file b{display:block;font-weight:600}
 .rs-file small{font-size:12px;color:var(--mut)}
+button.rs-file{width:100%;padding:10px 0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer;font:inherit}
+button.rs-file:hover .rs-file-ico,button.rs-file:focus-visible .rs-file-ico{background:var(--err-bg);color:var(--red)}
+button.rs-file:disabled{cursor:default;opacity:.7}
 .rs-final{display:flex;flex-direction:column;gap:10px}
 .rs-final label{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;cursor:pointer}
 .rs-final label:has(input:checked){border-color:var(--red);background:var(--err-bg)}
