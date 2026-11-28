@@ -52,3 +52,16 @@
 .ap-filtro{display:flex;flex-direction:column;gap:12px}
 .ap-filtro-grupo{display:flex;flex-direction:column;gap:6px}
 .ap-filtro-titulo{font:700 12px/16px 'Outfit',sans-serif;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+
+/* Progreso en el centro de aprendizaje (RF-13): barra arriba de la lista y marca «Visto» en cada tarjeta */
+.ap-progreso{display:flex;flex-direction:column;gap:10px;padding:16px 20px;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+.ap-progreso-texto{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:14px;color:var(--ink)}
+.ap-barra{height:10px;border-radius:999px;background:var(--neutral-bg);overflow:hidden}
+.ap-barra span{display:block;height:100%;border-radius:inherit;background:var(--ok);transition:width var(--dur-ui) var(--ease-out)}
+.ap-pendientes{display:inline-flex;align-items:center;gap:8px;min-height:var(--tap);font:600 13px/1 'Geist',sans-serif;cursor:pointer}
+.ap-pendientes input{width:18px;height:18px;accent-color:var(--red)}
+.ap-card-cab{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ap-card-cab .tag{align-self:auto}
+.ap-visto{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;background:var(--ok-bg);color:var(--ok);font:700 12px/1 'Outfit',sans-serif;white-space:nowrap}
+.ap-visto svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:reduce){.ap-barra span{transition:none}}
