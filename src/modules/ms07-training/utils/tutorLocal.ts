@@ -5,13 +5,15 @@
  */
 
 const SALUDO =
-  '¡Hola! Soy el Tutor CampusSeguro. Le ayudo con qué hacer antes, durante y después de un sismo, cómo evacuar y cómo '
-  + 'protegerse en salones, laboratorios, auditorios y oficinas. ¿Qué le gustaría saber?';
+  '¡Hola! Soy el Tutor CampusSeguro. Le ayudo con qué hacer ante una emergencia en el campus: sismos, incendios, fugas '
+  + 'o derrames de sustancias, evacuación, personas lesionadas y la prevención en salones, laboratorios, auditorios y '
+  + 'oficinas. ¿Qué le gustaría saber?';
 const QUE_HACE =
-  'Respondo preguntas sobre prevención y actuación ante sismos usando solo los contenidos oficiales del campus, y le '
-  + 'indico de cuáles saqué cada respuesta. Por ejemplo: «¿Qué hago si tiembla mientras estoy en clase?» o «¿Cómo evacúo '
-  + 'un laboratorio?».';
-const GRACIAS = '¡Con gusto! Si tiene otra pregunta sobre sismos o evacuación, escríbala cuando quiera.';
+  'Respondo preguntas sobre prevención y actuación ante emergencias en el campus (sismos, incendios, fugas o derrames '
+  + 'de sustancias, evacuación, personas lesionadas y prevención según el tipo de espacio) usando solo los contenidos '
+  + 'oficiales, y le indico de cuáles saqué cada respuesta. Por ejemplo: «¿Qué hago si hay un derrame de un químico en '
+  + 'el laboratorio?» o «¿Cómo evacúo un auditorio?».';
+const GRACIAS = '¡Con gusto! Si tiene otra pregunta sobre una emergencia en el campus, escríbala cuando quiera.';
 
 const PALABRAS_SALUDO = new Set([
   'hola', 'holi', 'hey', 'buenas', 'buenos', 'buen', 'dia', 'dias', 'tardes', 'noches', 'saludos', 'que', 'tal',
