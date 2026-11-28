@@ -139,7 +139,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
     <>
       <header className="ev-head bp-head">
         <div>
-          <span className="badge aviso">BRIGADISTA</span>
+          <span className="badge">BRIGADISTAS</span>
           <h1 style={{ marginTop: 10 }}>Panel de responsabilidades</h1>
           <p>Elija el evento, su zona y atienda los incidentes que le corresponden.</p>
         </div>
@@ -149,7 +149,7 @@ export default function BrigadistaPanel({ session }: { session: Session }) {
             : <button type="button" className="btn light" disabled={busy} onClick={() => void disponible()}>{busy ? 'Activando…' : 'Estoy disponible'}</button>}
         </div>
       </header>
-      <main className="ev-main">
+      <main className="ev-main bp-main">
         {notice && <Mensaje tono="exito">{notice}</Mensaje>}
         {fallo && <Mensaje tono="error">{fallo}</Mensaje>}
         {error && <Mensaje tono="error" onReintentar={() => void cargar()}>{error}</Mensaje>}

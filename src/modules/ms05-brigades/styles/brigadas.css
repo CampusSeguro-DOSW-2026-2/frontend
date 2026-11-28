@@ -25,7 +25,8 @@
 .bg-opt small{color:var(--mut);font-size:13px;white-space:nowrap}
 
 /* ---------- Auto asignación (brigadista) ---------- */
-.aa-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+/* La información va a la izquierda, debajo del selector del evento, y el mapa a la derecha (como en Rutas de evacuación) */
+.aa-layout{display:grid;grid-template-columns:320px minmax(0,1fr);gap:24px;align-items:start}
 .aa-map{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px;overflow:hidden}
 .aa-legend{margin-top:10px}
 .aa-legend i{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid var(--ink);vertical-align:-2px;margin-right:6px;background:var(--surface)}
@@ -53,6 +54,8 @@
 .bg-chev{flex:none}
 
 /* ---------- Panel del brigadista ---------- */
+/* Lo amarillo del panel («En ejecución», avisos, filas en curso) va todo en el amarillo claro, sin el borde más fuerte */
+.bp-main{--warn-line:var(--pale);--live-bg:var(--pale)}
 .bp-zona-acts{display:flex;gap:8px;flex-wrap:wrap}
 /* Resumen de una línea de la zona: solo en celular; en escritorio la tarjeta del evento ya lo muestra */
 .bp-resumen{display:none;align-items:center;flex-wrap:wrap;gap:0 8px;font-size:15px}

@@ -89,32 +89,13 @@ export default function RouteQuery() {
   const [error, setError] = useState<CampusApiError | null>(null);
   const edificioActual = useRef('');
 
-  useEffect(() => {
-    campus.edificios.listar()
-      .then(setEdificios)
-      .catch((e) => { setEdificios([]); setError(comoError(e)); });
-  }, []);
-
-  const elegirEdificio = (id: string) => {
-    edificioActual.current = id;
-    setEdificioId(id);
-    setEspacioId('');
-    setEspacios(null);
-    setRutas(null);
-    setError(null);
-    if (!id) return;
-    campus.espacios.listarPorEdificio(id)
-      .then((lista) => { if (edificioActual.current === id) setEspacios(lista); })
-      .catch((e) => { if (edificioActual.current === id) { setEspacios([]); setError(comoError(e)); } });
-  };
-
-  const consultar = async () => {
-    if (!edificioId) return;
+  const consultar = async (edificio = edificioId, espacio = espacioId) => {
+    if (!edificio) return;
     setConsultando(true);
     setError(null);
     setConsulta((n) => n + 1);
     try {
-      setRutas(espacioId ? [await campus.consulta.porEspacio(espacioId)] : await campus.consulta.porEdificio(edificioId));
+      setRutas(espacio ? [await campus.consulta.porEspacio(espacio)] : await campus.consulta.porEdificio(edificio));
     } catch (e) {
       setRutas(null);
       setError(comoError(e));
@@ -123,6 +104,35 @@ export default function RouteQuery() {
     }
   };
 
+  const elegirEdificio = (id: string, porDefecto = false) => {
+    edificioActual.current = id;
+    setEdificioId(id);
+    setEspacioId('');
+    setEspacios(null);
+    setRutas(null);
+    setError(null);
+    if (!id) return;
+    campus.espacios.listarPorEdificio(id)
+      .then((lista) => {
+        if (edificioActual.current !== id) return;
+        setEspacios(lista);
+        if (!porDefecto) return;
+        const primero = lista.find((s) => s.disponible) ?? lista[0];
+        if (primero) setEspacioId(primero.id);
+        void consultar(id, primero?.id ?? '');
+      })
+      .catch((e) => { if (edificioActual.current === id) { setEspacios([]); setError(comoError(e)); } });
+  };
+
+  // Al entrar se eligen el primer edificio y su primer espacio disponible, y se consulta su ruta: la pantalla abre con
+  // un mapa en vez de solo los desplegables vacíos
+  useEffect(() => {
+    campus.edificios.listar()
+      .then((lista) => { setEdificios(lista); if (lista[0]) elegirEdificio(lista[0].id, true); })
+      .catch((e) => { setEdificios([]); setError(comoError(e)); });
+    // solo al entrar
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const edificio = edificios?.find((e) => e.id === edificioId);
 
   return (
@@ -130,7 +140,7 @@ export default function RouteQuery() {
       <PageHeader badge="EVACUACIÓN" title="Rutas de evacuación"
         subtitle="Consulte la ruta recomendada desde su edificio o salón hasta la zona segura." context="Campus y seguridad" />
       <main className="content">
-        <form className="cs-form" onSubmit={(e) => { e.preventDefault(); consultar(); }}>
+        <form className="cs-form" onSubmit={(e) => { e.preventDefault(); void consultar(); }}>
           <div className="field">
             <label htmlFor="cs-edificio">Edificio</label>
             <div className="input">
