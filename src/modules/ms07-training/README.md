@@ -14,7 +14,7 @@
 | `#/evaluaciones` | `pages/Evaluaciones.tsx` | `ms07:quiz:take` | Evaluaciones activas, con filtro por categoría |
 | `#/evaluaciones/{id}` | `pages/PresentarEvaluacion.tsx` | `ms07:quiz:take` | Presentar la evaluación y ver el puntaje con la corrección; se puede repetir |
 | `#/mi-progreso` | `pages/MiProgreso.tsx` | `ms07:quiz:take` | Avance por categoría (contenidos vistos y promedio de los mejores puntajes), mejor resultado de cada evaluación y contenidos consultados; lo inactivado después sale como «No disponible» |
-| `#/tutor` | `pages/Tutor.tsx` | `ms07:tutor:use` | Chat con el Tutor CampusSeguro (RF-15): preguntas sugeridas, respuesta con los contenidos usados como fuente (enlazan a `#/aprendizaje/{id}`), mensaje amable cuando la pregunta no es del tema o los contenidos no la cubren (con el protocolo oficial y dos preguntas de ejemplo) y botón Reintentar si la IA no responde a tiempo |
+| `#/tutor` | `pages/Tutor.tsx` | `ms07:tutor:use` | Chat con el Tutor CampusSeguro (RF-15) sobre cualquier emergencia del campus que esté en los contenidos (sismos, incendios, fugas o derrames, evacuación, lesionados y prevención por tipo de espacio): preguntas sugeridas variadas, respuesta con los contenidos usados como fuente (enlazan a `#/aprendizaje/{id}`), mensaje amable cuando la pregunta no es del tema o los contenidos no la cubren (con el protocolo oficial y dos preguntas de ejemplo), y botón Reintentar si la IA no responde a tiempo o si se superó el límite de preguntas (429) |
 | `#/admin/evaluaciones` | `pages/AdminEvaluaciones.tsx` | `ms07:content:manage` | Crear, modificar, inactivar y reactivar evaluaciones (editor en `components/EditorEvaluacion.tsx`) |
 
 Las pantallas y el menú se muestran por permiso del token, nunca por nombre de rol. Nada se borra: lo inactivo solo
@@ -26,7 +26,10 @@ se guarda solo en el `sessionStorage` de la pestaña (para no perderla al abrir 
 «Nueva conversación» o al cerrar la pestaña; MS07 nunca guarda el texto de las preguntas ni de las respuestas.
 Los saludos, agradecimientos y preguntas sobre el propio tutor («hola», «gracias», «¿qué puedes hacer?») se responden
 en el navegador sin llamar a MS07 (`utils/tutorLocal.ts`, fase 1 del patrón Two-Phase Predictions del repositorio
-aaintegration); todo lo demás lo responde el tutor con los contenidos oficiales.
+aaintegration); todo lo demás lo responde el tutor con los contenidos oficiales. MS07 limita las preguntas por
+usuario (10 por minuto y 100 por día por defecto): al superarlo responde 429 y el chat muestra «Hizo varias preguntas
+seguidas. Espere un momento y vuelva a intentarlo.» con el botón Reintentar. MS07 quita los datos personales de la
+pregunta antes de enviarla a la IA, pero es mejor no escribirlos.
 
 | Carpeta | Contenido |
 |---|---|
