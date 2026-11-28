@@ -15,7 +15,8 @@ export const EVIDENCE_TYPES = ['image/png', 'application/pdf', 'video/mp4'];
 export const MAX_EVIDENCES = 5;
 
 /** El alcance de MS06 usa BUILDING/ZONE; MS05 los llama EDIFICIO/ZONA_SEGURA. */
-export const tipoDesdeAlcance = (type: 'BUILDING' | 'ZONE'): TipoUbicacion => (type === 'ZONE' ? 'ZONA_SEGURA' : 'EDIFICIO');
+export const tipoDesdeAlcance = (type: 'BUILDING' | 'ZONE' | 'PUNTO_ENCUENTRO'): TipoUbicacion =>
+  (type === 'BUILDING' ? 'EDIFICIO' : type === 'PUNTO_ENCUENTRO' ? 'PUNTO_ENCUENTRO' : 'ZONA_SEGURA');
 
 export const brigadesApi = {
   cambiarEstado: (session: Session, estado: EstadoBrigadista) =>

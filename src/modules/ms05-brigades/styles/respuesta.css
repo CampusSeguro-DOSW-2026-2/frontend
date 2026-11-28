@@ -147,6 +147,8 @@
 .na-sec{display:flex;flex-direction:column;gap:12px}
 .na-etiqueta{display:flex;align-items:baseline;gap:8px;font:700 19px/24px 'Outfit',sans-serif;color:var(--ink)}
 .na-opcional{font:400 14px 'Geist',sans-serif;color:var(--mut)}
+.na-grupo{display:flex;flex-direction:column;gap:8px}
+.na-grupo-titulo{font:600 14px/19px 'Geist',sans-serif;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
 .na-zonas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(190px,100%),1fr));gap:12px}
 .na-zona{min-height:60px;padding:10px 14px;border:1px solid var(--red);border-radius:12px;background:var(--surface);color:var(--red);font:700 17px/22px 'Outfit',sans-serif;cursor:pointer}
 .na-zona[aria-pressed=true]{background:var(--red);color:var(--on-color)}
