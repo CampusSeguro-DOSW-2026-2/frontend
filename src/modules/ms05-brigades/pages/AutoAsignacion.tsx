@@ -116,17 +116,6 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
 
         {data && actual && (
           <div className="aa-layout">
-            <section aria-label="Mapa del campus">
-              <SelectorZonaEvento
-                session={session}
-                eventoId={actual.evento.eventoId}
-                edificios={edificios}
-                miUbicacionId={actual.ubicacionId}
-                activo={!!activo}
-                onAsignado={async (nombre) => { await cargar(); setNotice(`Quedó asignado a ${nombre}.`); }}
-              />
-            </section>
-
             <aside className="aa-side">
               <section className="ev-card">
                 <span className={`st ${actual.evento.estado === 'EN_EJECUCION' ? 'IN_PROGRESS' : 'SCHEDULED'}`} style={{ alignSelf: 'flex-start' }}>
@@ -160,6 +149,17 @@ export default function AutoAsignacion({ session, eventId }: { session: Session;
                 <p className="help">Un edificio del evento no puede quedar sin brigadistas: si es el único en el suyo, no podrá cambiarse ni retirarse hasta que llegue otro.</p>
               </section>
             </aside>
+
+            <section aria-label="Mapa del campus">
+              <SelectorZonaEvento
+                session={session}
+                eventoId={actual.evento.eventoId}
+                edificios={edificios}
+                miUbicacionId={actual.ubicacionId}
+                activo={!!activo}
+                onAsignado={async (nombre) => { await cargar(); setNotice(`Quedó asignado a ${nombre}.`); }}
+              />
+            </section>
           </div>
         )}
       </main>
