@@ -15,11 +15,12 @@ const AVISO_LARGO = 400;
 /** Mensajes que se conservan al volver de un contenido (solo en esta pestaña). */
 const MAXIMO_GUARDADOS = 50;
 
+/** Sugerencias variadas: el tutor cubre todas las emergencias de los contenidos, no solo los sismos. */
 const SUGERENCIAS = [
   '¿Qué hago si tiembla mientras estoy en clase?',
-  '¿Cómo evacúo un laboratorio de forma segura?',
-  '¿Qué debo hacer después de un sismo?',
-  '¿Cómo me preparo antes de un sismo?',
+  '¿Qué hago si hay un derrame de un químico en el laboratorio?',
+  '¿Cómo evacúo un auditorio?',
+  '¿Qué hago si alguien se lesiona durante una emergencia?',
 ];
 
 /**
@@ -27,9 +28,10 @@ const SUGERENCIAS = [
  * explica con amabilidad para qué sirve, se remite al protocolo oficial (RF-15) y se proponen preguntas que sí responde.
  */
 const FUERA_DE_ALCANCE =
-  'Lo siento, eso no lo puedo responder. Solo le ayudo con la prevención y la actuación ante sismos y otras '
-  + 'emergencias en el campus, con base en los contenidos oficiales. Si su duda es sobre una emergencia, consulte el '
-  + 'protocolo oficial de emergencias de la ECI o a los brigadistas de su edificio.';
+  'Lo siento, eso no lo puedo responder. Solo le ayudo con la prevención y la actuación ante emergencias en el '
+  + 'campus (sismos, incendios, fugas o derrames de sustancias, evacuación y personas lesionadas), con base en los '
+  + 'contenidos oficiales. Si su duda es sobre una emergencia, consulte el protocolo oficial de emergencias de la ECI '
+  + 'o a los brigadistas de su edificio.';
 
 /** Dos preguntas de ejemplo, alternando entre respuestas para no repetir siempre las mismas. */
 const ejemplos = (posicion: number) => {
@@ -202,7 +204,7 @@ export default function Tutor({ session }: { session: Session }) {
       <PageHeader
         badge="TUTOR IA"
         title="Tutor CampusSeguro"
-        subtitle="Pregunte cómo prevenir y cómo actuar ante un sismo. Las respuestas salen de los contenidos oficiales del campus."
+        subtitle="Pregunte cómo prevenir y cómo actuar ante una emergencia en el campus: sismos, incendios, fugas o derrames, evacuación y personas lesionadas. Las respuestas salen de los contenidos oficiales."
         context={<a className="tu-ctx" href="#/aprendizaje">Centro de aprendizaje →</a>}
       />
       <main className="content tu-main">
@@ -309,7 +311,7 @@ export default function Tutor({ session }: { session: Session }) {
                 rows={1}
                 maxLength={MAXIMO}
                 value={texto}
-                placeholder="Escriba su pregunta sobre sismos o evacuación…"
+                placeholder="Escriba su pregunta sobre una emergencia en el campus…"
                 onChange={(e) => setTexto(e.target.value)}
                 onKeyDown={alTeclear}
                 aria-describedby="tu-ayuda"
