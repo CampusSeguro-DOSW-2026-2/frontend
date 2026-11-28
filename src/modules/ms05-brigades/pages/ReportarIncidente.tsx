@@ -115,7 +115,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
   const elegirArchivos = (files: FileList | null) => {
     const list = Array.from(files ?? []);
     const invalid = list.find((f) => !EVIDENCE_TYPES.includes(f.type));
-    if (invalid) { setErrors((e) => ({ ...e, evidencias: `"${invalid.name}" no es png, pdf ni mp4.` })); return; }
+    if (invalid) { setErrors((e) => ({ ...e, evidencias: `"${invalid.name}" no es una imagen (JPG, PNG, WEBP, GIF, BMP, TIFF o HEIC), un PDF o un MP4.` })); return; }
     if (list.length > MAX_EVIDENCES) { setErrors((e) => ({ ...e, evidencias: `Máximo ${MAX_EVIDENCES} archivos.` })); return; }
     setErrors((e) => ({ ...e, evidencias: undefined }));
     setArchivos(list);
