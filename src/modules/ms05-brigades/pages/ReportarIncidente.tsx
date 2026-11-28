@@ -1,7 +1,7 @@
 import { EstadoVacio } from '../../../shared/components/EstadoVacio';
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { Cargando } from '../../../shared/components/Cargando';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CircleCheck, Plus, Send } from '../../../shared/components/Icons';
 import { PageHeader } from '../../../shared/components/Layout';
 import { ApiError, errorMessage, type FieldErrors } from '../../../shared/services/http';
@@ -46,10 +46,16 @@ const IMPLICA: Record<string, string> = {
 
 type Resultado = { incidente: Incidente | null; fallidas: string[]; aviso?: string };
 
+/** Lugar del campus donde puede estar la persona, venga del catálogo de MS02 o del alcance del evento. */
+type Lugar = { id: string; type: 'BUILDING' | 'ZONE'; nombre: string };
+
+/** Estados en los que el incidente todavía recibe atención; fuera de estos, una nueva solicitud crea otro caso. */
+const ESTADOS_ABIERTOS = new Set(['REPORTADO', 'ASIGNADO', 'EN_ATENCION']);
+
 /**
  * RF-BEI-04 y RF-BEI-05: "Necesito ayuda" (solicitud propia) y "Reportar incidente" (brigadista, para otra persona).
- * Dos pasos, como el mockup: primero la prioridad y luego la zona, con descripción y evidencia opcionales. Las zonas son
- * el alcance del evento (MS06) y sus nombres salen del catálogo vivo de MS02, porque el evento solo guarda los ids.
+ * Dos pasos, como el mockup: primero la prioridad y luego el lugar, con descripción y evidencia opcionales. Los
+ * edificios y zonas salen del catálogo vivo de MS02; el alcance del evento (MS06) queda como respaldo.
  *
  * Una sola solicitud por persona: «Requiero asistencia» del check-in llega aquí. Con ms04:checkin:write, la solicitud
  * propia registra el estado en MS04 (que crea la solicitud en MS05) y luego la completa en MS05 con la prioridad, la
@@ -82,7 +88,31 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
       .catch((err) => { setMessage(errorMessage(err)); setEvent(null); });
   }, [session, eventId]);
 
-  const nombre = (id: string) => (cargandoNombres ? 'Cargando…' : scopeLabelIn(id, catalog));
+  // El incidente puede ocurrir en cualquier edificio o zona del campus, no solo en el alcance del evento.
+  const lugares = useMemo<Lugar[]>(() => {
+    if (catalog) {
+      return [
+        ...catalog.buildings.map((b) => ({ id: b.id, type: 'BUILDING' as const, nombre: b.label })),
+        ...catalog.zones.map((z) => ({ id: z.id, type: 'ZONE' as const, nombre: z.label })),
+      ];
+    }
+    return (event?.scope ?? []).map((s) => ({ id: s.id, type: s.type, nombre: scopeLabelIn(s.id, catalog) }));
+  }, [catalog, event]);
+
+  /**
+   * RN-MS04-11: la solicitud de asistencia es una por persona y evento. Si su incidente ya se resolvió o cerró,
+   * reutilizarla solo editaría el caso viejo; se crea uno nuevo en MS05 para que la brigada vuelva a recibirlo.
+   */
+  const solicitudSigueAbierta = async (eventoId: string, solicitudId: string): Promise<boolean> => {
+    try {
+      const pagina = await brigadesApi.misIncidentes(session, eventoId, 0, 100);
+      const incidente = (pagina.contenido ?? []).find((i) => i.incidenteId === solicitudId);
+      return incidente ? ESTADOS_ABIERTOS.has(incidente.estado) : false;
+    } catch {
+      // Sin poder comprobarlo, se conserva la solicitud existente para no duplicar el caso
+      return true;
+    }
+  };
   // MS04 registra el estado del check-in y MS05 gestiona la solicitud (prioridad, brigadista y seguimiento)
   const viaCheckin = !forOther && hasPermission(session, PERMISSION.MS04_CHECKIN_WRITE);
 
@@ -109,7 +139,11 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
     setErrors(local);
     if (Object.keys(local).length) return;
 
-    const zona = event.scope.find((s) => s.id === ubicacion)!;
+    const zona = lugares.find((l) => l.id === ubicacion);
+    if (!zona) {
+      setErrors((e) => ({ ...e, ubicacion: 'Seleccione el lugar donde está.' }));
+      return;
+    }
     const texto = descripcion.trim() || undefined;
     setSaving(true);
     setMessage('');
@@ -158,6 +192,8 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
     }
     if (solicitud?.estado_envio === 'PENDIENTE_ENVIO') return { incidente: null, fallidas: [], aviso: PENDIENTE_TEXTO };
     if (solicitud?.estado_envio !== 'ENVIADA' || !solicitud.id) return null;
+    // Si el incidente anterior ya se resolvió o cerró, no se reutiliza la solicitud: se crea uno nuevo en MS05.
+    if (!(await solicitudSigueAbierta(eventoId, solicitud.id))) return null;
     try {
       const incidente = await brigadesApi.completarIncidente(session, eventoId, solicitud.id, { prioridadId: p.id, descripcion: texto ?? '' });
       return { incidente, fallidas: [] };
@@ -271,16 +307,26 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
 
             <div className="na-sec">
               <h2 id="na-zona-titulo" className="na-titulo">{forOther ? '¿Dónde está la persona?' : '¿Dónde está?'}</h2>
-              <p className="na-sub">Elija el edificio o punto de encuentro. La brigada de esa zona recibe la solicitud.</p>
-              <div className="na-zonas" role="group" aria-labelledby="na-zona-titulo">
-                {event.scope.map((z) => (
-                  <button key={z.id} type="button" className="na-zona" aria-pressed={ubicacion === z.id}
-                    onClick={() => { setUbicacion(z.id); setErrors((e) => ({ ...e, ubicacion: undefined })); }}>
-                    {nombre(z.id)}
-                  </button>
-                ))}
-              </div>
-              {event.scope.length === 0 && <p className="na-sub">El evento no tiene zonas definidas.</p>}
+              <p className="na-sub">Elija el edificio o la zona del campus donde está. La brigada asignada a ese lugar recibe la solicitud.</p>
+              {cargandoNombres && lugares.length === 0 && <Cargando texto="Cargando los lugares…" />}
+              {(['BUILDING', 'ZONE'] as const).map((tipo) => {
+                const grupo = lugares.filter((l) => l.type === tipo);
+                if (grupo.length === 0) return null;
+                return (
+                  <div key={tipo} className="na-grupo">
+                    <h3 className="na-grupo-titulo">{tipo === 'BUILDING' ? 'Edificios' : 'Zonas seguras'}</h3>
+                    <div className="na-zonas" role="group" aria-labelledby="na-zona-titulo">
+                      {grupo.map((l) => (
+                        <button key={`${l.type}-${l.id}`} type="button" className="na-zona" aria-pressed={ubicacion === l.id}
+                          onClick={() => { setUbicacion(l.id); setErrors((e) => ({ ...e, ubicacion: undefined })); }}>
+                          {l.nombre}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+              {lugares.length === 0 && !cargandoNombres && <p className="na-sub">No hay edificios ni zonas disponibles.</p>}
               {errors.ubicacion && <span className="error" role="alert">{errors.ubicacion}</span>}
             </div>
 
