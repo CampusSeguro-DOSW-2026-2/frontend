@@ -15,7 +15,7 @@
 | `#/evaluaciones/{id}` | `pages/PresentarEvaluacion.tsx` | `ms07:quiz:take` | Presentar la evaluación y ver el puntaje con la corrección; se puede repetir |
 | `#/mi-progreso` | `pages/MiProgreso.tsx` | `ms07:quiz:take` | Avance por categoría (contenidos vistos y promedio de los mejores puntajes), mejor resultado de cada evaluación y contenidos consultados; lo inactivado después sale como «No disponible» |
 | `#/tutor` | `pages/Tutor.tsx` | `ms07:tutor:use` | Chat con el Tutor CampusSeguro (RF-15) sobre cualquier emergencia del campus que esté en los contenidos (sismos, incendios, fugas o derrames, evacuación, lesionados y prevención por tipo de espacio): preguntas sugeridas variadas, respuesta con los contenidos usados como fuente (enlazan a `#/aprendizaje/{id}`), mensaje amable cuando la pregunta no es del tema o los contenidos no la cubren (con el protocolo oficial y dos preguntas de ejemplo), y botón Reintentar si la IA no responde a tiempo o si se superó el límite de preguntas (429) |
-| `#/admin/evaluaciones` | `pages/AdminEvaluaciones.tsx` | `ms07:content:manage` | Crear, modificar, inactivar y reactivar evaluaciones (editor en `components/EditorEvaluacion.tsx`) |
+| `#/admin/evaluaciones` | `pages/AdminEvaluaciones.tsx` | `ms07:content:manage` | Crear, modificar, inactivar y reactivar evaluaciones (editor en `components/EditorEvaluacion.tsx`), con «Generar con IA» para llenar el formulario con un borrador (`components/GeneradorIa.tsx`) |
 
 Las pantallas y el menú se muestran por permiso del token, nunca por nombre de rol. Nada se borra: lo inactivo solo
 deja de verse para la comunidad. Una evaluación que ya tiene intentos no se puede modificar (MS07 responde 409): hay
@@ -30,6 +30,17 @@ aaintegration); todo lo demás lo responde el tutor con los contenidos oficiales
 usuario (10 por minuto y 100 por día por defecto): al superarlo responde 429 y el chat muestra «Hizo varias preguntas
 seguidas. Espere un momento y vuelva a intentarlo.» con el botón Reintentar. MS07 quita los datos personales de la
 pregunta antes de enviarla a la IA, pero es mejor no escribirlos.
+
+**Generar con IA (RF-14):** en el editor de evaluaciones, quien tiene `ms07:content:manage` elige la categoría y el
+número de preguntas (3 a 10, 5 por defecto) y pulsa «Generar con IA». El botón está deshabilitado sin categoría.
+El front pide el borrador (`POST /api/v1/training/evaluation-drafts`, 202) y lo consulta cada 1,5 s
+(`GET /evaluation-drafts/{id}`) hasta que queda `LISTO` o `FALLIDO`, con un máximo de unos 60 s; mientras tanto
+muestra el estado y un botón Cancelar que deja de consultar. Generar es asíncrono porque escribir varias preguntas
+puede tardar más que el tiempo del Gateway. Con `LISTO` llena el título, el tema y las preguntas con la opción
+correcta marcada, y muestra el aviso «Revise y ajuste las preguntas antes de guardar: las generó la IA a partir de los
+contenidos oficiales». Nada se guarda solo: el ADMIN guarda con «Guardar evaluación». Si el formulario ya tenía
+contenido, antes de generar se pide confirmación con el diálogo de la página (`confirmar`, no `window.confirm`).
+Los errores muestran el mensaje de MS07; el 429 (5 borradores por hora) muestra un texto amable.
 
 | Carpeta | Contenido |
 |---|---|
