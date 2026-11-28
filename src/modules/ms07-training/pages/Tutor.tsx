@@ -71,7 +71,13 @@ function guardar(session: Session, mensajes: Mensaje[]): void {
 /** Mensaje cuando la IA o el servicio no responden a tiempo (503, 504 o sin conexión): siempre se puede reintentar. */
 const NO_DISPONIBLE = 'El tutor no está disponible en este momento. Intente de nuevo en unos segundos o consulte el centro de aprendizaje.';
 
+/** Mensaje cuando se supera el límite de preguntas (429 DEMASIADAS_SOLICITUDES): también se puede reintentar. */
+const MUCHAS_PREGUNTAS = 'Hizo varias preguntas seguidas. Espere un momento y vuelva a intentarlo.';
+
 function mensajeDeError(err: unknown): string {
+  if (err instanceof ApiError && (err.status === 429 || err.code === 'DEMASIADAS_SOLICITUDES')) {
+    return MUCHAS_PREGUNTAS;
+  }
   if (err instanceof ApiError && (err.status === 0 || err.status === 502 || err.status === 503 || err.status === 504)) {
     return NO_DISPONIBLE;
   }
