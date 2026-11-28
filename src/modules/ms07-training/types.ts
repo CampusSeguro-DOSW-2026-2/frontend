@@ -86,6 +86,27 @@ export interface EvaluacionRequest {
   questions: { statement: string; options: { text: string; correct: boolean }[] }[];
 }
 
+/** Estado de un borrador de evaluación que escribe la IA (RF-14). */
+export type EstadoBorrador = 'EN_PROCESO' | 'LISTO' | 'FALLIDO';
+
+/** Cuerpo para pedir un borrador: `questions` de 3 a 10; `topic` es opcional. */
+export interface BorradorRequest {
+  categoryId: string;
+  questions: number;
+  topic?: string;
+}
+
+/**
+ * Borrador de evaluación (POST y GET /api/v1/training/evaluation-drafts). `draft` llega solo con LISTO y tiene la forma
+ * exacta del cuerpo para crear una evaluación; `message` llega solo con FALLIDO, ya en español. MS07 nunca lo guarda.
+ */
+export interface BorradorEvaluacion {
+  id: string;
+  status: EstadoBorrador;
+  draft?: EvaluacionRequest;
+  message?: string;
+}
+
 export interface Respuesta {
   questionId: string;
   optionId: string;

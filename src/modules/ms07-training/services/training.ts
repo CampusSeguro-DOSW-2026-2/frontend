@@ -1,8 +1,8 @@
 import { request } from '../../../shared/services/http';
 import type { Session } from '../../../shared/types';
 import type {
-  Categoria, CategoriaRequest, Contenido, ContenidoRequest, ContenidoResumen, Evaluacion, EvaluacionRequest,
-  EvaluacionResumen, Intento, Pagina, Progreso, Respuesta, RespuestaTutor,
+  BorradorEvaluacion, BorradorRequest, Categoria, CategoriaRequest, Contenido, ContenidoRequest, ContenidoResumen,
+  Evaluacion, EvaluacionRequest, EvaluacionResumen, Intento, Pagina, Progreso, Respuesta, RespuestaTutor,
 } from '../types';
 
 /**
@@ -125,6 +125,19 @@ export const trainingApi = {
 
   async reactivar(session: Session, id: string): Promise<Evaluacion> {
     return (await request(`${BASE}/evaluations/${enc(id)}/reactivate`, { method: 'PATCH', session })) as Evaluacion;
+  },
+
+  /**
+   * Pide a la IA un borrador de evaluación con los contenidos activos de la categoría (RF-14). MS07 responde 202 con el
+   * borrador EN_PROCESO; luego se consulta con `borrador` hasta que quede LISTO o FALLIDO. Nada se guarda solo.
+   */
+  async pedirBorrador(session: Session, cuerpo: BorradorRequest): Promise<BorradorEvaluacion> {
+    return (await request(`${BASE}/evaluation-drafts`, { method: 'POST', body: cuerpo, session })) as BorradorEvaluacion;
+  },
+
+  /** Estado del borrador. Solo lo ve quien lo pidió; vence a los 30 minutos (404). */
+  async borrador(session: Session, id: string): Promise<BorradorEvaluacion> {
+    return (await request(`${BASE}/evaluation-drafts/${enc(id)}`, { session })) as BorradorEvaluacion;
   },
 
   /**
