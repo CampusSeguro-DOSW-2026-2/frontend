@@ -1,7 +1,12 @@
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { PERMISSION } from '../../../shared/permissions';
+import { confirmar } from '../../../shared/services/feedback';
 import { ApiError, errorMessage } from '../../../shared/services/http';
+import { hasPermission } from '../../../shared/services/session';
+import type { Session } from '../../../shared/types';
+import GeneradorIa from './GeneradorIa';
 import type { Categoria, Evaluacion, EvaluacionRequest } from '../types';
 
 interface OpcionEditable { text: string; correct: boolean }
@@ -37,7 +42,8 @@ function validar(titulo: string, tema: string, categoria: string, preguntas: Pre
  * Editor de una evaluación (RF-14): título, tema, categoría y preguntas con sus opciones, una de ellas correcta.
  * Al modificar, las preguntas se reemplazan completas; MS07 responde 409 si la evaluación ya tiene intentos.
  */
-export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCancelar }: {
+export default function EditorEvaluacion({ session, inicial, categorias, onGuardar, onCancelar }: {
+  session: Session;
   inicial?: Evaluacion;
   categorias: Categoria[];
   onGuardar: (datos: EvaluacionRequest) => Promise<void>;
@@ -54,6 +60,32 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
   const [errores, setErrores] = useState<Record<string, string>>({});
   const [general, setGeneral] = useState('');
   const [guardando, setGuardando] = useState(false);
+  // El formulario se llenó con un borrador de la IA: se avisa hasta guardar
+  const [deIa, setDeIa] = useState(false);
+  const puedeGenerar = hasPermission(session, PERMISSION.MS07_CONTENT_MANAGE);
+
+  const hayContenido = titulo.trim() !== '' || tema.trim() !== ''
+    || preguntas.some((p) => p.statement.trim() !== '' || p.options.some((o) => o.text.trim() !== ''));
+
+  // Antes de reemplazar lo que ya se escribió se pide confirmación con el diálogo de la página
+  const confirmarReemplazo = async () => !hayContenido || confirmar({
+    titulo: '¿Reemplazar las preguntas con un borrador de la IA?',
+    texto: 'El título, el tema y las preguntas que ya escribió se reemplazarán por los que genere la IA. '
+      + 'Nada se guarda hasta que pulse «Guardar evaluación».',
+    accion: 'Generar y reemplazar',
+  });
+
+  const usarBorrador = (borrador: EvaluacionRequest) => {
+    setTitulo(borrador.title);
+    setTema(borrador.topic);
+    setPreguntas(borrador.questions.map((p) => ({
+      statement: p.statement,
+      options: p.options.map((o) => ({ text: o.text, correct: o.correct })),
+    })));
+    setErrores({});
+    setGeneral('');
+    setDeIa(true);
+  };
 
   // Se ofrece la categoría actual aunque esté inactiva: MS07 permite conservarla al modificar
   const opcionesCategoria = categorias.filter((c) => c.status === 'ACTIVO' || c.id === inicial?.categoryId);
@@ -133,7 +165,17 @@ export default function EditorEvaluacion({ inicial, categorias, onGuardar, onCan
           </select>
         </div>
         {errores.categoryId && <span className="error">{errores.categoryId}</span>}
+        {puedeGenerar && (
+          <GeneradorIa session={session} categoria={categoria} disabled={guardando}
+            antesDeGenerar={confirmarReemplazo} onListo={usarBorrador} />
+        )}
       </div>
+
+      {deIa && (
+        <Mensaje tono="aviso" titulo="Borrador generado con IA">
+          Revise y ajuste las preguntas antes de guardar: las generó la IA a partir de los contenidos oficiales.
+        </Mensaje>
+      )}
 
       {preguntas.map((p, i) => (
         <section key={i} className="evl-ed-pregunta" aria-label={`Pregunta ${i + 1}`}>
