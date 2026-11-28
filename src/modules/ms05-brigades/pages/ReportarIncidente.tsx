@@ -14,7 +14,7 @@ import { fechaHora, tipoEvento } from '../../ms04-evacuation/utils/labels';
 import { eventsApi } from '../../ms06-drills/services/events';
 import type { EventSummary } from '../../ms06-drills/types';
 import { scopeLabelIn } from '../../ms06-drills/utils/labels';
-import { EVIDENCE_TYPES, MAX_EVIDENCES, brigadesApi, tipoDesdeAlcance } from '../services/brigades';
+import { EVIDENCE_TYPES, MAX_EVIDENCES, MAX_EVIDENCE_BYTES, brigadesApi, tipoDesdeAlcance } from '../services/brigades';
 import { PRIORIDADES, type Incidente } from '../types';
 import PrioridadChip from '../components/PrioridadChip';
 import '../styles/respuesta.css';
@@ -116,6 +116,8 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
     const list = Array.from(files ?? []);
     const invalid = list.find((f) => !EVIDENCE_TYPES.includes(f.type));
     if (invalid) { setErrors((e) => ({ ...e, evidencias: `"${invalid.name}" no es una imagen (JPG, PNG, WEBP, GIF, BMP, TIFF o HEIC), un PDF o un MP4.` })); return; }
+    const tooBig = list.find((f) => f.size > MAX_EVIDENCE_BYTES);
+    if (tooBig) { setErrors((e) => ({ ...e, evidencias: `"${tooBig.name}" supera los 15 MB.` })); return; }
     if (list.length > MAX_EVIDENCES) { setErrors((e) => ({ ...e, evidencias: `Máximo ${MAX_EVIDENCES} archivos.` })); return; }
     setErrors((e) => ({ ...e, evidencias: undefined }));
     setArchivos(list);

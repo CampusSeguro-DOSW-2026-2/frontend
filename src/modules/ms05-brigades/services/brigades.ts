@@ -16,6 +16,8 @@ export const EVIDENCE_TYPES = [
   'application/pdf', 'video/mp4',
 ];
 export const MAX_EVIDENCES = 5;
+/** Tamaño máximo por archivo; coincide con spring.servlet.multipart.max-file-size de MS05. */
+export const MAX_EVIDENCE_BYTES = 15 * 1024 * 1024;
 
 /** El alcance de MS06 usa BUILDING/ZONE; MS05 los llama EDIFICIO/ZONA_SEGURA. */
 export const tipoDesdeAlcance = (type: 'BUILDING' | 'ZONE'): TipoUbicacion => (type === 'ZONE' ? 'ZONA_SEGURA' : 'EDIFICIO');
