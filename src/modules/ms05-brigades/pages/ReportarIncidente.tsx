@@ -46,8 +46,8 @@ const IMPLICA: Record<string, string> = {
 
 type Resultado = { incidente: Incidente | null; fallidas: string[]; aviso?: string };
 
-/** Lugar del campus donde puede estar la persona, venga del catálogo de MS02 o del alcance del evento. */
-type Lugar = { id: string; type: 'BUILDING' | 'ZONE' | 'PUNTO_ENCUENTRO'; nombre: string };
+/** Edificio o zona del alcance del evento donde puede estar la persona. */
+type Lugar = { id: string; type: 'BUILDING' | 'ZONE'; nombre: string };
 
 /** Estados en los que el incidente todavía recibe atención; fuera de estos, una nueva solicitud crea otro caso. */
 const ESTADOS_ABIERTOS = new Set(['REPORTADO', 'ASIGNADO', 'EN_ATENCION']);
@@ -55,7 +55,7 @@ const ESTADOS_ABIERTOS = new Set(['REPORTADO', 'ASIGNADO', 'EN_ATENCION']);
 /**
  * RF-BEI-04 y RF-BEI-05: "Necesito ayuda" (solicitud propia) y "Reportar incidente" (brigadista, para otra persona).
  * Dos pasos, como el mockup: primero la prioridad y luego el lugar, con descripción y evidencia opcionales. Los
- * edificios y zonas salen del catálogo vivo de MS02; el alcance del evento (MS06) queda como respaldo.
+ * edificios y zonas son el alcance del evento (MS06) y sus nombres salen del catálogo vivo de MS02.
  *
  * Una sola solicitud por persona: «Requiero asistencia» del check-in llega aquí. Con ms04:checkin:write, la solicitud
  * propia registra el estado en MS04 (que crea la solicitud en MS05) y luego la completa en MS05 con la prioridad, la
@@ -88,19 +88,12 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
       .catch((err) => { setMessage(errorMessage(err)); setEvent(null); });
   }, [session, eventId]);
 
-  // El incidente puede ocurrir en cualquier edificio o zona del campus, no solo en el alcance del evento.
-  const lugares = useMemo<Lugar[]>(() => {
-    if (catalog) {
-      const edificios: Lugar[] = catalog.buildings.map((b) => ({ id: b.id, type: 'BUILDING', nombre: b.label }));
-      const zonas: Lugar[] = catalog.zones.map((z) => ({
-        id: z.id,
-        type: z.puntoEncuentro ? 'PUNTO_ENCUENTRO' : 'ZONE',
-        nombre: z.label,
-      }));
-      return [...edificios, ...zonas];
-    }
-    return (event?.scope ?? []).map((s) => ({ id: s.id, type: s.type, nombre: scopeLabelIn(s.id, catalog) }));
-  }, [catalog, event]);
+  // Solo los edificios y zonas del alcance del evento: son los lugares con brigada asignada.
+  const lugares = useMemo<Lugar[]>(() => (event?.scope ?? []).map((s) => ({
+    id: s.id,
+    type: s.type,
+    nombre: cargandoNombres ? 'Cargando…' : scopeLabelIn(s.id, catalog),
+  })), [event, catalog, cargandoNombres]);
 
   /**
    * RN-MS04-11: la solicitud de asistencia es una por persona y evento. Si su incidente ya se resolvió o cerró,
@@ -187,7 +180,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
     let solicitud;
     try {
       const checkin = await checkinApi.reportar(session, eventoId, {
-        estado: 'NEEDS_ASSISTANCE', ubicacion: { tipo: zona.type === 'BUILDING' ? 'EDIFICIO' : 'PUNTO_ENCUENTRO', id: zona.id },
+        estado: 'NEEDS_ASSISTANCE', ubicacion: { tipo: zona.type === 'ZONE' ? 'PUNTO_ENCUENTRO' : 'EDIFICIO', id: zona.id },
       });
       solicitud = checkin.solicitud_asistencia;
     } catch {
@@ -310,12 +303,12 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
 
             <div className="na-sec">
               <h2 id="na-zona-titulo" className="na-titulo">{forOther ? '¿Dónde está la persona?' : '¿Dónde está?'}</h2>
-              <p className="na-sub">Elija el edificio o la zona del campus donde está. La brigada asignada a ese lugar recibe la solicitud.</p>
+              <p className="na-sub">Elija el edificio o la zona del evento donde está. La brigada asignada a ese lugar recibe la solicitud.</p>
               {cargandoNombres && lugares.length === 0 && <Cargando texto="Cargando los lugares…" />}
-              {(['BUILDING', 'ZONE', 'PUNTO_ENCUENTRO'] as const).map((tipo) => {
+              {(['BUILDING', 'ZONE'] as const).map((tipo) => {
                 const grupo = lugares.filter((l) => l.type === tipo);
                 if (grupo.length === 0) return null;
-                const titulo = tipo === 'BUILDING' ? 'Edificios' : tipo === 'ZONE' ? 'Zonas seguras' : 'Puntos de encuentro';
+                const titulo = tipo === 'BUILDING' ? 'Edificios' : 'Zonas seguras';
                 return (
                   <div key={tipo} className="na-grupo">
                     <h3 className="na-grupo-titulo">{titulo}</h3>
@@ -330,7 +323,7 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
                   </div>
                 );
               })}
-              {lugares.length === 0 && !cargandoNombres && <p className="na-sub">No hay edificios ni zonas disponibles.</p>}
+              {lugares.length === 0 && !cargandoNombres && <p className="na-sub">El evento no tiene zonas definidas.</p>}
               {errors.ubicacion && <span className="error" role="alert">{errors.ubicacion}</span>}
             </div>
 
