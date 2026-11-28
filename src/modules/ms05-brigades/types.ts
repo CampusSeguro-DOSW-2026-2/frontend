@@ -124,6 +124,7 @@ export interface IncidenteDetalle {
   fechaPrimeraAtencion: string | null;
   fechaResolucion: string | null;
   observacionesResolucion: string | null;
+  resultadoAtencion: string | null;
   fechaCierre: string | null;
   evidencias: EvidenciaDetalle[];
 }

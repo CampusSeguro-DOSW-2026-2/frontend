@@ -1,6 +1,6 @@
 import { Mensaje } from '../../../shared/components/Mensaje';
 import { Cargando } from '../../../shared/components/Cargando';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { withoutIds } from '../../../shared/utils/text';
 import { PageHeader } from '../../../shared/components/Layout';
 import { PERMISSION } from '../../../shared/permissions';
@@ -10,23 +10,21 @@ import type { Session } from '../../../shared/types';
 import { useScopeCatalog } from '../../ms03-alerts/hooks/useScopeCatalog';
 import { formatDate, scopeLabelIn } from '../../ms06-drills/utils/labels';
 import { brigadesApi } from '../services/brigades';
-import type { IncidenteDetalle } from '../types';
+import type { EvidenciaDetalle, IncidenteDetalle } from '../types';
 import { estadoIncidente } from '../utils/incidentes';
 import PrioridadChip from '../components/PrioridadChip';
 import '../styles/respuesta.css';
 
-type Resultado = 'TRANSFERIDO' | 'RESUELTO' | 'NO_SE_PUDO';
+type Resultado = 'TRANSFERIDO' | 'RESUELTO' | 'NO_RESUELTO';
 
-/**
- * Resultados del mockup. MS05 solo registra «Resuelto» (POST /resolver, con observaciones obligatorias); «Transferido»
- * y «No se pudo» no se muestran hasta que MS05 los admita en su contrato (basta con cambiar `disponible`).
- */
-const RESULTADOS: { codigo: Resultado; titulo: string; texto: string; icono: string; disponible: boolean }[] = [
-  { codigo: 'TRANSFERIDO', titulo: 'Transferido', texto: 'La atención pasó a otro responsable.', icono: '⇄', disponible: false },
-  { codigo: 'RESUELTO', titulo: 'Resuelto', texto: 'La situación fue atendida y solucionada.', icono: '✓', disponible: true },
-  { codigo: 'NO_SE_PUDO', titulo: 'No se pudo', texto: 'No fue posible completar la atención.', icono: '✕', disponible: false },
+/** Resultados que MS05 registra al finalizar la atención (POST /resolver). */
+const RESULTADOS: { codigo: Resultado; titulo: string; texto: string; icono: string }[] = [
+  { codigo: 'TRANSFERIDO', titulo: 'Transferido', texto: 'La atención pasó a otro responsable.', icono: '⇄' },
+  { codigo: 'RESUELTO', titulo: 'Resuelto', texto: 'La situación fue atendida y solucionada.', icono: '✓' },
+  { codigo: 'NO_RESUELTO', titulo: 'No resuelto', texto: 'No fue posible completar la atención.', icono: '✕' },
 ];
-const DISPONIBLES = RESULTADOS.filter((r) => r.disponible);
+
+const tituloResultado = (codigo: string) => RESULTADOS.find((r) => r.codigo === codigo)?.titulo ?? codigo;
 
 const PinIcon = () => (
   <svg className="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
@@ -45,13 +43,21 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
   const [inc, setInc] = useState<IncidenteDetalle | null>(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const [resultado, setResultado] = useState<Resultado | null>(DISPONIBLES.length === 1 ? DISPONIBLES[0].codigo : null);
+  const [resultado, setResultado] = useState<Resultado | null>(null);
   const [observaciones, setObservaciones] = useState('');
   const [errorObs, setErrorObs] = useState('');
   const [busy, setBusy] = useState(false);
   const [finalizado, setFinalizado] = useState(false);
+  const [abriendo, setAbriendo] = useState<string | null>(null);
+  const [errorEvidencia, setErrorEvidencia] = useState('');
+  // URLs temporales de las evidencias abiertas; se liberan al salir de la pantalla.
+  const blobUrls = useRef<string[]>([]);
   const { catalog } = useScopeCatalog();
   const canAttend = hasPermission(session, PERMISSION.MS05_ASSISTANCE_UPDATE_STATUS);
+
+  useEffect(() => () => {
+    blobUrls.current.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
 
   const load = useCallback(() => {
     setError('');
@@ -80,13 +86,13 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
   };
 
   const finalizar = async () => {
-    if (resultado !== 'RESUELTO') return;
-    if (!observaciones.trim()) { setErrorObs('Describa cómo se resolvió el incidente.'); return; }
+    if (!resultado) { setErrorObs('Seleccione el resultado de la atención.'); return; }
+    if (!observaciones.trim()) { setErrorObs('Escriba las observaciones de la atención.'); return; }
     setErrorObs('');
     setBusy(true);
     setNotice('');
     try {
-      await brigadesApi.resolver(session, eventoId, incidenteId, observaciones.trim());
+      await brigadesApi.resolver(session, eventoId, incidenteId, observaciones.trim(), resultado);
       setFinalizado(true);
       load();
     } catch (err) {
@@ -94,6 +100,25 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
       if (err instanceof ApiError && err.fields.observaciones) setErrorObs(err.fields.observaciones);
     } finally {
       setBusy(false);
+    }
+  };
+
+  const abrirEvidencia = async (evidencia: EvidenciaDetalle) => {
+    if (!evidencia.id) return;
+    // Se abre la pestaña antes del fetch para que el navegador no la bloquee como emergente.
+    const ventana = window.open('', '_blank');
+    setAbriendo(evidencia.id);
+    setErrorEvidencia('');
+    try {
+      const url = await brigadesApi.abrirEvidencia(session, eventoId, incidenteId, evidencia.id);
+      blobUrls.current.push(url);
+      if (ventana) ventana.location.href = url;
+      else window.open(url, '_blank', 'noopener');
+    } catch (err) {
+      ventana?.close();
+      setErrorEvidencia(errorMessage(err));
+    } finally {
+      setAbriendo(null);
     }
   };
 
@@ -135,10 +160,13 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                   <p className="rs-sub">{descripcion}</p>
                 </div>
               )}
-              {inc.observacionesResolucion && (
+              {(inc.resultadoAtencion || inc.observacionesResolucion) && (
                 <div className="rs-sec">
                   <h3>Resolución</h3>
-                  <p className="rs-sub">{inc.observacionesResolucion}{inc.fechaResolucion && ` · ${formatDate(inc.fechaResolucion)}`}</p>
+                  {inc.resultadoAtencion && <p className="rs-sub"><b>Resultado:</b> {tituloResultado(inc.resultadoAtencion)}</p>}
+                  {inc.observacionesResolucion && (
+                    <p className="rs-sub">{inc.observacionesResolucion}{inc.fechaResolucion && ` · ${formatDate(inc.fechaResolucion)}`}</p>
+                  )}
                 </div>
               )}
             </section>
@@ -156,14 +184,10 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
 
                 {puedeFinalizar && (
                   <>
-                    <p className="rs-sub">
-                      {DISPONIBLES.length === 1
-                        ? `Por ahora el único resultado que se registra es «${DISPONIBLES[0].titulo}». El caso no se cierra hasta que pulse «Finalizar atención».`
-                        : 'Seleccione el resultado. El caso no se cierra hasta que pulse «Finalizar atención».'}
-                    </p>
+                    <p className="rs-sub">Seleccione el resultado. El caso no se cierra hasta que pulse «Finalizar atención».</p>
                     <fieldset className="rs-final" style={{ border: 0, padding: 0, margin: 0 }}>
                       <legend className="rs-sub" style={{ padding: 0, marginBottom: 6 }}>Resultado</legend>
-                      {DISPONIBLES.map((r) => (
+                      {RESULTADOS.map((r) => (
                         <label key={r.codigo}>
                           <input type="radio" name="resultado" value={r.codigo} checked={resultado === r.codigo} onChange={() => setResultado(r.codigo)} />
                           <span><b>{r.titulo}</b><small>{r.texto}</small></span>
@@ -174,9 +198,9 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                   </>
                 )}
 
-                {resultado === 'RESUELTO' && puedeFinalizar && (
+                {puedeFinalizar && (
                   <div className="rs-sec">
-                    <label htmlFor="obs" className="rs-sub"><b>¿Cómo se resolvió?</b> (obligatorio)</label>
+                    <label htmlFor="obs" className="rs-sub"><b>Observaciones</b> (obligatorio)</label>
                     <div className="input area"><textarea id="obs" rows={3} maxLength={1000} value={observaciones}
                       aria-invalid={errorObs ? true : undefined} aria-describedby={errorObs ? 'obs-error' : undefined}
                       onChange={(e) => setObservaciones(e.target.value)} /></div>
@@ -188,7 +212,7 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                 {!propio && <span className="rs-sub">Solo el brigadista asignado puede registrar el resultado.</span>}
                 {propio && !enAtencion && inc.estado !== 'ASIGNADO' && !finalizado && <span className="rs-sub">El incidente está {st.texto.toLowerCase()}.</span>}
                 {notice && <Mensaje tono="error">{notice}</Mensaje>}
-                {finalizado && <Mensaje tono="exito">Incidente marcado como resuelto.</Mensaje>}
+                {finalizado && <Mensaje tono="exito">Resultado registrado: {resultado ? tituloResultado(resultado) : 'Resuelto'}.</Mensaje>}
 
                 {puedeFinalizar && (
                   <button type="submit" className={`btn rs-btn ${resultado ? 'red' : 'off'}`} disabled={!resultado || busy} aria-busy={busy || undefined}>
@@ -208,11 +232,17 @@ export default function AtenderIncidente({ session, eventoId, incidenteId }: Pro
                 </div>
               )}
               {inc.evidencias.map((e) => (
-                <div key={e.id ?? e.nombreArchivo} className="rs-file">
+                <button key={e.id ?? e.nombreArchivo} type="button" className="rs-file"
+                  onClick={() => void abrirEvidencia(e)} disabled={!e.id || abriendo === e.id}
+                  aria-label={`Ver la evidencia ${e.nombreArchivo}`}>
                   <span className="rs-file-ico"><FileIcon /></span>
-                  <span><b>{e.nombreArchivo}</b><small>{[e.tipoContenido, e.fechaCarga && formatDate(e.fechaCarga)].filter(Boolean).join(' · ')}</small></span>
-                </div>
+                  <span>
+                    <b>{e.nombreArchivo}</b>
+                    <small>{[e.tipoContenido, e.fechaCarga && formatDate(e.fechaCarga), abriendo === e.id ? 'Abriendo…' : 'Toque para ver'].filter(Boolean).join(' · ')}</small>
+                  </span>
+                </button>
               ))}
+              {errorEvidencia && <Mensaje tono="error">{errorEvidencia}</Mensaje>}
             </section>
           </div>
         )}

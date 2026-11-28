@@ -115,11 +115,30 @@ export const brigadesApi = {
   iniciarAtencion: (session: Session, eventoId: string, incidenteId: string) =>
     request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/iniciar-atencion`, { method: 'POST', session }),
 
-  /** El brigadista responsable marca como resuelto un incidente EN_ATENCION. */
-  resolver: (session: Session, eventoId: string, incidenteId: string, observaciones: string) =>
+  /** El brigadista responsable finaliza la atención con el resultado y las observaciones. */
+  resolver: (session: Session, eventoId: string, incidenteId: string, observaciones: string, resultado: string) =>
     request(`/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/resolver`, {
-      method: 'POST', session, body: { observaciones }, fields: { observaciones: 'observaciones' },
+      method: 'POST', session, body: { observaciones, resultado }, fields: { observaciones: 'observaciones' },
     }),
+
+  /**
+   * Descarga el archivo de una evidencia con el token de la sesión y devuelve una URL temporal para verlo.
+   * Se hace fuera de request() porque ese cliente solo envía JSON.
+   */
+  async abrirEvidencia(session: Session, eventoId: string, incidenteId: string, evidenciaId: string): Promise<string> {
+    let res: Response;
+    try {
+      res = await fetch(`${API_URL}/api/v1/incidentes/eventos/${enc(eventoId)}/${enc(incidenteId)}/evidencias/${enc(evidenciaId)}/archivo`, {
+        headers: { Accept: '*/*', Authorization: `Bearer ${session.token}`, 'X-Correlation-ID': crypto.randomUUID() },
+      });
+    } catch {
+      throw new ApiError(0, NETWORK_ERROR);
+    }
+    if (!res.ok) {
+      throw new ApiError(res.status, `No se pudo abrir la evidencia (HTTP ${res.status}).`);
+    }
+    return URL.createObjectURL(await res.blob());
+  },
 
   /** Sube una evidencia (multipart). Se hace fuera de request() porque ese cliente solo envía JSON. */
   async subirEvidencia(session: Session, eventoId: string, incidenteId: string, archivo: File): Promise<Evidencia> {
