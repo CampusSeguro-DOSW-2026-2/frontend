@@ -11,7 +11,10 @@ import type {
  */
 const enc = encodeURIComponent;
 
-export const EVIDENCE_TYPES = ['image/png', 'application/pdf', 'video/mp4'];
+export const EVIDENCE_TYPES = [
+  'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif', 'image/bmp', 'image/tiff', 'image/heic', 'image/heif',
+  'application/pdf', 'video/mp4',
+];
 export const MAX_EVIDENCES = 5;
 
 /** El alcance de MS06 usa BUILDING/ZONE; MS05 los llama EDIFICIO/ZONA_SEGURA. */
