@@ -2,7 +2,7 @@ import type { AlertType, Recipient, Scope } from './alerts';
 import { isTechnicalId } from '../../../shared/utils/text';
 import { etiquetaRol } from '../../../shared/utils/etiquetas';
 
-export interface CatalogItem { id: string; label: string; group: string }
+export interface CatalogItem { id: string; label: string; group: string; puntoEncuentro?: boolean }
 
 /** Catálogo de alcance cargado de MS02: los ids que MS03 acepta en `scope.ids`. */
 export interface ScopeCatalog {

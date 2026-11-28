@@ -30,7 +30,12 @@ export function loadScopeCatalog(): Promise<ScopeCatalog> {
     cached = Promise.all([campus.edificios.listar(), campus.zonas.listar(), allNames()])
       .then(([buildings, zones, names]) => ({
         buildings: buildings.map((building) => ({ id: building.id, label: building.nombre, group: 'Edificios' })),
-        zones: zones.map((zone) => ({ id: zone.id, label: zone.nombre || zone.codigo, group: 'Zonas' })),
+        zones: zones.map((zone) => ({
+          id: zone.id,
+          label: zone.nombre || zone.codigo,
+          group: 'Zonas',
+          puntoEncuentro: zone.puntoEncuentro,
+        })),
         names,
       }))
       .catch((error: unknown) => {

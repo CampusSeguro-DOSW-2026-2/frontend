@@ -47,7 +47,7 @@ const IMPLICA: Record<string, string> = {
 type Resultado = { incidente: Incidente | null; fallidas: string[]; aviso?: string };
 
 /** Lugar del campus donde puede estar la persona, venga del catálogo de MS02 o del alcance del evento. */
-type Lugar = { id: string; type: 'BUILDING' | 'ZONE'; nombre: string };
+type Lugar = { id: string; type: 'BUILDING' | 'ZONE' | 'PUNTO_ENCUENTRO'; nombre: string };
 
 /** Estados en los que el incidente todavía recibe atención; fuera de estos, una nueva solicitud crea otro caso. */
 const ESTADOS_ABIERTOS = new Set(['REPORTADO', 'ASIGNADO', 'EN_ATENCION']);
@@ -91,10 +91,13 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
   // El incidente puede ocurrir en cualquier edificio o zona del campus, no solo en el alcance del evento.
   const lugares = useMemo<Lugar[]>(() => {
     if (catalog) {
-      return [
-        ...catalog.buildings.map((b) => ({ id: b.id, type: 'BUILDING' as const, nombre: b.label })),
-        ...catalog.zones.map((z) => ({ id: z.id, type: 'ZONE' as const, nombre: z.label })),
-      ];
+      const edificios: Lugar[] = catalog.buildings.map((b) => ({ id: b.id, type: 'BUILDING', nombre: b.label }));
+      const zonas: Lugar[] = catalog.zones.map((z) => ({
+        id: z.id,
+        type: z.puntoEncuentro ? 'PUNTO_ENCUENTRO' : 'ZONE',
+        nombre: z.label,
+      }));
+      return [...edificios, ...zonas];
     }
     return (event?.scope ?? []).map((s) => ({ id: s.id, type: s.type, nombre: scopeLabelIn(s.id, catalog) }));
   }, [catalog, event]);
@@ -180,11 +183,11 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
    * Requiero asistencia: MS04 guarda el estado y crea la solicitud en MS05 con la prioridad por defecto; aquí se
    * completa con la que eligió la persona. Devuelve null si MS04 no la registró (la pantalla la crea en MS05).
    */
-  const porCheckin = async (eventoId: string, zona: { type: 'BUILDING' | 'ZONE'; id: string }, p: Prioridad, texto?: string): Promise<Resultado | null> => {
+  const porCheckin = async (eventoId: string, zona: Lugar, p: Prioridad, texto?: string): Promise<Resultado | null> => {
     let solicitud;
     try {
       const checkin = await checkinApi.reportar(session, eventoId, {
-        estado: 'NEEDS_ASSISTANCE', ubicacion: { tipo: zona.type === 'ZONE' ? 'PUNTO_ENCUENTRO' : 'EDIFICIO', id: zona.id },
+        estado: 'NEEDS_ASSISTANCE', ubicacion: { tipo: zona.type === 'BUILDING' ? 'EDIFICIO' : 'PUNTO_ENCUENTRO', id: zona.id },
       });
       solicitud = checkin.solicitud_asistencia;
     } catch {
@@ -309,12 +312,13 @@ export default function ReportarIncidente({ session, eventId, forOther = false }
               <h2 id="na-zona-titulo" className="na-titulo">{forOther ? '¿Dónde está la persona?' : '¿Dónde está?'}</h2>
               <p className="na-sub">Elija el edificio o la zona del campus donde está. La brigada asignada a ese lugar recibe la solicitud.</p>
               {cargandoNombres && lugares.length === 0 && <Cargando texto="Cargando los lugares…" />}
-              {(['BUILDING', 'ZONE'] as const).map((tipo) => {
+              {(['BUILDING', 'ZONE', 'PUNTO_ENCUENTRO'] as const).map((tipo) => {
                 const grupo = lugares.filter((l) => l.type === tipo);
                 if (grupo.length === 0) return null;
+                const titulo = tipo === 'BUILDING' ? 'Edificios' : tipo === 'ZONE' ? 'Zonas seguras' : 'Puntos de encuentro';
                 return (
                   <div key={tipo} className="na-grupo">
-                    <h3 className="na-grupo-titulo">{tipo === 'BUILDING' ? 'Edificios' : 'Zonas seguras'}</h3>
+                    <h3 className="na-grupo-titulo">{titulo}</h3>
                     <div className="na-zonas" role="group" aria-labelledby="na-zona-titulo">
                       {grupo.map((l) => (
                         <button key={`${l.type}-${l.id}`} type="button" className="na-zona" aria-pressed={ubicacion === l.id}
