@@ -86,7 +86,7 @@ export default function AdminEvaluaciones({ session }: { session: Session }) {
         {aviso && <Mensaje tono="error">{aviso}</Mensaje>}
 
         {edicion ? (
-          <EditorEvaluacion key={edicion.tipo === 'modificar' ? edicion.evaluacion.id : 'nueva'}
+          <EditorEvaluacion session={session} key={edicion.tipo === 'modificar' ? edicion.evaluacion.id : 'nueva'}
             inicial={edicion.tipo === 'modificar' ? edicion.evaluacion : undefined}
             categorias={categorias} onGuardar={guardar} onCancelar={() => setEdicion(null)} />
         ) : (
